@@ -58,31 +58,27 @@ def best_guess(query):
 
 
 ```python
-pkg_name_options('skimage')
+>>> pkg_name_options('skimage')
+[('scikit-image', 5),
+ ('-e', 2),
+ ('virtualenv', 1),
+ ('scikit', 1),
+ ('scikit-', 1),
+ ('pillow', 1)]
 ```
 
 
 
 
-    [('scikit-image', 5),
-     ('-e', 2),
-     ('virtualenv', 1),
-     ('scikit', 1),
-     ('scikit-', 1),
-     ('pillow', 1)]
+
 
 
 
 
 ```python
-best_guess('skimage')
+>>> best_guess('skimage')
+'scikit-image'
 ```
-
-
-
-
-    'scikit-image'
-
 
 
 Yay, it works!
@@ -91,11 +87,11 @@ Let's try two...
 
 
 ```python
-pkg_name_options('sklearn')
+>>> pkg_name_options('sklearn')
+[('numpy', 3), ('scikit-learn', 2), ('-U', 2), ('scikit-', 1), ('scipy', 1)]
 ```
 
 
-    [('numpy', 3), ('scikit-learn', 2), ('-U', 2), ('scikit-', 1), ('scipy', 1)]
 
 
 Okay, so it already fails. 
@@ -127,23 +123,19 @@ from equate.site_names import (
 
 
 ```python
-DFLT_SITE_PKG_DIR
+>>> DFLT_SITE_PKG_DIR
+'/Users/twhalen/.virtualenvs/382/lib/python3.8/site-packages'
 ```
-
-
-
-    '/Users/twhalen/.virtualenvs/382/lib/python3.8/site-packages'
-
 
 
 
 ```python
-data = site_packages_info_df()
-print(f"{data.shape}")
-data
+>>> data = site_packages_info_df()
+>>> print(f"{data.shape}")
+(303, 8)
+>>> data
 ```
 
-    (303, 8)
 
 
 
@@ -306,75 +298,63 @@ data
 
 
 
-
 ```python
-print_n_null_elements_in_each_column_containing_at_least_one(data)
-```
-
-    most_frequent_record_dirname:	1 null values
-    first_line_of_top_level_txt:	6 null values
-    installer:	32 null values
-    metadata_name:	1 null values
-    pypi_url_name:	255 null values
-
-
-
-```python
-lidx = Lidx(data)
-
-df = data[lidx.no_nans]
-print(f"no nan df: {len(df)=}")
-```
-
-    no nan df: len(df)=302
-
-
-
-```python
-lidx = Lidx(df)
-lidx.print_diagnosis()
+>>> print_n_null_elements_in_each_column_containing_at_least_one(data)
+most_frequent_record_dirname:	1 null values
+first_line_of_top_level_txt:	6 null values
+installer:	32 null values
+metadata_name:	1 null values
+pypi_url_name:	255 null values
 ```
 
 
-    no_nans: 302
-    equal: 187
-    dash_underscore_eq: 220
-    ('equal', 'dash_underscore_eq'): 186
-
-
-
 ```python
-lidx = Lidx(df, 'first_line_of_top_level_txt')
-lidx.print_diagnosis()
-```
-
-    no_nans: 297
-    equal: 182
-    dash_underscore_eq: 214
-    ('equal', 'dash_underscore_eq'): 181
-
-
-
-
-```python
-t = Lidx(df, 'most_frequent_record_dirname')
-tt = Lidx(df, 'first_line_of_top_level_txt')
-sum(t.equal | tt.equal)
+>>> lidx = Lidx(data)
+>>> df = data[lidx.no_nans]
+>>> print(f"no nan df: {len(df)=}")
+no_nans: 302
+equal: 187
+dash_underscore_eq: 220
+('equal', 'dash_underscore_eq'): 186
 ```
 
 
-    199
-
-
-
-
 ```python
-sum(t.dash_underscore_eq | tt.dash_underscore_eq)
+>>> lidx = Lidx(df)
+>>> lidx.print_diagnosis()
+no_nans: 302
+equal: 187
+dash_underscore_eq: 220
+('equal', 'dash_underscore_eq'): 186
 ```
 
 
 
 
-    233
+
+```python
+>>> lidx = Lidx(df, 'first_line_of_top_level_txt')
+>>> lidx.print_diagnosis()
+no_nans: 297
+equal: 182
+dash_underscore_eq: 214
+('equal', 'dash_underscore_eq'): 181
+```
+
+
+
+```python
+>>> t = Lidx(df, 'most_frequent_record_dirname')
+>>> tt = Lidx(df, 'first_line_of_top_level_txt')
+>>> sum(t.equal | tt.equal)
+199
+```
+
+
+```python
+>> sum(t.dash_underscore_eq | tt.dash_underscore_eq)
+233
+```
+
 
 
