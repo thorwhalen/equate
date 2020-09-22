@@ -2,7 +2,7 @@
 
 This is a package with tools for matching things. 
 
-Dirty things, like language, files in your file system, a whistle. 
+Dirty things, like language, files in your file system, socks and whistles. 
 
 # In search of a import-to-package name matcher
 
@@ -40,7 +40,7 @@ Here's a solution: Ask the world (of semantic clouds -- otherwise known as "Goog
 ```python
 import requests
 import re
-
+from collections import Counter
 
 search_re = re.compile('(?<=pip install\W)[-\w]+')
 
