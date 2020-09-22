@@ -4,6 +4,14 @@ This is a package with tools for matching things.
 
 Dirty things, like language, files in your file system, socks and whistles. 
 
+# Install
+
+```
+pip install equate
+```
+
+Moving on...
+
 # In search of a import-to-package name matcher
 
 ## The problem
