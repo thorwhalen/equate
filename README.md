@@ -2,7 +2,7 @@
 
 This is a package with tools for matching things. 
 
-Dirty things, like language, files in your file system, socks and whistles. 
+Dirty things like language, files in your file system, socks and whistles.
 
 # Install
 
@@ -13,6 +13,8 @@ pip install equate
 Moving on...
 
 # In search of a import-to-package name matcher
+
+Guessing the pip install name from a pip package name, and other related analyses.
 
 ## The problem
 
@@ -132,7 +134,7 @@ from equate.site_names import (
 
 ```python
 >>> DFLT_SITE_PKG_DIR
-'/Users/twhalen/.virtualenvs/382/lib/python3.8/site-packages'
+'~/.virtualenvs/382/lib/python3.8/site-packages'
 ```
 
 

@@ -210,3 +210,40 @@ def print_n_null_elements_in_each_column_containing_at_least_one(df):
         n = len(df) - sum(df[c].notnull())
         if n > 0:
             print(f"{c}:\t{n} null values")
+
+
+# ANd just for fun: Using google to find the solution...
+class PipInstallGooGuess:
+    """Makes a google search request, and bluntly parses out options in the results.
+    Meant as an example only.
+    Not meant to be instantiated"""
+    import re
+    from collections import Counter
+
+    search_re = re.compile('(?<=pip install\W)[-\w]+')
+
+    __init__ = None  # not meant to be instantiated!
+
+    def best_guess(query):
+        """
+        >>> PipInstallGooGuess.pkg_name_options('bs4')  # doctest: +SKIP
+        'beautifulsoup4'
+        """
+        t = PipInstallGooGuess.pkg_name_options(query)
+        if t:
+            return t[0][0]
+
+    def pkg_name_options(query):
+        """
+        >>> PipInstallGooGuess.pkg_name_options('bs4')  # doctest: +SKIP
+        [('beautifulsoup4', 5),
+         ('beautifulsoup', 2),
+         ('--trusted-host', 1),
+         ('lxml', 1)]
+        """
+        import requests
+        r = requests.get('https://www.google.com/search',
+                         params={'q': f'python "pip install" {query}'})
+        if r.status_code == 200:
+            return Counter(filter(lambda x: x != query,
+                                  PipInstallGooGuess.search_re.findall(r.content.decode('latin-1')))).most_common()
