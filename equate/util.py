@@ -196,7 +196,7 @@ def match_keys_to_values(
     values,
     obj_to_vect: Callable = None,
     similarity_func: Callable = cosine_similarity,
-    matcher: Callable = greedy_matching,
+    matcher: Callable = hungarian_matching,
 ):
     similarity_matrix_ = similarity_matrix(
         keys, values, obj_to_vect=obj_to_vect, similarity_func=similarity_func

@@ -52,7 +52,7 @@ the number of keys matched).
 Here's a more involved entry point:
 
 ```python
-from equate import similarity_matrix
+from equate import match_keys_to_values
 
 keys = ['apple pie', 'apple crumble', 'banana split']
 values = ['american pie', 'big apple', 'american girl', 'banana republic']
@@ -102,6 +102,9 @@ At the time of writing this, we've implemented:
 `maximal_matching`,
 `stable_marriage_matching`, and 
 `kuhn_munkres_matching`.
+
+At the time of writing this, the default `matcher` used by `match_keys_to_values` is 
+[hungarian_matching](https://en.wikipedia.org/wiki/Hungarian_algorithm).
 
 
 # An example: In search of a import-to-package name matcher
