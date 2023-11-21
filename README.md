@@ -12,9 +12,103 @@ pip install equate
 
 Moving on...
 
-# In search of a import-to-package name matcher
+# Little peep
 
-Guessing the pip install name from a pip package name, and other related analyses.
+Merging/joining tables is very common instance, yet only a small part of what is
+possible, and often needed. Consider the following use cases:
+
+- Find the columns to match (join keys) by comparing how well the values of the column
+match.
+
+- Comparing the values of the columns with something more flexible than hard equality.
+For example, correlation, similarity, etc.
+
+- Find near duplicate columns
+
+- Find rows to align, based on flexible comparison of fuzzily matched cells
+
+## Simple case
+
+Say you have two sets of strings, and all you do is want to is match each element of
+the "keys" set to an element of the "values" set (never reusing the same value for a 
+different key), and say you know that a matching value string will differ from its 
+key only by a few characters. In that case just do this:
+
+```python
+keys = ['apple', 'banana', 'carrot']
+values = ['car', 'app', 'carob', 'cabana']
+dict(match_greedily(keys, values))
+# == {'apple': 'app', 'banana': 'cabana', 'carrot': 'carob'}
+```
+
+Note that by default, `match_greedily` uses the edit-distance as its `score_func`, 
+and you can specify your own custom `score_func`. But the matching is done "greedily". 
+This means that at every step, the highest-score value will be taken as the match. 
+Some times this is not ideal (typically, your matches validity will decline along with 
+the number of keys matched). 
+
+## More involved methods
+
+Here's a more involved entry point:
+
+```python
+from equate import similarity_matrix
+
+keys = ['apple pie', 'apple crumble', 'banana split']
+values = ['american pie', 'big apple', 'american girl', 'banana republic']
+dict(match_keys_to_values(keys, values))
+# == {'apple pie': 'american pie',
+# 'apple crumble': 'big apple',
+# 'banana split': 'banana republic'}
+```
+
+The algorithm that gets you these matches is a bit more involved, and parametrizable.
+This is how it works.
+
+First, it computes a similarity matrix, and then applies a "matcher" that will 
+search through this similarity matrix for an optimal matching, using any 
+optimal search function you want (and of course, we provide a few standard ones).
+
+The similarity matrix, if full, contains scores for every possible combination of 
+keys and values. 
+You can specify how to compute this similarity matrix, which means that if you 
+don't want to compute the similarity for every combination, you don't need to. 
+Usually, your similarity matrix will be a "sparse matrix", that is, only specify a 
+few non-zero entries.
+
+The default similarity matrix function uses a `obj_to_vect` function along with a 
+vector similarity function `similarty_func` to compute what the `score_func` 
+did in our first `match_greedily` function.
+By default here, though, `similarity_matrix` will use methods that are more powerful 
+than just an edit-distance. It will learn and use a "TfIdf" vectorization 
+(a.k.a. embedding) and a cosine similarity function. 
+As a result, you should get finer matchings.
+
+```python
+from equate import similarity_matrix
+
+keys = ['apple pie', 'apple crumble', 'banana split']
+values = ['american pie', 'big apple', 'american girl', 'banana republic']
+m = similarity_matrix(keys, values)
+m.round(2).tolist()
+# == [[0.54, 0.38, 0.0, 0.0], [0.0, 0.33, 0.0, 0.0], [0.0, 0.0, 0.0, 0.41]]
+```
+
+The `equate.util` module has a few optimal matching function you can use from 
+there to extract the matching pairs from the matrix. 
+At the time of writing this, we've implemented: 
+`greedy_matching`, 
+`hungarian_matching`, 
+`maximal_matching`,
+`stable_marriage_matching`, and 
+`kuhn_munkres_matching`.
+
+
+# An example: In search of a import-to-package name matcher
+
+Here, we'll go through an actual practical example of when you might want to match 
+things: "Guessing" the pip install name from a pip package name, 
+and other related analyses.
 
 ## The problem
 
@@ -116,14 +210,14 @@ What you'll find next is an attempt to look at the man in the mirror instead. Lo
 
 
 
-# Extract, analyze and compare site-packages info names
+## Extract, analyze and compare site-packages info names
 
 
 ```python
 import pandas as pd
 import numpy as np
 
-from equate.site_names import (
+from equate.examples.site_names import (
     DFLT_SITE_PKG_DIR,    
     site_packages_info_df,
     print_n_null_elements_in_each_column_containing_at_least_one,
