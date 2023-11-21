@@ -1,7 +1,10 @@
 """Tools to match stuff."""
 
 from equate.util import (
-    match_keys_to_values, match_greedily, similarity_matrix
+    match_keys_to_values,
+    match_greedily,
+    similarity_matrix,
+    hungarian_matching,
 )
 
 # from equate.examples.site_names import (
