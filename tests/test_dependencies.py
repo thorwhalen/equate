@@ -55,6 +55,43 @@ def test_import_equate_stays_light():
     assert r.returncode == 0, f"import equate pulled heavy modules: {r.stdout.strip()}"
 
 
+def test_require_reraises_real_import_error_for_present_but_broken_module(
+    tmp_path, monkeypatch
+):
+    """A present-but-broken package must not be mis-reported as 'not installed'."""
+    (tmp_path / "broken_equate_dep.py").write_text(
+        "raise ImportError('a real import failure, not a missing package')"
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+    with pytest.raises(ImportError) as ei:
+        require("broken_equate_dep", extra="graph")
+    assert not isinstance(ei.value, MissingDependencyError)
+    assert "not installed" not in str(ei.value)
+
+
+def test_require_reraises_for_missing_transitive_dependency(tmp_path, monkeypatch):
+    """A present package whose OWN dependency is missing surfaces the real error."""
+    (tmp_path / "pkg_with_bad_import.py").write_text(
+        "import a_totally_absent_transitive_xyz"
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+    with pytest.raises(ModuleNotFoundError) as ei:
+        require("pkg_with_bad_import", extra="graph")
+    assert not isinstance(ei.value, MissingDependencyError)
+    assert ei.value.name == "a_totally_absent_transitive_xyz"
+
+
+def test_have_dotted_name_does_not_import_parent():
+    """Probing a submodule must not import the (heavy) parent package."""
+    code = (
+        "from equate import have; import sys;"
+        "have('sklearn.metrics.pairwise');"
+        "sys.exit(1 if 'sklearn' in sys.modules else 0)"
+    )
+    r = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+    assert r.returncode == 0, "have() imported sklearn as a side effect"
+
+
 def test_default_match_path_still_works():
     """Back-compat: the default TF-IDF+cosine+Hungarian path still resolves (lazily)."""
     from equate import match_keys_to_values
