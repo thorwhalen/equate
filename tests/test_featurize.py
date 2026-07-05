@@ -94,3 +94,36 @@ def test_default_match_path_still_matches_bananas():
     values = ["american pie", "banana republic"]
     result = dict(match_keys_to_values(keys, values))
     assert result["banana split"] == "banana republic"
+
+
+# --- review-driven fixes ----------------------------------------------------------
+
+def test_resolve_featurizer_without_corpus_fails_fast():
+    # a fittable featurizer resolved without a corpus must raise at the call site,
+    # not hand back a half-built object that only explodes later inside transform
+    with pytest.raises(ValueError):
+        resolve_featurizer("tfidf")
+    with pytest.raises(ValueError):
+        resolve_featurizer()  # default is 'tfidf'
+
+
+def test_resolve_featurizer_unknown_option_raises_not_swallowed():
+    with pytest.raises(TypeError):
+        resolve_featurizer("tfidf", corpus=["a", "b"], not_a_real_option=1)
+
+
+def test_char_ngrams_short_text_falls_back_to_padding():
+    assert char_ngrams("", (3, 4)) == ["  "]
+    # empty strings then get a (single) feature and can match each other
+    feat = mk_tfidf(["", "x"], ngram_range=(3, 4))
+    sim = cosine_similarity(feat([""]), feat([""]))
+    np.testing.assert_allclose(sim, [[1.0]], atol=1e-9)
+
+
+def test_match_keys_to_values_accepts_generators():
+    from equate import match_keys_to_values
+
+    keys = (k for k in ["apple pie", "banana split"])
+    values = (v for v in ["american pie", "banana republic"])
+    result = dict(match_keys_to_values(keys, values))
+    assert result["banana split"] == "banana republic"

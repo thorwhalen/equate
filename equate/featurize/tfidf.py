@@ -20,10 +20,19 @@ DFLT_NGRAM_RANGE = (2, 4)
 
 
 def char_ngrams(text, ngram_range=DFLT_NGRAM_RANGE, *, lowercase=True):
-    """Character n-grams of ``text`` over the inclusive ``ngram_range``, boundary-padded.
+    """Character n-grams of ``text`` over the inclusive ``ngram_range``.
+
+    The whole string is padded with one leading and one trailing space (so prefixes and
+    suffixes are captured), and n-grams slide over the entire padded string — they *may
+    therefore span the spaces between words*. This is deliberate (it helps fuzzy
+    name/SKU matching) and differs from scikit-learn's per-word ``char_wb`` analyzer. A
+    text too short for any ``n`` in the range falls back to the padded string itself, so
+    tiny or empty inputs still yield a (single) feature rather than an all-zero vector.
 
     >>> char_ngrams('cat', (2, 3))
     [' c', 'ca', 'at', 't ', ' ca', 'cat', 'at ']
+    >>> char_ngrams('', (3, 4))          # too short for any n: falls back to the padding
+    ['  ']
     """
     if lowercase:
         text = text.lower()
@@ -33,7 +42,7 @@ def char_ngrams(text, ngram_range=DFLT_NGRAM_RANGE, *, lowercase=True):
     for n in range(lo, hi + 1):
         if len(padded) >= n:
             grams.extend(padded[i : i + n] for i in range(len(padded) - n + 1))
-    return grams
+    return grams or [padded]
 
 
 class TfidfFeaturizer:

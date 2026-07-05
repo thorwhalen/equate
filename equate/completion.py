@@ -9,14 +9,21 @@ match.
 For example, correlation, similarity, etc.
 - Find near duplicate columns
 - Find rows to align, based on flexible comparison of fuzzily matched cells
+
+.. note::
+   This module is a stale early duplicate of ``equate.util`` and is slated to be
+   rewritten as a thin facade over the redesigned stages (roadmap #13). Its ``grub``
+   import is lazy (behind the optional ``equate[grub]`` extra) so importing the module
+   does not fail on a default numpy/scipy-only install.
 """
 
-from functools import lru_cache, partial
-from grub import SearchStore
-from sklearn.metrics.pairwise import cosine_similarity
+from functools import partial
 from itertools import chain
 from scipy.optimize import linear_sum_assignment
 import numpy as np
+
+from equate._dependencies import require
+from equate._vector import cosine_similarity
 
 
 def transform_text(text, transformer):
@@ -26,10 +33,11 @@ def transform_text(text, transformer):
         return transformer(text)
 
 
-# @lru_cache
 def mk_text_to_vect(*learn_texts):
+    grub = require('grub', extra='grub', purpose='the legacy grub TF-IDF featurizer')
+
     docs = dict(enumerate(chain(*learn_texts)))
-    s = SearchStore(docs)
+    s = grub.SearchStore(docs)
     return partial(transform_text, transformer=s.tfidf.transform)
 
 

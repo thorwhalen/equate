@@ -57,8 +57,14 @@ class Registry:
             ) from None
 
     def meta(self, name: str) -> Any:
-        """Return the declared metadata for ``name`` (or ``None``)."""
-        return self._entries[name][1] if name in self._entries else None
+        """Return the declared metadata for ``name`` (``None`` if none was declared).
+
+        Raises ``KeyError`` for an unknown name, consistent with :meth:`factory` — so
+        an unknown name is never silently conflated with a known name that has no meta.
+        """
+        if name not in self._entries:
+            raise KeyError(f"unknown {self.kind} {name!r}; available: {self.names()}")
+        return self._entries[name][1]
 
     def create(self, name: str, *args, **kwargs):
         """Build the strategy registered under ``name`` (calls its lazy factory)."""

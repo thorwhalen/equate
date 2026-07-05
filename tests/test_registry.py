@@ -27,7 +27,9 @@ def test_meta_and_contains():
     reg = make_registry()
     assert "double" in reg and "nope" not in reg
     assert reg.meta("double") == {"note": "x2"}
-    assert reg.meta("nope") is None
+    assert reg.meta("triple") is None  # known name, but no meta declared
+    with pytest.raises(KeyError):
+        reg.meta("nope")  # unknown -> KeyError, consistent with factory()
 
 
 def test_resolve_callable_passthrough():

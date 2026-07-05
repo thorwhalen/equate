@@ -234,6 +234,7 @@ def match_keys_to_values(
     ``(key, value)`` pairs. ``obj_to_vect`` and ``similarity_func`` default to the
     lazily-resolved TF-IDF featurizer and cosine comparator when left as ``None``.
     """
+    keys, values = list(keys), list(values)  # need indexable sequences below
     similarity_matrix_ = similarity_matrix(
         keys, values, obj_to_vect=obj_to_vect, similarity_func=similarity_func
     )

@@ -44,42 +44,58 @@ identity.meta = FeaturizerMeta(output_kinds=('scalar', 'structured'))
 
 
 @featurizers.register('identity', meta=identity.meta)
-def _identity_factory(corpus=None, **_):
+def _identity_factory():
     return identity
 
 
 @featurizers.register('tfidf', meta=TfidfFeaturizer.meta)
-def _tfidf_factory(corpus=None, *, ngram_range=DFLT_NGRAM_RANGE, lowercase=True):
-    """Build a char-n-gram TF-IDF featurizer, fit on ``corpus`` when one is given."""
-    feat = TfidfFeaturizer(ngram_range=ngram_range, lowercase=lowercase)
-    if corpus is not None:
-        feat.fit(corpus)
-    return feat
+def _tfidf_factory(*, ngram_range=DFLT_NGRAM_RANGE, lowercase=True):
+    """Build a char-n-gram TF-IDF featurizer (unfit; ``resolve_featurizer`` fits it)."""
+    return TfidfFeaturizer(ngram_range=ngram_range, lowercase=lowercase)
 
 
-# Dense embedders (optional extras) — registered as lazy factories.
-featurizers.register(
-    'sbert',
-    _text.sbert_featurizer,
-    meta=FeaturizerMeta(output_kinds=('vector',), normalize=True, license='Apache-2.0'),
-)
-featurizers.register(
-    'openai',
-    _text.openai_featurizer,
-    meta=FeaturizerMeta(output_kinds=('vector',), license='proprietary'),
-)
+# Dense embedders (optional extras) — registered as lazy factories. The metadata is
+# defined once (in text.py) and mirrored here, so the two copies cannot diverge.
+featurizers.register('sbert', _text.sbert_featurizer, meta=_text.SBERT_META)
+featurizers.register('openai', _text.openai_featurizer, meta=_text.OPENAI_META)
 
 
-def resolve_featurizer(spec=None, *, corpus=None):
+def resolve_featurizer(spec=None, *, corpus=None, **config):
     """Resolve ``spec`` to a ready-to-use batch featurizer.
 
-    - ``None`` -> the default ``'tfidf'`` (fit on ``corpus``);
-    - a registered name (``str``) -> built via its factory (fit on ``corpus`` if it is a
-      corpus-dependent featurizer);
+    - ``None`` -> the default ``'tfidf'``;
+    - a registered name (``str``) -> built via its factory (``**config`` is forwarded, so
+      an unknown option raises rather than being silently ignored);
     - a callable -> returned as-is (assumed already a batch featurizer).
+
+    A *fittable* featurizer (one exposing ``fit``, e.g. TF-IDF) is fit on ``corpus``
+    here — and a corpus is then required: resolving a fittable featurizer without one
+    raises immediately (a clear error at the call site) instead of returning a
+    half-built object that only fails later inside ``transform``.
     """
     if spec is None:
         spec = 'tfidf'
     if isinstance(spec, str):
-        return featurizers.create(spec, corpus=corpus)
-    return featurizers.resolve(spec)
+        feat = featurizers.create(spec, **config)
+    elif callable(spec):
+        feat = spec
+    else:
+        raise TypeError(
+            f"featurizer spec must be a registered name or a callable, "
+            f"got {type(spec).__name__}"
+        )
+    fit = getattr(feat, 'fit', None)
+    if callable(fit):
+        if corpus is None:
+            raise ValueError(
+                f"featurizer {spec!r} must be fit on a corpus; pass corpus=... "
+                f"(e.g. resolve_featurizer({spec!r}, corpus=your_texts))"
+            )
+        feat = fit(corpus) or feat
+    # make the declared metadata reachable off the resolved featurizer
+    if isinstance(spec, str) and not hasattr(feat, 'meta'):
+        try:
+            feat.meta = featurizers.meta(spec)
+        except (AttributeError, TypeError):
+            pass
+    return feat
