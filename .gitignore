@@ -1,4 +1,7 @@
 docs/*
+# ...but keep the hand-written research corpus tracked (generated Sphinx/mkdocs
+# output still lives elsewhere under docs/ and stays ignored by the line above).
+!docs/research/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

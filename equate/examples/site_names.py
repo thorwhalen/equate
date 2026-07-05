@@ -2,7 +2,8 @@ import re
 import os
 from collections import Counter
 import site
-from typing import Any, Mapping
+from typing import Any
+from collections.abc import Mapping
 
 from py2store import DirReader, filt_iter, LocalTextStore
 
@@ -50,7 +51,7 @@ def site_dir_reader(site_packages_dir=DFLT_SITE_PKG_DIR, filt=None):
 
 path_sep = os.path.sep
 
-first_word_re = re.compile('\w+')
+first_word_re = re.compile(r'\w+')
 first = lambda g, dflt=None: next(iter(g), dflt)
 
 
@@ -220,7 +221,7 @@ class PipInstallGooGuess:
     import re
     from collections import Counter
 
-    search_re = re.compile('(?<=pip install\W)[-\w]+')
+    search_re = re.compile(r'(?<=pip install\W)[-\w]+')
 
     __init__ = None  # not meant to be instantiated!
 

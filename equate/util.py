@@ -1,6 +1,6 @@
 """Utils for equate."""
 
-from typing import Callable
+from collections.abc import Callable
 from functools import lru_cache, partial
 from itertools import chain
 
