@@ -1,0 +1,355 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.examples.site_names &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="equate.util" href="../util.html" />
+    <link rel="prev" title="equate.examples" href="../examples.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">equate.examples</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">equate.examples.site_names</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#equate.examples.site_names.Lidx"><code class="docutils literal notranslate"><span class="pre">Lidx</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.examples.site_names.PipInstallGooGuess"><code class="docutils literal notranslate"><span class="pre">PipInstallGooGuess</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#equate.examples.site_names.PipInstallGooGuess.Counter"><code class="docutils literal notranslate"><span class="pre">PipInstallGooGuess.Counter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#equate.examples.site_names.PipInstallGooGuess.Counter.copy"><code class="docutils literal notranslate"><span class="pre">PipInstallGooGuess.Counter.copy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#equate.examples.site_names.PipInstallGooGuess.Counter.elements"><code class="docutils literal notranslate"><span class="pre">PipInstallGooGuess.Counter.elements()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#equate.examples.site_names.PipInstallGooGuess.Counter.fromkeys"><code class="docutils literal notranslate"><span class="pre">PipInstallGooGuess.Counter.fromkeys()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#equate.examples.site_names.PipInstallGooGuess.Counter.most_common"><code class="docutils literal notranslate"><span class="pre">PipInstallGooGuess.Counter.most_common()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#equate.examples.site_names.PipInstallGooGuess.Counter.subtract"><code class="docutils literal notranslate"><span class="pre">PipInstallGooGuess.Counter.subtract()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#equate.examples.site_names.PipInstallGooGuess.Counter.total"><code class="docutils literal notranslate"><span class="pre">PipInstallGooGuess.Counter.total()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#equate.examples.site_names.PipInstallGooGuess.Counter.update"><code class="docutils literal notranslate"><span class="pre">PipInstallGooGuess.Counter.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#equate.examples.site_names.PipInstallGooGuess.best_guess"><code class="docutils literal notranslate"><span class="pre">PipInstallGooGuess.best_guess()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#equate.examples.site_names.PipInstallGooGuess.pkg_name_options"><code class="docutils literal notranslate"><span class="pre">PipInstallGooGuess.pkg_name_options()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#equate.examples.site_names.PipInstallGooGuess.re"><code class="docutils literal notranslate"><span class="pre">PipInstallGooGuess.re</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.examples.site_names.features_of_site_packages"><code class="docutils literal notranslate"><span class="pre">features_of_site_packages()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.examples.site_names.key_chain"><code class="docutils literal notranslate"><span class="pre">key_chain()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.examples.site_names.site_dir_reader"><code class="docutils literal notranslate"><span class="pre">site_dir_reader()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.examples.site_names.site_packages_info_df"><code class="docutils literal notranslate"><span class="pre">site_packages_info_df()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">equate.examples.site_names</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/module_docs/equate/examples/site_names.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-equate.examples.site_names">
+<span id="equate-examples-site-names"></span><h1>equate.examples.site_names<a class="headerlink" href="#module-equate.examples.site_names" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="equate.examples.site_names.Lidx">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.examples.site_names.</span></span><span class="sig-name descname"><span class="pre">Lidx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">import_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'most_frequent_record_dirname'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pkg_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'metadata_name'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/equate/examples/site_names.html#Lidx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.examples.site_names.Lidx" title="Link to this definition"></a></dt>
+<dd><p>A df query class</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="equate.examples.site_names.PipInstallGooGuess">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.examples.site_names.</span></span><span class="sig-name descname"><span class="pre">PipInstallGooGuess</span></span><a class="reference internal" href="../../../_modules/equate/examples/site_names.html#PipInstallGooGuess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.examples.site_names.PipInstallGooGuess" title="Link to this definition"></a></dt>
+<dd><p>Makes a google search request, and bluntly parses out options in the results.
+Meant as an example only.
+Not meant to be instantiated</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="equate.examples.site_names.PipInstallGooGuess.Counter">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Counter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#equate.examples.site_names.PipInstallGooGuess.Counter" title="Link to this definition"></a></dt>
+<dd><p>Dict subclass for counting hashable items.  Sometimes called a bag
+or multiset.  Elements are stored as dictionary keys and their counts
+are stored as dictionary values.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="s1">&#39;abcdeabcdabcaba&#39;</span><span class="p">)</span>  <span class="c1"># count elements from a string</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">most_common</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>                <span class="c1"># three most common elements</span>
+<span class="go">[(&#39;a&#39;, 5), (&#39;b&#39;, 4), (&#39;c&#39;, 3)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>                       <span class="c1"># list all unique elements</span>
+<span class="go">[&#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;d&#39;, &#39;e&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">elements</span><span class="p">()))</span>   <span class="c1"># list elements with repetitions</span>
+<span class="go">&#39;aaaaabbbbcccdde&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sum</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>                 <span class="c1"># total of all counts</span>
+<span class="go">15</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span>                          <span class="c1"># count of letter &#39;a&#39;</span>
+<span class="go">5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="s1">&#39;shazam&#39;</span><span class="p">:</span>           <span class="c1"># update counts from an iterable</span>
+<span class="gp">... </span>    <span class="n">c</span><span class="p">[</span><span class="n">elem</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>                <span class="c1"># by adding 1 to each element&#39;s count</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span>                          <span class="c1"># now there are seven &#39;a&#39;</span>
+<span class="go">7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">c</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span>                      <span class="c1"># remove all &#39;b&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span>                          <span class="c1"># now there are zero &#39;b&#39;</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="s1">&#39;simsalabim&#39;</span><span class="p">)</span>       <span class="c1"># make another counter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>                     <span class="c1"># add in the second counter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span>                          <span class="c1"># now there are nine &#39;a&#39;</span>
+<span class="go">9</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>                       <span class="c1"># empty the counter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span>
+<span class="go">Counter()</span>
+</pre></div>
+</div>
+<p>Note:  If a count is set to zero or reduced to zero, it will remain
+in the counter until the entry is deleted or the counter is cleared:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="s1">&#39;aaabbc&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">2</span>                     <span class="c1"># reduce the count of &#39;b&#39; by two</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">most_common</span><span class="p">()</span>                 <span class="c1"># &#39;b&#39; is still in, but its count is zero</span>
+<span class="go">[(&#39;a&#39;, 3), (&#39;c&#39;, 1), (&#39;b&#39;, 0)]</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.examples.site_names.PipInstallGooGuess.Counter.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#equate.examples.site_names.PipInstallGooGuess.Counter.copy" title="Link to this definition"></a></dt>
+<dd><p>Return a shallow copy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.examples.site_names.PipInstallGooGuess.Counter.elements">
+<span class="sig-name descname"><span class="pre">elements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#equate.examples.site_names.PipInstallGooGuess.Counter.elements" title="Link to this definition"></a></dt>
+<dd><p>Iterator over elements repeating each as many times as its count.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="s1">&#39;ABCABC&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">elements</span><span class="p">())</span>
+<span class="go">[&#39;A&#39;, &#39;A&#39;, &#39;B&#39;, &#39;B&#39;, &#39;C&#39;, &#39;C&#39;]</span>
+</pre></div>
+</div>
+<p># Knuth’s example for prime factors of 1836:  2**2 * 3**3 * 17**1
+&gt;&gt;&gt; import math
+&gt;&gt;&gt; prime_factors = Counter({2: 2, 3: 3, 17: 1})
+&gt;&gt;&gt; math.prod(prime_factors.elements())
+1836</p>
+<p>Note, if an element’s count has been set to zero or is a negative
+number, elements() will ignore it.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.examples.site_names.PipInstallGooGuess.Counter.fromkeys">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">fromkeys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#equate.examples.site_names.PipInstallGooGuess.Counter.fromkeys" title="Link to this definition"></a></dt>
+<dd><p>Create a new dictionary with keys from iterable and values set to value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.examples.site_names.PipInstallGooGuess.Counter.most_common">
+<span class="sig-name descname"><span class="pre">most_common</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#equate.examples.site_names.PipInstallGooGuess.Counter.most_common" title="Link to this definition"></a></dt>
+<dd><p>List the n most common elements and their counts from the most
+common to the least.  If n is None, then list all element counts.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Counter</span><span class="p">(</span><span class="s1">&#39;abracadabra&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">most_common</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">[(&#39;a&#39;, 5), (&#39;b&#39;, 2), (&#39;r&#39;, 2)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.examples.site_names.PipInstallGooGuess.Counter.subtract">
+<span class="sig-name descname"><span class="pre">subtract</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#equate.examples.site_names.PipInstallGooGuess.Counter.subtract" title="Link to this definition"></a></dt>
+<dd><p>Like dict.update() but subtracts counts instead of replacing them.
+Counts can be reduced below zero.  Both the inputs and outputs are
+allowed to contain zero and negative counts.</p>
+<p>Source can be an iterable, a dictionary, or another Counter instance.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="s1">&#39;which&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="s1">&#39;witch&#39;</span><span class="p">)</span>             <span class="c1"># subtract elements from another iterable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">Counter</span><span class="p">(</span><span class="s1">&#39;watch&#39;</span><span class="p">))</span>    <span class="c1"># subtract elements from another counter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="p">[</span><span class="s1">&#39;h&#39;</span><span class="p">]</span>                          <span class="c1"># 2 in which, minus 1 in witch, minus 1 in watch</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="p">[</span><span class="s1">&#39;w&#39;</span><span class="p">]</span>                          <span class="c1"># 1 in which, minus 1 in witch, minus 1 in watch</span>
+<span class="go">-1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.examples.site_names.PipInstallGooGuess.Counter.total">
+<span class="sig-name descname"><span class="pre">total</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#equate.examples.site_names.PipInstallGooGuess.Counter.total" title="Link to this definition"></a></dt>
+<dd><p>Sum of the counts</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.examples.site_names.PipInstallGooGuess.Counter.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#equate.examples.site_names.PipInstallGooGuess.Counter.update" title="Link to this definition"></a></dt>
+<dd><p>Like dict.update() but add counts instead of replacing them.</p>
+<p>Source can be an iterable, a dictionary, or another Counter instance.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="s1">&#39;which&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s1">&#39;witch&#39;</span><span class="p">)</span>           <span class="c1"># add elements from another iterable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="s1">&#39;watch&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>                 <span class="c1"># add elements from another counter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="p">[</span><span class="s1">&#39;h&#39;</span><span class="p">]</span>                      <span class="c1"># four &#39;h&#39; in which, witch, and watch</span>
+<span class="go">4</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.examples.site_names.PipInstallGooGuess.best_guess">
+<span class="sig-name descname"><span class="pre">best_guess</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/equate/examples/site_names.html#PipInstallGooGuess.best_guess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.examples.site_names.PipInstallGooGuess.best_guess" title="Link to this definition"></a></dt>
+<dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">PipInstallGooGuess</span><span class="o">.</span><span class="n">pkg_name_options</span><span class="p">(</span><span class="s1">&#39;bs4&#39;</span><span class="p">)</span>
+<span class="go">&#39;beautifulsoup4&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.examples.site_names.PipInstallGooGuess.pkg_name_options">
+<span class="sig-name descname"><span class="pre">pkg_name_options</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/equate/examples/site_names.html#PipInstallGooGuess.pkg_name_options"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.examples.site_names.PipInstallGooGuess.pkg_name_options" title="Link to this definition"></a></dt>
+<dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">PipInstallGooGuess</span><span class="o">.</span><span class="n">pkg_name_options</span><span class="p">(</span><span class="s1">&#39;bs4&#39;</span><span class="p">)</span>
+<span class="go">[(&#39;beautifulsoup4&#39;, 5),</span>
+<span class="go"> (&#39;beautifulsoup&#39;, 2),</span>
+<span class="go"> (&#39;--trusted-host&#39;, 1),</span>
+<span class="go"> (&#39;lxml&#39;, 1)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="equate.examples.site_names.PipInstallGooGuess.re">
+<span class="sig-name descname"><span class="pre">re</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;module</span> <span class="pre">'re'</span> <span class="pre">from</span> <span class="pre">'/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/re/__init__.py'&gt;</span></span><a class="headerlink" href="#equate.examples.site_names.PipInstallGooGuess.re" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.examples.site_names.features_of_site_packages">
+<span class="sig-prename descclassname"><span class="pre">equate.examples.site_names.</span></span><span class="sig-name descname"><span class="pre">features_of_site_packages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site_packages_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/equate/examples/site_names.html#features_of_site_packages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.examples.site_names.features_of_site_packages" title="Link to this definition"></a></dt>
+<dd><p>Iterator of package features extracted from site_packages_dir.</p>
+<p>To get a dataframe containing all the packages and features found:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">features_of_site_packages</span><span class="p">())))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.examples.site_names.key_chain">
+<span class="sig-prename descclassname"><span class="pre">equate.examples.site_names.</span></span><span class="sig-name descname"><span class="pre">key_chain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dflt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;class</span> <span class="pre">'equate.examples.site_names.NotSpecified'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/equate/examples/site_names.html#key_chain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.examples.site_names.key_chain" title="Link to this definition"></a></dt>
+<dd><p>Get a value from a mapping, from a list of possible key names. First one found wins.
+You know collections.Chain? That’s to look for a single key in a chain of mappings.
+This is to find</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">key_chain</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">)</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">key_chain</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">dflt</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="kc">None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">key_chain</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">  </span><span class="c">...</span>
+<span class="gr">KeyError</span>: <span class="n">&quot;Couldn&#39;t find any of these keys: x, y&quot;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.examples.site_names.site_dir_reader">
+<span class="sig-prename descclassname"><span class="pre">equate.examples.site_names.</span></span><span class="sig-name descname"><span class="pre">site_dir_reader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site_packages_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/equate/examples/site_names.html#site_dir_reader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.examples.site_names.site_dir_reader" title="Link to this definition"></a></dt>
+<dd><p>Store of directories of site_packages_dir.
+If site_packages_dir is not given, will take the first directory found by <cite>site.getsitepackages()</cite></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.examples.site_names.site_packages_info_df">
+<span class="sig-prename descclassname"><span class="pre">equate.examples.site_names.</span></span><span class="sig-name descname"><span class="pre">site_packages_info_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site_packages_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/equate/examples/site_names.html#site_packages_info_df"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.examples.site_names.site_packages_info_df" title="Link to this definition"></a></dt>
+<dd><p>Get a pandas.DataFrame of package features extracted from site_packages_dir.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../examples.html" class="btn btn-neutral float-left" title="equate.examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../util.html" class="btn btn-neutral float-right" title="equate.util" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

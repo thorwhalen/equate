@@ -1,0 +1,4 @@
+equate.base
+===========
+.. automodule:: equate.base
+   :members:

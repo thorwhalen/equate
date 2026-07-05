@@ -1,0 +1,4 @@
+equate.completion
+=================
+.. automodule:: equate.completion
+   :members:

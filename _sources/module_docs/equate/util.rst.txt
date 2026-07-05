@@ -1,0 +1,4 @@
+equate.util
+===========
+.. automodule:: equate.util
+   :members:

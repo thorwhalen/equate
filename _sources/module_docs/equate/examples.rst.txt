@@ -1,0 +1,4 @@
+equate.examples
+===============
+.. automodule:: equate.examples
+   :members:

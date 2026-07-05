@@ -1,0 +1,385 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.examples.site_names &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">equate.examples.site_names</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for equate.examples.site_names</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">site</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">py2store</span><span class="w"> </span><span class="kn">import</span> <span class="n">DirReader</span><span class="p">,</span> <span class="n">filt_iter</span><span class="p">,</span> <span class="n">LocalTextStore</span>
+
+<span class="n">DFLT_SITE_PKG_DIR</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">site</span><span class="o">.</span><span class="n">getsitepackages</span><span class="p">()),</span> <span class="kc">None</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="site_packages_info_df">
+<a class="viewcode-back" href="../../../module_docs/equate/examples/site_names.html#equate.examples.site_names.site_packages_info_df">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">site_packages_info_df</span><span class="p">(</span><span class="n">site_packages_dir</span><span class="o">=</span><span class="n">DFLT_SITE_PKG_DIR</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a pandas.DataFrame of package features extracted from site_packages_dir.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">features_of_site_packages</span><span class="p">(</span><span class="n">site_packages_dir</span><span class="p">))))</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">_site_packages_dir</span> <span class="o">=</span> <span class="n">site_packages_dir</span>
+    <span class="k">return</span> <span class="n">df</span></div>
+
+
+
+<div class="viewcode-block" id="features_of_site_packages">
+<a class="viewcode-back" href="../../../module_docs/equate/examples/site_names.html#equate.examples.site_names.features_of_site_packages">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">features_of_site_packages</span><span class="p">(</span><span class="n">site_packages_dir</span><span class="o">=</span><span class="n">DFLT_SITE_PKG_DIR</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Iterator of package features extracted from site_packages_dir.</span>
+
+<span class="sd">    To get a dataframe containing all the packages and features found:</span>
+
+<span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">    &gt;&gt;&gt; df = pd.DataFrame(list(map(dict, features_of_site_packages())))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">pkgs_info_dirs</span> <span class="o">=</span> <span class="n">site_dir_reader</span><span class="p">(</span><span class="n">site_packages_dir</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;info/&#39;</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">pkg_info_dir_path</span> <span class="ow">in</span> <span class="n">pkgs_info_dirs</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">dist_info_features</span><span class="p">(</span><span class="n">pkg_info_dir_path</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="site_dir_reader">
+<a class="viewcode-back" href="../../../module_docs/equate/examples/site_names.html#equate.examples.site_names.site_dir_reader">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">site_dir_reader</span><span class="p">(</span><span class="n">site_packages_dir</span><span class="o">=</span><span class="n">DFLT_SITE_PKG_DIR</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Store of directories of site_packages_dir.</span>
+<span class="sd">    If site_packages_dir is not given, will take the first directory found by `site.getsitepackages()`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">filt</span><span class="p">:</span>
+        <span class="n">store</span> <span class="o">=</span> <span class="n">filt_iter</span><span class="p">(</span><span class="n">DirReader</span><span class="p">(</span><span class="n">site_packages_dir</span><span class="p">),</span> <span class="n">filt</span><span class="o">=</span><span class="n">filt</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">store</span> <span class="o">=</span> <span class="n">DirReader</span><span class="p">(</span><span class="n">site_packages_dir</span><span class="p">)</span>
+    <span class="n">store</span><span class="o">.</span><span class="n">_madeby</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">func</span><span class="o">=</span><span class="n">site_dir_reader</span><span class="p">,</span>
+        <span class="n">kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">site_packages_dir</span><span class="o">=</span><span class="n">site_packages_dir</span><span class="p">,</span> <span class="n">filt</span><span class="o">=</span><span class="n">filt</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">store</span></div>
+
+
+
+<span class="n">path_sep</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span>
+
+<span class="n">first_word_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\w+&#39;</span><span class="p">)</span>
+<span class="n">first</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">g</span><span class="p">,</span> <span class="n">dflt</span><span class="o">=</span><span class="kc">None</span><span class="p">:</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">g</span><span class="p">),</span> <span class="n">dflt</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">last</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">dflt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">dflt</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">return</span> <span class="n">x</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">NotSpecified</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="key_chain">
+<a class="viewcode-back" href="../../../module_docs/equate/examples/site_names.html#equate.examples.site_names.key_chain">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">key_chain</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="o">*</span><span class="n">keys</span><span class="p">,</span> <span class="n">dflt</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">NotSpecified</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a value from a mapping, from a list of possible key names. First one found wins.</span>
+<span class="sd">    You know collections.Chain? That&#39;s to look for a single key in a chain of mappings.</span>
+<span class="sd">    This is to find</span>
+
+<span class="sd">    &gt;&gt;&gt; d = {&#39;a&#39;: 1, &#39;b&#39;: 2, &#39;c&#39;: 3}</span>
+<span class="sd">    &gt;&gt;&gt; key_chain(d, &#39;x&#39;, &#39;c&#39;, &#39;b&#39;)</span>
+<span class="sd">    3</span>
+<span class="sd">    &gt;&gt;&gt; assert key_chain(d, &#39;x&#39;, &#39;y&#39;, dflt=None) == None</span>
+<span class="sd">    &gt;&gt;&gt; key_chain(d, &#39;x&#39;, &#39;y&#39;)</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">      ...</span>
+<span class="sd">    KeyError: &quot;Couldn&#39;t find any of these keys: x, y&quot;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">dflt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">NotSpecified</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dflt</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Couldn&#39;t find any of these keys: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">dist_info_features</span><span class="p">(</span><span class="n">dist_info_dir</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">dist_info_dir</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">path_sep</span><span class="p">):</span>
+        <span class="n">dist_info_dir</span> <span class="o">=</span> <span class="n">dist_info_dir</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">dist_info_dirname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">dist_info_dir</span><span class="p">)</span>
+    <span class="k">yield</span> <span class="p">(</span><span class="s1">&#39;dist_info_dirname&#39;</span><span class="p">,</span>
+           <span class="n">dist_info_dirname</span><span class="p">)</span>
+    <span class="k">yield</span> <span class="p">(</span><span class="s1">&#39;info_kind&#39;</span><span class="p">,</span>
+           <span class="n">last</span><span class="p">(</span><span class="n">dist_info_dirname</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)))</span>
+
+    <span class="n">dist_name</span> <span class="o">=</span> <span class="n">first_word_re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">dist_info_dirname</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">yield</span> <span class="p">(</span><span class="s1">&#39;dist_name&#39;</span><span class="p">,</span>
+           <span class="n">dist_name</span><span class="p">)</span>
+
+    <span class="n">ss</span> <span class="o">=</span> <span class="n">LocalTextStore</span><span class="p">(</span><span class="n">dist_info_dir</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">record_lines</span><span class="p">(</span><span class="n">records_txt</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">records_txt</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">dist_info_dirname</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;__pycache__&#39;</span> <span class="o">+</span> <span class="n">path_sep</span><span class="p">):</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s1">&#39;__pycache__&#39;</span> <span class="o">+</span> <span class="n">path_sep</span><span class="p">):]</span>
+                    <span class="k">yield</span> <span class="n">line</span><span class="p">[:</span><span class="n">line</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;..&#39;</span> <span class="o">+</span> <span class="n">path_sep</span><span class="p">):</span>
+                        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">3</span><span class="p">:]</span>  <span class="c1"># discard a ../ prefix</span>
+                    <span class="k">yield</span> <span class="n">line</span>
+
+    <span class="n">record_txt</span> <span class="o">=</span> <span class="n">key_chain</span><span class="p">(</span><span class="n">ss</span><span class="p">,</span> <span class="s1">&#39;RECORD&#39;</span><span class="p">,</span> <span class="s1">&#39;installed-files.txt&#39;</span><span class="p">,</span> <span class="n">dflt</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">record_txt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">top_dirnames</span> <span class="o">=</span> <span class="p">(</span><span class="n">first</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">path_sep</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">record_lines</span><span class="p">(</span><span class="n">record_txt</span><span class="p">))</span>
+        <span class="k">yield</span> <span class="p">(</span><span class="s1">&#39;most_frequent_record_dirname&#39;</span><span class="p">,</span>
+               <span class="n">first</span><span class="p">(</span><span class="n">Counter</span><span class="p">(</span><span class="n">top_dirnames</span><span class="p">)</span><span class="o">.</span><span class="n">most_common</span><span class="p">(),</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">])[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="s1">&#39;top_level.txt&#39;</span> <span class="ow">in</span> <span class="n">ss</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="p">(</span><span class="s1">&#39;first_line_of_top_level_txt&#39;</span><span class="p">,</span>
+               <span class="n">first</span><span class="p">(</span><span class="n">ss</span><span class="p">[</span><span class="s1">&#39;top_level.txt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="s1">&#39;INSTALLER&#39;</span> <span class="ow">in</span> <span class="n">ss</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="p">(</span><span class="s1">&#39;installer&#39;</span><span class="p">,</span>
+               <span class="n">first</span><span class="p">(</span><span class="n">ss</span><span class="p">[</span><span class="s1">&#39;INSTALLER&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)))</span>
+
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">key_chain</span><span class="p">(</span><span class="n">ss</span><span class="p">,</span> <span class="s1">&#39;METADATA&#39;</span><span class="p">,</span> <span class="s1">&#39;PKG-INFO&#39;</span><span class="p">,</span> <span class="n">dflt</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">metadata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ww</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span>
+                         <span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;: &#39;</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">metadata</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">))))</span>
+        <span class="k">yield</span> <span class="p">(</span><span class="s1">&#39;metadata_name&#39;</span><span class="p">,</span>
+               <span class="n">ww</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;Name&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">gen</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ww</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;(?&lt;=pypi.org/project/)[^/]+&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">yield</span> <span class="p">(</span><span class="s1">&#39;pypi_url_name&#39;</span><span class="p">,</span>
+               <span class="nb">next</span><span class="p">(</span><span class="n">gen</span><span class="p">(),</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="c1"># m = re.compile(&#39;(?&lt;=pypi.org/project/)[^/]+&#39;).search(ww.get(&#39;Download-URL&#39;, &#39;&#39;))</span>
+        <span class="c1"># yield (&#39;download_url_name&#39;, m and m.group(0))</span>
+
+
+<span class="c1"># Diagnosis objects</span>
+
+<div class="viewcode-block" id="Lidx">
+<a class="viewcode-back" href="../../../module_docs/equate/examples/site_names.html#equate.examples.site_names.Lidx">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Lidx</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A df query class&quot;&quot;&quot;</span>
+    <span class="n">diagnosis_meths</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;no_nans&#39;</span><span class="p">,</span> <span class="s1">&#39;equal&#39;</span><span class="p">,</span> <span class="s1">&#39;dash_underscore_eq&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">,</span> <span class="s1">&#39;dash_underscore_eq&#39;</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">df</span><span class="p">,</span>
+                 <span class="n">import_name</span><span class="o">=</span><span class="s1">&#39;most_frequent_record_dirname&#39;</span><span class="p">,</span>
+                 <span class="n">pkg_name</span><span class="o">=</span><span class="s1">&#39;metadata_name&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="n">import_name</span><span class="p">:</span> <span class="s1">&#39;import_name&#39;</span><span class="p">,</span> <span class="n">pkg_name</span><span class="p">:</span> <span class="s1">&#39;pkg_name&#39;</span><span class="p">})</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">no_nans</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">~</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">import_name</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">pkg_name</span><span class="o">.</span><span class="n">isna</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">equal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">import_name</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">pkg_name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dash_underscore_eq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">underscored_pkg_names</span> <span class="o">=</span> <span class="p">[(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">pkg_name</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">import_name</span> <span class="o">==</span> <span class="n">underscored_pkg_names</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">print_diagnosis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">diagnosis_meths</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">diagnosis_meths</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">diagnosis_meths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagnosis_meths</span>
+        <span class="k">for</span> <span class="n">meth</span> <span class="ow">in</span> <span class="n">diagnosis_meths</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">meth</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meth</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">meth</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">reduce</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">&amp;</span> <span class="n">y</span><span class="p">,</span>
+                               <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">meth</span><span class="p">],</span>
+                               <span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">)))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Don&#39;t know how to handle meth: </span><span class="si">{</span><span class="n">meth</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">meth</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">r</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">file_peeps</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">peep_size</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">kk</span><span class="p">,</span> <span class="n">vv</span> <span class="ow">in</span> <span class="n">store</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">yield</span> <span class="n">kk</span><span class="p">,</span> <span class="n">vv</span><span class="p">[:</span><span class="n">peep_size</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">file_peeps_print</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">peep_size</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">kk</span><span class="p">,</span> <span class="n">vv</span> <span class="ow">in</span> <span class="n">file_peeps</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">peep_size</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;---- </span><span class="si">{</span><span class="n">kk</span><span class="si">}</span><span class="s2"> ----&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">vv</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">vv</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">peep_size</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;...&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;-&#39;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">kk</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">print_n_null_elements_in_each_column_containing_at_least_one</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">notnull</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">c</span><span class="si">}</span><span class="s2">:</span><span class="se">\t</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> null values&quot;</span><span class="p">)</span>
+
+
+<span class="c1"># ANd just for fun: Using google to find the solution...</span>
+<div class="viewcode-block" id="PipInstallGooGuess">
+<a class="viewcode-back" href="../../../module_docs/equate/examples/site_names.html#equate.examples.site_names.PipInstallGooGuess">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PipInstallGooGuess</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Makes a google search request, and bluntly parses out options in the results.</span>
+<span class="sd">    Meant as an example only.</span>
+<span class="sd">    Not meant to be instantiated&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span>
+
+    <span class="n">search_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(?&lt;=pip install\W)[-\w]+&#39;</span><span class="p">)</span>
+
+    <span class="fm">__init__</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># not meant to be instantiated!</span>
+
+<div class="viewcode-block" id="PipInstallGooGuess.best_guess">
+<a class="viewcode-back" href="../../../module_docs/equate/examples/site_names.html#equate.examples.site_names.PipInstallGooGuess.best_guess">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">best_guess</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &gt;&gt;&gt; PipInstallGooGuess.pkg_name_options(&#39;bs4&#39;)  # doctest: +SKIP</span>
+<span class="sd">        &#39;beautifulsoup4&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">PipInstallGooGuess</span><span class="o">.</span><span class="n">pkg_name_options</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">t</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="PipInstallGooGuess.pkg_name_options">
+<a class="viewcode-back" href="../../../module_docs/equate/examples/site_names.html#equate.examples.site_names.PipInstallGooGuess.pkg_name_options">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pkg_name_options</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &gt;&gt;&gt; PipInstallGooGuess.pkg_name_options(&#39;bs4&#39;)  # doctest: +SKIP</span>
+<span class="sd">        [(&#39;beautifulsoup4&#39;, 5),</span>
+<span class="sd">         (&#39;beautifulsoup&#39;, 2),</span>
+<span class="sd">         (&#39;--trusted-host&#39;, 1),</span>
+<span class="sd">         (&#39;lxml&#39;, 1)]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://www.google.com/search&#39;</span><span class="p">,</span>
+                         <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;q&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;python &quot;pip install&quot; </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">})</span>
+        <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Counter</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">!=</span> <span class="n">query</span><span class="p">,</span>
+                                  <span class="n">PipInstallGooGuess</span><span class="o">.</span><span class="n">search_re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;latin-1&#39;</span><span class="p">))))</span><span class="o">.</span><span class="n">most_common</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

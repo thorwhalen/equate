@@ -1,0 +1,246 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.util &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="prev" title="equate.examples.site_names" href="examples/site_names.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">equate.util</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#equate.util.greedy_matching"><code class="docutils literal notranslate"><span class="pre">greedy_matching()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.util.hungarian_matching"><code class="docutils literal notranslate"><span class="pre">hungarian_matching()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.util.kuhn_munkres_matching"><code class="docutils literal notranslate"><span class="pre">kuhn_munkres_matching()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.util.match_greedily"><code class="docutils literal notranslate"><span class="pre">match_greedily()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.util.maximal_matching"><code class="docutils literal notranslate"><span class="pre">maximal_matching()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.util.similarity_matrix"><code class="docutils literal notranslate"><span class="pre">similarity_matrix()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.util.stable_marriage_matching"><code class="docutils literal notranslate"><span class="pre">stable_marriage_matching()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">equate.util</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/equate/util.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-equate.util">
+<span id="equate-util"></span><h1>equate.util<a class="headerlink" href="#module-equate.util" title="Link to this heading"></a></h1>
+<p>Utils for equate.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.util.greedy_matching">
+<span class="sig-prename descclassname"><span class="pre">equate.util.</span></span><span class="sig-name descname"><span class="pre">greedy_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/util.html#greedy_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.util.greedy_matching" title="Link to this definition"></a></dt>
+<dd><p>Greedy Algorithm: Iteratively picks the highest similarity pair and removes the
+matched items from the pool.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>similarity_matrix</strong> – A sparse matrix of similarities.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of tuples (row_index, col_index) for matched pairs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.util.hungarian_matching">
+<span class="sig-prename descclassname"><span class="pre">equate.util.</span></span><span class="sig-name descname"><span class="pre">hungarian_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maximize'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/util.html#hungarian_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.util.hungarian_matching" title="Link to this definition"></a></dt>
+<dd><p>Hungarian Algorithm (Optimal Matching): Finds the optimal 1:1 assignment,
+minimizing the total cost (equivalently, maximizing the total similarity).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>similarity_matrix</strong> – A matrix of scores. <code class="docutils literal notranslate"><span class="pre">sense='maximize'</span></code> treats them as
+similarities (higher = better, the default); <code class="docutils literal notranslate"><span class="pre">sense='minimize'</span></code> treats them
+as costs/distances. The conversion goes through the <code class="docutils literal notranslate"><span class="pre">to_cost</span></code> SSOT.</p></li>
+<li><p><strong>cost_matrix</strong> – An explicit cost matrix to use instead (overrides <code class="docutils literal notranslate"><span class="pre">sense</span></code>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An iterator of (row_index, col_index) tuples for matched pairs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.util.kuhn_munkres_matching">
+<span class="sig-prename descclassname"><span class="pre">equate.util.</span></span><span class="sig-name descname"><span class="pre">kuhn_munkres_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maximize'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/util.html#kuhn_munkres_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.util.kuhn_munkres_matching" title="Link to this definition"></a></dt>
+<dd><p>Kuhn-Munkres Algorithm: Another implementation of the Hungarian algorithm using
+the <cite>networkx</cite> package (requires the optional <code class="docutils literal notranslate"><span class="pre">equate[graph]</span></code> extra).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>similarity_matrix</strong> – A matrix of scores (see <code class="docutils literal notranslate"><span class="pre">sense</span></code>); converted to edge
+costs via the <code class="docutils literal notranslate"><span class="pre">to_cost</span></code> SSOT.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of tuples (row_index, col_index) for matched pairs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.util.match_greedily">
+<span class="sig-prename descclassname"><span class="pre">equate.util.</span></span><span class="sig-name descname"><span class="pre">match_greedily</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">score_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimum_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-inf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/util.html#match_greedily"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.util.match_greedily" title="Link to this definition"></a></dt>
+<dd><p>Generates the best (key, value) matches of each key of keys with a value of
+values. The score_func is used to gauge the strength of a match. If not provided,
+the default score_func is <code class="docutils literal notranslate"><span class="pre">difflib.SequenceMatcher(None,</span> <span class="pre">a,</span> <span class="pre">b).ratio()</span></code> — a
+normalized measure of matching subsequences in [0, 1] (higher is more alike).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;apple&#39;</span><span class="p">,</span> <span class="s1">&#39;banana&#39;</span><span class="p">,</span> <span class="s1">&#39;carrot&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;car&#39;</span><span class="p">,</span> <span class="s1">&#39;app&#39;</span><span class="p">,</span> <span class="s1">&#39;carob&#39;</span><span class="p">,</span> <span class="s1">&#39;cabana&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">dict</span><span class="p">(</span><span class="n">match_greedily</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">))</span>
+<span class="go">{&#39;apple&#39;: &#39;app&#39;, &#39;banana&#39;: &#39;cabana&#39;, &#39;carrot&#39;: &#39;carob&#39;}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.util.maximal_matching">
+<span class="sig-prename descclassname"><span class="pre">equate.util.</span></span><span class="sig-name descname"><span class="pre">maximal_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/util.html#maximal_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.util.maximal_matching" title="Link to this definition"></a></dt>
+<dd><p>Maximal Matching in Bipartite Graph: Finds a maximal matching in a bipartite graph.
+See <a class="reference external" href="https://www.geeksforgeeks.org/maximum-bipartite-matching/">https://www.geeksforgeeks.org/maximum-bipartite-matching/</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>similarity_matrix</strong> – A sparse matrix of similarities.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of tuples (row_index, col_index) for matched pairs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.util.similarity_matrix">
+<span class="sig-prename descclassname"><span class="pre">equate.util.</span></span><span class="sig-name descname"><span class="pre">similarity_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj_to_vect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">cosine_similarity&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/util.html#similarity_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.util.similarity_matrix" title="Link to this definition"></a></dt>
+<dd><p>Return a matrix of the similarity of the keys to the values.
+By default, the <cite>obj_to_vect</cite> will be learned from the keys and values,
+using the tfidf vectorizer from <cite>grub</cite>.</p>
+<p>You can pass in a different <cite>obj_to_vect</cite> function to use a different vectorizer:
+For example, pre-computed embeddings such as word2vec or fasttext, or openai
+embeddings.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;apple pie&#39;</span><span class="p">,</span> <span class="s1">&#39;apple crumble&#39;</span><span class="p">,</span> <span class="s1">&#39;banana split&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;american pie&#39;</span><span class="p">,</span> <span class="s1">&#39;big apple&#39;</span><span class="p">,</span> <span class="s1">&#39;american girl&#39;</span><span class="p">,</span> <span class="s1">&#39;banana republic&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">similarity_matrix</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+<span class="go">[[0.54, 0.38, 0.0, 0.0], [0.0, 0.33, 0.0, 0.0], [0.0, 0.0, 0.0, 0.41]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.util.stable_marriage_matching">
+<span class="sig-prename descclassname"><span class="pre">equate.util.</span></span><span class="sig-name descname"><span class="pre">stable_marriage_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maximize'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/util.html#stable_marriage_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.util.stable_marriage_matching" title="Link to this definition"></a></dt>
+<dd><p>Stable Marriage Problem (Gale-Shapley Algorithm):
+Solves the stable marriage problem, ensuring a stable matching. Note this
+optimizes <em>stability</em> (no blocking pair), not total score, and is
+proposer-optimal / receiver-pessimal — so it can differ from the optimal
+assignment found by <code class="docutils literal notranslate"><span class="pre">hungarian_matching</span></code>.
+See: <a class="reference external" href="https://en.wikipedia.org/wiki/Stable_marriage_problem">https://en.wikipedia.org/wiki/Stable_marriage_problem</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>similarity_matrix</strong> – A matrix of scores (see <code class="docutils literal notranslate"><span class="pre">sense</span></code>); preferences are
+ranked by the <code class="docutils literal notranslate"><span class="pre">to_cost</span></code> distance, so higher similarity is more preferred.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of tuples (row_index, col_index) for matched pairs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="examples/site_names.html" class="btn btn-neutral float-left" title="equate.examples.site_names" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

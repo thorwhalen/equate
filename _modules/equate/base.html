@@ -1,0 +1,414 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.base &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">equate.base</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for equate.base</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Foundational contracts and data structures for equate.</span>
+
+<span class="sd">This module is the stable spine of the matching framework. It defines:</span>
+
+<span class="sd">- the four **stage protocols** (``Featurizer``, ``Comparator``, ``Blocker``,</span>
+<span class="sd">  ``Matcher``) that every strategy satisfies — each is just a callable with a</span>
+<span class="sd">  documented contract, so a plain lambda qualifies;</span>
+<span class="sd">- the ``ScoreMatrix`` that flows from the compare stage to the match stage (the</span>
+<span class="sd">  single source of truth carrying the scores, their ``sense``, and row/col labels);</span>
+<span class="sd">- the structured result types (``Candidate``, ``Matching``, ``Explanation``,</span>
+<span class="sd">  ``Partition``) returned at every public boundary — never printouts — so the same</span>
+<span class="sd">  core dispatches cleanly to a CLI, an HTTP service, and a declarative UI;</span>
+<span class="sd">- ``to_cost`` — the single similarity-&gt;cost conversion that every cost-minimizing</span>
+<span class="sd">  matcher routes through, so they can never disagree.</span>
+
+<span class="sd">The three-stage decomposition (featurize -&gt; compare -&gt; match/resolve) and the design</span>
+<span class="sd">decisions realized here are documented in ``docs/research/`` — start with</span>
+<span class="sd">``00-taxonomy-and-terminology.md`` and the decision register</span>
+<span class="sd">``11-design-decisions-and-open-questions.md``.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">issparse</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;Sense&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Featurizer&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Comparator&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ComparatorMeta&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Blocker&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Matcher&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;to_cost&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ScoreMatrix&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Explanation&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Candidate&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Matching&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Partition&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1"># --- Stage protocols (structural: a plain callable/lambda satisfies each) ---------</span>
+<span class="c1"># These are documented type aliases, not ABCs — favouring functions over classes.</span>
+
+<span class="c1">#: Whether higher scores are better (``&#39;maximize&#39;``, a similarity) or lower scores</span>
+<span class="c1">#: are better (``&#39;minimize&#39;``, a distance/cost).</span>
+<span class="n">Sense</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;maximize&#39;</span><span class="p">,</span> <span class="s1">&#39;minimize&#39;</span><span class="p">]</span>
+
+<span class="c1">#: ① Featurize — map each object to a comparable representation (batched). ``id`` and</span>
+<span class="c1">#: any ``key=`` function (``str.lower``, ``operator.attrgetter(&#39;name&#39;)``) are valid.</span>
+<span class="n">Featurizer</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span>
+
+<span class="c1">#: ② Compare — score how alike two representations are (higher = more alike by the</span>
+<span class="c1">#: canonical ``&#39;maximize&#39;`` sense).</span>
+<span class="n">Comparator</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">float</span><span class="p">]</span>
+
+<span class="c1">#: ② Block — candidate generation: yield ``(i, j)`` index pairs lazily, never a</span>
+<span class="c1">#: materialized n×m matrix. A default ``all_pairs`` blocker (roadmap #5) will be the</span>
+<span class="c1">#: correctness baseline.</span>
+<span class="n">Blocker</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]]</span>
+
+<span class="c1">#: ③ Match — turn a score structure into matched ``(i, j)`` pairs; accepts ``*, sense``.</span>
+<span class="n">Matcher</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]]</span>
+
+
+<div class="viewcode-block" id="ComparatorMeta">
+<a class="viewcode-back" href="../../module_docs/equate/base.html#equate.base.ComparatorMeta">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ComparatorMeta</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Declared properties of a comparator, so the framework adapts instead of the</span>
+<span class="sd">    caller hard-coding conversions (decision register D2/D3/D6).</span>
+
+<span class="sd">    - ``polarity``: ``&#39;similarity&#39;`` (higher = more alike) or ``&#39;distance&#39;`` (lower =</span>
+<span class="sd">      more alike);</span>
+<span class="sd">    - ``bounded``: whether scores lie in a known bounded range (e.g. ``[0, 1]``);</span>
+<span class="sd">    - ``is_metric``: obeys identity / symmetry / triangle-inequality (cosine does NOT —</span>
+<span class="sd">      so a triangle-inequality index like a VP/ball tree must not be used on it);</span>
+<span class="sd">    - ``is_symmetric``: ``g(a, b) == g(b, a)`` (Monge-Elkan, containment do NOT — such</span>
+<span class="sd">      comparators stay directional and are only symmetrized at the matcher boundary).</span>
+
+<span class="sd">    A comparator can carry this on a ``.meta`` attribute; the ``compare`` stage</span>
+<span class="sd">    (roadmap #4) attaches it when registering strategies.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">polarity</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;distance&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;similarity&#39;</span>
+    <span class="n">bounded</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">is_metric</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">is_symmetric</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="to_cost">
+<a class="viewcode-back" href="../../module_docs/equate/base.html#equate.base.to_cost">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">to_cost</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sense</span><span class="p">:</span> <span class="n">Sense</span> <span class="o">=</span> <span class="s1">&#39;maximize&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a score array to a **cost** array for minimization-based matchers.</span>
+
+<span class="sd">    The single source of truth for the similarity-&gt;cost conversion, so every matcher</span>
+<span class="sd">    agrees. Historically the matchers each converted differently (``hungarian`` used</span>
+<span class="sd">    ``S.max() - S``, ``kuhn_munkres`` used ``-S``, ``stable`` used ``1 - S``) — wrong</span>
+<span class="sd">    for unbounded or non-``[0, 1]`` scores. Route every cost-minimizing matcher through</span>
+<span class="sd">    this instead.</span>
+
+<span class="sd">    - ``sense=&#39;maximize&#39;`` (a *similarity*, higher = better): return the complement to</span>
+<span class="sd">      the maximum, ``S.max() - S`` — non-negative (safe for min-weight solvers), and</span>
+<span class="sd">      for a **fixed-cardinality** assignment it yields the same optimum as ``-S``.</span>
+<span class="sd">    - ``sense=&#39;minimize&#39;`` (already a *distance*/cost, lower = better): returned</span>
+<span class="sd">      unchanged. An edit/DTW/geographic distance is never forced through ``1 - S``.</span>
+
+<span class="sd">    A **sparse** input is treated as blocker output: structurally-absent cells are</span>
+<span class="sd">    *non-candidates* and become a worst-case cost (never preferred over a real pair) —</span>
+<span class="sd">    *not* a score of 0, which would let unscored holes win when stored similarities are</span>
+<span class="sd">    negative. This densifies for correctness; the efficient path that never</span>
+<span class="sd">    materializes the full matrix lands with the blocking / sparse-LAP work (roadmap #6).</span>
+<span class="sd">    Empty inputs return an empty array (an empty collection yields an empty matching).</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; S = np.array([[0.9, 0.1], [0.2, 0.8]])</span>
+<span class="sd">    &gt;&gt;&gt; to_cost(S).round(2).tolist()</span>
+<span class="sd">    [[0.0, 0.8], [0.7, 0.1]]</span>
+<span class="sd">    &gt;&gt;&gt; to_cost(S, sense=&#39;minimize&#39;) is S</span>
+<span class="sd">    True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">sense</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;maximize&#39;</span><span class="p">,</span> <span class="s1">&#39;minimize&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sense must be &#39;maximize&#39; or &#39;minimize&#39;, got </span><span class="si">{</span><span class="n">sense</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">scores</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_sparse_to_cost</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sense</span> <span class="o">==</span> <span class="s1">&#39;minimize&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">scores</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">arr</span>
+    <span class="k">return</span> <span class="n">arr</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">arr</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sparse_to_cost</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sense</span><span class="p">:</span> <span class="n">Sense</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;``to_cost`` for a sparse (blocked) score matrix — see :func:`to_cost`.</span>
+
+<span class="sd">    Densifies (a correctness stopgap until the sparse-LAP path in roadmap #6). The</span>
+<span class="sd">    structurally-absent (non-candidate) cells get a cost strictly worse than any real</span>
+<span class="sd">    pair, so the optimizer never prefers an unscored hole over a scored pair — for</span>
+<span class="sd">    ``&#39;maximize&#39;`` this is the bug when stored similarities are negative; for</span>
+<span class="sd">    ``&#39;minimize&#39;`` it stops absent cells (densified to 0) from looking cheapest.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dense</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">toarray</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">scores</span><span class="o">.</span><span class="n">nnz</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">dense</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dense</span>
+    <span class="n">stored_mask</span> <span class="o">=</span> <span class="n">_stored_mask</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sense</span> <span class="o">==</span> <span class="s1">&#39;maximize&#39;</span><span class="p">:</span>
+        <span class="n">cost</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="o">-</span> <span class="n">dense</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># &#39;minimize&#39;: the stored values are already costs</span>
+        <span class="n">cost</span> <span class="o">=</span> <span class="n">dense</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="c1"># non-candidate cells become strictly worse than the worst real pair</span>
+    <span class="n">worst</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cost</span><span class="p">[</span><span class="n">stored_mask</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="o">+</span> <span class="mf">1.0</span>
+    <span class="n">cost</span><span class="p">[</span><span class="o">~</span><span class="n">stored_mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">worst</span>
+    <span class="k">return</span> <span class="n">cost</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_stored_mask</span><span class="p">(</span><span class="n">scores</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Boolean dense mask, True where the sparse matrix structurally stores a cell.&quot;&quot;&quot;</span>
+    <span class="n">ones</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">ones</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">ones</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ones</span><span class="o">.</span><span class="n">toarray</span><span class="p">())</span> <span class="o">!=</span> <span class="mi">0</span>
+
+
+<div class="viewcode-block" id="ScoreMatrix">
+<a class="viewcode-back" href="../../module_docs/equate/base.html#equate.base.ScoreMatrix">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ScoreMatrix</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Scored candidate structure flowing compare -&gt; match (the SSOT).</span>
+
+<span class="sd">    ``data`` is a dense ``numpy`` array or a ``scipy.sparse`` matrix of pairwise</span>
+<span class="sd">    scores; ``sense`` records the polarity (see :data:`Sense`); ``row_labels`` /</span>
+<span class="sd">    ``col_labels`` name the two collections so a downstream matcher never guesses</span>
+<span class="sd">    orientation or polarity. A sparse ``data`` is exactly what a blocker produces:</span>
+<span class="sd">    the cells it chose not to score are simply absent.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">data</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="n">sense</span><span class="p">:</span> <span class="n">Sense</span> <span class="o">=</span> <span class="s1">&#39;maximize&#39;</span>
+    <span class="n">row_labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">col_labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+
+<div class="viewcode-block" id="ScoreMatrix.to_cost">
+<a class="viewcode-back" href="../../module_docs/equate/base.html#equate.base.ScoreMatrix.to_cost">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Cost view of the scores, honouring ``sense`` (see :func:`to_cost`).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">to_cost</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sense</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Explanation">
+<a class="viewcode-back" href="../../module_docs/equate/base.html#equate.base.Explanation">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Explanation</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Render-agnostic justification for a decision (rules / attributions / diffs).</span>
+
+<span class="sd">    A structured payload, never a printed string, so any UI can render it declaratively.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">summary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">details</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Candidate">
+<a class="viewcode-back" href="../../module_docs/equate/base.html#equate.base.Candidate">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Candidate</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;One scored correspondence between a ``left`` item and a ``right`` item.</span>
+
+<span class="sd">    Iterating a ``Candidate`` yields ``(left, right)``, so a list of candidates is</span>
+<span class="sd">    ``dict``-able into a mapping — keeping the &quot;richer iterates as simpler&quot; contract</span>
+<span class="sd">    consistent across the result types.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">left</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="n">right</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="n">score</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">explanation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Explanation</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span>
+        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span></div>
+
+
+
+<div class="viewcode-block" id="Matching">
+<a class="viewcode-back" href="../../module_docs/equate/base.html#equate.base.Matching">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Matching</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Default (hard) matcher output: matched index pairs, with retained scores.</span>
+
+<span class="sd">    Iterating a ``Matching`` yields ``(i, j)`` index tuples, so ``dict(matching)`` and</span>
+<span class="sd">    ``list(matching)`` work. Richer tiers are *optional attributes* rather than</span>
+<span class="sd">    separate return types: ``plan`` holds a soft transport plan, ``probability`` holds</span>
+<span class="sd">    per-pair calibrated match probabilities. ``Partition`` (clustering) and, later,</span>
+<span class="sd">    ``PartitionPosterior`` (Bayesian) also iterate as their point-estimate pairs, so a</span>
+<span class="sd">    caller can always ``dict(...)`` a result regardless of the ``how=`` strategy.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">pairs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]</span>
+    <span class="n">scores</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">plan</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">probability</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">row_labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">col_labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pairs</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pairs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Matching.labeled_pairs">
+<a class="viewcode-back" href="../../module_docs/equate/base.html#equate.base.Matching.labeled_pairs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">labeled_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Yield ``(row_label, col_label)``, using labels when present, else indices.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pairs</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">i</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">col_labels</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">col_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">j</span>
+            <span class="k">yield</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Partition">
+<a class="viewcode-back" href="../../module_docs/equate/base.html#equate.base.Partition">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Partition</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clustering / collective output: a map from item index to entity (cluster) id.</span>
+
+<span class="sd">    Iterating yields the induced within-cluster ``(i, j)`` pairs (the point estimate),</span>
+<span class="sd">    so a ``Partition`` is drop-in where matched pairs are expected. This is the</span>
+<span class="sd">    canonical *clustering* output — it subsumes pairwise links, 1:1 assignment and</span>
+<span class="sd">    dedup, and generalizes ``match(A, B)`` to ``resolve(*collections)``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">labels</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Partition.groups">
+<a class="viewcode-back" href="../../module_docs/equate/base.html#equate.base.Partition.groups">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">groups</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``{cluster_id: [item_index, ...]}``.&quot;&quot;&quot;</span>
+        <span class="n">out</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">cluster</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">):</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">cluster</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">members</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">members</span><span class="p">)):</span>
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">members</span><span class="p">)):</span>
+                    <span class="k">yield</span> <span class="n">members</span><span class="p">[</span><span class="n">a</span><span class="p">],</span> <span class="n">members</span><span class="p">[</span><span class="n">b</span><span class="p">]</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

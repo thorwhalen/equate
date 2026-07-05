@@ -1,0 +1,322 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.base &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="equate.completion" href="completion.html" />
+    <link rel="prev" title="equate" href="../equate.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../equate.html">equate</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">equate.base</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#equate.base.Blocker"><code class="docutils literal notranslate"><span class="pre">Blocker</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.base.Candidate"><code class="docutils literal notranslate"><span class="pre">Candidate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.base.Comparator"><code class="docutils literal notranslate"><span class="pre">Comparator</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.base.ComparatorMeta"><code class="docutils literal notranslate"><span class="pre">ComparatorMeta</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.base.Explanation"><code class="docutils literal notranslate"><span class="pre">Explanation</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.base.Featurizer"><code class="docutils literal notranslate"><span class="pre">Featurizer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.base.Matcher"><code class="docutils literal notranslate"><span class="pre">Matcher</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.base.Matching"><code class="docutils literal notranslate"><span class="pre">Matching</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#equate.base.Matching.labeled_pairs"><code class="docutils literal notranslate"><span class="pre">Matching.labeled_pairs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.base.Partition"><code class="docutils literal notranslate"><span class="pre">Partition</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#equate.base.Partition.groups"><code class="docutils literal notranslate"><span class="pre">Partition.groups()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.base.ScoreMatrix"><code class="docutils literal notranslate"><span class="pre">ScoreMatrix</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#equate.base.ScoreMatrix.to_cost"><code class="docutils literal notranslate"><span class="pre">ScoreMatrix.to_cost()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.base.Sense"><code class="docutils literal notranslate"><span class="pre">Sense</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.base.to_cost"><code class="docutils literal notranslate"><span class="pre">to_cost()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">equate.base</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/equate/base.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-equate.base">
+<span id="equate-base"></span><h1>equate.base<a class="headerlink" href="#module-equate.base" title="Link to this heading"></a></h1>
+<p>Foundational contracts and data structures for equate.</p>
+<p>This module is the stable spine of the matching framework. It defines:</p>
+<ul class="simple">
+<li><p>the four <strong>stage protocols</strong> (<code class="docutils literal notranslate"><span class="pre">Featurizer</span></code>, <code class="docutils literal notranslate"><span class="pre">Comparator</span></code>, <code class="docutils literal notranslate"><span class="pre">Blocker</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Matcher</span></code>) that every strategy satisfies — each is just a callable with a
+documented contract, so a plain lambda qualifies;</p></li>
+<li><p>the <code class="docutils literal notranslate"><span class="pre">ScoreMatrix</span></code> that flows from the compare stage to the match stage (the
+single source of truth carrying the scores, their <code class="docutils literal notranslate"><span class="pre">sense</span></code>, and row/col labels);</p></li>
+<li><p>the structured result types (<code class="docutils literal notranslate"><span class="pre">Candidate</span></code>, <code class="docutils literal notranslate"><span class="pre">Matching</span></code>, <code class="docutils literal notranslate"><span class="pre">Explanation</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Partition</span></code>) returned at every public boundary — never printouts — so the same
+core dispatches cleanly to a CLI, an HTTP service, and a declarative UI;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">to_cost</span></code> — the single similarity-&gt;cost conversion that every cost-minimizing
+matcher routes through, so they can never disagree.</p></li>
+</ul>
+<p>The three-stage decomposition (featurize -&gt; compare -&gt; match/resolve) and the design
+decisions realized here are documented in <code class="docutils literal notranslate"><span class="pre">docs/research/</span></code> — start with
+<code class="docutils literal notranslate"><span class="pre">00-taxonomy-and-terminology.md</span></code> and the decision register
+<code class="docutils literal notranslate"><span class="pre">11-design-decisions-and-open-questions.md</span></code>.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="equate.base.Blocker">
+<span class="sig-prename descclassname"><span class="pre">equate.base.</span></span><span class="sig-name descname"><span class="pre">Blocker</span></span><a class="headerlink" href="#equate.base.Blocker" title="Link to this definition"></a></dt>
+<dd><p>yield <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> index pairs lazily, never a
+materialized n×m matrix. A default <code class="docutils literal notranslate"><span class="pre">all_pairs</span></code> blocker (roadmap #5) will be the
+correctness baseline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>② Block — candidate generation</p>
+</dd>
+</dl>
+<p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>[[…], <code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>]]</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="equate.base.Candidate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.base.</span></span><span class="sig-name descname"><span class="pre">Candidate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explanation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#equate.base.Explanation" title="equate.base.Explanation"><span class="pre">Explanation</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/base.html#Candidate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.base.Candidate" title="Link to this definition"></a></dt>
+<dd><p>One scored correspondence between a <code class="docutils literal notranslate"><span class="pre">left</span></code> item and a <code class="docutils literal notranslate"><span class="pre">right</span></code> item.</p>
+<p>Iterating a <code class="docutils literal notranslate"><span class="pre">Candidate</span></code> yields <code class="docutils literal notranslate"><span class="pre">(left,</span> <span class="pre">right)</span></code>, so a list of candidates is
+<code class="docutils literal notranslate"><span class="pre">dict</span></code>-able into a mapping — keeping the “richer iterates as simpler” contract
+consistent across the result types.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="equate.base.Comparator">
+<span class="sig-prename descclassname"><span class="pre">equate.base.</span></span><span class="sig-name descname"><span class="pre">Comparator</span></span><a class="headerlink" href="#equate.base.Comparator" title="Link to this definition"></a></dt>
+<dd><p>② Compare — score how alike two representations are (higher = more alike by the
+canonical <code class="docutils literal notranslate"><span class="pre">'maximize'</span></code> sense).</p>
+<p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="equate.base.ComparatorMeta">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.base.</span></span><span class="sig-name descname"><span class="pre">ComparatorMeta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polarity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'similarity'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'distance'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'similarity'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounded</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_metric</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_symmetric</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/base.html#ComparatorMeta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.base.ComparatorMeta" title="Link to this definition"></a></dt>
+<dd><p>Declared properties of a comparator, so the framework adapts instead of the
+caller hard-coding conversions (decision register D2/D3/D6).</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">polarity</span></code>: <code class="docutils literal notranslate"><span class="pre">'similarity'</span></code> (higher = more alike) or <code class="docutils literal notranslate"><span class="pre">'distance'</span></code> (lower =
+more alike);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bounded</span></code>: whether scores lie in a known bounded range (e.g. <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">is_metric</span></code>: obeys identity / symmetry / triangle-inequality (cosine does NOT —
+so a triangle-inequality index like a VP/ball tree must not be used on it);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">is_symmetric</span></code>: <code class="docutils literal notranslate"><span class="pre">g(a,</span> <span class="pre">b)</span> <span class="pre">==</span> <span class="pre">g(b,</span> <span class="pre">a)</span></code> (Monge-Elkan, containment do NOT — such
+comparators stay directional and are only symmetrized at the matcher boundary).</p></li>
+</ul>
+<p>A comparator can carry this on a <code class="docutils literal notranslate"><span class="pre">.meta</span></code> attribute; the <code class="docutils literal notranslate"><span class="pre">compare</span></code> stage
+(roadmap #4) attaches it when registering strategies.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="equate.base.Explanation">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.base.</span></span><span class="sig-name descname"><span class="pre">Explanation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">summary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">details</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~typing.Any]</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/base.html#Explanation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.base.Explanation" title="Link to this definition"></a></dt>
+<dd><p>Render-agnostic justification for a decision (rules / attributions / diffs).</p>
+<p>A structured payload, never a printed string, so any UI can render it declaratively.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="equate.base.Featurizer">
+<span class="sig-prename descclassname"><span class="pre">equate.base.</span></span><span class="sig-name descname"><span class="pre">Featurizer</span></span><a class="headerlink" href="#equate.base.Featurizer" title="Link to this definition"></a></dt>
+<dd><p>① Featurize — map each object to a comparable representation (batched). <code class="docutils literal notranslate"><span class="pre">id</span></code> and
+any <code class="docutils literal notranslate"><span class="pre">key=</span></code> function (<code class="docutils literal notranslate"><span class="pre">str.lower</span></code>, <code class="docutils literal notranslate"><span class="pre">operator.attrgetter('name')</span></code>) are valid.</p>
+<p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>]], <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>]]</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="equate.base.Matcher">
+<span class="sig-prename descclassname"><span class="pre">equate.base.</span></span><span class="sig-name descname"><span class="pre">Matcher</span></span><a class="headerlink" href="#equate.base.Matcher" title="Link to this definition"></a></dt>
+<dd><p>③ Match — turn a score structure into matched <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> pairs; accepts <code class="docutils literal notranslate"><span class="pre">*,</span> <span class="pre">sense</span></code>.</p>
+<p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>[[…], <code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>]]</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="equate.base.Matching">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.base.</span></span><span class="sig-name descname"><span class="pre">Matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pairs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probability</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">row_labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/base.html#Matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.base.Matching" title="Link to this definition"></a></dt>
+<dd><p>Default (hard) matcher output: matched index pairs, with retained scores.</p>
+<p>Iterating a <code class="docutils literal notranslate"><span class="pre">Matching</span></code> yields <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> index tuples, so <code class="docutils literal notranslate"><span class="pre">dict(matching)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">list(matching)</span></code> work. Richer tiers are <em>optional attributes</em> rather than
+separate return types: <code class="docutils literal notranslate"><span class="pre">plan</span></code> holds a soft transport plan, <code class="docutils literal notranslate"><span class="pre">probability</span></code> holds
+per-pair calibrated match probabilities. <code class="docutils literal notranslate"><span class="pre">Partition</span></code> (clustering) and, later,
+<code class="docutils literal notranslate"><span class="pre">PartitionPosterior</span></code> (Bayesian) also iterate as their point-estimate pairs, so a
+caller can always <code class="docutils literal notranslate"><span class="pre">dict(...)</span></code> a result regardless of the <code class="docutils literal notranslate"><span class="pre">how=</span></code> strategy.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.base.Matching.labeled_pairs">
+<span class="sig-name descname"><span class="pre">labeled_pairs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/base.html#Matching.labeled_pairs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.base.Matching.labeled_pairs" title="Link to this definition"></a></dt>
+<dd><p>Yield <code class="docutils literal notranslate"><span class="pre">(row_label,</span> <span class="pre">col_label)</span></code>, using labels when present, else indices.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="equate.base.Partition">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.base.</span></span><span class="sig-name descname"><span class="pre">Partition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/base.html#Partition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.base.Partition" title="Link to this definition"></a></dt>
+<dd><p>Clustering / collective output: a map from item index to entity (cluster) id.</p>
+<p>Iterating yields the induced within-cluster <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> pairs (the point estimate),
+so a <code class="docutils literal notranslate"><span class="pre">Partition</span></code> is drop-in where matched pairs are expected. This is the
+canonical <em>clustering</em> output — it subsumes pairwise links, 1:1 assignment and
+dedup, and generalizes <code class="docutils literal notranslate"><span class="pre">match(A,</span> <span class="pre">B)</span></code> to <code class="docutils literal notranslate"><span class="pre">resolve(*collections)</span></code>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.base.Partition.groups">
+<span class="sig-name descname"><span class="pre">groups</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/equate/base.html#Partition.groups"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.base.Partition.groups" title="Link to this definition"></a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">{cluster_id:</span> <span class="pre">[item_index,</span> <span class="pre">...]}</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="equate.base.ScoreMatrix">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.base.</span></span><span class="sig-name descname"><span class="pre">ScoreMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'maximize'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'minimize'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'maximize'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">row_labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/base.html#ScoreMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.base.ScoreMatrix" title="Link to this definition"></a></dt>
+<dd><p>Scored candidate structure flowing compare -&gt; match (the SSOT).</p>
+<p><code class="docutils literal notranslate"><span class="pre">data</span></code> is a dense <code class="docutils literal notranslate"><span class="pre">numpy</span></code> array or a <code class="docutils literal notranslate"><span class="pre">scipy.sparse</span></code> matrix of pairwise
+scores; <code class="docutils literal notranslate"><span class="pre">sense</span></code> records the polarity (see <a class="reference internal" href="#equate.base.Sense" title="equate.base.Sense"><code class="xref py py-data docutils literal notranslate"><span class="pre">Sense</span></code></a>); <code class="docutils literal notranslate"><span class="pre">row_labels</span></code> /
+<code class="docutils literal notranslate"><span class="pre">col_labels</span></code> name the two collections so a downstream matcher never guesses
+orientation or polarity. A sparse <code class="docutils literal notranslate"><span class="pre">data</span></code> is exactly what a blocker produces:
+the cells it chose not to score are simply absent.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.base.ScoreMatrix.to_cost">
+<span class="sig-name descname"><span class="pre">to_cost</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/base.html#ScoreMatrix.to_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.base.ScoreMatrix.to_cost" title="Link to this definition"></a></dt>
+<dd><p>Cost view of the scores, honouring <code class="docutils literal notranslate"><span class="pre">sense</span></code> (see <a class="reference internal" href="#equate.base.to_cost" title="equate.base.to_cost"><code class="xref py py-func docutils literal notranslate"><span class="pre">to_cost()</span></code></a>).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="equate.base.Sense">
+<span class="sig-prename descclassname"><span class="pre">equate.base.</span></span><span class="sig-name descname"><span class="pre">Sense</span></span><a class="headerlink" href="#equate.base.Sense" title="Link to this definition"></a></dt>
+<dd><p>Whether higher scores are better (<code class="docutils literal notranslate"><span class="pre">'maximize'</span></code>, a similarity) or lower scores
+are better (<code class="docutils literal notranslate"><span class="pre">'minimize'</span></code>, a distance/cost).</p>
+<p>alias of <code class="xref py py-obj docutils literal notranslate"><span class="pre">Literal</span></code>[‘maximize’, ‘minimize’]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.base.to_cost">
+<span class="sig-prename descclassname"><span class="pre">equate.base.</span></span><span class="sig-name descname"><span class="pre">to_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'maximize'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'minimize'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'maximize'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/base.html#to_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.base.to_cost" title="Link to this definition"></a></dt>
+<dd><p>Convert a score array to a <strong>cost</strong> array for minimization-based matchers.</p>
+<p>The single source of truth for the similarity-&gt;cost conversion, so every matcher
+agrees. Historically the matchers each converted differently (<code class="docutils literal notranslate"><span class="pre">hungarian</span></code> used
+<code class="docutils literal notranslate"><span class="pre">S.max()</span> <span class="pre">-</span> <span class="pre">S</span></code>, <code class="docutils literal notranslate"><span class="pre">kuhn_munkres</span></code> used <code class="docutils literal notranslate"><span class="pre">-S</span></code>, <code class="docutils literal notranslate"><span class="pre">stable</span></code> used <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">S</span></code>) — wrong
+for unbounded or non-<code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code> scores. Route every cost-minimizing matcher through
+this instead.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sense='maximize'</span></code> (a <em>similarity</em>, higher = better): return the complement to
+the maximum, <code class="docutils literal notranslate"><span class="pre">S.max()</span> <span class="pre">-</span> <span class="pre">S</span></code> — non-negative (safe for min-weight solvers), and
+for a <strong>fixed-cardinality</strong> assignment it yields the same optimum as <code class="docutils literal notranslate"><span class="pre">-S</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sense='minimize'</span></code> (already a <em>distance</em>/cost, lower = better): returned
+unchanged. An edit/DTW/geographic distance is never forced through <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">S</span></code>.</p></li>
+</ul>
+<p>A <strong>sparse</strong> input is treated as blocker output: structurally-absent cells are
+<em>non-candidates</em> and become a worst-case cost (never preferred over a real pair) —
+<em>not</em> a score of 0, which would let unscored holes win when stored similarities are
+negative. This densifies for correctness; the efficient path that never
+materializes the full matrix lands with the blocking / sparse-LAP work (roadmap #6).
+Empty inputs return an empty array (an empty collection yields an empty matching).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">to_cost</span><span class="p">(</span><span class="n">S</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+<span class="go">[[0.0, 0.8], [0.7, 0.1]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">to_cost</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;minimize&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="n">S</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../equate.html" class="btn btn-neutral float-left" title="equate" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="completion.html" class="btn btn-neutral float-right" title="equate.completion" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,10 @@
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   module_docs/equate
+   module_docs/equate/base
+   module_docs/equate/completion
+   module_docs/equate/examples
+   module_docs/equate/examples/site_names
+   module_docs/equate/util

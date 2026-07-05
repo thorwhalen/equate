@@ -1,0 +1,226 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.completion &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="equate.examples" href="examples.html" />
+    <link rel="prev" title="equate.base" href="base.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">equate.base</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">equate.completion</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#equate.completion.greedy_matching"><code class="docutils literal notranslate"><span class="pre">greedy_matching()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.completion.hungarian_matching"><code class="docutils literal notranslate"><span class="pre">hungarian_matching()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.completion.kuhn_munkres_matching"><code class="docutils literal notranslate"><span class="pre">kuhn_munkres_matching()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.completion.maximal_matching"><code class="docutils literal notranslate"><span class="pre">maximal_matching()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.completion.similarity_matrix"><code class="docutils literal notranslate"><span class="pre">similarity_matrix()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.completion.stable_marriage_matching"><code class="docutils literal notranslate"><span class="pre">stable_marriage_matching()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">equate.completion</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/equate/completion.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-equate.completion">
+<span id="equate-completion"></span><h1>equate.completion<a class="headerlink" href="#module-equate.completion" title="Link to this heading"></a></h1>
+<p>Tools to complete missing data from other sources of the same data.</p>
+<p>Merging/joining tables is very common instance, yet only a small part of what is
+possible, and often needed. Without moving away from tabular data:</p>
+<ul class="simple">
+<li><p>Find the columns to match (join keys) by comparing how well the values of the column</p></li>
+</ul>
+<p>match.
+- Comparing the values of the columns with something more flexible than hard equality.
+For example, correlation, similarity, etc.
+- Find near duplicate columns
+- Find rows to align, based on flexible comparison of fuzzily matched cells</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.completion.greedy_matching">
+<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">greedy_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/completion.html#greedy_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.greedy_matching" title="Link to this definition"></a></dt>
+<dd><p>Greedy Algorithm: Iteratively picks the highest similarity pair and removes the
+matched items from the pool.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>similarity_matrix</strong> – A sparse matrix of similarities.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of tuples (row_index, col_index) for matched pairs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.completion.hungarian_matching">
+<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">hungarian_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/completion.html#hungarian_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.hungarian_matching" title="Link to this definition"></a></dt>
+<dd><p>Hungarian Algorithm (Optimal Matching): Finds the optimal matching, minimizing the
+total cost.
+:param similarity_matrix: A sparse matrix of similarities.
+:return: List of tuples (row_index, col_index) for matched pairs.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.completion.kuhn_munkres_matching">
+<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">kuhn_munkres_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/completion.html#kuhn_munkres_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.kuhn_munkres_matching" title="Link to this definition"></a></dt>
+<dd><p>Kuhn-Munkres Algorithm: Another implementation of the Hungarian algorithm using
+the <cite>networkx</cite> package.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>similarity_matrix</strong> – A sparse matrix of similarities.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of tuples (row_index, col_index) for matched pairs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.completion.maximal_matching">
+<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">maximal_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/completion.html#maximal_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.maximal_matching" title="Link to this definition"></a></dt>
+<dd><p>Maximal Matching in Bipartite Graph: Finds a maximal matching in a bipartite graph.
+See <a class="reference external" href="https://www.geeksforgeeks.org/maximum-bipartite-matching/">https://www.geeksforgeeks.org/maximum-bipartite-matching/</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>similarity_matrix</strong> – A sparse matrix of similarities.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of tuples (row_index, col_index) for matched pairs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.completion.similarity_matrix">
+<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">similarity_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_to_vect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">cosine_similarity&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/completion.html#similarity_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.similarity_matrix" title="Link to this definition"></a></dt>
+<dd><p>Return a matrix of the similarity of the keys to the values.
+By default, the <cite>text_to_vect</cite> will be learned from the keys and values,
+using the tfidf vectorizer from <cite>grub</cite>.
+You can pass in a different <cite>text_to_vect</cite> function to use a different vectorizer:
+For example, pre-computed embeddings such as word2vec or fasttext, or openai
+embeddings.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;apple pie&#39;</span><span class="p">,</span> <span class="s1">&#39;apple crumble&#39;</span><span class="p">,</span> <span class="s1">&#39;banana split&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;american pie&#39;</span><span class="p">,</span> <span class="s1">&#39;big apple&#39;</span><span class="p">,</span> <span class="s1">&#39;american girl&#39;</span><span class="p">,</span> <span class="s1">&#39;banana republic&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">similarity_matrix</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+<span class="go">[[0.54, 0.38, 0.0, 0.0], [0.0, 0.33, 0.0, 0.0], [0.0, 0.0, 0.0, 0.41]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.completion.stable_marriage_matching">
+<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">stable_marriage_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/completion.html#stable_marriage_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.stable_marriage_matching" title="Link to this definition"></a></dt>
+<dd><p>Stable Marriage Problem (Gale-Shapley Algorithm):
+Solves the stable marriage problem, ensuring a stable matching.
+See: <a class="reference external" href="https://en.wikipedia.org/wiki/Stable_marriage_problem">https://en.wikipedia.org/wiki/Stable_marriage_problem</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>similarity_matrix</strong> – A sparse matrix of similarities.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of tuples (row_index, col_index) for matched pairs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="base.html" class="btn btn-neutral float-left" title="equate.base" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="examples.html" class="btn btn-neutral float-right" title="equate.examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

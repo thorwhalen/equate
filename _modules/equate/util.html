@@ -1,0 +1,352 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.util &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">equate.util</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for equate.util</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Utils for equate.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache</span><span class="p">,</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">grub</span><span class="w"> </span><span class="kn">import</span> <span class="n">SearchStore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics.pairwise</span><span class="w"> </span><span class="kn">import</span> <span class="n">cosine_similarity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">linear_sum_assignment</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">issparse</span><span class="p">,</span> <span class="n">csr_matrix</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_cost</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">ensure_sparse</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">issparse</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
+        <span class="n">matrix</span> <span class="o">=</span> <span class="n">csr_matrix</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">matrix</span>
+
+
+<div class="viewcode-block" id="match_greedily">
+<a class="viewcode-back" href="../../module_docs/equate/util.html#equate.util.match_greedily">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">match_greedily</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">score_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">minimum_score</span><span class="o">=-</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;infinity&#39;</span><span class="p">)):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates the best (key, value) matches of each key of keys with a value of</span>
+<span class="sd">    values. The score_func is used to gauge the strength of a match. If not provided,</span>
+<span class="sd">    the default score_func is ``difflib.SequenceMatcher(None, a, b).ratio()`` — a</span>
+<span class="sd">    normalized measure of matching subsequences in [0, 1] (higher is more alike).</span>
+
+<span class="sd">    &gt;&gt;&gt; keys = [&#39;apple&#39;, &#39;banana&#39;, &#39;carrot&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; values = [&#39;car&#39;, &#39;app&#39;, &#39;carob&#39;, &#39;cabana&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; dict(match_greedily(keys, values))</span>
+<span class="sd">    {&#39;apple&#39;: &#39;app&#39;, &#39;banana&#39;: &#39;cabana&#39;, &#39;carrot&#39;: &#39;carob&#39;}</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">score_func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">difflib</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequenceMatcher</span>
+
+        <span class="n">score_func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">SequenceMatcher</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">ratio</span><span class="p">()</span>
+
+    <span class="n">_values</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+        <span class="n">best_score</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">best_value</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_values</span><span class="p">:</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="n">score_func</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="n">best_score</span> <span class="ow">and</span> <span class="n">score</span> <span class="o">&gt;=</span> <span class="n">minimum_score</span><span class="p">:</span>
+                <span class="n">best_score</span> <span class="o">=</span> <span class="n">score</span>
+                <span class="n">best_value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="n">best_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">key</span><span class="p">,</span> <span class="n">best_value</span>
+            <span class="n">_values</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">best_value</span><span class="p">)</span>  <span class="c1"># Ensure no endpoint is used more than once</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">transform_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">transformer</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">transformer</span><span class="p">([</span><span class="n">text</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">transformer</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+
+<span class="c1"># @lru_cache</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">mk_text_to_vect</span><span class="p">(</span><span class="o">*</span><span class="n">learn_texts</span><span class="p">):</span>
+    <span class="n">docs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">learn_texts</span><span class="p">)))</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">SearchStore</span><span class="p">(</span><span class="n">docs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">partial</span><span class="p">(</span><span class="n">transform_text</span><span class="p">,</span> <span class="n">transformer</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">tfidf</span><span class="o">.</span><span class="n">transform</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="similarity_matrix">
+<a class="viewcode-back" href="../../module_docs/equate/util.html#equate.util.similarity_matrix">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">similarity_matrix</span><span class="p">(</span>
+    <span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">obj_to_vect</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">similarity_func</span><span class="o">=</span><span class="n">cosine_similarity</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a matrix of the similarity of the keys to the values.</span>
+<span class="sd">    By default, the `obj_to_vect` will be learned from the keys and values,</span>
+<span class="sd">    using the tfidf vectorizer from `grub`.</span>
+
+<span class="sd">    You can pass in a different `obj_to_vect` function to use a different vectorizer:</span>
+<span class="sd">    For example, pre-computed embeddings such as word2vec or fasttext, or openai</span>
+<span class="sd">    embeddings.</span>
+
+<span class="sd">    &gt;&gt;&gt; keys = [&#39;apple pie&#39;, &#39;apple crumble&#39;, &#39;banana split&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; values = [&#39;american pie&#39;, &#39;big apple&#39;, &#39;american girl&#39;, &#39;banana republic&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; m = similarity_matrix(keys, values)</span>
+<span class="sd">    &gt;&gt;&gt; m.round(2).tolist()</span>
+<span class="sd">    [[0.54, 0.38, 0.0, 0.0], [0.0, 0.33, 0.0, 0.0], [0.0, 0.0, 0.0, 0.41]]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">obj_to_vect</span> <span class="o">=</span> <span class="n">obj_to_vect</span> <span class="ow">or</span> <span class="n">mk_text_to_vect</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+    <span class="n">key_vectors</span><span class="p">,</span> <span class="n">value_vectors</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">obj_to_vect</span><span class="p">,</span> <span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">similarity_func</span><span class="p">(</span><span class="n">key_vectors</span><span class="p">,</span> <span class="n">value_vectors</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="greedy_matching">
+<a class="viewcode-back" href="../../module_docs/equate/util.html#equate.util.greedy_matching">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">greedy_matching</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Greedy Algorithm: Iteratively picks the highest similarity pair and removes the</span>
+<span class="sd">    matched items from the pool.</span>
+
+<span class="sd">    :param similarity_matrix: A sparse matrix of similarities.</span>
+<span class="sd">    :return: List of tuples (row_index, col_index) for matched pairs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">similarity_matrix</span> <span class="o">=</span> <span class="n">ensure_sparse</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">similarity_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">nnz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">similarity_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">argmax</span><span class="p">()</span>
+        <span class="k">yield</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span>
+        <span class="n">similarity_matrix</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Remove this column for subsequent iterations</span></div>
+
+
+
+<div class="viewcode-block" id="hungarian_matching">
+<a class="viewcode-back" href="../../module_docs/equate/util.html#equate.util.hungarian_matching">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">hungarian_matching</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;maximize&#39;</span><span class="p">,</span> <span class="n">cost_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Hungarian Algorithm (Optimal Matching): Finds the optimal 1:1 assignment,</span>
+<span class="sd">    minimizing the total cost (equivalently, maximizing the total similarity).</span>
+
+<span class="sd">    :param similarity_matrix: A matrix of scores. ``sense=&#39;maximize&#39;`` treats them as</span>
+<span class="sd">        similarities (higher = better, the default); ``sense=&#39;minimize&#39;`` treats them</span>
+<span class="sd">        as costs/distances. The conversion goes through the ``to_cost`` SSOT.</span>
+<span class="sd">    :param cost_matrix: An explicit cost matrix to use instead (overrides ``sense``).</span>
+<span class="sd">    :return: An iterator of (row_index, col_index) tuples for matched pairs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">cost_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cost_matrix</span> <span class="o">=</span> <span class="n">to_cost</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">)</span>
+    <span class="n">row_ind</span><span class="p">,</span> <span class="n">col_ind</span> <span class="o">=</span> <span class="n">linear_sum_assignment</span><span class="p">(</span><span class="n">cost_matrix</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">zip</span><span class="p">(</span><span class="n">row_ind</span><span class="p">,</span> <span class="n">col_ind</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="maximal_matching">
+<a class="viewcode-back" href="../../module_docs/equate/util.html#equate.util.maximal_matching">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">maximal_matching</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Maximal Matching in Bipartite Graph: Finds a maximal matching in a bipartite graph.</span>
+<span class="sd">    See https://www.geeksforgeeks.org/maximum-bipartite-matching/.</span>
+
+<span class="sd">    :param similarity_matrix: A sparse matrix of similarities.</span>
+<span class="sd">    :return: List of tuples (row_index, col_index) for matched pairs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;key_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;value_</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">similarity_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
+    <span class="n">matching</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">max_weight_matching</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">maxcardinality</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]))</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">matching</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="stable_marriage_matching">
+<a class="viewcode-back" href="../../module_docs/equate/util.html#equate.util.stable_marriage_matching">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">stable_marriage_matching</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;maximize&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Stable Marriage Problem (Gale-Shapley Algorithm):</span>
+<span class="sd">    Solves the stable marriage problem, ensuring a stable matching. Note this</span>
+<span class="sd">    optimizes *stability* (no blocking pair), not total score, and is</span>
+<span class="sd">    proposer-optimal / receiver-pessimal — so it can differ from the optimal</span>
+<span class="sd">    assignment found by ``hungarian_matching``.</span>
+<span class="sd">    See: https://en.wikipedia.org/wiki/Stable_marriage_problem</span>
+
+<span class="sd">    :param similarity_matrix: A matrix of scores (see ``sense``); preferences are</span>
+<span class="sd">        ranked by the ``to_cost`` distance, so higher similarity is more preferred.</span>
+<span class="sd">    :return: List of tuples (row_index, col_index) for matched pairs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">distance_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">to_cost</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">n_men</span><span class="p">,</span> <span class="n">n_women</span> <span class="o">=</span> <span class="n">distance_matrix</span><span class="o">.</span><span class="n">shape</span>
+    <span class="c1"># Each man ranks women by ascending distance (most-preferred first).</span>
+    <span class="n">men_prefs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">distance_matrix</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># women_rank[m, w] = the rank of man m in woman w&#39;s preference list (0 = best).</span>
+    <span class="n">women_rank</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">distance_matrix</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">next_proposal</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_men</span>  <span class="c1"># index into men_prefs[man] of the next woman to try</span>
+    <span class="n">woman_partner</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># woman -&gt; currently engaged man</span>
+    <span class="n">free_men</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_men</span><span class="p">))</span>
+    <span class="k">while</span> <span class="n">free_men</span><span class="p">:</span>
+        <span class="n">man</span> <span class="o">=</span> <span class="n">free_men</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">next_proposal</span><span class="p">[</span><span class="n">man</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">n_women</span><span class="p">:</span>
+            <span class="k">continue</span>  <span class="c1"># exhausted his list (possible when there are fewer women)</span>
+        <span class="n">woman</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">men_prefs</span><span class="p">[</span><span class="n">man</span><span class="p">][</span><span class="n">next_proposal</span><span class="p">[</span><span class="n">man</span><span class="p">]])</span>
+        <span class="n">next_proposal</span><span class="p">[</span><span class="n">man</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="n">woman_partner</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">woman</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">woman_partner</span><span class="p">[</span><span class="n">woman</span><span class="p">]</span> <span class="o">=</span> <span class="n">man</span>
+        <span class="k">elif</span> <span class="n">women_rank</span><span class="p">[</span><span class="n">man</span><span class="p">,</span> <span class="n">woman</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">women_rank</span><span class="p">[</span><span class="n">current</span><span class="p">,</span> <span class="n">woman</span><span class="p">]:</span>
+            <span class="n">woman_partner</span><span class="p">[</span><span class="n">woman</span><span class="p">]</span> <span class="o">=</span> <span class="n">man</span>
+            <span class="n">free_men</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>  <span class="c1"># the jilted man is free again</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">free_men</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">man</span><span class="p">)</span>  <span class="c1"># rejected; he will try his next choice</span>
+    <span class="k">return</span> <span class="p">[(</span><span class="n">man</span><span class="p">,</span> <span class="n">woman</span><span class="p">)</span> <span class="k">for</span> <span class="n">woman</span><span class="p">,</span> <span class="n">man</span> <span class="ow">in</span> <span class="n">woman_partner</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span></div>
+
+
+
+<div class="viewcode-block" id="kuhn_munkres_matching">
+<a class="viewcode-back" href="../../module_docs/equate/util.html#equate.util.kuhn_munkres_matching">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">kuhn_munkres_matching</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;maximize&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Kuhn-Munkres Algorithm: Another implementation of the Hungarian algorithm using</span>
+<span class="sd">    the `networkx` package (requires the optional ``equate[graph]`` extra).</span>
+
+<span class="sd">    :param similarity_matrix: A matrix of scores (see ``sense``); converted to edge</span>
+<span class="sd">        costs via the ``to_cost`` SSOT.</span>
+<span class="sd">    :return: List of tuples (row_index, col_index) for matched pairs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+
+    <span class="n">cost</span> <span class="o">=</span> <span class="n">to_cost</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">)</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;key_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;value_</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">cost</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
+    <span class="n">matching</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">algorithms</span><span class="o">.</span><span class="n">bipartite</span><span class="o">.</span><span class="n">matching</span><span class="o">.</span><span class="n">minimum_weight_full_matching</span><span class="p">(</span>
+        <span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">matching</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">u</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;key_&#39;</span><span class="p">)</span>
+    <span class="p">]</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">match_keys_to_values</span><span class="p">(</span>
+    <span class="n">keys</span><span class="p">,</span>
+    <span class="n">values</span><span class="p">,</span>
+    <span class="n">obj_to_vect</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">similarity_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">cosine_similarity</span><span class="p">,</span>
+    <span class="n">matcher</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">hungarian_matching</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="n">similarity_matrix_</span> <span class="o">=</span> <span class="n">similarity_matrix</span><span class="p">(</span>
+        <span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">obj_to_vect</span><span class="o">=</span><span class="n">obj_to_vect</span><span class="p">,</span> <span class="n">similarity_func</span><span class="o">=</span><span class="n">similarity_func</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">key_idx</span><span class="p">,</span> <span class="n">value_idx</span> <span class="ow">in</span> <span class="n">matcher</span><span class="p">(</span><span class="n">similarity_matrix_</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">keys</span><span class="p">[</span><span class="n">key_idx</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="n">value_idx</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

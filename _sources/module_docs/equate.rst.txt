@@ -1,0 +1,4 @@
+equate
+======
+.. automodule:: equate
+   :members:
