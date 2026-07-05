@@ -15,6 +15,8 @@ from equate.base import (
     Partition,
 )
 
+from equate._dependencies import require, have, MissingDependencyError
+
 from equate.util import (
     match_keys_to_values,
     match_greedily,

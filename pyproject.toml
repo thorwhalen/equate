@@ -41,19 +41,27 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-graph = [
-    "networkx",
-]
-examples = [
-    "pandas",
-    "py2store",
-    "requests",
-]
-dev = [
-    "pytest>=7.0",
-    "pytest-cov>=4.0",
-    "ruff>=0.1.0",
-]
+# Heavy capabilities are optional extras, imported lazily via equate._dependencies.require
+# so the core install stays numpy/scipy-light. More extras are added as their strategy
+# stages land (image/audio/bio/graph-kernels/vector-db); see the roadmap.
+# --- comparison: fast string similarity (compare stage) ---
+fuzzy = ["rapidfuzz"]
+phonetic = ["jellyfish"]
+# --- featurization: embeddings (featurize stage) ---
+embeddings = ["sentence-transformers"]
+api = ["openai", "cohere"]
+# --- blocking / candidate generation (block stage) ---
+ann = ["hnswlib"]
+lsh = ["datasketch"]
+# --- matching (match stage) ---
+graph = ["networkx"]
+ot = ["POT"]
+# --- interactive: active learning + LLM (interactive stage) ---
+active = ["scikit-activeml"]
+llm = ["openai"]
+# --- examples & dev ---
+examples = ["pandas", "py2store", "requests"]
+dev = ["pytest>=7.0", "pytest-cov>=4.0", "ruff>=0.1.0"]
 
 [project.urls]
 Homepage = "https://github.com/thorwhalen/equate"

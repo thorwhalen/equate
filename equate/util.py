@@ -1,16 +1,27 @@
 """Utils for equate."""
 
 from collections.abc import Callable
-from functools import lru_cache, partial
+from functools import partial
 from itertools import chain
 
-from grub import SearchStore
-from sklearn.metrics.pairwise import cosine_similarity
 from scipy.optimize import linear_sum_assignment
 from scipy.sparse import issparse, csr_matrix
 import numpy as np
 
 from equate.base import to_cost
+from equate._dependencies import require
+
+# grub (TF-IDF) and scikit-learn (cosine_similarity) are imported lazily inside the
+# functions that use them, so a bare `import equate` stays numpy/scipy-light. They are
+# still declared core dependencies today; moving them behind an extra waits on the
+# pure-numpy TF-IDF default (roadmap #4).
+
+
+def _cosine_similarity(*args, **kwargs):
+    """Lazy proxy for sklearn's cosine_similarity (the default text comparator)."""
+    from sklearn.metrics.pairwise import cosine_similarity
+
+    return cosine_similarity(*args, **kwargs)
 
 
 def ensure_sparse(matrix):
@@ -58,16 +69,15 @@ def transform_text(text, transformer):
         return transformer(text)
 
 
-# @lru_cache
 def mk_text_to_vect(*learn_texts):
+    from grub import SearchStore  # lazy: keeps `import equate` numpy/scipy-light
+
     docs = dict(enumerate(chain(*learn_texts)))
     s = SearchStore(docs)
     return partial(transform_text, transformer=s.tfidf.transform)
 
 
-def similarity_matrix(
-    keys, values, *, obj_to_vect=None, similarity_func=cosine_similarity
-):
+def similarity_matrix(keys, values, *, obj_to_vect=None, similarity_func=None):
     """Return a matrix of the similarity of the keys to the values.
     By default, the `obj_to_vect` will be learned from the keys and values,
     using the tfidf vectorizer from `grub`.
@@ -82,6 +92,8 @@ def similarity_matrix(
     >>> m.round(2).tolist()
     [[0.54, 0.38, 0.0, 0.0], [0.0, 0.33, 0.0, 0.0], [0.0, 0.0, 0.0, 0.41]]
     """
+    if similarity_func is None:
+        similarity_func = _cosine_similarity
     obj_to_vect = obj_to_vect or mk_text_to_vect(keys, values)
     key_vectors, value_vectors = map(obj_to_vect, (keys, values))
     return similarity_func(key_vectors, value_vectors)
@@ -130,7 +142,7 @@ def maximal_matching(similarity_matrix):
     :param similarity_matrix: A sparse matrix of similarities.
     :return: List of tuples (row_index, col_index) for matched pairs.
     """
-    import networkx as nx
+    nx = require('networkx', extra='graph', purpose='the maximal_matching graph matcher')
 
     G = nx.Graph()
     for i in range(similarity_matrix.shape[0]):
@@ -189,7 +201,7 @@ def kuhn_munkres_matching(similarity_matrix, *, sense='maximize'):
         costs via the ``to_cost`` SSOT.
     :return: List of tuples (row_index, col_index) for matched pairs.
     """
-    import networkx as nx
+    nx = require('networkx', extra='graph', purpose='the kuhn_munkres_matching matcher')
 
     cost = to_cost(similarity_matrix, sense=sense)
     G = nx.Graph()
@@ -210,9 +222,16 @@ def match_keys_to_values(
     keys,
     values,
     obj_to_vect: Callable = None,
-    similarity_func: Callable = cosine_similarity,
+    similarity_func: Callable = None,
     matcher: Callable = hungarian_matching,
 ):
+    """Match each key to a value via a similarity matrix and a matcher.
+
+    Builds ``similarity_matrix(keys, values, ...)`` (TF-IDF + cosine by default) and
+    applies ``matcher`` (optimal Hungarian assignment by default), yielding
+    ``(key, value)`` pairs. ``obj_to_vect`` and ``similarity_func`` default to the
+    lazily-resolved TF-IDF featurizer and cosine comparator when left as ``None``.
+    """
     similarity_matrix_ = similarity_matrix(
         keys, values, obj_to_vect=obj_to_vect, similarity_func=similarity_func
     )
