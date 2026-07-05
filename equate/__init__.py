@@ -1,4 +1,19 @@
-"""Tools to match stuff."""
+"""Tools for matching things: featurize, compare, and match collections of objects.
+
+Matching is fuzzy correspondence, not exact equality (``==`` is the degenerate case).
+The public surface is being redesigned around the ``featurize -> compare -> match``
+decomposition; see ``docs/research/`` and the ``equate-dev-architecture`` skill. The
+foundation contracts live in :mod:`equate.base`.
+"""
+
+from equate.base import (
+    to_cost,
+    ScoreMatrix,
+    Candidate,
+    Matching,
+    Explanation,
+    Partition,
+)
 
 from equate.util import (
     match_keys_to_values,

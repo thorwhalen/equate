@@ -29,7 +29,7 @@ core stays open-closed and the default install stays light. Read
    comparator declares polarity / bounded / is_metric / is_symmetric; a matcher
    declares the objective and required score `sense`.
 5. **Scores respect the sense contract** — similarity is higher-is-better; matchers
-   route through the shared `_to_cost(scores, *, sense)` SSOT, never a bespoke
+   route through the shared `to_cost(scores, *, sense)` SSOT, never a bespoke
    conversion.
 
 ## Recipe
@@ -75,7 +75,7 @@ def _jaro_winkler_factory():
 - For optional-dep strategies, guard with `pytest.importorskip("<lib>")` so CI
   without the extra skips rather than errors.
 - If it's a matcher, assert the `sense` contract (a maximize-sense similarity yields
-  the high-score assignment) and that it goes through `_to_cost`.
+  the high-score assignment) and that it goes through `to_cost`.
 - Keep tests under `tests/`; CI collects `tests/` (see `pyproject.toml`
   `[tool.pytest.ini_options]`).
 
@@ -89,7 +89,7 @@ stage needs no map change — that's the point of the registry (placement test:
 
 - Adding `rapidfuzz`/`sentence-transformers`/`faiss`/`POT` to core `dependencies`.
 - A raw `import faiss` at module top (breaks `import equate` when the extra is absent).
-- A matcher that converts similarity→cost itself instead of `_to_cost(..., sense=)`.
+- A matcher that converts similarity→cost itself instead of `to_cost(..., sense=)`.
 - Returning printed strings instead of a structured `Candidate`/`Matching`/`Explanation`.
 - Assuming a comparator is symmetric/metric when it isn't (silently corrupts blocking
   and assignment).

@@ -10,6 +10,8 @@ from scipy.optimize import linear_sum_assignment
 from scipy.sparse import issparse, csr_matrix
 import numpy as np
 
+from equate.base import to_cost
+
 
 def ensure_sparse(matrix):
     if not issparse(matrix):
@@ -20,8 +22,8 @@ def ensure_sparse(matrix):
 def match_greedily(keys, values, *, score_func=None, minimum_score=-float('infinity')):
     """Generates the best (key, value) matches of each key of keys with a value of
     values. The score_func is used to gauge the strength of a match. If not provided,
-    the default score_func is the ratio of the longest common subsequence to the
-    length of the longest of the two strings.
+    the default score_func is ``difflib.SequenceMatcher(None, a, b).ratio()`` — a
+    normalized measure of matching subsequences in [0, 1] (higher is more alike).
 
     >>> keys = ['apple', 'banana', 'carrot']
     >>> values = ['car', 'app', 'carob', 'cabana']
@@ -103,15 +105,19 @@ def greedy_matching(similarity_matrix):
         similarity_matrix[:, j] = 0  # Remove this column for subsequent iterations
 
 
-def hungarian_matching(similarity_matrix, *, cost_matrix=None):
+def hungarian_matching(similarity_matrix, *, sense='maximize', cost_matrix=None):
     """
-    Hungarian Algorithm (Optimal Matching): Finds the optimal matching, minimizing the
-    total cost.
-    :param similarity_matrix: A sparse matrix of similarities.
-    :return: List of tuples (row_index, col_index) for matched pairs.
+    Hungarian Algorithm (Optimal Matching): Finds the optimal 1:1 assignment,
+    minimizing the total cost (equivalently, maximizing the total similarity).
+
+    :param similarity_matrix: A matrix of scores. ``sense='maximize'`` treats them as
+        similarities (higher = better, the default); ``sense='minimize'`` treats them
+        as costs/distances. The conversion goes through the ``to_cost`` SSOT.
+    :param cost_matrix: An explicit cost matrix to use instead (overrides ``sense``).
+    :return: An iterator of (row_index, col_index) tuples for matched pairs.
     """
     if cost_matrix is None:
-        cost_matrix = similarity_matrix.max() - similarity_matrix
+        cost_matrix = to_cost(similarity_matrix, sense=sense)
     row_ind, col_ind = linear_sum_assignment(cost_matrix)
     return zip(row_ind, col_ind)
 
@@ -134,53 +140,62 @@ def maximal_matching(similarity_matrix):
     return ((int(u.split('_')[1]), int(v.split('_')[1])) for u, v in matching)
 
 
-def stable_marriage_matching(similarity_matrix):
+def stable_marriage_matching(similarity_matrix, *, sense='maximize'):
     """
     Stable Marriage Problem (Gale-Shapley Algorithm):
-    Solves the stable marriage problem, ensuring a stable matching.
+    Solves the stable marriage problem, ensuring a stable matching. Note this
+    optimizes *stability* (no blocking pair), not total score, and is
+    proposer-optimal / receiver-pessimal — so it can differ from the optimal
+    assignment found by ``hungarian_matching``.
     See: https://en.wikipedia.org/wiki/Stable_marriage_problem
 
-    :param similarity_matrix: A sparse matrix of similarities.
+    :param similarity_matrix: A matrix of scores (see ``sense``); preferences are
+        ranked by the ``to_cost`` distance, so higher similarity is more preferred.
     :return: List of tuples (row_index, col_index) for matched pairs.
     """
-    distance_matrix = 1 - similarity_matrix
+    distance_matrix = np.asarray(to_cost(similarity_matrix, sense=sense), dtype=float)
+    n_men, n_women = distance_matrix.shape
+    # Each man ranks women by ascending distance (most-preferred first).
     men_prefs = np.argsort(distance_matrix, axis=1)
-    women_prefs = np.argsort(distance_matrix, axis=0).T
-    couples = {}
-    while len(couples) < similarity_matrix.shape[0]:
-        for man in range(similarity_matrix.shape[0]):
-            if man not in couples:
-                woman = men_prefs[man][0]
-                if woman not in couples.values():
-                    couples[man] = woman
-                else:
-                    current_man = list(couples.keys())[
-                        list(couples.values()).index(woman)
-                    ]
-                    if list(women_prefs[woman]).index(man) < list(
-                        women_prefs[woman]
-                    ).index(current_man):
-                        del couples[current_man]
-                        couples[man] = woman
-        for couple in couples.items():
-            men_prefs[couple[0]] = men_prefs[couple[0]][1:]
-    return list(couples.items())
+    # women_rank[m, w] = the rank of man m in woman w's preference list (0 = best).
+    women_rank = np.argsort(np.argsort(distance_matrix, axis=0), axis=0)
+
+    next_proposal = [0] * n_men  # index into men_prefs[man] of the next woman to try
+    woman_partner: dict = {}  # woman -> currently engaged man
+    free_men = list(range(n_men))
+    while free_men:
+        man = free_men.pop(0)
+        if next_proposal[man] >= n_women:
+            continue  # exhausted his list (possible when there are fewer women)
+        woman = int(men_prefs[man][next_proposal[man]])
+        next_proposal[man] += 1
+        current = woman_partner.get(woman)
+        if current is None:
+            woman_partner[woman] = man
+        elif women_rank[man, woman] < women_rank[current, woman]:
+            woman_partner[woman] = man
+            free_men.append(current)  # the jilted man is free again
+        else:
+            free_men.append(man)  # rejected; he will try his next choice
+    return [(man, woman) for woman, man in woman_partner.items()]
 
 
-def kuhn_munkres_matching(similarity_matrix):
+def kuhn_munkres_matching(similarity_matrix, *, sense='maximize'):
     """
     Kuhn-Munkres Algorithm: Another implementation of the Hungarian algorithm using
-    the `networkx` package.
+    the `networkx` package (requires the optional ``equate[graph]`` extra).
 
-    :param similarity_matrix: A sparse matrix of similarities.
+    :param similarity_matrix: A matrix of scores (see ``sense``); converted to edge
+        costs via the ``to_cost`` SSOT.
     :return: List of tuples (row_index, col_index) for matched pairs.
     """
     import networkx as nx
 
+    cost = to_cost(similarity_matrix, sense=sense)
     G = nx.Graph()
     for i in range(similarity_matrix.shape[0]):
         for j in range(similarity_matrix.shape[1]):
-            G.add_edge(f'key_{i}', f'value_{j}', weight=-similarity_matrix[i, j])
+            G.add_edge(f'key_{i}', f'value_{j}', weight=cost[i, j])
     matching = nx.algorithms.bipartite.matching.minimum_weight_full_matching(
         G, weight='weight'
     )

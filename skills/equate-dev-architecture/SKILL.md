@@ -55,10 +55,10 @@ into each stage/concern; `docs/research/README.md` is the index.
 
 1. **Score sense is explicit and centralized.** Scores default to **similarity,
    higher = better**. Every matcher shares one knob `sense: Literal['maximize','minimize'] = 'maximize'`
-   and routes similarity→cost through a single `_to_cost(scores, *, sense)` SSOT.
-   *Do not* hand-roll per-matcher conversions — today `util.py` has three
-   inconsistent ones (`S.max()-S`, `-S`, `1-S`); that is a latent bug the redesign
-   fixes first.
+   and routes similarity→cost through the single `to_cost(scores, *, sense)` SSOT in
+   `equate/base.py` (shipped in #2 — it replaced three inconsistent per-matcher
+   conversions `S.max()-S`/`-S`/`1-S`, and also uncovered/fixed a broken hand-rolled
+   Gale-Shapley). *Never* hand-roll a per-matcher conversion.
 2. **One sparse `ScoreMatrix` SSOT** flows compare → match, carrying `sense` + row/col
    labels. Blocking = leaving cells uncomputed (sparse), not a separate data model.
 3. **Comparators are not assumed symmetric or metric.** A comparator declares
@@ -109,14 +109,14 @@ into each stage/concern; `docs/research/README.md` is the index.
 ```
 equate/
 ├── __init__.py     # facade: match(), dedupe(), link(), resolve()
-├── base.py         # stage protocols; ScoreMatrix (sparse SSOT); Candidate/Matching/Explanation
+├── base.py         # stage protocols; to_cost SSOT; ScoreMatrix; Candidate/Matching/Explanation/Partition  ← #2
 ├── featurize/      # registry + identity/key-fn; text(tfidf default | sbert|openai [extra]);
 │                   #   image/audio [extra]; structured (per-field products)
 ├── compare/        # registry; direct() vs featurized(); string(difflib | rapidfuzz|jellyfish [extra]);
 │                   #   numeric_geo; vector(cosine); vectorize(comparison-vector combiners); calibrate
 ├── block/          # Blocker protocol; all_pairs default; keyed blocking; index build/query;
 │                   #   ann/lsh [extra]; metablock; PC/RR/PQ metrics
-├── match/          # registry; _to_cost SSOT; assign(greedy, scipy LAP default, sparse routing);
+├── match/          # registry; assign(greedy, scipy LAP default, sparse routing);
 │                   #   graph[extra]; stable; soft[POT extra]; kbest(Murty)
 ├── cluster/        # connected-components default; correlation; canonicalize (golden record)
 ├── interactive/    # CandidateStore (top-k+scores, persisted); constraints (local re-solve);
