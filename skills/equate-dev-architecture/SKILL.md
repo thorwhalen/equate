@@ -110,8 +110,12 @@ into each stage/concern; `docs/research/README.md` is the index.
 equate/
 ├── __init__.py     # facade: match(), dedupe(), link(), resolve()
 ├── base.py         # stage protocols; to_cost SSOT; ScoreMatrix; Candidate/Matching/Explanation/Partition  ← #2
-├── featurize/      # registry + identity/key-fn; text(tfidf default | sbert|openai [extra]);
-│                   #   image/audio [extra]; structured (per-field products)
+├── _dependencies.py # require()/have() + MissingDependencyError (lazy optional deps)  ← #3
+├── registry.py     # generic name→lazy-factory Registry (open-closed dispatch)  ← #4
+├── _vector.py      # numpy cosine + L2-normalize (drops the sklearn dep)  ← #4
+├── featurize/      # featurizers registry + resolve_featurizer; identity/key-fn;  ← #4
+│                   #   tfidf.py = pure numpy/scipy char-n-gram TF-IDF (core default);
+│                   #   text.py = [sbert|openai|…] dense embedders behind extras (lazy)
 ├── compare/        # registry; direct() vs featurized(); string(difflib | rapidfuzz|jellyfish [extra]);
 │                   #   numeric_geo; vector(cosine); vectorize(comparison-vector combiners); calibrate
 ├── block/          # Blocker protocol; all_pairs default; keyed blocking; index build/query;

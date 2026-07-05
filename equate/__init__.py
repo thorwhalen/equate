@@ -13,9 +13,13 @@ from equate.base import (
     Matching,
     Explanation,
     Partition,
+    FeaturizerMeta,
+    ComparatorMeta,
 )
 
 from equate._dependencies import require, have, MissingDependencyError
+from equate.registry import Registry
+from equate.featurize import featurizers, resolve_featurizer
 
 from equate.util import (
     match_keys_to_values,

@@ -46,8 +46,8 @@ def test_import_equate_stays_light():
     """`import equate` must not eagerly pull heavy/optional deps."""
     code = (
         "import equate, sys;"
-        "heavy=[m for m in ('grub','sklearn','networkx','pandas','rapidfuzz') "
-        "if m in sys.modules];"
+        "heavy=[m for m in ('grub','sklearn','networkx','pandas','rapidfuzz',"
+        "'sentence_transformers','openai') if m in sys.modules];"
         "print(heavy);"
         "sys.exit(1 if heavy else 0)"
     )

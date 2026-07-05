@@ -36,8 +36,6 @@ classifiers = [
 dependencies = [
     "numpy",
     "scipy",
-    "scikit-learn",
-    "grub",
 ]
 
 [project.optional-dependencies]
@@ -59,6 +57,9 @@ ot = ["POT"]
 # --- interactive: active learning + LLM (interactive stage) ---
 active = ["scikit-activeml"]
 llm = ["openai"]
+# --- legacy / interop featurizers (default TF-IDF is now pure numpy/scipy) ---
+grub = ["grub"]
+sklearn = ["scikit-learn"]
 # --- examples & dev ---
 examples = ["pandas", "py2store", "requests"]
 dev = ["pytest>=7.0", "pytest-cov>=4.0", "ruff>=0.1.0"]

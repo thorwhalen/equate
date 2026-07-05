@@ -29,6 +29,7 @@ from scipy.sparse import issparse
 __all__ = [
     'Sense',
     'Featurizer',
+    'FeaturizerMeta',
     'Comparator',
     'ComparatorMeta',
     'Blocker',
@@ -86,6 +87,33 @@ class ComparatorMeta:
     bounded: bool = False
     is_metric: bool = False
     is_symmetric: bool = True
+
+
+@dataclass(frozen=True)
+class FeaturizerMeta:
+    """Declared properties of a featurizer (decision register D9), so the framework
+    can pick a legal index/metric, auto-apply a required query/passage prefix, refuse a
+    non-commercial model in a commercial context, and offer Matryoshka truncation.
+
+    - ``output_kinds``: what the representation is — ``'vector'`` / ``'set'`` /
+      ``'bitstring'`` / ``'scalar'`` / ``'structured'`` (a multi-functional embedder may
+      emit several, e.g. dense + sparse);
+    - ``normalize``: whether output vectors are already L2-normalized;
+    - ``dim`` / ``max_seq_len``: dimensionality and max input length, when fixed;
+    - ``license``: SPDX/label, so a commercial context can refuse non-commercial models;
+    - ``query_prefix`` / ``passage_prefix``: instruction prefixes some embedders require
+      (e.g. E5's ``"query: "`` / ``"passage: "``) — a silent-omission footgun;
+    - ``truncatable_to``: Matryoshka dims the embedding can be safely truncated to.
+    """
+
+    output_kinds: tuple = ('vector',)
+    normalize: bool = False
+    dim: Optional[int] = None
+    license: Optional[str] = None
+    max_seq_len: Optional[int] = None
+    query_prefix: Optional[str] = None
+    passage_prefix: Optional[str] = None
+    truncatable_to: tuple = ()
 
 
 def to_cost(scores, *, sense: Sense = 'maximize'):

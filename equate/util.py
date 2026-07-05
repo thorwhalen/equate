@@ -10,18 +10,11 @@ import numpy as np
 
 from equate.base import to_cost
 from equate._dependencies import require
+from equate._vector import cosine_similarity
 
-# grub (TF-IDF) and scikit-learn (cosine_similarity) are imported lazily inside the
-# functions that use them, so a bare `import equate` stays numpy/scipy-light. They are
-# still declared core dependencies today; moving them behind an extra waits on the
-# pure-numpy TF-IDF default (roadmap #4).
-
-
-def _cosine_similarity(*args, **kwargs):
-    """Lazy proxy for sklearn's cosine_similarity (the default text comparator)."""
-    from sklearn.metrics.pairwise import cosine_similarity
-
-    return cosine_similarity(*args, **kwargs)
+# The default text path is now pure numpy/scipy: char-n-gram TF-IDF
+# (equate.featurize) + cosine similarity (equate._vector). scikit-learn and grub are
+# optional extras, imported lazily only where still offered (mk_text_to_vect).
 
 
 def ensure_sparse(matrix):
@@ -70,32 +63,41 @@ def transform_text(text, transformer):
 
 
 def mk_text_to_vect(*learn_texts):
-    from grub import SearchStore  # lazy: keeps `import equate` numpy/scipy-light
+    """Legacy grub-backed TF-IDF featurizer (requires the optional ``equate[grub]``
+    extra). The default text featurizer is now equate's pure numpy/scipy char-n-gram
+    TF-IDF — see :func:`equate.featurize.mk_tfidf`.
+    """
+    grub = require('grub', extra='grub', purpose='the legacy grub TF-IDF featurizer')
 
     docs = dict(enumerate(chain(*learn_texts)))
-    s = SearchStore(docs)
+    s = grub.SearchStore(docs)
     return partial(transform_text, transformer=s.tfidf.transform)
 
 
 def similarity_matrix(keys, values, *, obj_to_vect=None, similarity_func=None):
     """Return a matrix of the similarity of the keys to the values.
-    By default, the `obj_to_vect` will be learned from the keys and values,
-    using the tfidf vectorizer from `grub`.
 
-    You can pass in a different `obj_to_vect` function to use a different vectorizer:
-    For example, pre-computed embeddings such as word2vec or fasttext, or openai
-    embeddings.
+    By default the featurizer is learned from ``keys`` and ``values`` using equate's
+    pure numpy/scipy char-n-gram TF-IDF (:mod:`equate.featurize`), and similarity is
+    cosine (:func:`equate._vector.cosine_similarity`) — no scikit-learn or grub needed.
+    Pass ``obj_to_vect`` to use a different batch featurizer (precomputed embeddings, or
+    a registered name resolved via ``equate.featurize.resolve_featurizer``), and
+    ``similarity_func`` to use a different similarity.
 
     >>> keys = ['apple pie', 'apple crumble', 'banana split']
     >>> values = ['american pie', 'big apple', 'american girl', 'banana republic']
     >>> m = similarity_matrix(keys, values)
     >>> m.round(2).tolist()
-    [[0.54, 0.38, 0.0, 0.0], [0.0, 0.33, 0.0, 0.0], [0.0, 0.0, 0.0, 0.41]]
+    [[0.32, 0.42, 0.01, 0.0], [0.04, 0.35, 0.01, 0.02], [0.03, 0.04, 0.02, 0.44]]
     """
+    keys, values = list(keys), list(values)
     if similarity_func is None:
-        similarity_func = _cosine_similarity
-    obj_to_vect = obj_to_vect or mk_text_to_vect(keys, values)
-    key_vectors, value_vectors = map(obj_to_vect, (keys, values))
+        similarity_func = cosine_similarity
+    if obj_to_vect is None:
+        from equate.featurize import resolve_featurizer
+
+        obj_to_vect = resolve_featurizer('tfidf', corpus=keys + values)
+    key_vectors, value_vectors = obj_to_vect(keys), obj_to_vect(values)
     return similarity_func(key_vectors, value_vectors)
 
 
