@@ -2,6 +2,9 @@ docs/*
 # ...but keep the hand-written research corpus tracked (generated Sphinx/mkdocs
 # output still lives elsewhere under docs/ and stays ignored by the line above).
 !docs/research/
+# Local-only Claude Code files (keep CLAUDE.md and skills/ symlinks tracked)
+.claude/settings.local.json
+.claude/handoffs/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
