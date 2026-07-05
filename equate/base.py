@@ -30,6 +30,7 @@ __all__ = [
     'Sense',
     'Featurizer',
     'Comparator',
+    'ComparatorMeta',
     'Blocker',
     'Matcher',
     'to_cost',
@@ -56,28 +57,58 @@ Featurizer = Callable[[Iterable[Any]], Sequence[Any]]
 Comparator = Callable[[Any, Any], float]
 
 #: ② Block — candidate generation: yield ``(i, j)`` index pairs lazily, never a
-#: materialized n×m matrix. The default ``all_pairs`` blocker is the correctness base.
+#: materialized n×m matrix. A default ``all_pairs`` blocker (roadmap #5) will be the
+#: correctness baseline.
 Blocker = Callable[..., Iterable[tuple]]
 
 #: ③ Match — turn a score structure into matched ``(i, j)`` pairs; accepts ``*, sense``.
 Matcher = Callable[..., Iterable[tuple]]
 
 
+@dataclass(frozen=True)
+class ComparatorMeta:
+    """Declared properties of a comparator, so the framework adapts instead of the
+    caller hard-coding conversions (decision register D2/D3/D6).
+
+    - ``polarity``: ``'similarity'`` (higher = more alike) or ``'distance'`` (lower =
+      more alike);
+    - ``bounded``: whether scores lie in a known bounded range (e.g. ``[0, 1]``);
+    - ``is_metric``: obeys identity / symmetry / triangle-inequality (cosine does NOT —
+      so a triangle-inequality index like a VP/ball tree must not be used on it);
+    - ``is_symmetric``: ``g(a, b) == g(b, a)`` (Monge-Elkan, containment do NOT — such
+      comparators stay directional and are only symmetrized at the matcher boundary).
+
+    A comparator can carry this on a ``.meta`` attribute; the ``compare`` stage
+    (roadmap #4) attaches it when registering strategies.
+    """
+
+    polarity: Literal['similarity', 'distance'] = 'similarity'
+    bounded: bool = False
+    is_metric: bool = False
+    is_symmetric: bool = True
+
+
 def to_cost(scores, *, sense: Sense = 'maximize'):
     """Convert a score array to a **cost** array for minimization-based matchers.
 
-    This is the single source of truth for the similarity->cost conversion, so every
-    matcher agrees. Historically the matchers each converted differently
-    (``hungarian`` used ``S.max() - S``, ``kuhn_munkres`` used ``-S``, ``stable`` used
-    ``1 - S``) — equivalent only by luck, and wrong for unbounded or non-``[0, 1]``
-    scores. Route every cost-minimizing matcher through this instead.
+    The single source of truth for the similarity->cost conversion, so every matcher
+    agrees. Historically the matchers each converted differently (``hungarian`` used
+    ``S.max() - S``, ``kuhn_munkres`` used ``-S``, ``stable`` used ``1 - S``) — wrong
+    for unbounded or non-``[0, 1]`` scores. Route every cost-minimizing matcher through
+    this instead.
 
     - ``sense='maximize'`` (a *similarity*, higher = better): return the complement to
-      the maximum, ``S.max() - S``. It is non-negative (safe for min-weight solvers)
-      and, differing from ``-S`` only by a global constant, yields the same optimal
-      assignment.
+      the maximum, ``S.max() - S`` — non-negative (safe for min-weight solvers), and
+      for a **fixed-cardinality** assignment it yields the same optimum as ``-S``.
     - ``sense='minimize'`` (already a *distance*/cost, lower = better): returned
       unchanged. An edit/DTW/geographic distance is never forced through ``1 - S``.
+
+    A **sparse** input is treated as blocker output: structurally-absent cells are
+    *non-candidates* and become a worst-case cost (never preferred over a real pair) —
+    *not* a score of 0, which would let unscored holes win when stored similarities are
+    negative. This densifies for correctness; the efficient path that never
+    materializes the full matrix lands with the blocking / sparse-LAP work (roadmap #6).
+    Empty inputs return an empty array (an empty collection yields an empty matching).
 
     >>> import numpy as np
     >>> S = np.array([[0.9, 0.1], [0.2, 0.8]])
@@ -86,12 +117,46 @@ def to_cost(scores, *, sense: Sense = 'maximize'):
     >>> to_cost(S, sense='minimize') is S
     True
     """
+    if sense not in ('maximize', 'minimize'):
+        raise ValueError(f"sense must be 'maximize' or 'minimize', got {sense!r}")
+    if issparse(scores):
+        return _sparse_to_cost(scores, sense=sense)
     if sense == 'minimize':
         return scores
-    if sense != 'maximize':
-        raise ValueError(f"sense must be 'maximize' or 'minimize', got {sense!r}")
-    arr = scores.toarray() if issparse(scores) else np.asarray(scores, dtype=float)
+    arr = np.asarray(scores, dtype=float)
+    if arr.size == 0:
+        return arr
     return arr.max() - arr
+
+
+def _sparse_to_cost(scores, *, sense: Sense):
+    """``to_cost`` for a sparse (blocked) score matrix — see :func:`to_cost`.
+
+    Densifies (a correctness stopgap until the sparse-LAP path in roadmap #6). The
+    structurally-absent (non-candidate) cells get a cost strictly worse than any real
+    pair, so the optimizer never prefers an unscored hole over a scored pair — for
+    ``'maximize'`` this is the bug when stored similarities are negative; for
+    ``'minimize'`` it stops absent cells (densified to 0) from looking cheapest.
+    """
+    dense = np.asarray(scores.toarray(), dtype=float)
+    if scores.nnz == 0 or dense.size == 0:
+        return dense
+    stored_mask = _stored_mask(scores)
+    if sense == 'maximize':
+        cost = float(scores.data.max()) - dense
+    else:  # 'minimize': the stored values are already costs
+        cost = dense.copy()
+    # non-candidate cells become strictly worse than the worst real pair
+    worst = float(cost[stored_mask].max()) + 1.0
+    cost[~stored_mask] = worst
+    return cost
+
+
+def _stored_mask(scores):
+    """Boolean dense mask, True where the sparse matrix structurally stores a cell."""
+    ones = scores.copy()
+    ones.data = np.ones_like(ones.data)
+    return np.asarray(ones.toarray()) != 0
 
 
 @dataclass
@@ -132,12 +197,21 @@ class Explanation:
 
 @dataclass
 class Candidate:
-    """One scored correspondence between a ``left`` item and a ``right`` item."""
+    """One scored correspondence between a ``left`` item and a ``right`` item.
+
+    Iterating a ``Candidate`` yields ``(left, right)``, so a list of candidates is
+    ``dict``-able into a mapping — keeping the "richer iterates as simpler" contract
+    consistent across the result types.
+    """
 
     left: Any
     right: Any
     score: float
     explanation: Optional[Explanation] = None
+
+    def __iter__(self):
+        yield self.left
+        yield self.right
 
 
 @dataclass

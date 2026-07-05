@@ -119,3 +119,50 @@ def test_candidate_and_explanation_are_structured():
     c = Candidate(left="apple", right="app", score=0.8, explanation=Explanation("edit-close"))
     assert c.left == "apple" and c.score == 0.8
     assert c.explanation.summary == "edit-close"
+
+
+def test_candidate_iterates_as_pair():
+    cands = [Candidate("a", "x", 0.9), Candidate("b", "y", 0.8)]
+    assert dict(cands) == {"a": "x", "b": "y"}
+
+
+# --- review-driven fixes: empty inputs, sparse edge cases -------------------------
+
+@pytest.mark.parametrize("shape", [(0, 0), (0, 3), (2, 0)])
+def test_to_cost_empty_does_not_crash(shape):
+    C = to_cost(np.empty(shape))
+    assert C.shape == shape
+
+
+@pytest.mark.parametrize("shape", [(0, 0), (0, 2), (2, 0)])
+def test_matchers_handle_empty_input(shape):
+    assert dict(hungarian_matching(np.empty(shape))) == {}
+    assert stable_marriage_matching(np.empty(shape)) == []
+
+
+def test_to_cost_sparse_maximize_avoids_absent_cells_with_negative_scores():
+    # only the anti-diagonal holds real (negative) candidates; the diagonal is absent
+    csr = pytest.importorskip("scipy.sparse").csr_matrix
+    S = csr(([-0.3, -0.4], ([0, 1], [1, 0])), shape=(2, 2))
+    # must pick the two real (anti-diagonal) candidates, not the never-scored diagonal
+    assert dict(hungarian_matching(S)) == {0: 1, 1: 0}
+
+
+def test_to_cost_sparse_minimize_densifies_and_avoids_absent():
+    sparse = pytest.importorskip("scipy.sparse")
+    # a full sparse cost matrix (no absent cells): minimize should not crash
+    D = sparse.csr_matrix(np.array([[0.1, 0.9], [0.8, 0.2]]))
+    assert dict(hungarian_matching(D, sense="minimize")) == {0: 0, 1: 1}
+    # absent cells in a minimize matrix must be worst-case, not cheapest-at-0
+    absent_ok = sparse.csr_matrix(([0.1, 0.2], ([0, 1], [1, 0])), shape=(2, 2))
+    assert dict(hungarian_matching(absent_ok, sense="minimize")) == {0: 1, 1: 0}
+
+
+def test_comparator_meta_defaults_and_directionality():
+    from equate.base import ComparatorMeta
+
+    default = ComparatorMeta()
+    assert default.polarity == "similarity"
+    assert default.is_symmetric is True and default.is_metric is False
+    directional = ComparatorMeta(polarity="distance", is_symmetric=False, bounded=True)
+    assert directional.is_symmetric is False and directional.bounded is True
