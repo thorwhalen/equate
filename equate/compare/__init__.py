@@ -15,6 +15,8 @@ the framework adapts — never treating a non-metric as a metric, keeping direct
 comparators (Monge-Elkan, containment) directional until the matcher boundary (D3).
 """
 
+from functools import partial
+
 import numpy as np
 
 from equate.registry import Registry
@@ -52,27 +54,50 @@ __all__ = [
 comparators = Registry('comparator')
 
 
-def _const(obj):
-    """A zero-arg factory returning a fixed comparator (rejects stray config kwargs)."""
-    return lambda: obj
+def _const(obj, name):
+    """A factory returning a fixed comparator; passing config is a clear error."""
+
+    def factory(**config):
+        if config:
+            raise TypeError(
+                f"comparator {name!r} takes no configuration; got {list(config)}"
+            )
+        return obj
+
+    return factory
 
 
-# Plain pairwise comparators (core, or lazy-on-first-call for optional-dep ones).
+def _configurable(fn):
+    """A factory returning ``fn``, partially applied with any keyword config."""
+
+    def factory(**config):
+        return partial(fn, **config) if config else fn
+
+    return factory
+
+
+# Fixed pairwise comparators (core, or lazy-on-first-call for optional-dep ones).
 for _name, _fn in [
     ('ratio', _string.ratio),
     ('levenshtein', _string.levenshtein),
     ('levenshtein_distance', _string.levenshtein_distance),
-    ('monge_elkan', _string.monge_elkan),
     ('jaro_winkler', _string.jaro_winkler),
-    ('phonetic', _string.phonetic_match),
     ('cosine', _vec.cosine),
     ('dot', _vec.dot),
     ('angular', _vec.angular_distance),
     ('haversine', _ng.haversine),
 ]:
-    comparators.register(_name, _const(_fn), meta=getattr(_fn, 'meta', None))
+    comparators.register(_name, _const(_fn, _name), meta=getattr(_fn, 'meta', None))
 
-# Configurable comparator factories (take config, return a comparator).
+# Configurable pairwise comparators (accept keyword config, applied via functools.partial).
+comparators.register(
+    'monge_elkan', _configurable(_string.monge_elkan), meta=_string.monge_elkan.meta
+)
+comparators.register(
+    'phonetic', _configurable(_string.phonetic_match), meta=_string.phonetic_match.meta
+)
+
+# Comparator factories (build a configured comparator from config).
 comparators.register('exp_decay', _ng.exp_decay)
 comparators.register('linear_decay', _ng.linear_decay)
 comparators.register('gaussian_decay', _ng.gaussian_decay)
@@ -102,6 +127,9 @@ def direct(h, *, meta=None):
     """
 
     def build(A, B):
+        A, B = list(A), list(B)  # materialize: B is iterated once per row of A
+        if not A:
+            return np.empty((0, len(B)), dtype=float)
         return np.array([[h(a, b) for b in B] for a in A], dtype=float)
 
     build.comparator = h

@@ -17,9 +17,22 @@ def cosine(u, v):
     """
     u = np.asarray(u, dtype=float)
     v = np.asarray(v, dtype=float)
-    nu = np.linalg.norm(u)
-    nv = np.linalg.norm(v)
-    return float(u @ v / (nu * nv)) if nu and nv else 0.0
+    if u.shape != v.shape:
+        raise ValueError(
+            f"cosine: vectors must have the same shape, got {u.shape} and {v.shape}"
+        )
+    # Scale each vector by its max-abs component first, so squaring a large component
+    # cannot overflow to inf/NaN. Cosine is scale-invariant, so this does not change
+    # the value for in-range inputs but keeps huge-magnitude vectors correct.
+    su = float(np.abs(u).max(initial=0.0))
+    sv = float(np.abs(v).max(initial=0.0))
+    if su == 0.0 or sv == 0.0:
+        return 0.0
+    u = u / su
+    v = v / sv
+    denom = float(np.linalg.norm(u) * np.linalg.norm(v))
+    result = float(u @ v / denom) if denom else 0.0
+    return result if math.isfinite(result) else 0.0
 
 
 cosine.meta = ComparatorMeta(

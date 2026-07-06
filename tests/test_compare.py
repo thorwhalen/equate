@@ -155,3 +155,59 @@ def test_jaro_winkler_if_available():
     pytest.importorskip("rapidfuzz")
     jw = resolve_comparator("jaro_winkler")
     assert jw("martha", "marhta") > 0.9
+
+
+# --- review-driven fixes ----------------------------------------------------------
+
+def test_cosine_numerically_stable_for_huge_vectors():
+    # identical huge vectors must be similarity 1.0 (no overflow -> NaN)
+    huge = [1e200, 1e200]
+    assert V.cosine(huge, huge) == pytest.approx(1.0)
+    np.testing.assert_allclose(V.angular_distance(huge, huge), 0.0, atol=1e-6)
+
+
+def test_cosine_dimension_mismatch_raises():
+    with pytest.raises(ValueError):
+        V.cosine([1.0, 0.0], [1.0, 0.0, 0.0])
+
+
+def test_decay_rejects_nonpositive_scale():
+    with pytest.raises(ValueError):
+        NG.exp_decay(0)
+    with pytest.raises(ValueError):
+        NG.gaussian_decay(-1.0)
+    with pytest.raises(ValueError):
+        NG.linear_decay(0)
+
+
+def test_direct_materializes_one_shot_iterables():
+    build = direct(S.ratio)
+    M = build((k for k in ["ab", "cd"]), (v for v in ["ab", "ce"]))
+    assert M.shape == (2, 2) and M[0, 0] == 1.0
+
+
+def test_direct_empty_a_has_2d_shape():
+    build = direct(S.ratio)
+    assert build([], ["a", "b"]).shape == (0, 2)
+
+
+def test_monge_elkan_configurable_via_registry():
+    cmp = resolve_comparator("monge_elkan", sim=S.ratio)
+    assert callable(cmp) and 0.0 <= cmp("john smith", "smith john") <= 1.0
+
+
+def test_comparison_vector_missing_field_scores_missing_not_crash():
+    fields = {"name": S.levenshtein}
+    cv = comparison_vector({"name": "jon"}, {}, fields)  # 'name' missing in b
+    assert cv["name"] == 0.0  # default missing score; no TypeError from None
+
+
+def test_fellegi_sunter_handles_extreme_probabilities():
+    combine = fellegi_sunter({"f": 1.0}, {"f": 0.0})  # would be log(0)/div0 unclamped
+    assert combine({"f": 1.0}) > 0  # clamped, finite
+
+
+def test_fellegi_sunter_missing_field_gives_clear_keyerror():
+    combine = fellegi_sunter({"name": 0.9}, {"name": 0.1})
+    with pytest.raises(KeyError, match="city"):
+        combine({"city": 1.0})

@@ -24,18 +24,24 @@ def _get(record, field):
     return getattr(record, field, None)
 
 
-def comparison_vector(a, b, field_comparators):
+def comparison_vector(a, b, field_comparators, *, missing=0.0):
     """Return ``{field: comparator(a[field], b[field])}`` for each field comparator.
 
     ``field_comparators`` maps a field name to a pairwise comparator; records may be
-    mappings or objects (attribute access).
+    mappings or objects (attribute access). A field whose value is *missing* (``None``)
+    in either record scores ``missing`` (default 0.0) rather than being passed to the
+    comparator — many comparators (edit distance, ratio) raise on ``None``.
 
     >>> from equate.compare.string import levenshtein
     >>> cv = comparison_vector({'name': 'jon'}, {'name': 'john'}, {'name': levenshtein})
     >>> round(cv['name'], 2)
     0.75
     """
-    return {f: cmp(_get(a, f), _get(b, f)) for f, cmp in field_comparators.items()}
+    out = {}
+    for f, cmp in field_comparators.items():
+        va, vb = _get(a, f), _get(b, f)
+        out[f] = missing if (va is None or vb is None) else cmp(va, vb)
+    return out
 
 
 def weighted_sum(weights=None):
@@ -58,21 +64,30 @@ def max_combiner(cv):
     return max(cv.values(), default=0.0)
 
 
-def fellegi_sunter(m_probs, u_probs):
+def fellegi_sunter(m_probs, u_probs, *, eps=1e-6):
     """Fellegi-Sunter combiner (decision register D5): sum of per-field match weights.
 
     For each field with agreement ``s`` in [0, 1], contributes
     ``s*log(m/u) + (1-s)*log((1-m)/(1-u))`` — the log-likelihood-ratio "match weight".
     ``m_probs`` / ``u_probs`` are the m- and u-probabilities per field (from labels or
     EM; the EM estimation lives in the classify stage, roadmap #8). Returns a log-odds
-    score (higher = more likely a match).
+    score (higher = more likely a match). Probabilities are clamped to ``[eps, 1-eps]``
+    so ``m``/``u`` of exactly 0 or 1 can't cause ``log(0)`` / division-by-zero.
     """
+
+    def _clamp(p):
+        return min(1.0 - eps, max(eps, p))
 
     def combine(cv):
         total = 0.0
         for f, s in cv.items():
-            m = m_probs[f]
-            u = u_probs[f]
+            try:
+                m = _clamp(m_probs[f])
+                u = _clamp(u_probs[f])
+            except KeyError:
+                raise KeyError(
+                    f"fellegi_sunter: field {f!r} is missing from m_probs/u_probs"
+                ) from None
             total += s * math.log(m / u) + (1.0 - s) * math.log((1.0 - m) / (1.0 - u))
         return total
 

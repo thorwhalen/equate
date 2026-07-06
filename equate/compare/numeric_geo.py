@@ -22,27 +22,33 @@ def _default_distance(x, y):
 
 
 def exp_decay(scale=1.0, *, distance=_default_distance):
-    """Comparator mapping distance ``d`` to ``exp(-d / scale)`` in ``(0, 1]``."""
+    """Comparator mapping (non-negative) distance ``d`` to ``exp(-d / scale)`` in ``(0, 1]``."""
+    if scale <= 0:
+        raise ValueError(f"exp_decay scale must be > 0, got {scale!r}")
 
     def cmp(x, y):
-        return math.exp(-distance(x, y) / scale)
+        return math.exp(-abs(distance(x, y)) / scale)
 
     cmp.meta = _SIM
     return cmp
 
 
 def linear_decay(max_distance=1.0, *, distance=_default_distance):
-    """Comparator mapping distance ``d`` to ``max(0, 1 - d / max_distance)``."""
+    """Comparator mapping distance ``d`` to ``1 - d / max_distance``, clamped to [0, 1]."""
+    if max_distance <= 0:
+        raise ValueError(f"linear_decay max_distance must be > 0, got {max_distance!r}")
 
     def cmp(x, y):
-        return max(0.0, 1.0 - distance(x, y) / max_distance)
+        return min(1.0, max(0.0, 1.0 - abs(distance(x, y)) / max_distance))
 
     cmp.meta = _SIM
     return cmp
 
 
 def gaussian_decay(scale=1.0, *, distance=_default_distance):
-    """Comparator mapping distance ``d`` to ``exp(-(d / scale)^2 / 2)``."""
+    """Comparator mapping distance ``d`` to ``exp(-(d / scale)^2 / 2)`` in ``(0, 1]``."""
+    if scale <= 0:
+        raise ValueError(f"gaussian_decay scale must be > 0, got {scale!r}")
 
     def cmp(x, y):
         d = distance(x, y) / scale
