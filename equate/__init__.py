@@ -21,6 +21,13 @@ from equate._dependencies import require, have, MissingDependencyError
 from equate.registry import Registry
 from equate.featurize import featurizers, resolve_featurizer
 from equate.compare import comparators, resolve_comparator, direct, featurized
+from equate.block import (
+    blockers,
+    resolve_blocker,
+    all_pairs,
+    blocking_metrics,
+    score_candidates,
+)
 
 from equate.util import (
     match_keys_to_values,

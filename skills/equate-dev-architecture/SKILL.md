@@ -118,8 +118,8 @@ equate/
 │                   #   text.py = [sbert|openai|…] dense embedders behind extras (lazy)
 ├── compare/        # registry; direct() vs featurized(); string(difflib | rapidfuzz|jellyfish [extra]);  ← #5
 │                   #   numeric_geo(decay/haversine); vector(cosine/dot/angular); vectorize(combiners+FS); calibrate
-├── block/          # Blocker protocol; all_pairs default; keyed blocking; index build/query;
-│                   #   ann/lsh [extra]; metablock; PC/RR/PQ metrics
+├── block/          # Blocker (lazy candidate pairs); all_pairs default; keyed/SNM blocking;  ← #6
+│                   #   brute_knn (core) + ann/lsh [extra]; metablock; score_candidates→sparse; PC/RR/PQ
 ├── match/          # registry; assign(greedy, scipy LAP default, sparse routing);
 │                   #   graph[extra]; stable; soft[POT extra]; kbest(Murty)
 ├── cluster/        # connected-components default; correlation; canonicalize (golden record)
