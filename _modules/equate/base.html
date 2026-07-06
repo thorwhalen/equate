@@ -47,10 +47,16 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/_vector.html">equate._vector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/base.html">equate.base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/completion.html">equate.completion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/examples.html">equate.examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/registry.html">equate.registry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/util.html">equate.util</a></li>
 </ul>
 
@@ -110,6 +116,7 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s1">&#39;Sense&#39;</span><span class="p">,</span>
     <span class="s1">&#39;Featurizer&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;FeaturizerMeta&#39;</span><span class="p">,</span>
     <span class="s1">&#39;Comparator&#39;</span><span class="p">,</span>
     <span class="s1">&#39;ComparatorMeta&#39;</span><span class="p">,</span>
     <span class="s1">&#39;Blocker&#39;</span><span class="p">,</span>
@@ -169,6 +176,36 @@
     <span class="n">bounded</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">is_metric</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">is_symmetric</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="FeaturizerMeta">
+<a class="viewcode-back" href="../../module_docs/equate/featurize.html#equate.base.FeaturizerMeta">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FeaturizerMeta</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Declared properties of a featurizer (decision register D9), so the framework</span>
+<span class="sd">    can pick a legal index/metric, auto-apply a required query/passage prefix, refuse a</span>
+<span class="sd">    non-commercial model in a commercial context, and offer Matryoshka truncation.</span>
+
+<span class="sd">    - ``output_kinds``: what the representation is — ``&#39;vector&#39;`` / ``&#39;set&#39;`` /</span>
+<span class="sd">      ``&#39;bitstring&#39;`` / ``&#39;scalar&#39;`` / ``&#39;structured&#39;`` (a multi-functional embedder may</span>
+<span class="sd">      emit several, e.g. dense + sparse);</span>
+<span class="sd">    - ``normalize``: whether output vectors are already L2-normalized;</span>
+<span class="sd">    - ``dim`` / ``max_seq_len``: dimensionality and max input length, when fixed;</span>
+<span class="sd">    - ``license``: SPDX/label, so a commercial context can refuse non-commercial models;</span>
+<span class="sd">    - ``query_prefix`` / ``passage_prefix``: instruction prefixes some embedders require</span>
+<span class="sd">      (e.g. E5&#39;s ``&quot;query: &quot;`` / ``&quot;passage: &quot;``) — a silent-omission footgun;</span>
+<span class="sd">    - ``truncatable_to``: Matryoshka dims the embedding can be safely truncated to.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">output_kinds</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;vector&#39;</span><span class="p">,)</span>
+    <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">dim</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">license</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">max_seq_len</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">query_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">passage_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">truncatable_to</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">()</span></div>
 
 
 

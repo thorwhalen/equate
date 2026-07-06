@@ -1,0 +1,4 @@
+equate._dependencies
+====================
+.. automodule:: equate._dependencies
+   :members:

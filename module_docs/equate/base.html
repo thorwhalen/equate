@@ -25,7 +25,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="equate.completion" href="completion.html" />
-    <link rel="prev" title="equate" href="../equate.html" /> 
+    <link rel="prev" title="equate._vector" href="_vector.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,6 +50,8 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_vector.html">equate._vector</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">equate.base</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#equate.base.Blocker"><code class="docutils literal notranslate"><span class="pre">Blocker</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#equate.base.Candidate"><code class="docutils literal notranslate"><span class="pre">Candidate</span></code></a></li>
@@ -57,6 +59,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#equate.base.ComparatorMeta"><code class="docutils literal notranslate"><span class="pre">ComparatorMeta</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#equate.base.Explanation"><code class="docutils literal notranslate"><span class="pre">Explanation</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#equate.base.Featurizer"><code class="docutils literal notranslate"><span class="pre">Featurizer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.base.FeaturizerMeta"><code class="docutils literal notranslate"><span class="pre">FeaturizerMeta</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#equate.base.Matcher"><code class="docutils literal notranslate"><span class="pre">Matcher</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#equate.base.Matching"><code class="docutils literal notranslate"><span class="pre">Matching</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#equate.base.Matching.labeled_pairs"><code class="docutils literal notranslate"><span class="pre">Matching.labeled_pairs()</span></code></a></li>
@@ -77,6 +80,10 @@
 <li class="toctree-l1"><a class="reference internal" href="completion.html">equate.completion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">equate.examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">equate.registry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="util.html">equate.util</a></li>
 </ul>
 
@@ -188,6 +195,25 @@ any <code class="docutils literal notranslate"><span class="pre">key=</span></co
 <p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>]], <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>]]</p>
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="equate.base.FeaturizerMeta">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.base.</span></span><span class="sig-name descname"><span class="pre">FeaturizerMeta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_kinds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('vector',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_len</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passage_prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncatable_to</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/base.html#FeaturizerMeta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.base.FeaturizerMeta" title="Link to this definition"></a></dt>
+<dd><p>Declared properties of a featurizer (decision register D9), so the framework
+can pick a legal index/metric, auto-apply a required query/passage prefix, refuse a
+non-commercial model in a commercial context, and offer Matryoshka truncation.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">output_kinds</span></code>: what the representation is — <code class="docutils literal notranslate"><span class="pre">'vector'</span></code> / <code class="docutils literal notranslate"><span class="pre">'set'</span></code> /
+<code class="docutils literal notranslate"><span class="pre">'bitstring'</span></code> / <code class="docutils literal notranslate"><span class="pre">'scalar'</span></code> / <code class="docutils literal notranslate"><span class="pre">'structured'</span></code> (a multi-functional embedder may
+emit several, e.g. dense + sparse);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">normalize</span></code>: whether output vectors are already L2-normalized;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dim</span></code> / <code class="docutils literal notranslate"><span class="pre">max_seq_len</span></code>: dimensionality and max input length, when fixed;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">license</span></code>: SPDX/label, so a commercial context can refuse non-commercial models;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">query_prefix</span></code> / <code class="docutils literal notranslate"><span class="pre">passage_prefix</span></code>: instruction prefixes some embedders require
+(e.g. E5’s <code class="docutils literal notranslate"><span class="pre">&quot;query:</span> <span class="pre">&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;passage:</span> <span class="pre">&quot;</span></code>) — a silent-omission footgun;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">truncatable_to</span></code>: Matryoshka dims the embedding can be safely truncated to.</p></li>
+</ul>
+</dd></dl>
+
 <dl class="py data">
 <dt class="sig sig-object py" id="equate.base.Matcher">
 <span class="sig-prename descclassname"><span class="pre">equate.base.</span></span><span class="sig-name descname"><span class="pre">Matcher</span></span><a class="headerlink" href="#equate.base.Matcher" title="Link to this definition"></a></dt>
@@ -292,7 +318,7 @@ Empty inputs return an empty array (an empty collection yields an empty matching
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../equate.html" class="btn btn-neutral float-left" title="equate" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="_vector.html" class="btn btn-neutral float-left" title="equate._vector" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="completion.html" class="btn btn-neutral float-right" title="equate.completion" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

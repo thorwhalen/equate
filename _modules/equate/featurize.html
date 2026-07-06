@@ -1,0 +1,224 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.featurize &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/_vector.html">equate._vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/registry.html">equate.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">equate.featurize</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for equate.featurize</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;The featurize stage (①): map objects to comparable representations.</span>
+
+<span class="sd">A *featurizer* is a batch callable ``Iterable[object] -&gt; representations``. The default</span>
+<span class="sd">is a pure numpy/scipy char-n-gram TF-IDF (:mod:`equate.featurize.tfidf`) — no heavy</span>
+<span class="sd">dependencies; dense embedders (SBERT, OpenAI, ...) are optional extras</span>
+<span class="sd">(:mod:`equate.featurize.text`). Select a featurizer by name via the :data:`featurizers`</span>
+<span class="sd">registry, or pass a callable. Corpus-dependent featurizers (TF-IDF) are built by</span>
+<span class="sd">fitting on a corpus, which :func:`resolve_featurizer` handles.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">FeaturizerMeta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">Registry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.featurize.tfidf</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TfidfFeaturizer</span><span class="p">,</span>
+    <span class="n">mk_tfidf</span><span class="p">,</span>
+    <span class="n">char_ngrams</span><span class="p">,</span>
+    <span class="n">DFLT_NGRAM_RANGE</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.featurize</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span> <span class="k">as</span> <span class="n">_text</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;featurizers&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;identity&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;resolve_featurizer&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;TfidfFeaturizer&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;mk_tfidf&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;char_ngrams&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;FeaturizerMeta&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">#: the featurize-stage strategy registry (name -&gt; lazy factory)</span>
+<span class="n">featurizers</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;featurizer&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="identity">
+<a class="viewcode-back" href="../../module_docs/equate/featurize.html#equate.featurize.identity">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">identity</span><span class="p">(</span><span class="n">objects</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The identity featurizer: use the objects themselves as their representation.</span>
+
+<span class="sd">    This is the degenerate case that recovers exact matching (φ = id).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">objects</span><span class="p">)</span></div>
+
+
+
+<span class="n">identity</span><span class="o">.</span><span class="n">meta</span> <span class="o">=</span> <span class="n">FeaturizerMeta</span><span class="p">(</span><span class="n">output_kinds</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;scalar&#39;</span><span class="p">,</span> <span class="s1">&#39;structured&#39;</span><span class="p">))</span>
+
+
+<span class="nd">@featurizers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;identity&#39;</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">identity</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_identity_factory</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">identity</span>
+
+
+<span class="nd">@featurizers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;tfidf&#39;</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">TfidfFeaturizer</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_tfidf_factory</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">ngram_range</span><span class="o">=</span><span class="n">DFLT_NGRAM_RANGE</span><span class="p">,</span> <span class="n">lowercase</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a char-n-gram TF-IDF featurizer (unfit; ``resolve_featurizer`` fits it).&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">TfidfFeaturizer</span><span class="p">(</span><span class="n">ngram_range</span><span class="o">=</span><span class="n">ngram_range</span><span class="p">,</span> <span class="n">lowercase</span><span class="o">=</span><span class="n">lowercase</span><span class="p">)</span>
+
+
+<span class="c1"># Dense embedders (optional extras) — registered as lazy factories. The metadata is</span>
+<span class="c1"># defined once (in text.py) and mirrored here, so the two copies cannot diverge.</span>
+<span class="n">featurizers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;sbert&#39;</span><span class="p">,</span> <span class="n">_text</span><span class="o">.</span><span class="n">sbert_featurizer</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">_text</span><span class="o">.</span><span class="n">SBERT_META</span><span class="p">)</span>
+<span class="n">featurizers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;openai&#39;</span><span class="p">,</span> <span class="n">_text</span><span class="o">.</span><span class="n">openai_featurizer</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">_text</span><span class="o">.</span><span class="n">OPENAI_META</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="resolve_featurizer">
+<a class="viewcode-back" href="../../module_docs/equate/featurize.html#equate.featurize.resolve_featurizer">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_featurizer</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">corpus</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve ``spec`` to a ready-to-use batch featurizer.</span>
+
+<span class="sd">    - ``None`` -&gt; the default ``&#39;tfidf&#39;``;</span>
+<span class="sd">    - a registered name (``str``) -&gt; built via its factory (``**config`` is forwarded, so</span>
+<span class="sd">      an unknown option raises rather than being silently ignored);</span>
+<span class="sd">    - a callable -&gt; returned as-is (assumed already a batch featurizer).</span>
+
+<span class="sd">    A *fittable* featurizer (one exposing ``fit``, e.g. TF-IDF) is fit on ``corpus``</span>
+<span class="sd">    here — and a corpus is then required: resolving a fittable featurizer without one</span>
+<span class="sd">    raises immediately (a clear error at the call site) instead of returning a</span>
+<span class="sd">    half-built object that only fails later inside ``transform``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="s1">&#39;tfidf&#39;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">feat</span> <span class="o">=</span> <span class="n">featurizers</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+        <span class="n">feat</span> <span class="o">=</span> <span class="n">spec</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;featurizer spec must be a registered name or a callable, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    <span class="n">fit</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="s1">&#39;fit&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">fit</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">corpus</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;featurizer </span><span class="si">{</span><span class="n">spec</span><span class="si">!r}</span><span class="s2"> must be fit on a corpus; pass corpus=... &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(e.g. resolve_featurizer(</span><span class="si">{</span><span class="n">spec</span><span class="si">!r}</span><span class="s2">, corpus=your_texts))&quot;</span>
+            <span class="p">)</span>
+        <span class="n">feat</span> <span class="o">=</span> <span class="n">fit</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span> <span class="ow">or</span> <span class="n">feat</span>
+    <span class="c1"># make the declared metadata reachable off the resolved featurizer</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="s1">&#39;meta&#39;</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">feat</span><span class="o">.</span><span class="n">meta</span> <span class="o">=</span> <span class="n">featurizers</span><span class="o">.</span><span class="n">meta</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">pass</span>
+    <span class="k">return</span> <span class="n">feat</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

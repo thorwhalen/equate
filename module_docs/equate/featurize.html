@@ -1,0 +1,233 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.featurize &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="equate.featurize.text" href="featurize/text.html" />
+    <link rel="prev" title="equate.examples.site_names" href="examples/site_names.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_vector.html">equate._vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">equate.featurize</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#equate.featurize.FeaturizerMeta"><code class="docutils literal notranslate"><span class="pre">FeaturizerMeta</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.featurize.TfidfFeaturizer"><code class="docutils literal notranslate"><span class="pre">TfidfFeaturizer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#equate.featurize.TfidfFeaturizer.meta"><code class="docutils literal notranslate"><span class="pre">TfidfFeaturizer.meta</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.featurize.char_ngrams"><code class="docutils literal notranslate"><span class="pre">char_ngrams()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.featurize.featurizers"><code class="docutils literal notranslate"><span class="pre">featurizers</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.featurize.identity"><code class="docutils literal notranslate"><span class="pre">identity()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.featurize.mk_tfidf"><code class="docutils literal notranslate"><span class="pre">mk_tfidf()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.featurize.resolve_featurizer"><code class="docutils literal notranslate"><span class="pre">resolve_featurizer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">equate.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">equate.featurize</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/equate/featurize.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-equate.featurize">
+<span id="equate-featurize"></span><h1>equate.featurize<a class="headerlink" href="#module-equate.featurize" title="Link to this heading"></a></h1>
+<p>The featurize stage (①): map objects to comparable representations.</p>
+<p>A <em>featurizer</em> is a batch callable <code class="docutils literal notranslate"><span class="pre">Iterable[object]</span> <span class="pre">-&gt;</span> <span class="pre">representations</span></code>. The default
+is a pure numpy/scipy char-n-gram TF-IDF (<a class="reference internal" href="featurize/tfidf.html#module-equate.featurize.tfidf" title="equate.featurize.tfidf"><code class="xref py py-mod docutils literal notranslate"><span class="pre">equate.featurize.tfidf</span></code></a>) — no heavy
+dependencies; dense embedders (SBERT, OpenAI, …) are optional extras
+(<a class="reference internal" href="featurize/text.html#module-equate.featurize.text" title="equate.featurize.text"><code class="xref py py-mod docutils literal notranslate"><span class="pre">equate.featurize.text</span></code></a>). Select a featurizer by name via the <a class="reference internal" href="#equate.featurize.featurizers" title="equate.featurize.featurizers"><code class="xref py py-data docutils literal notranslate"><span class="pre">featurizers</span></code></a>
+registry, or pass a callable. Corpus-dependent featurizers (TF-IDF) are built by
+fitting on a corpus, which <a class="reference internal" href="#equate.featurize.resolve_featurizer" title="equate.featurize.resolve_featurizer"><code class="xref py py-func docutils literal notranslate"><span class="pre">resolve_featurizer()</span></code></a> handles.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="equate.featurize.FeaturizerMeta">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.featurize.</span></span><span class="sig-name descname"><span class="pre">FeaturizerMeta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_kinds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('vector',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_len</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passage_prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncatable_to</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/base.html#FeaturizerMeta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.featurize.FeaturizerMeta" title="Link to this definition"></a></dt>
+<dd><p>Declared properties of a featurizer (decision register D9), so the framework
+can pick a legal index/metric, auto-apply a required query/passage prefix, refuse a
+non-commercial model in a commercial context, and offer Matryoshka truncation.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">output_kinds</span></code>: what the representation is — <code class="docutils literal notranslate"><span class="pre">'vector'</span></code> / <code class="docutils literal notranslate"><span class="pre">'set'</span></code> /
+<code class="docutils literal notranslate"><span class="pre">'bitstring'</span></code> / <code class="docutils literal notranslate"><span class="pre">'scalar'</span></code> / <code class="docutils literal notranslate"><span class="pre">'structured'</span></code> (a multi-functional embedder may
+emit several, e.g. dense + sparse);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">normalize</span></code>: whether output vectors are already L2-normalized;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dim</span></code> / <code class="docutils literal notranslate"><span class="pre">max_seq_len</span></code>: dimensionality and max input length, when fixed;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">license</span></code>: SPDX/label, so a commercial context can refuse non-commercial models;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">query_prefix</span></code> / <code class="docutils literal notranslate"><span class="pre">passage_prefix</span></code>: instruction prefixes some embedders require
+(e.g. E5’s <code class="docutils literal notranslate"><span class="pre">&quot;query:</span> <span class="pre">&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;passage:</span> <span class="pre">&quot;</span></code>) — a silent-omission footgun;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">truncatable_to</span></code>: Matryoshka dims the embedding can be safely truncated to.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="equate.featurize.TfidfFeaturizer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.featurize.</span></span><span class="sig-name descname"><span class="pre">TfidfFeaturizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">ngram_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">4)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lowercase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/featurize/tfidf.html#TfidfFeaturizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.featurize.TfidfFeaturizer" title="Link to this definition"></a></dt>
+<dd><p>Fittable char-n-gram TF-IDF featurizer producing L2-normalized sparse vectors.</p>
+<p>Fit on a corpus to learn the vocabulary and inverse document frequencies, then
+transform texts to vectors. A fitted instance is itself a batch featurizer, so
+<code class="docutils literal notranslate"><span class="pre">vecs</span> <span class="pre">=</span> <span class="pre">featurizer(texts)</span></code> works.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="equate.featurize.TfidfFeaturizer.meta">
+<span class="sig-name descname"><span class="pre">meta</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">FeaturizerMeta(output_kinds=('vector',),</span> <span class="pre">normalize=True,</span> <span class="pre">dim=None,</span> <span class="pre">license='core',</span> <span class="pre">max_seq_len=None,</span> <span class="pre">query_prefix=None,</span> <span class="pre">passage_prefix=None,</span> <span class="pre">truncatable_to=())</span></span><a class="headerlink" href="#equate.featurize.TfidfFeaturizer.meta" title="Link to this definition"></a></dt>
+<dd><p>declared metadata (see equate.base.FeaturizerMeta)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.featurize.char_ngrams">
+<span class="sig-prename descclassname"><span class="pre">equate.featurize.</span></span><span class="sig-name descname"><span class="pre">char_ngrams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ngram_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">4)</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">lowercase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/featurize/tfidf.html#char_ngrams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.featurize.char_ngrams" title="Link to this definition"></a></dt>
+<dd><p>Character n-grams of <code class="docutils literal notranslate"><span class="pre">text</span></code> over the inclusive <code class="docutils literal notranslate"><span class="pre">ngram_range</span></code>.</p>
+<p>The whole string is padded with one leading and one trailing space (so prefixes and
+suffixes are captured), and n-grams slide over the entire padded string — they <em>may
+therefore span the spaces between words</em>. This is deliberate (it helps fuzzy
+name/SKU matching) and differs from scikit-learn’s per-word <code class="docutils literal notranslate"><span class="pre">char_wb</span></code> analyzer. A
+text too short for any <code class="docutils literal notranslate"><span class="pre">n</span></code> in the range falls back to the padded string itself, so
+tiny or empty inputs still yield a (single) feature rather than an all-zero vector.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">char_ngrams</span><span class="p">(</span><span class="s1">&#39;cat&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="go">[&#39; c&#39;, &#39;ca&#39;, &#39;at&#39;, &#39;t &#39;, &#39; ca&#39;, &#39;cat&#39;, &#39;at &#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">char_ngrams</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>          <span class="c1"># too short for any n: falls back to the padding</span>
+<span class="go">[&#39;  &#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="equate.featurize.featurizers">
+<span class="sig-prename descclassname"><span class="pre">equate.featurize.</span></span><span class="sig-name descname"><span class="pre">featurizers</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;equate.registry.Registry</span> <span class="pre">object&gt;</span></span><a class="headerlink" href="#equate.featurize.featurizers" title="Link to this definition"></a></dt>
+<dd><p>the featurize-stage strategy registry (name -&gt; lazy factory)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.featurize.identity">
+<span class="sig-prename descclassname"><span class="pre">equate.featurize.</span></span><span class="sig-name descname"><span class="pre">identity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">objects</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/featurize.html#identity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.featurize.identity" title="Link to this definition"></a></dt>
+<dd><p>The identity featurizer: use the objects themselves as their representation.</p>
+<p>This is the degenerate case that recovers exact matching (φ = id).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.featurize.mk_tfidf">
+<span class="sig-prename descclassname"><span class="pre">equate.featurize.</span></span><span class="sig-name descname"><span class="pre">mk_tfidf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">learn_texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ngram_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">4)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lowercase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/featurize/tfidf.html#mk_tfidf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.featurize.mk_tfidf" title="Link to this definition"></a></dt>
+<dd><p>Fit a char-n-gram TF-IDF on the given collection(s) and return the fitted,
+callable batch featurizer — the pure numpy/scipy replacement for the legacy
+grub-backed <code class="docutils literal notranslate"><span class="pre">equate.util.mk_text_to_vect</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.featurize.resolve_featurizer">
+<span class="sig-prename descclassname"><span class="pre">equate.featurize.</span></span><span class="sig-name descname"><span class="pre">resolve_featurizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">corpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/featurize.html#resolve_featurizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.featurize.resolve_featurizer" title="Link to this definition"></a></dt>
+<dd><p>Resolve <code class="docutils literal notranslate"><span class="pre">spec</span></code> to a ready-to-use batch featurizer.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code> -&gt; the default <code class="docutils literal notranslate"><span class="pre">'tfidf'</span></code>;</p></li>
+<li><p>a registered name (<code class="docutils literal notranslate"><span class="pre">str</span></code>) -&gt; built via its factory (<code class="docutils literal notranslate"><span class="pre">**config</span></code> is forwarded, so
+an unknown option raises rather than being silently ignored);</p></li>
+<li><p>a callable -&gt; returned as-is (assumed already a batch featurizer).</p></li>
+</ul>
+<p>A <em>fittable</em> featurizer (one exposing <code class="docutils literal notranslate"><span class="pre">fit</span></code>, e.g. TF-IDF) is fit on <code class="docutils literal notranslate"><span class="pre">corpus</span></code>
+here — and a corpus is then required: resolving a fittable featurizer without one
+raises immediately (a clear error at the call site) instead of returning a
+half-built object that only fails later inside <code class="docutils literal notranslate"><span class="pre">transform</span></code>.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="examples/site_names.html" class="btn btn-neutral float-left" title="equate.examples.site_names" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="featurize/text.html" class="btn btn-neutral float-right" title="equate.featurize.text" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

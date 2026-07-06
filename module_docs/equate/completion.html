@@ -50,6 +50,8 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_vector.html">equate._vector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="base.html">equate.base</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">equate.completion</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#equate.completion.greedy_matching"><code class="docutils literal notranslate"><span class="pre">greedy_matching()</span></code></a></li>
@@ -62,6 +64,10 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">equate.examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">equate.registry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="util.html">equate.util</a></li>
 </ul>
 
@@ -102,6 +108,13 @@ possible, and often needed. Without moving away from tabular data:</p>
 For example, correlation, similarity, etc.
 - Find near duplicate columns
 - Find rows to align, based on flexible comparison of fuzzily matched cells</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This module is a stale early duplicate of <code class="docutils literal notranslate"><span class="pre">equate.util</span></code> and is slated to be
+rewritten as a thin facade over the redesigned stages (roadmap #13). Its <code class="docutils literal notranslate"><span class="pre">grub</span></code>
+import is lazy (behind the optional <code class="docutils literal notranslate"><span class="pre">equate[grub]</span></code> extra) so importing the module
+does not fail on a default numpy/scipy-only install.</p>
+</div>
 <dl class="py function">
 <dt class="sig sig-object py" id="equate.completion.greedy_matching">
 <span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">greedy_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/completion.html#greedy_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.greedy_matching" title="Link to this definition"></a></dt>

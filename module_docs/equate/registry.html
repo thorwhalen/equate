@@ -1,0 +1,205 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.registry &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="equate.util" href="util.html" />
+    <link rel="prev" title="equate.featurize.tfidf" href="featurize/tfidf.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_vector.html">equate._vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">equate.registry</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#equate.registry.Registry"><code class="docutils literal notranslate"><span class="pre">Registry</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#equate.registry.Registry.create"><code class="docutils literal notranslate"><span class="pre">Registry.create()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#equate.registry.Registry.factory"><code class="docutils literal notranslate"><span class="pre">Registry.factory()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#equate.registry.Registry.meta"><code class="docutils literal notranslate"><span class="pre">Registry.meta()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#equate.registry.Registry.names"><code class="docutils literal notranslate"><span class="pre">Registry.names()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#equate.registry.Registry.register"><code class="docutils literal notranslate"><span class="pre">Registry.register()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#equate.registry.Registry.resolve"><code class="docutils literal notranslate"><span class="pre">Registry.resolve()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">equate.registry</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/equate/registry.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-equate.registry">
+<span id="equate-registry"></span><h1>equate.registry<a class="headerlink" href="#module-equate.registry" title="Link to this heading"></a></h1>
+<p>A tiny name-keyed strategy registry with lazy factories (open-closed dispatch).</p>
+<p>Each pipeline stage (featurize, compare, block, match, cluster) owns a <code class="docutils literal notranslate"><span class="pre">Registry</span></code>
+mapping a string <code class="docutils literal notranslate"><span class="pre">name</span></code> to a lazy factory that builds the strategy on demand, so a
+heavy optional import fires only when that strategy is actually used. Users select a
+strategy by name (<code class="docutils literal notranslate"><span class="pre">featurize='tfidf'</span></code>) or pass a callable directly — <a class="reference internal" href="#equate.registry.Registry.resolve" title="equate.registry.Registry.resolve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Registry.resolve()</span></code></a>
+accepts both, and users can register their own strategies without subclassing.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="equate.registry.Registry">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.registry.</span></span><span class="sig-name descname"><span class="pre">Registry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/registry.html#Registry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.registry.Registry" title="Link to this definition"></a></dt>
+<dd><p>A <code class="docutils literal notranslate"><span class="pre">name</span> <span class="pre">-&gt;</span> <span class="pre">lazy</span> <span class="pre">factory</span></code> registry for one pipeline stage’s strategies.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">reg</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;demo&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@reg</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;double&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">def</span><span class="w"> </span><span class="nf">_double_factory</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">*</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reg</span><span class="o">.</span><span class="n">names</span><span class="p">()</span>
+<span class="go">[&#39;double&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reg</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s1">&#39;double&#39;</span><span class="p">)(</span><span class="mi">21</span><span class="p">)</span>          <span class="c1"># look up + build + call</span>
+<span class="go">42</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reg</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="nb">str</span><span class="o">.</span><span class="n">upper</span><span class="p">)(</span><span class="s1">&#39;hi&#39;</span><span class="p">)</span>       <span class="c1"># a callable passes through unchanged</span>
+<span class="go">&#39;HI&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;double&#39;</span> <span class="ow">in</span> <span class="n">reg</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.registry.Registry.create">
+<span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/registry.html#Registry.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.registry.Registry.create" title="Link to this definition"></a></dt>
+<dd><p>Build the strategy registered under <code class="docutils literal notranslate"><span class="pre">name</span></code> (calls its lazy factory).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.registry.Registry.factory">
+<span class="sig-name descname"><span class="pre">factory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="reference internal" href="../../_modules/equate/registry.html#Registry.factory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.registry.Registry.factory" title="Link to this definition"></a></dt>
+<dd><p>Return the (uncalled) factory registered under <code class="docutils literal notranslate"><span class="pre">name</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.registry.Registry.meta">
+<span class="sig-name descname"><span class="pre">meta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../../_modules/equate/registry.html#Registry.meta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.registry.Registry.meta" title="Link to this definition"></a></dt>
+<dd><p>Return the declared metadata for <code class="docutils literal notranslate"><span class="pre">name</span></code> (<code class="docutils literal notranslate"><span class="pre">None</span></code> if none was declared).</p>
+<p>Raises <code class="docutils literal notranslate"><span class="pre">KeyError</span></code> for an unknown name, consistent with <a class="reference internal" href="#equate.registry.Registry.factory" title="equate.registry.Registry.factory"><code class="xref py py-meth docutils literal notranslate"><span class="pre">factory()</span></code></a> — so
+an unknown name is never silently conflated with a known name that has no meta.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.registry.Registry.names">
+<span class="sig-name descname"><span class="pre">names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="../../_modules/equate/registry.html#Registry.names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.registry.Registry.names" title="Link to this definition"></a></dt>
+<dd><p>Sorted list of registered strategy names.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.registry.Registry.register">
+<span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/registry.html#Registry.register"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.registry.Registry.register" title="Link to this definition"></a></dt>
+<dd><p>Register <code class="docutils literal notranslate"><span class="pre">factory</span></code> under <code class="docutils literal notranslate"><span class="pre">name</span></code>. Usable as a decorator or directly.</p>
+<p>The factory is called lazily (by <a class="reference internal" href="#equate.registry.Registry.create" title="equate.registry.Registry.create"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create()</span></code></a>/<a class="reference internal" href="#equate.registry.Registry.resolve" title="equate.registry.Registry.resolve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">resolve()</span></code></a>), so any heavy
+import inside it fires only on use. <code class="docutils literal notranslate"><span class="pre">meta</span></code> is optional declared metadata
+(e.g. a <code class="docutils literal notranslate"><span class="pre">FeaturizerMeta</span></code>/<code class="docutils literal notranslate"><span class="pre">ComparatorMeta</span></code>).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.registry.Registry.resolve">
+<span class="sig-name descname"><span class="pre">resolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/registry.html#Registry.resolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.registry.Registry.resolve" title="Link to this definition"></a></dt>
+<dd><p>Resolve <code class="docutils literal notranslate"><span class="pre">spec</span></code> to a strategy.</p>
+<p>A callable <code class="docutils literal notranslate"><span class="pre">spec</span></code> passes through unchanged; a <code class="docutils literal notranslate"><span class="pre">str</span></code> is looked up and its
+factory is called with <code class="docutils literal notranslate"><span class="pre">(*args,</span> <span class="pre">**kwargs)</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="featurize/tfidf.html" class="btn btn-neutral float-left" title="equate.featurize.tfidf" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="util.html" class="btn btn-neutral float-right" title="equate.util" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

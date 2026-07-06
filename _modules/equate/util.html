@@ -47,10 +47,16 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/_vector.html">equate._vector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/base.html">equate.base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/completion.html">equate.completion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/examples.html">equate.examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/registry.html">equate.registry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/util.html">equate.util</a></li>
 </ul>
 
@@ -82,16 +88,20 @@
 <span></span><span class="sd">&quot;&quot;&quot;Utils for equate.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache</span><span class="p">,</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">grub</span><span class="w"> </span><span class="kn">import</span> <span class="n">SearchStore</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics.pairwise</span><span class="w"> </span><span class="kn">import</span> <span class="n">cosine_similarity</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">linear_sum_assignment</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">issparse</span><span class="p">,</span> <span class="n">csr_matrix</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_cost</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate._dependencies</span><span class="w"> </span><span class="kn">import</span> <span class="n">require</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate._vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">cosine_similarity</span>
+
+<span class="c1"># The default text path is now pure numpy/scipy: char-n-gram TF-IDF</span>
+<span class="c1"># (equate.featurize) + cosine similarity (equate._vector). scikit-learn and grub are</span>
+<span class="c1"># optional extras, imported lazily only where still offered (mk_text_to_vect).</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">ensure_sparse</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
@@ -142,34 +152,47 @@
         <span class="k">return</span> <span class="n">transformer</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
 
 
-<span class="c1"># @lru_cache</span>
+<div class="viewcode-block" id="mk_text_to_vect">
+<a class="viewcode-back" href="../../module_docs/equate/util.html#equate.util.mk_text_to_vect">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">mk_text_to_vect</span><span class="p">(</span><span class="o">*</span><span class="n">learn_texts</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legacy grub-backed TF-IDF featurizer (requires the optional ``equate[grub]``</span>
+<span class="sd">    extra). The default text featurizer is now equate&#39;s pure numpy/scipy char-n-gram</span>
+<span class="sd">    TF-IDF — see :func:`equate.featurize.mk_tfidf`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">grub</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="s1">&#39;grub&#39;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s1">&#39;grub&#39;</span><span class="p">,</span> <span class="n">purpose</span><span class="o">=</span><span class="s1">&#39;the legacy grub TF-IDF featurizer&#39;</span><span class="p">)</span>
+
     <span class="n">docs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">learn_texts</span><span class="p">)))</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="n">SearchStore</span><span class="p">(</span><span class="n">docs</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">partial</span><span class="p">(</span><span class="n">transform_text</span><span class="p">,</span> <span class="n">transformer</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">tfidf</span><span class="o">.</span><span class="n">transform</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">grub</span><span class="o">.</span><span class="n">SearchStore</span><span class="p">(</span><span class="n">docs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">partial</span><span class="p">(</span><span class="n">transform_text</span><span class="p">,</span> <span class="n">transformer</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">tfidf</span><span class="o">.</span><span class="n">transform</span><span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="similarity_matrix">
 <a class="viewcode-back" href="../../module_docs/equate/util.html#equate.util.similarity_matrix">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">similarity_matrix</span><span class="p">(</span>
-    <span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">obj_to_vect</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">similarity_func</span><span class="o">=</span><span class="n">cosine_similarity</span>
-<span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">similarity_matrix</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">obj_to_vect</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">similarity_func</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a matrix of the similarity of the keys to the values.</span>
-<span class="sd">    By default, the `obj_to_vect` will be learned from the keys and values,</span>
-<span class="sd">    using the tfidf vectorizer from `grub`.</span>
 
-<span class="sd">    You can pass in a different `obj_to_vect` function to use a different vectorizer:</span>
-<span class="sd">    For example, pre-computed embeddings such as word2vec or fasttext, or openai</span>
-<span class="sd">    embeddings.</span>
+<span class="sd">    By default the featurizer is learned from ``keys`` and ``values`` using equate&#39;s</span>
+<span class="sd">    pure numpy/scipy char-n-gram TF-IDF (:mod:`equate.featurize`), and similarity is</span>
+<span class="sd">    cosine (:func:`equate._vector.cosine_similarity`) — no scikit-learn or grub needed.</span>
+<span class="sd">    Pass ``obj_to_vect`` to use a different batch featurizer (precomputed embeddings, or</span>
+<span class="sd">    a registered name resolved via ``equate.featurize.resolve_featurizer``), and</span>
+<span class="sd">    ``similarity_func`` to use a different similarity.</span>
 
 <span class="sd">    &gt;&gt;&gt; keys = [&#39;apple pie&#39;, &#39;apple crumble&#39;, &#39;banana split&#39;]</span>
 <span class="sd">    &gt;&gt;&gt; values = [&#39;american pie&#39;, &#39;big apple&#39;, &#39;american girl&#39;, &#39;banana republic&#39;]</span>
 <span class="sd">    &gt;&gt;&gt; m = similarity_matrix(keys, values)</span>
 <span class="sd">    &gt;&gt;&gt; m.round(2).tolist()</span>
-<span class="sd">    [[0.54, 0.38, 0.0, 0.0], [0.0, 0.33, 0.0, 0.0], [0.0, 0.0, 0.0, 0.41]]</span>
+<span class="sd">    [[0.32, 0.42, 0.01, 0.0], [0.04, 0.35, 0.01, 0.02], [0.03, 0.04, 0.02, 0.44]]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">obj_to_vect</span> <span class="o">=</span> <span class="n">obj_to_vect</span> <span class="ow">or</span> <span class="n">mk_text_to_vect</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
-    <span class="n">key_vectors</span><span class="p">,</span> <span class="n">value_vectors</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">obj_to_vect</span><span class="p">,</span> <span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">))</span>
+    <span class="n">keys</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">keys</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">similarity_func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">similarity_func</span> <span class="o">=</span> <span class="n">cosine_similarity</span>
+    <span class="k">if</span> <span class="n">obj_to_vect</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">equate.featurize</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_featurizer</span>
+
+        <span class="n">obj_to_vect</span> <span class="o">=</span> <span class="n">resolve_featurizer</span><span class="p">(</span><span class="s1">&#39;tfidf&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="o">=</span><span class="n">keys</span> <span class="o">+</span> <span class="n">values</span><span class="p">)</span>
+    <span class="n">key_vectors</span><span class="p">,</span> <span class="n">value_vectors</span> <span class="o">=</span> <span class="n">obj_to_vect</span><span class="p">(</span><span class="n">keys</span><span class="p">),</span> <span class="n">obj_to_vect</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">similarity_func</span><span class="p">(</span><span class="n">key_vectors</span><span class="p">,</span> <span class="n">value_vectors</span><span class="p">)</span></div>
 
 
@@ -225,7 +248,7 @@
 <span class="sd">    :param similarity_matrix: A sparse matrix of similarities.</span>
 <span class="sd">    :return: List of tuples (row_index, col_index) for matched pairs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+    <span class="n">nx</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="s1">&#39;networkx&#39;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s1">&#39;graph&#39;</span><span class="p">,</span> <span class="n">purpose</span><span class="o">=</span><span class="s1">&#39;the maximal_matching graph matcher&#39;</span><span class="p">)</span>
 
     <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
@@ -290,7 +313,7 @@
 <span class="sd">        costs via the ``to_cost`` SSOT.</span>
 <span class="sd">    :return: List of tuples (row_index, col_index) for matched pairs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+    <span class="n">nx</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="s1">&#39;networkx&#39;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s1">&#39;graph&#39;</span><span class="p">,</span> <span class="n">purpose</span><span class="o">=</span><span class="s1">&#39;the kuhn_munkres_matching matcher&#39;</span><span class="p">)</span>
 
     <span class="n">cost</span> <span class="o">=</span> <span class="n">to_cost</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">)</span>
     <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
@@ -308,18 +331,29 @@
 
 
 
+<div class="viewcode-block" id="match_keys_to_values">
+<a class="viewcode-back" href="../../module_docs/equate/util.html#equate.util.match_keys_to_values">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">match_keys_to_values</span><span class="p">(</span>
     <span class="n">keys</span><span class="p">,</span>
     <span class="n">values</span><span class="p">,</span>
     <span class="n">obj_to_vect</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">similarity_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">cosine_similarity</span><span class="p">,</span>
+    <span class="n">similarity_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">matcher</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">hungarian_matching</span><span class="p">,</span>
 <span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Match each key to a value via a similarity matrix and a matcher.</span>
+
+<span class="sd">    Builds ``similarity_matrix(keys, values, ...)`` (TF-IDF + cosine by default) and</span>
+<span class="sd">    applies ``matcher`` (optimal Hungarian assignment by default), yielding</span>
+<span class="sd">    ``(key, value)`` pairs. ``obj_to_vect`` and ``similarity_func`` default to the</span>
+<span class="sd">    lazily-resolved TF-IDF featurizer and cosine comparator when left as ``None``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">keys</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">keys</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>  <span class="c1"># need indexable sequences below</span>
     <span class="n">similarity_matrix_</span> <span class="o">=</span> <span class="n">similarity_matrix</span><span class="p">(</span>
         <span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">obj_to_vect</span><span class="o">=</span><span class="n">obj_to_vect</span><span class="p">,</span> <span class="n">similarity_func</span><span class="o">=</span><span class="n">similarity_func</span>
     <span class="p">)</span>
     <span class="k">for</span> <span class="n">key_idx</span><span class="p">,</span> <span class="n">value_idx</span> <span class="ow">in</span> <span class="n">matcher</span><span class="p">(</span><span class="n">similarity_matrix_</span><span class="p">):</span>
-        <span class="k">yield</span> <span class="n">keys</span><span class="p">[</span><span class="n">key_idx</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="n">value_idx</span><span class="p">]</span>
+        <span class="k">yield</span> <span class="n">keys</span><span class="p">[</span><span class="n">key_idx</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="n">value_idx</span><span class="p">]</span></div>
+
 </pre></div>
 
            </div>

@@ -1,0 +1,177 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.featurize.text &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/_vector.html">equate._vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/registry.html">equate.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../featurize.html">equate.featurize</a></li>
+      <li class="breadcrumb-item active">equate.featurize.text</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for equate.featurize.text</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Dense text-embedding featurizers, behind optional extras.</span>
+
+<span class="sd">Each is a *lazily-built* strategy: the heavy library is imported only when the</span>
+<span class="sd">strategy is actually constructed, via :func:`equate._dependencies.require`, so a</span>
+<span class="sd">missing extra raises a friendly ``MissingDependencyError`` instead of breaking</span>
+<span class="sd">``import equate``. A representative set is provided here; more embedders (bge-m3, e5,</span>
+<span class="sd">nomic, cohere, voyage, and image/audio modalities) are added the same way as their</span>
+<span class="sd">stages land — see the ``equate-dev-add-strategy`` skill.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">FeaturizerMeta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate._dependencies</span><span class="w"> </span><span class="kn">import</span> <span class="n">require</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;sbert_featurizer&#39;</span><span class="p">,</span> <span class="s1">&#39;openai_featurizer&#39;</span><span class="p">,</span> <span class="s1">&#39;SBERT_META&#39;</span><span class="p">,</span> <span class="s1">&#39;OPENAI_META&#39;</span><span class="p">]</span>
+
+<span class="c1"># Single source of declared metadata for each embedder (mirrored into the registry).</span>
+<span class="n">SBERT_META</span> <span class="o">=</span> <span class="n">FeaturizerMeta</span><span class="p">(</span><span class="n">output_kinds</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;vector&#39;</span><span class="p">,),</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">license</span><span class="o">=</span><span class="s1">&#39;Apache-2.0&#39;</span><span class="p">)</span>
+<span class="n">OPENAI_META</span> <span class="o">=</span> <span class="n">FeaturizerMeta</span><span class="p">(</span><span class="n">output_kinds</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;vector&#39;</span><span class="p">,),</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">license</span><span class="o">=</span><span class="s1">&#39;proprietary&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="sbert_featurizer">
+<a class="viewcode-back" href="../../../module_docs/equate/featurize/text.html#equate.featurize.text.sbert_featurizer">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">sbert_featurizer</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s1">&#39;sentence-transformers/all-MiniLM-L6-v2&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sentence-Transformers (SBERT) embedder — requires ``equate[embeddings]``.</span>
+
+<span class="sd">    Returns a batch featurizer ``texts -&gt; L2-normalized embedding matrix``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">st</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span>
+        <span class="s1">&#39;sentence_transformers&#39;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s1">&#39;embeddings&#39;</span><span class="p">,</span> <span class="n">purpose</span><span class="o">=</span><span class="s1">&#39;SBERT text embeddings&#39;</span>
+    <span class="p">)</span>
+    <span class="n">model_obj</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">SentenceTransformer</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">featurize</span><span class="p">(</span><span class="n">texts</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">model_obj</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">texts</span><span class="p">),</span> <span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">featurize</span><span class="o">.</span><span class="n">meta</span> <span class="o">=</span> <span class="n">SBERT_META</span>
+    <span class="k">return</span> <span class="n">featurize</span></div>
+
+
+
+<div class="viewcode-block" id="openai_featurizer">
+<a class="viewcode-back" href="../../../module_docs/equate/featurize/text.html#equate.featurize.text.openai_featurizer">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">openai_featurizer</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s1">&#39;text-embedding-3-small&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OpenAI embeddings — requires ``equate[api]`` and an ``OPENAI_API_KEY``.</span>
+
+<span class="sd">    Returns a batch featurizer ``texts -&gt; embedding matrix``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">openai</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="s1">&#39;openai&#39;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s1">&#39;api&#39;</span><span class="p">,</span> <span class="n">purpose</span><span class="o">=</span><span class="s1">&#39;OpenAI text embeddings&#39;</span><span class="p">)</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">openai</span><span class="o">.</span><span class="n">OpenAI</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">featurize</span><span class="p">(</span><span class="n">texts</span><span class="p">):</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">embeddings</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">texts</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">d</span><span class="o">.</span><span class="n">embedding</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">resp</span><span class="o">.</span><span class="n">data</span><span class="p">])</span>
+
+    <span class="n">featurize</span><span class="o">.</span><span class="n">meta</span> <span class="o">=</span> <span class="n">OPENAI_META</span>
+    <span class="k">return</span> <span class="n">featurize</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

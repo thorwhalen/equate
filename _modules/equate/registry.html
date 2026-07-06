@@ -1,0 +1,231 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.registry &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/_vector.html">equate._vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/registry.html">equate.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">equate.registry</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for equate.registry</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;A tiny name-keyed strategy registry with lazy factories (open-closed dispatch).</span>
+
+<span class="sd">Each pipeline stage (featurize, compare, block, match, cluster) owns a ``Registry``</span>
+<span class="sd">mapping a string ``name`` to a lazy factory that builds the strategy on demand, so a</span>
+<span class="sd">heavy optional import fires only when that strategy is actually used. Users select a</span>
+<span class="sd">strategy by name (``featurize=&#39;tfidf&#39;``) or pass a callable directly — :meth:`Registry.resolve`</span>
+<span class="sd">accepts both, and users can register their own strategies without subclassing.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Registry&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="Registry">
+<a class="viewcode-back" href="../../module_docs/equate/registry.html#equate.registry.Registry">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Registry</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A ``name -&gt; lazy factory`` registry for one pipeline stage&#39;s strategies.</span>
+
+<span class="sd">    &gt;&gt;&gt; reg = Registry(&#39;demo&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; @reg.register(&#39;double&#39;)</span>
+<span class="sd">    ... def _double_factory():</span>
+<span class="sd">    ...     return lambda x: x * 2</span>
+<span class="sd">    &gt;&gt;&gt; reg.names()</span>
+<span class="sd">    [&#39;double&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; reg.create(&#39;double&#39;)(21)          # look up + build + call</span>
+<span class="sd">    42</span>
+<span class="sd">    &gt;&gt;&gt; reg.resolve(str.upper)(&#39;hi&#39;)       # a callable passes through unchanged</span>
+<span class="sd">    &#39;HI&#39;</span>
+<span class="sd">    &gt;&gt;&gt; &#39;double&#39; in reg</span>
+<span class="sd">    True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kind</span> <span class="o">=</span> <span class="n">kind</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_entries</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># name -&gt; (factory, meta)</span>
+
+<div class="viewcode-block" id="Registry.register">
+<a class="viewcode-back" href="../../module_docs/equate/registry.html#equate.registry.Registry.register">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">factory</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Register ``factory`` under ``name``. Usable as a decorator or directly.</span>
+
+<span class="sd">        The factory is called lazily (by :meth:`create`/:meth:`resolve`), so any heavy</span>
+<span class="sd">        import inside it fires only on use. ``meta`` is optional declared metadata</span>
+<span class="sd">        (e.g. a ``FeaturizerMeta``/``ComparatorMeta``).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">deco</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_entries</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">meta</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">f</span>
+
+        <span class="k">return</span> <span class="n">deco</span><span class="p">(</span><span class="n">factory</span><span class="p">)</span> <span class="k">if</span> <span class="n">factory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">deco</span></div>
+
+
+<div class="viewcode-block" id="Registry.factory">
+<a class="viewcode-back" href="../../module_docs/equate/registry.html#equate.registry.Registry.factory">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">factory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the (uncalled) factory registered under ``name``.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entries</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;unknown </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">kind</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">; available: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Registry.meta">
+<a class="viewcode-back" href="../../module_docs/equate/registry.html#equate.registry.Registry.meta">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the declared metadata for ``name`` (``None`` if none was declared).</span>
+
+<span class="sd">        Raises ``KeyError`` for an unknown name, consistent with :meth:`factory` — so</span>
+<span class="sd">        an unknown name is never silently conflated with a known name that has no meta.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entries</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;unknown </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">kind</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">; available: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entries</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Registry.create">
+<a class="viewcode-back" href="../../module_docs/equate/registry.html#equate.registry.Registry.create">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the strategy registered under ``name`` (calls its lazy factory).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">factory</span><span class="p">(</span><span class="n">name</span><span class="p">)(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Registry.resolve">
+<a class="viewcode-back" href="../../module_docs/equate/registry.html#equate.registry.Registry.resolve">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Resolve ``spec`` to a strategy.</span>
+
+<span class="sd">        A callable ``spec`` passes through unchanged; a ``str`` is looked up and its</span>
+<span class="sd">        factory is called with ``(*args, **kwargs)``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">spec</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">kind</span><span class="si">}</span><span class="s2"> spec must be a registered name (str) or a callable, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Registry.names">
+<a class="viewcode-back" href="../../module_docs/equate/registry.html#equate.registry.Registry.names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sorted list of registered strategy names.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_entries</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entries</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

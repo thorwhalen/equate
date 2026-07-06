@@ -24,7 +24,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="prev" title="equate.examples.site_names" href="examples/site_names.html" /> 
+    <link rel="prev" title="equate.registry" href="registry.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -49,16 +49,24 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_vector.html">equate._vector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="base.html">equate.base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="completion.html">equate.completion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">equate.examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">equate.registry</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">equate.util</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#equate.util.greedy_matching"><code class="docutils literal notranslate"><span class="pre">greedy_matching()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#equate.util.hungarian_matching"><code class="docutils literal notranslate"><span class="pre">hungarian_matching()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#equate.util.kuhn_munkres_matching"><code class="docutils literal notranslate"><span class="pre">kuhn_munkres_matching()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#equate.util.match_greedily"><code class="docutils literal notranslate"><span class="pre">match_greedily()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.util.match_keys_to_values"><code class="docutils literal notranslate"><span class="pre">match_keys_to_values()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#equate.util.maximal_matching"><code class="docutils literal notranslate"><span class="pre">maximal_matching()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.util.mk_text_to_vect"><code class="docutils literal notranslate"><span class="pre">mk_text_to_vect()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#equate.util.similarity_matrix"><code class="docutils literal notranslate"><span class="pre">similarity_matrix()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#equate.util.stable_marriage_matching"><code class="docutils literal notranslate"><span class="pre">stable_marriage_matching()</span></code></a></li>
 </ul>
@@ -159,6 +167,16 @@ normalized measure of matching subsequences in [0, 1] (higher is more alike).</p
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="equate.util.match_keys_to_values">
+<span class="sig-prename descclassname"><span class="pre">equate.util.</span></span><span class="sig-name descname"><span class="pre">match_keys_to_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj_to_vect</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matcher</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">hungarian_matching&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/util.html#match_keys_to_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.util.match_keys_to_values" title="Link to this definition"></a></dt>
+<dd><p>Match each key to a value via a similarity matrix and a matcher.</p>
+<p>Builds <code class="docutils literal notranslate"><span class="pre">similarity_matrix(keys,</span> <span class="pre">values,</span> <span class="pre">...)</span></code> (TF-IDF + cosine by default) and
+applies <code class="docutils literal notranslate"><span class="pre">matcher</span></code> (optimal Hungarian assignment by default), yielding
+<code class="docutils literal notranslate"><span class="pre">(key,</span> <span class="pre">value)</span></code> pairs. <code class="docutils literal notranslate"><span class="pre">obj_to_vect</span></code> and <code class="docutils literal notranslate"><span class="pre">similarity_func</span></code> default to the
+lazily-resolved TF-IDF featurizer and cosine comparator when left as <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="equate.util.maximal_matching">
 <span class="sig-prename descclassname"><span class="pre">equate.util.</span></span><span class="sig-name descname"><span class="pre">maximal_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/util.html#maximal_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.util.maximal_matching" title="Link to this definition"></a></dt>
 <dd><p>Maximal Matching in Bipartite Graph: Finds a maximal matching in a bipartite graph.
@@ -174,19 +192,28 @@ See <a class="reference external" href="https://www.geeksforgeeks.org/maximum-bi
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="equate.util.mk_text_to_vect">
+<span class="sig-prename descclassname"><span class="pre">equate.util.</span></span><span class="sig-name descname"><span class="pre">mk_text_to_vect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">learn_texts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/util.html#mk_text_to_vect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.util.mk_text_to_vect" title="Link to this definition"></a></dt>
+<dd><p>Legacy grub-backed TF-IDF featurizer (requires the optional <code class="docutils literal notranslate"><span class="pre">equate[grub]</span></code>
+extra). The default text featurizer is now equate’s pure numpy/scipy char-n-gram
+TF-IDF — see <a class="reference internal" href="featurize.html#equate.featurize.mk_tfidf" title="equate.featurize.mk_tfidf"><code class="xref py py-func docutils literal notranslate"><span class="pre">equate.featurize.mk_tfidf()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="equate.util.similarity_matrix">
-<span class="sig-prename descclassname"><span class="pre">equate.util.</span></span><span class="sig-name descname"><span class="pre">similarity_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj_to_vect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">cosine_similarity&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/util.html#similarity_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.util.similarity_matrix" title="Link to this definition"></a></dt>
-<dd><p>Return a matrix of the similarity of the keys to the values.
-By default, the <cite>obj_to_vect</cite> will be learned from the keys and values,
-using the tfidf vectorizer from <cite>grub</cite>.</p>
-<p>You can pass in a different <cite>obj_to_vect</cite> function to use a different vectorizer:
-For example, pre-computed embeddings such as word2vec or fasttext, or openai
-embeddings.</p>
+<span class="sig-prename descclassname"><span class="pre">equate.util.</span></span><span class="sig-name descname"><span class="pre">similarity_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj_to_vect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/util.html#similarity_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.util.similarity_matrix" title="Link to this definition"></a></dt>
+<dd><p>Return a matrix of the similarity of the keys to the values.</p>
+<p>By default the featurizer is learned from <code class="docutils literal notranslate"><span class="pre">keys</span></code> and <code class="docutils literal notranslate"><span class="pre">values</span></code> using equate’s
+pure numpy/scipy char-n-gram TF-IDF (<a class="reference internal" href="featurize.html#module-equate.featurize" title="equate.featurize"><code class="xref py py-mod docutils literal notranslate"><span class="pre">equate.featurize</span></code></a>), and similarity is
+cosine (<a class="reference internal" href="_vector.html#equate._vector.cosine_similarity" title="equate._vector.cosine_similarity"><code class="xref py py-func docutils literal notranslate"><span class="pre">equate._vector.cosine_similarity()</span></code></a>) — no scikit-learn or grub needed.
+Pass <code class="docutils literal notranslate"><span class="pre">obj_to_vect</span></code> to use a different batch featurizer (precomputed embeddings, or
+a registered name resolved via <code class="docutils literal notranslate"><span class="pre">equate.featurize.resolve_featurizer</span></code>), and
+<code class="docutils literal notranslate"><span class="pre">similarity_func</span></code> to use a different similarity.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;apple pie&#39;</span><span class="p">,</span> <span class="s1">&#39;apple crumble&#39;</span><span class="p">,</span> <span class="s1">&#39;banana split&#39;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;american pie&#39;</span><span class="p">,</span> <span class="s1">&#39;big apple&#39;</span><span class="p">,</span> <span class="s1">&#39;american girl&#39;</span><span class="p">,</span> <span class="s1">&#39;banana republic&#39;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">similarity_matrix</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-<span class="go">[[0.54, 0.38, 0.0, 0.0], [0.0, 0.33, 0.0, 0.0], [0.0, 0.0, 0.0, 0.41]]</span>
+<span class="go">[[0.32, 0.42, 0.01, 0.0], [0.04, 0.35, 0.01, 0.02], [0.03, 0.04, 0.02, 0.44]]</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -217,7 +244,7 @@ ranked by the <code class="docutils literal notranslate"><span class="pre">to_co
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="examples/site_names.html" class="btn btn-neutral float-left" title="equate.examples.site_names" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="registry.html" class="btn btn-neutral float-left" title="equate.registry" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

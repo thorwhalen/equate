@@ -1,0 +1,190 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate._dependencies &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="equate._vector" href="_vector.html" />
+    <link rel="prev" title="equate" href="../equate.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../equate.html">equate</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">equate._dependencies</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#equate._dependencies.MissingDependencyError"><code class="docutils literal notranslate"><span class="pre">MissingDependencyError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate._dependencies.have"><code class="docutils literal notranslate"><span class="pre">have()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate._dependencies.require"><code class="docutils literal notranslate"><span class="pre">require()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="_vector.html">equate._vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">equate.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">equate._dependencies</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/equate/_dependencies.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-equate._dependencies">
+<span id="equate-dependencies"></span><h1>equate._dependencies<a class="headerlink" href="#module-equate._dependencies" title="Link to this heading"></a></h1>
+<p>Optional-dependency helpers: import heavy libraries lazily, with a friendly error.</p>
+<p>equate keeps its core install light (<code class="docutils literal notranslate"><span class="pre">numpy</span></code>/<code class="docutils literal notranslate"><span class="pre">scipy</span></code>) and draws every heavy
+capability — fast string similarity, embeddings, ANN indexes, optimal transport,
+graph algorithms, LLMs — behind a <cite>pip</cite> <em>extra</em> imported only on use. Strategy code
+calls <a class="reference internal" href="#equate._dependencies.require" title="equate._dependencies.require"><code class="xref py py-func docutils literal notranslate"><span class="pre">require()</span></code></a> <strong>inside</strong> its factory/first-use so that a missing optional
+dependency raises an actionable <a class="reference internal" href="#equate._dependencies.MissingDependencyError" title="equate._dependencies.MissingDependencyError"><code class="xref py py-class docutils literal notranslate"><span class="pre">MissingDependencyError</span></code></a> naming the extra to
+install, never a bare <code class="docutils literal notranslate"><span class="pre">ImportError</span></code> from a top-level import that would break
+<code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">equate</span></code> itself. See the <code class="docutils literal notranslate"><span class="pre">equate-dev-add-strategy</span></code> skill.</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="equate._dependencies.MissingDependencyError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate._dependencies.</span></span><span class="sig-name descname"><span class="pre">MissingDependencyError</span></span><a class="reference internal" href="../../_modules/equate/_dependencies.html#MissingDependencyError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate._dependencies.MissingDependencyError" title="Link to this definition"></a></dt>
+<dd><p>An optional dependency needed by a strategy is not installed.</p>
+<p>Subclasses <code class="xref py py-class docutils literal notranslate"><span class="pre">ImportError</span></code> so existing <code class="docutils literal notranslate"><span class="pre">except</span> <span class="pre">ImportError</span></code> handlers still
+catch it, while carrying an actionable install hint in its message.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate._dependencies.have">
+<span class="sig-prename descclassname"><span class="pre">equate._dependencies.</span></span><span class="sig-name descname"><span class="pre">have</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/equate/_dependencies.html#have"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate._dependencies.have" title="Link to this definition"></a></dt>
+<dd><p>Return whether optional dependency <code class="docutils literal notranslate"><span class="pre">name</span></code> is importable, without importing it.</p>
+<p>A cheap, side-effect-free capability probe for choosing among installed backends
+(e.g. prefer <code class="docutils literal notranslate"><span class="pre">rapidfuzz</span></code> over stdlib <code class="docutils literal notranslate"><span class="pre">difflib</span></code> when present). It checks the
+<strong>top-level package</strong> of <code class="docutils literal notranslate"><span class="pre">name</span></code> (a dotted name is reduced to its first
+component) <em>precisely so that no package code runs</em> — <code class="docutils literal notranslate"><span class="pre">importlib.util.find_spec</span></code>
+on a dotted name would import the parent package to locate the submodule, which
+would defeat the light-import goal (<code class="docutils literal notranslate"><span class="pre">have('sklearn.metrics.pairwise')</span></code> must not
+import sklearn).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">have</span><span class="p">(</span><span class="s1">&#39;numpy&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">have</span><span class="p">(</span><span class="s1">&#39;no_such_pkg_xyz&#39;</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate._dependencies.require">
+<span class="sig-prename descclassname"><span class="pre">equate._dependencies.</span></span><span class="sig-name descname"><span class="pre">require</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">purpose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/_dependencies.html#require"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate._dependencies.require" title="Link to this definition"></a></dt>
+<dd><p>Import and return the module <code class="docutils literal notranslate"><span class="pre">name</span></code>, or raise <a class="reference internal" href="#equate._dependencies.MissingDependencyError" title="equate._dependencies.MissingDependencyError"><code class="xref py py-class docutils literal notranslate"><span class="pre">MissingDependencyError</span></code></a>.</p>
+<p>Use this instead of a bare <code class="docutils literal notranslate"><span class="pre">import</span></code> for any optional dependency, so a missing
+package produces an actionable message instead of a raw <code class="docutils literal notranslate"><span class="pre">ImportError</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – the importable module name (e.g. <code class="docutils literal notranslate"><span class="pre">'rapidfuzz'</span></code>, <code class="docutils literal notranslate"><span class="pre">'networkx'</span></code>).</p></li>
+<li><p><strong>extra</strong> – the equate extra that bundles it (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'equate[&lt;extra&gt;]'</span></code>).</p></li>
+<li><p><strong>purpose</strong> – a short phrase naming what needs it, woven into the error message.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Only a genuinely <em>absent</em> package becomes a <a class="reference internal" href="#equate._dependencies.MissingDependencyError" title="equate._dependencies.MissingDependencyError"><code class="xref py py-class docutils literal notranslate"><span class="pre">MissingDependencyError</span></code></a>. If the
+package is present but fails to import for another reason (a missing transitive
+dependency, a broken C-extension), that real error is re-raised unchanged — the
+user is not misdirected to a useless reinstall.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">require</span><span class="p">(</span><span class="s1">&#39;numpy&#39;</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>          <span class="c1"># a present dependency imports normally</span>
+<span class="go">&#39;numpy&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../equate.html" class="btn btn-neutral float-left" title="equate" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="_vector.html" class="btn btn-neutral float-right" title="equate._vector" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

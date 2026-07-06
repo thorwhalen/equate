@@ -1,0 +1,4 @@
+equate.featurize
+================
+.. automodule:: equate.featurize
+   :members:
