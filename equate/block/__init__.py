@@ -8,6 +8,12 @@ scoring a candidate stream yields a sparse ``ScoreMatrix`` (:func:`score_candida
 
 Select a blocker by name via the :data:`blockers` registry or pass a callable. Blocking
 quality is measured with :func:`blocking_metrics` (PC / RR / PQ).
+
+A blocker requests a **self-join** (dedup within one collection, yielding ``i < j``) via
+the single-argument form ``blocker(A)``. The two-argument ``blocker(A, B)`` is a
+cross-join. Self-join is detected by object *identity*, so ``blocker(A, A)`` is also a
+self-join, but ``blocker(A, list(A))`` — a value-equal *copy* — is a cross-join; use the
+single-argument form to be unambiguous.
 """
 
 from equate.registry import Registry
@@ -64,7 +70,20 @@ def all_pairs(A, B=None):
             yield (i, j)
 
 
-blockers.register('all_pairs', lambda: all_pairs)
+def _const_blocker(fn, name):
+    """Factory returning a fixed blocker; passing config is a clear error."""
+
+    def factory(**config):
+        if config:
+            raise TypeError(
+                f"blocker {name!r} takes no configuration; got {list(config)}"
+            )
+        return fn
+
+    return factory
+
+
+blockers.register('all_pairs', _const_blocker(all_pairs, 'all_pairs'))
 blockers.register('key', key_blocking)
 blockers.register('sorted_neighborhood', sorted_neighborhood)
 blockers.register('brute_knn', brute_knn_blocking)

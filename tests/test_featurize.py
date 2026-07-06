@@ -127,3 +127,12 @@ def test_match_keys_to_values_accepts_generators():
     values = (v for v in ["american pie", "banana republic"])
     result = dict(match_keys_to_values(keys, values))
     assert result["banana split"] == "banana republic"
+
+
+def test_resolve_featurizer_does_not_refit_passed_featurizer():
+    # a caller-supplied fitted featurizer must be returned as-is, never re-fit/mutated
+    feat = TfidfFeaturizer().fit(["hello world", "foo bar"])
+    vocab_before = dict(feat.vocabulary_)
+    resolved = resolve_featurizer(feat, corpus=["completely", "different", "corpus"])
+    assert resolved is feat
+    assert feat.vocabulary_ == vocab_before  # unchanged

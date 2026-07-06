@@ -7,6 +7,8 @@ item, e.g. token / q-gram blocking) and emits the within-group pairs. Standard, 
 q-gram, and phonetic blocking are all *one* algorithm parameterized by the key function.
 """
 
+from itertools import groupby, zip_longest
+
 from equate._dependencies import require
 
 __all__ = [
@@ -68,10 +70,23 @@ def sorted_neighborhood(sort_key=str, *, window=3):
             tagged = [(sort_key(x), 0, i) for i, x in enumerate(A)]
             tagged += [(sort_key(x), 1, j) for j, x in enumerate(B)]
             tagged.sort(key=lambda t: t[0])
-            for p in range(len(tagged)):
-                for q in range(p + 1, min(p + window, len(tagged))):
-                    _, sa, ia = tagged[p]
-                    _, sb, jb = tagged[q]
+            # Interleave A and B items within each equal-key run so A-B pairs sit
+            # adjacent and land inside the window (else a tie group of all-A-then-all-B
+            # pushes A items a full block away from any B — dropping true pairs).
+            ordered = []
+            for _, run in groupby(tagged, key=lambda t: t[0]):
+                grp = list(run)
+                a_items = [t for t in grp if t[1] == 0]
+                b_items = [t for t in grp if t[1] == 1]
+                for xa, xb in zip_longest(a_items, b_items):
+                    if xa is not None:
+                        ordered.append(xa)
+                    if xb is not None:
+                        ordered.append(xb)
+            for p in range(len(ordered)):
+                for q in range(p + 1, min(p + window, len(ordered))):
+                    _, sa, ia = ordered[p]
+                    _, sb, jb = ordered[q]
                     if sa != sb:
                         yield (ia, jb) if sa == 0 else (jb, ia)
 

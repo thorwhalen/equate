@@ -75,15 +75,17 @@ def resolve_featurizer(spec=None, *, corpus=None, **config):
     """
     if spec is None:
         spec = 'tfidf'
-    if isinstance(spec, str):
-        feat = featurizers.create(spec, **config)
-    elif callable(spec):
-        feat = spec
-    else:
+    # A callable passed directly is assumed ready-to-use and is returned UNCHANGED —
+    # never re-fit (which would mutate a caller-supplied fitted featurizer in place and
+    # discard its state). Only a featurizer we just built from a name is fit here.
+    if callable(spec):
+        return spec
+    if not isinstance(spec, str):
         raise TypeError(
             f"featurizer spec must be a registered name or a callable, "
             f"got {type(spec).__name__}"
         )
+    feat = featurizers.create(spec, **config)
     fit = getattr(feat, 'fit', None)
     if callable(fit):
         if corpus is None:
@@ -92,8 +94,7 @@ def resolve_featurizer(spec=None, *, corpus=None, **config):
                 f"(e.g. resolve_featurizer({spec!r}, corpus=your_texts))"
             )
         feat = fit(corpus) or feat
-    # make the declared metadata reachable off the resolved featurizer
-    if isinstance(spec, str) and not hasattr(feat, 'meta'):
+    if not hasattr(feat, 'meta'):  # make the declared metadata reachable off the featurizer
         try:
             feat.meta = featurizers.meta(spec)
         except (AttributeError, TypeError):

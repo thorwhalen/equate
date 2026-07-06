@@ -21,10 +21,15 @@ def score_candidates(A, B, candidate_pairs, comparator='ratio', *, sense='maximi
     candidate pairs are collapsed (scored once) so a sparse matrix never sums them.
     """
     A, B = list(A), list(B)
+    n_a, n_b = len(A), len(B)
     comp = resolve_comparator(comparator)
     rows, cols, data = [], [], []
     seen = set()
     for i, j in candidate_pairs:
+        if not (0 <= i < n_a and 0 <= j < n_b):
+            raise IndexError(
+                f"candidate pair ({i}, {j}) out of range for a {n_a}x{n_b} score matrix"
+            )
         if (i, j) in seen:
             continue
         seen.add((i, j))

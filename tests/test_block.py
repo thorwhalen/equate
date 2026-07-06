@@ -153,3 +153,38 @@ def test_minhash_lsh_if_available():
     B = ["the quick brown dog", "yet another unrelated line"]
     pairs = set(minhash_lsh_blocking(threshold=0.2)(A, B))
     assert (0, 0) in pairs  # the two "quick brown" sentences share tokens
+
+
+# --- review-driven fixes ----------------------------------------------------------
+
+def test_brute_knn_self_join_emits_exact_k_no_overproduce():
+    # three identical items (all tie at max similarity): each row must emit exactly k=1,
+    # never k+1, and no self-pair
+    pairs = list(brute_knn_blocking("tfidf", k=1)(["x", "x", "x"]))
+    assert len(pairs) == 3
+    assert all(i < j for i, j in pairs)  # normalized i<j, no (i,i)
+
+
+def test_blocking_metrics_self_join_canonicalizes_orientation():
+    m = blocking_metrics([(1, 0)], [(0, 1)], n_a=3)  # self-join (n_b=None)
+    assert m["pair_completeness"] == 1.0  # (1,0) matches true (0,1)
+
+
+def test_blocking_metrics_reduction_ratio_clamped_to_unit_interval():
+    m = blocking_metrics([(0, 1), (0, 2), (1, 2), (0, 1)], [], n_a=3)
+    assert 0.0 <= m["reduction_ratio"] <= 1.0
+
+
+def test_prune_frequent_self_join_combines_slot_degrees():
+    cands = [(0, 1), (0, 2), (1, 2)]  # each item touches 2 candidates
+    assert list(metablock.prune_frequent(cands, max_degree=1, self_join=True)) == []
+
+
+def test_score_candidates_rejects_out_of_range_index():
+    with pytest.raises(IndexError):
+        score_candidates(["a"], ["b"], [(0, 5)], comparator="ratio")
+
+
+def test_all_pairs_via_registry_rejects_config():
+    with pytest.raises(TypeError):
+        blockers.create("all_pairs", foo=1)
