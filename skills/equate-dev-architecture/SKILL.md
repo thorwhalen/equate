@@ -108,7 +108,8 @@ into each stage/concern; `docs/research/README.md` is the index.
 
 ```
 equate/
-├── __init__.py     # facade: match(), dedupe(), link(), resolve()
+├── __init__.py     # re-exports the public API (match, stage registries, types)
+├── facade.py       # match(A,B,*,featurize,compare,block,how) → Matching (end-to-end)  ← #7
 ├── base.py         # stage protocols; to_cost SSOT; ScoreMatrix; Candidate/Matching/Explanation/Partition  ← #2
 ├── _dependencies.py # require()/have() + MissingDependencyError (lazy optional deps)  ← #3
 ├── registry.py     # generic name→lazy-factory Registry (open-closed dispatch)  ← #4
@@ -120,8 +121,8 @@ equate/
 │                   #   numeric_geo(decay/haversine); vector(cosine/dot/angular); vectorize(combiners+FS); calibrate
 ├── block/          # Blocker (lazy candidate pairs); all_pairs default; keyed/SNM blocking;  ← #6
 │                   #   brute_knn (core) + ann/lsh [extra]; metablock; score_candidates→sparse; PC/RR/PQ
-├── match/          # registry; assign(greedy, scipy LAP default, sparse routing);
-│                   #   graph[extra]; stable; soft[POT extra]; kbest(Murty)
+├── matching/       # registry; assign(optimal LAP + sparse routing, greedy, stable);  ← #7
+│                   #   max_weight/kuhn_munkres [graph]; soft_match/harden [ot]; kbest(Murty) later
 ├── cluster/        # connected-components default; correlation; canonicalize (golden record)
 ├── interactive/    # CandidateStore (top-k+scores, persisted); constraints (local re-solve);
 │                   #   active (QueryStrategy/Oracle); review (ReviewQueue/RiskModel/Explanation)

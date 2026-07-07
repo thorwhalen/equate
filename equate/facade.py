@@ -1,0 +1,73 @@
+"""The equate facade: the one-line ``match(A, B)`` entry point.
+
+Wires the pipeline — featurize → compare (over the blocker's candidates) → match — with
+sensible defaults, and returns a structured :class:`equate.base.Matching`. Every stage is
+swappable by one keyword (decision register D4): ``featurize=``, ``compare=``, ``block=``,
+``how=``. This is the canonical case (doc 10 §1): two collections -> optimally-matched
+(and scored) pairs, zero config.
+"""
+
+import numpy as np
+from scipy.sparse import issparse
+
+from equate.base import Matching
+from equate.compare import resolve_comparator, direct, featurized
+from equate.block import resolve_blocker, score_candidates
+from equate.matching import resolve_matcher, soft_match, harden
+
+__all__ = ['match']
+
+
+def match(A, B=None, *, featurize='tfidf', compare=None, block=None, how='assign', sense='maximize'):
+    """Match two collections into a :class:`~equate.base.Matching` of scored ``(i, j)`` pairs.
+
+    Pipeline (each stage swappable by one keyword):
+
+    - **featurize / compare** — with ``compare=None`` (default), the *vector route*:
+      featurize both sides with ``featurize`` (TF-IDF by default) and score by cosine.
+      With a ``compare`` comparator (a registered name or a callable), the *direct
+      pairwise route* on the raw items.
+    - **block** — ``None`` (default) scores all pairs (dense); a blocker (name/callable)
+      scores only the candidate pairs into a sparse matrix, and the matcher stays sparse-aware.
+    - **how** — the matcher objective: ``'assign'`` (optimal 1:1, the default),
+      ``'greedy'``, ``'stable'``, or ``'soft'`` (an optimal-transport plan; ``.plan`` is set).
+
+    Returns a ``Matching``: iterate it for ``(i, j)`` pairs, ``dict(...)`` it for a mapping,
+    ``.labeled_pairs()`` for ``(A[i], B[j])``; ``.scores`` holds each matched pair's score.
+
+    >>> keys = ['apple pie', 'banana split', 'cherry tart']
+    >>> values = ['cherry tarte', 'aple pie', 'banana split']
+    >>> m = match(keys, values, compare='ratio')
+    >>> dict(m.labeled_pairs())
+    {'apple pie': 'aple pie', 'banana split': 'banana split', 'cherry tart': 'cherry tarte'}
+    """
+    A = list(A)
+    B = A if B is None else list(B)
+
+    if block is not None:
+        candidates = list(resolve_blocker(block)(A, B))
+        scores = score_candidates(A, B, candidates, compare or 'ratio', sense=sense).data
+    elif compare is not None:
+        scores = direct(resolve_comparator(compare))(A, B)
+    else:
+        scores = featurized(featurize)(A, B)
+
+    if how == 'soft':
+        plan = soft_match(scores, sense=sense)
+        pairs = harden(plan)
+        return Matching(
+            pairs=pairs,
+            scores=[float(plan[i, j]) for i, j in pairs],
+            plan=plan,
+            row_labels=A,
+            col_labels=B,
+        )
+
+    pairs = list(resolve_matcher(how)(scores, sense=sense))
+    dense = scores.toarray() if issparse(scores) else np.asarray(scores)
+    return Matching(
+        pairs=pairs,
+        scores=[float(dense[i, j]) for i, j in pairs],
+        row_labels=A,
+        col_labels=B,
+    )
