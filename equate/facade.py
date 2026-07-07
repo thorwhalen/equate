@@ -90,7 +90,7 @@ def match(
             edges = [
                 (i, n_a + j, float(dense[i, j])) for i in range(n_a) for j in range(len(B))
             ]
-        return resolve_clusterer(cluster)(edges, n_a + len(B), threshold=thr)
+        return resolve_clusterer(cluster)(edges, n_a + len(B), threshold=thr, sense=sense)
 
     if how == 'soft':
         plan = soft_match(scores, sense=sense)
@@ -112,24 +112,30 @@ def match(
     )
 
 
-def dedupe(A, *, compare='ratio', block=None, threshold=0.7, cluster='connected_components'):
+def dedupe(A, *, compare='ratio', block=None, threshold=0.7, cluster='connected_components', sense=None):
     """Deduplicate a single collection into entity groups.
 
-    Self-compares ``A``'s candidate pairs, keeps those scoring at or above ``threshold``,
-    and clusters them -> a :class:`~equate.base.Partition` over ``A`` (iterate it for the
-    duplicate ``(i, j)`` pairs; ``.groups()`` for the clusters). ``block`` (a blocker)
-    restricts the candidate pairs (self-join); the default compares all ``i < j`` pairs.
-    ``cluster`` is ``'connected_components'`` (transitive closure) or ``'correlation'``.
+    Self-compares ``A``'s candidate pairs, keeps those passing ``threshold``, and clusters
+    them -> a :class:`~equate.base.Partition` over ``A`` (iterate it for the duplicate
+    ``(i, j)`` pairs; ``.groups()`` for the clusters). ``block`` (a blocker) restricts the
+    candidate pairs (self-join); the default compares all ``i < j`` pairs. ``cluster`` is
+    ``'connected_components'`` (transitive closure) or ``'correlation'``. ``sense`` defaults
+    to the comparator's declared polarity — a *distance* comparator (e.g.
+    ``levenshtein_distance``) uses ``'minimize'`` so *lower* scores link, a similarity uses
+    ``'maximize'``.
 
     >>> from equate import dedupe
     >>> dedupe(['Jon Smith', 'Jon Smyth', 'Kate Doe'], threshold=0.8).groups()
     {0: [0, 1], 1: [2]}
     """
     A = list(A)
-    candidates = list(resolve_blocker(block)(A)) if block is not None else list(all_pairs(A))
     comp = resolve_comparator(compare)
+    if sense is None:
+        meta = getattr(comp, 'meta', None)
+        sense = 'minimize' if getattr(meta, 'polarity', None) == 'distance' else 'maximize'
+    candidates = list(resolve_blocker(block)(A)) if block is not None else list(all_pairs(A))
     scored = [(i, j, float(comp(A[i], A[j]))) for i, j in candidates]
-    return resolve_clusterer(cluster)(scored, len(A), threshold=threshold)
+    return resolve_clusterer(cluster)(scored, len(A), threshold=threshold, sense=sense)
 
 
 def resolve(*collections, **kwargs):

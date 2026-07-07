@@ -106,3 +106,63 @@ def test_match_how_cluster_returns_partition():
     assert isinstance(p, Partition)
     # A[0]=apple (idx 0) clusters with B[0]=appl (idx len(A)+0 = 2)
     assert 0 in p.groups().get(p.labels[0]) and 2 in p.groups().get(p.labels[0])
+
+
+# --- review-driven fixes ----------------------------------------------------------
+
+def test_clusterers_reject_out_of_range_and_negative_indices():
+    with pytest.raises(ValueError):
+        connected_components([(-1, 0)], 5)  # negative would silently alias to item 4
+    with pytest.raises(ValueError):
+        connected_components([(0, 9)], 5)  # out of range
+    with pytest.raises(ValueError):
+        correlation_clustering([(0, -1, 1.0)], 5, threshold=0.5)
+
+
+def test_connected_components_usable_as_clusterer_callable():
+    # passing the public function to resolve_clusterer must honor the (scored_pairs, n,
+    # *, threshold, sense) contract, not crash on the name/adapter mismatch
+    cl = resolve_clusterer(connected_components)
+    assert cl([(0, 1, 0.9), (2, 3, 0.2)], 4, threshold=0.5).groups() == {
+        0: [0, 1],
+        1: [2],
+        2: [3],
+    }
+
+
+def test_dedupe_with_distance_comparator_uses_minimize_sense():
+    from equate.compare.string import levenshtein_distance
+
+    # distance: lower = more similar; threshold=1 links pairs within edit distance 1
+    p = dedupe(["cat", "car", "dog"], compare=levenshtein_distance, threshold=1)
+    assert p.groups() == {0: [0, 1], 1: [2]}  # cat~car (dist 1); dog alone
+
+
+def test_canonicalize_majority_scalar_and_unhashable():
+    part = Partition([0, 0, 0])
+    # scalar records: value vote (was silently returning {})
+    assert canonicalize(part, ["Jon", "Jon", "Jonathan"], policy="majority")[0] == "Jon"
+    # unhashable field values fall back to the first, not crash
+    recs = [{"tags": ["a"]}, {"tags": ["b"]}, {"tags": ["a"]}]
+    assert canonicalize(part, recs, policy="majority")[0]["tags"] == ["a"]
+
+
+def test_canonicalize_unknown_policy_raises_even_when_empty():
+    with pytest.raises(ValueError):
+        canonicalize(Partition([]), [], policy="bogus")
+
+
+def test_classify_rejects_nan():
+    with pytest.raises(ValueError):
+        classify(float("nan"), lower=-1.0, upper=1.0)
+
+
+def test_estimate_mu_em_skips_missing_fields():
+    # 'name' is present in both classes and separates them; 'city' appears only in the
+    # matches, so with missing!=disagreement it has NO non-match evidence and must NOT
+    # spuriously discriminate (the old missing==disagreement bug would make m>>u for it)
+    matches = [{"name": 1.0, "city": 1.0}] * 15
+    nonmatches = [{"name": 0.0}] * 15  # 'city' absent, not a disagreement
+    m, u = estimate_mu_em(matches + nonmatches)
+    assert m["name"] > u["name"]  # name genuinely discriminates
+    assert abs(m["city"] - u["city"]) < 0.05  # city cannot be estimated -> ~equal
