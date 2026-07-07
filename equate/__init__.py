@@ -29,7 +29,15 @@ from equate.block import (
     score_candidates,
 )
 from equate.matching import matchers, resolve_matcher, soft_match, harden
-from equate.facade import match
+from equate.cluster import (
+    clusterers,
+    resolve_clusterer,
+    connected_components,
+    correlation_clustering,
+    canonicalize,
+)
+from equate.cluster.classify import classify, estimate_mu_em
+from equate.facade import match, dedupe, resolve
 
 from equate.util import (
     match_keys_to_values,

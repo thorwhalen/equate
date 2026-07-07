@@ -12,13 +12,25 @@ from scipy.sparse import issparse
 
 from equate.base import Matching
 from equate.compare import resolve_comparator, direct, featurized
-from equate.block import resolve_blocker, score_candidates
+from equate.block import resolve_blocker, score_candidates, all_pairs
 from equate.matching import resolve_matcher, soft_match, harden
+from equate.cluster import resolve_clusterer
 
-__all__ = ['match']
+__all__ = ['match', 'dedupe', 'resolve']
 
 
-def match(A, B=None, *, featurize=None, compare=None, block=None, how='assign', sense='maximize'):
+def match(
+    A,
+    B=None,
+    *,
+    featurize=None,
+    compare=None,
+    block=None,
+    how='assign',
+    threshold=None,
+    cluster='connected_components',
+    sense='maximize',
+):
     """Match two collections into a :class:`~equate.base.Matching` of scored ``(i, j)`` pairs.
 
     Pipeline (each stage swappable by one keyword):
@@ -66,6 +78,20 @@ def match(A, B=None, *, featurize=None, compare=None, block=None, how='assign', 
     # consistently for the hard and soft paths
     dense = scores.toarray() if issparse(scores) else np.asarray(scores)
 
+    if how == 'cluster':
+        # cluster the pooled A+B index space (B offset by len(A)) using the A-B match
+        # edges above `threshold` — cross-collection entity resolution -> a Partition
+        thr = 0.5 if threshold is None else threshold
+        n_a = len(A)
+        if issparse(scores):
+            coo = scores.tocoo()
+            edges = [(int(i), n_a + int(j), float(v)) for i, j, v in zip(coo.row, coo.col, coo.data)]
+        else:
+            edges = [
+                (i, n_a + j, float(dense[i, j])) for i in range(n_a) for j in range(len(B))
+            ]
+        return resolve_clusterer(cluster)(edges, n_a + len(B), threshold=thr)
+
     if how == 'soft':
         plan = soft_match(scores, sense=sense)
         pairs = harden(plan)
@@ -84,3 +110,32 @@ def match(A, B=None, *, featurize=None, compare=None, block=None, how='assign', 
         row_labels=A,
         col_labels=B,
     )
+
+
+def dedupe(A, *, compare='ratio', block=None, threshold=0.7, cluster='connected_components'):
+    """Deduplicate a single collection into entity groups.
+
+    Self-compares ``A``'s candidate pairs, keeps those scoring at or above ``threshold``,
+    and clusters them -> a :class:`~equate.base.Partition` over ``A`` (iterate it for the
+    duplicate ``(i, j)`` pairs; ``.groups()`` for the clusters). ``block`` (a blocker)
+    restricts the candidate pairs (self-join); the default compares all ``i < j`` pairs.
+    ``cluster`` is ``'connected_components'`` (transitive closure) or ``'correlation'``.
+
+    >>> from equate import dedupe
+    >>> dedupe(['Jon Smith', 'Jon Smyth', 'Kate Doe'], threshold=0.8).groups()
+    {0: [0, 1], 1: [2]}
+    """
+    A = list(A)
+    candidates = list(resolve_blocker(block)(A)) if block is not None else list(all_pairs(A))
+    comp = resolve_comparator(compare)
+    scored = [(i, j, float(comp(A[i], A[j]))) for i, j in candidates]
+    return resolve_clusterer(cluster)(scored, len(A), threshold=threshold)
+
+
+def resolve(*collections, **kwargs):
+    """Resolve entities across multiple collections: pool them (in order) and
+    :func:`dedupe` -> a Partition over the pooled items. Generalizes cross-collection
+    matching to n-way linkage. Accepts the same keywords as :func:`dedupe`.
+    """
+    pooled = [x for collection in collections for x in collection]
+    return dedupe(pooled, **kwargs)
