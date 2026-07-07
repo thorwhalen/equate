@@ -19,22 +19,22 @@ __all__ = ['optimal_matching', 'greedy_matching', 'stable_matching']
 def optimal_matching(scores, *, sense='maximize'):
     """Globally optimal 1:1 assignment (the linear assignment problem).
 
-    Dense input -> ``scipy.optimize.linear_sum_assignment`` on ``to_cost(scores, sense)``.
-    Sparse input -> the sparse solver ``min_weight_full_bipartite_matching`` (no densify)
-    when the blocked graph admits a full matching, else a densify fallback.
+    A dense matrix goes straight to ``linear_sum_assignment`` on ``to_cost(scores, sense)``.
+    A **sparse (blocked)** matrix honors the *candidate* semantics: absent cells are
+    worst-cased (via ``to_cost``/``_sparse_to_cost``), the LAP is solved on that cost, and
+    any assignment landing on a non-candidate (absent) cell is dropped — so a row with no
+    candidate is left unmatched (a *partial* matching), and an all-absent matrix yields no
+    matches. This densifies the cost; a non-densifying sparse LAP is a future optimization
+    (scipy's sparse solver silently drops explicitly-stored zero-score candidates, so it is
+    not used here).
     """
-    if issparse(scores):
-        try:
-            from scipy.sparse.csgraph import min_weight_full_bipartite_matching
-
-            row, col = min_weight_full_bipartite_matching(
-                scores, maximize=(sense == 'maximize')
-            )
-            return list(zip(row.tolist(), col.tolist()))
-        except ValueError:
-            scores = scores.toarray()  # no full matching in the blocked graph -> densify
-    cost = to_cost(scores, sense=sense)
+    cost = to_cost(scores, sense=sense)  # handles sparse via _sparse_to_cost (holes worst-cased)
     row, col = linear_sum_assignment(cost)
+    if issparse(scores):
+        from equate.base import _stored_mask
+
+        stored = _stored_mask(scores)  # True only on real candidate cells
+        return [(int(i), int(j)) for i, j in zip(row, col) if stored[i, j]]
     return list(zip(row.tolist(), col.tolist()))
 
 
@@ -68,9 +68,17 @@ def greedy_matching(scores, *, sense='maximize'):
 def stable_matching(scores, *, sense='maximize'):
     """Gale-Shapley stable matching (optimizes stability, not total score).
 
-    See :func:`equate.util.stable_marriage_matching`; a sparse matrix is densified.
+    See :func:`equate.util.stable_marriage_matching`. A sparse (blocked) matrix routes
+    through ``to_cost`` (absent cells worst-cased), is ranked by that cost, and
+    hole-assignments are dropped — so an absent cell never out-ranks a real candidate.
     """
     from equate.util import stable_marriage_matching
 
-    S = scores.toarray() if issparse(scores) else scores
-    return stable_marriage_matching(S, sense=sense)
+    if issparse(scores):
+        from equate.base import _stored_mask
+
+        stored = _stored_mask(scores)
+        cost = to_cost(scores, sense=sense)  # dense, absent cells worst-cased
+        pairs = stable_marriage_matching(cost, sense='minimize')  # rank by cost ascending
+        return [(i, j) for i, j in pairs if stored[i, j]]
+    return stable_marriage_matching(scores, sense=sense)

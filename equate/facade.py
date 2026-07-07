@@ -18,7 +18,7 @@ from equate.matching import resolve_matcher, soft_match, harden
 __all__ = ['match']
 
 
-def match(A, B=None, *, featurize='tfidf', compare=None, block=None, how='assign', sense='maximize'):
+def match(A, B=None, *, featurize=None, compare=None, block=None, how='assign', sense='maximize'):
     """Match two collections into a :class:`~equate.base.Matching` of scored ``(i, j)`` pairs.
 
     Pipeline (each stage swappable by one keyword):
@@ -41,8 +41,18 @@ def match(A, B=None, *, featurize='tfidf', compare=None, block=None, how='assign
     >>> dict(m.labeled_pairs())
     {'apple pie': 'aple pie', 'banana split': 'banana split', 'cherry tart': 'cherry tarte'}
     """
+    if B is None:
+        raise ValueError(
+            "match() matches two collections; to deduplicate a single collection use "
+            "equate.dedupe(A)."
+        )
+    if compare is not None and featurize is not None:
+        raise ValueError(
+            "featurize (the vector route) and compare (the direct pairwise route) are "
+            "mutually exclusive — pass one, not both."
+        )
     A = list(A)
-    B = A if B is None else list(B)
+    B = list(B)
 
     if block is not None:
         candidates = list(resolve_blocker(block)(A, B))
@@ -50,21 +60,24 @@ def match(A, B=None, *, featurize='tfidf', compare=None, block=None, how='assign
     elif compare is not None:
         scores = direct(resolve_comparator(compare))(A, B)
     else:
-        scores = featurized(featurize)(A, B)
+        scores = featurized(featurize or 'tfidf')(A, B)
+
+    # each matched pair's score is read from the score matrix (the similarity/score),
+    # consistently for the hard and soft paths
+    dense = scores.toarray() if issparse(scores) else np.asarray(scores)
 
     if how == 'soft':
         plan = soft_match(scores, sense=sense)
         pairs = harden(plan)
         return Matching(
             pairs=pairs,
-            scores=[float(plan[i, j]) for i, j in pairs],
+            scores=[float(dense[i, j]) for i, j in pairs],
             plan=plan,
             row_labels=A,
             col_labels=B,
         )
 
     pairs = list(resolve_matcher(how)(scores, sense=sense))
-    dense = scores.toarray() if issparse(scores) else np.asarray(scores)
     return Matching(
         pairs=pairs,
         scores=[float(dense[i, j]) for i, j in pairs],

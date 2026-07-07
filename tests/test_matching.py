@@ -122,3 +122,44 @@ def test_match_how_soft_if_ot_available():
     m = match(KEYS, VALS, compare="ratio", how="soft")
     assert m.plan is not None and m.plan.shape == (3, 3)
     assert dict(m.labeled_pairs()) == EXPECTED
+    # .scores are the similarities (from the score matrix), not transport-plan mass
+    assert all(0.0 <= s <= 1.0 for s in m.scores) and max(m.scores) > 0.9
+
+
+# --- review-driven fixes ----------------------------------------------------------
+
+def test_optimal_sparse_keeps_explicit_zero_candidate_minimize():
+    # (0,0)=0 is a perfect distance-0 candidate; scipy's sparse solver would drop it
+    S = csr_matrix(([0.0, 10.0, 10.0, 1.0], ([0, 0, 1, 1], [0, 1, 0, 1])), shape=(2, 2))
+    assert dict(optimal_matching(S, sense="minimize")) == {0: 0, 1: 1}
+
+
+def test_optimal_sparse_partial_matching_drops_hole_assignments():
+    # column 2 is absent everywhere; row 2's only candidates are taken by rows 0,1,
+    # so row 2 has no free real candidate and is left unmatched (partial matching)
+    S = csr_matrix(([-1.0, -1.0, -2.0, -2.0], ([0, 1, 2, 2], [0, 1, 0, 1])), shape=(3, 3))
+    assert dict(optimal_matching(S, sense="maximize")) == {0: 0, 1: 1}
+
+
+def test_optimal_all_absent_sparse_returns_empty():
+    assert optimal_matching(csr_matrix((2, 2))) == []
+
+
+def test_stable_sparse_prefers_real_candidate_over_hole():
+    S = csr_matrix(([-5.0, -1.0, -2.0], ([0, 0, 1], [0, 1, 0])), shape=(2, 2))
+    assert dict(stable_matching(S, sense="maximize")).get(1) == 0  # not the (1,1) hole
+
+
+def test_soft_match_rejects_nonpositive_reg():
+    with pytest.raises(ValueError):
+        soft_match(DIAG, reg=0)
+
+
+def test_match_requires_two_collections():
+    with pytest.raises(ValueError):
+        match(["a", "b"], None)
+
+
+def test_match_featurize_and_compare_mutually_exclusive():
+    with pytest.raises(ValueError):
+        match(["a"], ["b"], featurize="tfidf", compare="ratio")
