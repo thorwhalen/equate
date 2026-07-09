@@ -125,8 +125,8 @@ equate/
 │                   #   max_weight/kuhn_munkres [graph]; soft_match/harden [ot]; kbest(Murty) later
 ├── cluster/        # connected-components default; correlation; canonicalize (golden record);  ← #8
 │                   #   classify.py = Fellegi-Sunter 3-way decide + unsupervised EM (D5)
-├── interactive/    # CandidateStore (top-k+scores, persisted); constraints (local re-solve);
-│                   #   active (QueryStrategy/Oracle); review (ReviewQueue/RiskModel/Explanation)
+├── interactive/    # CandidateStore (top-k+scores, serializable); kbest.py = in-house Murty;  ← #9
+│                   #   constraints (ConstraintSet + reoptimize = edit→re-solve); review/active queues
 ├── evaluate.py     # pairwise P/R/F1, B-Cubed; blocking PC/RR/PQ
 ├── service.py      # qh-friendly JSON-in/JSON-out facade
 └── util.py         # existing helpers + back-compat re-exports

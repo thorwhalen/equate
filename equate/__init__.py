@@ -37,6 +37,14 @@ from equate.cluster import (
     canonicalize,
 )
 from equate.cluster.classify import classify, estimate_mu_em
+from equate.interactive import (
+    CandidateStore,
+    k_best_assignments,
+    ConstraintSet,
+    reoptimize,
+    review_queue,
+    uncertainty_sampling,
+)
 from equate.facade import match, dedupe, resolve
 
 from equate.util import (
