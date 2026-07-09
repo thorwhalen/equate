@@ -1,0 +1,4 @@
+equate.facade
+=============
+.. automodule:: equate.facade
+   :members:

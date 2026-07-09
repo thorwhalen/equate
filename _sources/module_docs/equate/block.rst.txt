@@ -1,0 +1,4 @@
+equate.block
+============
+.. automodule:: equate.block
+   :members:

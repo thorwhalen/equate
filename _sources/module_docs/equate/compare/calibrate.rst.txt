@@ -1,0 +1,4 @@
+equate.compare.calibrate
+========================
+.. automodule:: equate.compare.calibrate
+   :members:

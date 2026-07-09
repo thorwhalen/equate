@@ -1,0 +1,4 @@
+equate.cluster.classify
+=======================
+.. automodule:: equate.cluster.classify
+   :members:

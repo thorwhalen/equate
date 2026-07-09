@@ -1,0 +1,270 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.compare &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="equate.compare.calibrate" href="compare/calibrate.html" />
+    <link rel="prev" title="equate.cluster.classify" href="cluster/classify.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_vector.html">equate._vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block.html">equate.block</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block/ann.html">equate.block.ann</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block/keyed.html">equate.block.keyed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block/lsh.html">equate.block.lsh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block/metablock.html">equate.block.metablock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block/metrics.html">equate.block.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block/score.html">equate.block.score</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cluster.html">equate.cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cluster/classify.html">equate.cluster.classify</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">equate.compare</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#equate.compare.comparators"><code class="docutils literal notranslate"><span class="pre">comparators</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.compare.comparison_vector"><code class="docutils literal notranslate"><span class="pre">comparison_vector()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.compare.direct"><code class="docutils literal notranslate"><span class="pre">direct()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.compare.featurized"><code class="docutils literal notranslate"><span class="pre">featurized()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.compare.fellegi_sunter"><code class="docutils literal notranslate"><span class="pre">fellegi_sunter()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.compare.isotonic"><code class="docutils literal notranslate"><span class="pre">isotonic()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.compare.max_combiner"><code class="docutils literal notranslate"><span class="pre">max_combiner()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.compare.mean"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.compare.platt"><code class="docutils literal notranslate"><span class="pre">platt()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.compare.resolve_comparator"><code class="docutils literal notranslate"><span class="pre">resolve_comparator()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.compare.threshold"><code class="docutils literal notranslate"><span class="pre">threshold()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.compare.weighted_sum"><code class="docutils literal notranslate"><span class="pre">weighted_sum()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="compare/calibrate.html">equate.compare.calibrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare/numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare/string.html">equate.compare.string</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare/vector.html">equate.compare.vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare/vectorize.html">equate.compare.vectorize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="facade.html">equate.facade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matching.html">equate.matching</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matching/assign.html">equate.matching.assign</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matching/soft.html">equate.matching.soft</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">equate.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">equate.compare</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/equate/compare.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-equate.compare">
+<span id="equate-compare"></span><h1>equate.compare<a class="headerlink" href="#module-equate.compare" title="Link to this heading"></a></h1>
+<p>The compare stage (②): score how alike two (featurized) items are.</p>
+<p>There are two routes (decision register / doc 00-taxonomy):</p>
+<ul class="simple">
+<li><p><strong>featurize-then-compare</strong> (<a class="reference internal" href="#equate.compare.featurized" title="equate.compare.featurized"><code class="xref py py-func docutils literal notranslate"><span class="pre">featurized()</span></code></a>) — an <em>indexable</em> vector metric over
+independent representations (what the legacy <code class="docutils literal notranslate"><span class="pre">similarity_matrix</span></code> does); only this
+route can drive an ANN/LSH index;</p></li>
+<li><p><strong>direct pairwise compare</strong> (<a class="reference internal" href="#equate.compare.direct" title="equate.compare.direct"><code class="xref py py-func docutils literal notranslate"><span class="pre">direct()</span></code></a>) — an <em>opaque</em> scorer <code class="docutils literal notranslate"><span class="pre">h(a,</span> <span class="pre">b)</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code>
+(edit distance, a cross-encoder/LLM); it can only re-rank a candidate set.</p></li>
+</ul>
+<p>Pairwise comparators are <code class="docutils literal notranslate"><span class="pre">(a,</span> <span class="pre">b)</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code> callables; select one by name via the
+<a class="reference internal" href="#equate.compare.comparators" title="equate.compare.comparators"><code class="xref py py-data docutils literal notranslate"><span class="pre">comparators</span></code></a> registry or pass a callable. Each carries a
+<a class="reference internal" href="base.html#equate.base.ComparatorMeta" title="equate.base.ComparatorMeta"><code class="xref py py-class docutils literal notranslate"><span class="pre">equate.base.ComparatorMeta</span></code></a> (polarity / bounded / is_metric / is_symmetric) so
+the framework adapts — never treating a non-metric as a metric, keeping directional
+comparators (Monge-Elkan, containment) directional until the matcher boundary (D3).</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="equate.compare.comparators">
+<span class="sig-prename descclassname"><span class="pre">equate.compare.</span></span><span class="sig-name descname"><span class="pre">comparators</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;equate.registry.Registry</span> <span class="pre">object&gt;</span></span><a class="headerlink" href="#equate.compare.comparators" title="Link to this definition"></a></dt>
+<dd><p>the compare-stage strategy registry (name -&gt; lazy factory)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.compare.comparison_vector">
+<span class="sig-prename descclassname"><span class="pre">equate.compare.</span></span><span class="sig-name descname"><span class="pre">comparison_vector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_comparators</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/compare/vectorize.html#comparison_vector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.compare.comparison_vector" title="Link to this definition"></a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">{field:</span> <span class="pre">comparator(a[field],</span> <span class="pre">b[field])}</span></code> for each field comparator.</p>
+<p><code class="docutils literal notranslate"><span class="pre">field_comparators</span></code> maps a field name to a pairwise comparator; records may be
+mappings or objects (attribute access). A field whose value is <em>missing</em> (<code class="docutils literal notranslate"><span class="pre">None</span></code>)
+in either record scores <code class="docutils literal notranslate"><span class="pre">missing</span></code> (default 0.0) rather than being passed to the
+comparator — many comparators (edit distance, ratio) raise on <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare.string</span><span class="w"> </span><span class="kn">import</span> <span class="n">levenshtein</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cv</span> <span class="o">=</span> <span class="n">comparison_vector</span><span class="p">({</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;jon&#39;</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;john&#39;</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">levenshtein</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">cv</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">0.75</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.compare.direct">
+<span class="sig-prename descclassname"><span class="pre">equate.compare.</span></span><span class="sig-name descname"><span class="pre">direct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/compare.html#direct"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.compare.direct" title="Link to this definition"></a></dt>
+<dd><p>Wrap an opaque pairwise scorer <code class="docutils literal notranslate"><span class="pre">h(a,</span> <span class="pre">b)</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code> into a score-matrix builder
+<code class="docutils literal notranslate"><span class="pre">build(A,</span> <span class="pre">B)</span> <span class="pre">-&gt;</span> <span class="pre">ndarray</span></code>. Marked <strong>not indexable</strong> — usable only to re-rank a
+candidate set, never to drive an ANN/LSH index.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.compare.featurized">
+<span class="sig-prename descclassname"><span class="pre">equate.compare.</span></span><span class="sig-name descname"><span class="pre">featurized</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">featurizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tfidf'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/compare.html#featurized"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.compare.featurized" title="Link to this definition"></a></dt>
+<dd><p>Build a score-matrix builder that featurizes both collections then applies a
+vector <code class="docutils literal notranslate"><span class="pre">metric</span></code> (default cosine over the two matrices). Marked <strong>indexable</strong> — the
+featurize-then-compare route; this is what the legacy <code class="docutils literal notranslate"><span class="pre">similarity_matrix</span></code> does.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.compare.fellegi_sunter">
+<span class="sig-prename descclassname"><span class="pre">equate.compare.</span></span><span class="sig-name descname"><span class="pre">fellegi_sunter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m_probs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u_probs</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/compare/vectorize.html#fellegi_sunter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.compare.fellegi_sunter" title="Link to this definition"></a></dt>
+<dd><p>Fellegi-Sunter combiner (decision register D5): sum of per-field match weights.</p>
+<p>For each field with agreement <code class="docutils literal notranslate"><span class="pre">s</span></code> in [0, 1], contributes
+<code class="docutils literal notranslate"><span class="pre">s*log(m/u)</span> <span class="pre">+</span> <span class="pre">(1-s)*log((1-m)/(1-u))</span></code> — the log-likelihood-ratio “match weight”.
+<code class="docutils literal notranslate"><span class="pre">m_probs</span></code> / <code class="docutils literal notranslate"><span class="pre">u_probs</span></code> are the m- and u-probabilities per field (from labels or
+EM; the EM estimation lives in the classify stage, roadmap #8). Returns a log-odds
+score (higher = more likely a match). Probabilities are clamped to <code class="docutils literal notranslate"><span class="pre">[eps,</span> <span class="pre">1-eps]</span></code>
+so <code class="docutils literal notranslate"><span class="pre">m</span></code>/<code class="docutils literal notranslate"><span class="pre">u</span></code> of exactly 0 or 1 can’t cause <code class="docutils literal notranslate"><span class="pre">log(0)</span></code> / division-by-zero.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.compare.isotonic">
+<span class="sig-prename descclassname"><span class="pre">equate.compare.</span></span><span class="sig-name descname"><span class="pre">isotonic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/compare/calibrate.html#isotonic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.compare.isotonic" title="Link to this definition"></a></dt>
+<dd><p>Fit isotonic regression -&gt; a monotone calibrated probability.</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">equate[sklearn]</span></code>. Returns a calibrator mapping a raw score to a
+probability.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.compare.max_combiner">
+<span class="sig-prename descclassname"><span class="pre">equate.compare.</span></span><span class="sig-name descname"><span class="pre">max_combiner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cv</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/compare/vectorize.html#max_combiner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.compare.max_combiner" title="Link to this definition"></a></dt>
+<dd><p>Combiner: maximum field score in a comparison vector.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.compare.mean">
+<span class="sig-prename descclassname"><span class="pre">equate.compare.</span></span><span class="sig-name descname"><span class="pre">mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cv</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/compare/vectorize.html#mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.compare.mean" title="Link to this definition"></a></dt>
+<dd><p>Combiner: arithmetic mean of a comparison vector.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.compare.platt">
+<span class="sig-prename descclassname"><span class="pre">equate.compare.</span></span><span class="sig-name descname"><span class="pre">platt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/compare/calibrate.html#platt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.compare.platt" title="Link to this definition"></a></dt>
+<dd><p>Fit Platt scaling (logistic regression on 1-D scores) -&gt; <code class="docutils literal notranslate"><span class="pre">P(match)</span></code>.</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">equate[sklearn]</span></code>. Returns a calibrator mapping a raw score to a
+probability.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.compare.resolve_comparator">
+<span class="sig-prename descclassname"><span class="pre">equate.compare.</span></span><span class="sig-name descname"><span class="pre">resolve_comparator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/compare.html#resolve_comparator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.compare.resolve_comparator" title="Link to this definition"></a></dt>
+<dd><p>Resolve <code class="docutils literal notranslate"><span class="pre">spec</span></code> to a pairwise comparator.</p>
+<p>A callable passes through; a registered name (<code class="docutils literal notranslate"><span class="pre">str</span></code>) is built via its factory
+(<code class="docutils literal notranslate"><span class="pre">**config</span></code> forwarded, so an unknown option raises instead of being ignored).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.compare.threshold">
+<span class="sig-prename descclassname"><span class="pre">equate.compare.</span></span><span class="sig-name descname"><span class="pre">threshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">hard</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/compare/calibrate.html#threshold"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.compare.threshold" title="Link to this definition"></a></dt>
+<dd><p>Return a calibrator: <code class="docutils literal notranslate"><span class="pre">hard</span></code> -&gt; boolean <code class="docutils literal notranslate"><span class="pre">score</span> <span class="pre">&gt;=</span> <span class="pre">t</span></code>; else pass the score through.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.compare.weighted_sum">
+<span class="sig-prename descclassname"><span class="pre">equate.compare.</span></span><span class="sig-name descname"><span class="pre">weighted_sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/compare/vectorize.html#weighted_sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.compare.weighted_sum" title="Link to this definition"></a></dt>
+<dd><p>Combiner: weighted sum of a comparison vector (default weight 1.0 per field).</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cluster/classify.html" class="btn btn-neutral float-left" title="equate.cluster.classify" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="compare/calibrate.html" class="btn btn-neutral float-right" title="equate.compare.calibrate" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

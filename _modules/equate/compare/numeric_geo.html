@@ -1,0 +1,236 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.compare.numeric_geo &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/_vector.html">equate._vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block.html">equate.block</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block/ann.html">equate.block.ann</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block/keyed.html">equate.block.keyed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block/lsh.html">equate.block.lsh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block/metablock.html">equate.block.metablock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block/metrics.html">equate.block.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block/score.html">equate.block.score</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/cluster.html">equate.cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/cluster/classify.html">equate.cluster.classify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/compare.html">equate.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/compare/calibrate.html">equate.compare.calibrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/compare/numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/compare/string.html">equate.compare.string</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/compare/vector.html">equate.compare.vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/compare/vectorize.html">equate.compare.vectorize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/facade.html">equate.facade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/matching.html">equate.matching</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/matching/assign.html">equate.matching.assign</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/matching/soft.html">equate.matching.soft</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/registry.html">equate.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../compare.html">equate.compare</a></li>
+      <li class="breadcrumb-item active">equate.compare.numeric_geo</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for equate.compare.numeric_geo</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Numeric, date, and geospatial comparators (stage ②): turn a domain distance into a</span>
+<span class="sd">[0, 1] similarity via a decay function. Pure standard library.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComparatorMeta</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;exp_decay&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;linear_decay&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;gaussian_decay&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;haversine&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;geo_similarity&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">_SIM</span> <span class="o">=</span> <span class="n">ComparatorMeta</span><span class="p">(</span><span class="n">polarity</span><span class="o">=</span><span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="n">bounded</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">is_metric</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">is_symmetric</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_default_distance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="exp_decay">
+<a class="viewcode-back" href="../../../module_docs/equate/compare/numeric_geo.html#equate.compare.numeric_geo.exp_decay">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">exp_decay</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">_default_distance</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Comparator mapping (non-negative) distance ``d`` to ``exp(-d / scale)`` in ``(0, 1]``.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">scale</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;exp_decay scale must be &gt; 0, got </span><span class="si">{</span><span class="n">scale</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cmp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="nb">abs</span><span class="p">(</span><span class="n">distance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span> <span class="o">/</span> <span class="n">scale</span><span class="p">)</span>
+
+    <span class="n">cmp</span><span class="o">.</span><span class="n">meta</span> <span class="o">=</span> <span class="n">_SIM</span>
+    <span class="k">return</span> <span class="n">cmp</span></div>
+
+
+
+<div class="viewcode-block" id="linear_decay">
+<a class="viewcode-back" href="../../../module_docs/equate/compare/numeric_geo.html#equate.compare.numeric_geo.linear_decay">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">linear_decay</span><span class="p">(</span><span class="n">max_distance</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">_default_distance</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Comparator mapping distance ``d`` to ``1 - d / max_distance``, clamped to [0, 1].&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">max_distance</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;linear_decay max_distance must be &gt; 0, got </span><span class="si">{</span><span class="n">max_distance</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cmp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">distance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span> <span class="o">/</span> <span class="n">max_distance</span><span class="p">))</span>
+
+    <span class="n">cmp</span><span class="o">.</span><span class="n">meta</span> <span class="o">=</span> <span class="n">_SIM</span>
+    <span class="k">return</span> <span class="n">cmp</span></div>
+
+
+
+<div class="viewcode-block" id="gaussian_decay">
+<a class="viewcode-back" href="../../../module_docs/equate/compare/numeric_geo.html#equate.compare.numeric_geo.gaussian_decay">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">gaussian_decay</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">_default_distance</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Comparator mapping distance ``d`` to ``exp(-(d / scale)^2 / 2)`` in ``(0, 1]``.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">scale</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;gaussian_decay scale must be &gt; 0, got </span><span class="si">{</span><span class="n">scale</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cmp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">distance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="n">scale</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">d</span> <span class="o">*</span> <span class="n">d</span><span class="p">)</span>
+
+    <span class="n">cmp</span><span class="o">.</span><span class="n">meta</span> <span class="o">=</span> <span class="n">_SIM</span>
+    <span class="k">return</span> <span class="n">cmp</span></div>
+
+
+
+<div class="viewcode-block" id="haversine">
+<a class="viewcode-back" href="../../../module_docs/equate/compare/numeric_geo.html#equate.compare.numeric_geo.haversine">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">haversine</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Great-circle distance in km between two ``(lat, lon)`` points (degrees).</span>
+
+<span class="sd">    &gt;&gt;&gt; round(haversine((0.0, 0.0), (0.0, 1.0)), 1)   # 1 deg lon at the equator</span>
+<span class="sd">    111.2</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lat1</span><span class="p">,</span> <span class="n">lon1</span> <span class="o">=</span> <span class="n">a</span>
+    <span class="n">lat2</span><span class="p">,</span> <span class="n">lon2</span> <span class="o">=</span> <span class="n">b</span>
+    <span class="n">radius_km</span> <span class="o">=</span> <span class="mf">6371.0088</span>
+    <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lat1</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lat2</span><span class="p">)</span>
+    <span class="n">dphi</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lat2</span> <span class="o">-</span> <span class="n">lat1</span><span class="p">)</span>
+    <span class="n">dlmb</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lon2</span> <span class="o">-</span> <span class="n">lon1</span><span class="p">)</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dphi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">p2</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dlmb</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">radius_km</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">asin</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">h</span><span class="p">))</span></div>
+
+
+
+<span class="n">haversine</span><span class="o">.</span><span class="n">meta</span> <span class="o">=</span> <span class="n">ComparatorMeta</span><span class="p">(</span>
+    <span class="n">polarity</span><span class="o">=</span><span class="s1">&#39;distance&#39;</span><span class="p">,</span> <span class="n">bounded</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">is_metric</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">is_symmetric</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="geo_similarity">
+<a class="viewcode-back" href="../../../module_docs/equate/compare/numeric_geo.html#equate.compare.numeric_geo.geo_similarity">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">geo_similarity</span><span class="p">(</span><span class="n">scale_km</span><span class="o">=</span><span class="mf">10.0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Geospatial similarity comparator: exponential decay of haversine distance (km).&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">exp_decay</span><span class="p">(</span><span class="n">scale_km</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">haversine</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

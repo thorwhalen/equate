@@ -1,0 +1,178 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.cluster.classify &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="equate.compare" href="../compare.html" />
+    <link rel="prev" title="equate.cluster" href="../cluster.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../_vector.html">equate._vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../block.html">equate.block</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../block/ann.html">equate.block.ann</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../block/keyed.html">equate.block.keyed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../block/lsh.html">equate.block.lsh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../block/metablock.html">equate.block.metablock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../block/metrics.html">equate.block.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../block/score.html">equate.block.score</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cluster.html">equate.cluster</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">equate.cluster.classify</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#equate.cluster.classify.classify"><code class="docutils literal notranslate"><span class="pre">classify()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.cluster.classify.estimate_mu_em"><code class="docutils literal notranslate"><span class="pre">estimate_mu_em()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../compare.html">equate.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../compare/calibrate.html">equate.compare.calibrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../compare/numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../compare/string.html">equate.compare.string</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../compare/vector.html">equate.compare.vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../compare/vectorize.html">equate.compare.vectorize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../facade.html">equate.facade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../matching.html">equate.matching</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../matching/assign.html">equate.matching.assign</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../matching/soft.html">equate.matching.soft</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../registry.html">equate.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">equate.cluster.classify</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/module_docs/equate/cluster/classify.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-equate.cluster.classify">
+<span id="equate-cluster-classify"></span><h1>equate.cluster.classify<a class="headerlink" href="#module-equate.cluster.classify" title="Link to this heading"></a></h1>
+<p>Classification (the optional decide stage): map a comparison score to a decision.</p>
+<p>The Fellegi-Sunter model turns per-field agreement into a match <em>weight</em> (log-odds; the
+combiner lives in <a class="reference internal" href="../compare/vectorize.html#module-equate.compare.vectorize" title="equate.compare.vectorize"><code class="xref py py-mod docutils literal notranslate"><span class="pre">equate.compare.vectorize</span></code></a>, decision register D5) and then a
+<em>three-way</em> decision — match / possible-match / non-match — via two thresholds. The
+possible-match band is the abstain region that feeds human review (roadmap #9). The m- and
+u-probabilities can come from labels or be estimated unsupervised by EM here. The default
+matching path stays score-only; classification is opt-in.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.cluster.classify.classify">
+<span class="sig-prename descclassname"><span class="pre">equate.cluster.classify.</span></span><span class="sig-name descname"><span class="pre">classify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weight</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/equate/cluster/classify.html#classify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.cluster.classify.classify" title="Link to this definition"></a></dt>
+<dd><p>Three-way Fellegi-Sunter decision from a match <code class="docutils literal notranslate"><span class="pre">weight</span></code> and two thresholds.</p>
+<p><code class="docutils literal notranslate"><span class="pre">weight</span> <span class="pre">&gt;=</span> <span class="pre">upper</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">'match'</span></code>; <code class="docutils literal notranslate"><span class="pre">weight</span> <span class="pre">&lt;=</span> <span class="pre">lower</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">'non_match'</span></code>; between -&gt;
+<code class="docutils literal notranslate"><span class="pre">'possible_match'</span></code> (the clerical-review / abstain band). Requires <code class="docutils literal notranslate"><span class="pre">lower</span> <span class="pre">&lt;=</span> <span class="pre">upper</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">classify</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">lower</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.0</span><span class="p">)]</span>
+<span class="go">[&#39;match&#39;, &#39;possible_match&#39;, &#39;non_match&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.cluster.classify.estimate_mu_em">
+<span class="sig-prename descclassname"><span class="pre">equate.cluster.classify.</span></span><span class="sig-name descname"><span class="pre">estimate_mu_em</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comparison_vectors</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">iters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agree_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/equate/cluster/classify.html#estimate_mu_em"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.cluster.classify.estimate_mu_em" title="Link to this definition"></a></dt>
+<dd><p>Unsupervised EM estimate of per-field m- and u-probabilities (a 2-class mixture).</p>
+<p><code class="docutils literal notranslate"><span class="pre">comparison_vectors</span></code> is an iterable of <code class="docutils literal notranslate"><span class="pre">{field:</span> <span class="pre">agreement}</span></code> (agreement in [0, 1]);
+each is binarized at <code class="docutils literal notranslate"><span class="pre">agree_threshold</span></code>. A field <em>missing</em> from a record contributes
+no evidence for that record (it is skipped, not treated as a disagreement). Returns
+<code class="docutils literal notranslate"><span class="pre">(m_probs,</span> <span class="pre">u_probs)</span></code> dicts suitable for <a class="reference internal" href="../compare/vectorize.html#equate.compare.vectorize.fellegi_sunter" title="equate.compare.vectorize.fellegi_sunter"><code class="xref py py-func docutils literal notranslate"><span class="pre">equate.compare.vectorize.fellegi_sunter()</span></code></a>;
+m &gt; u for a discriminating field when the data has genuine match/non-match structure.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../cluster.html" class="btn btn-neutral float-left" title="equate.cluster" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../compare.html" class="btn btn-neutral float-right" title="equate.compare" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,4 @@
+equate.compare
+==============
+.. automodule:: equate.compare
+   :members:

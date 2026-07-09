@@ -1,0 +1,302 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.compare &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/_vector.html">equate._vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block.html">equate.block</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block/ann.html">equate.block.ann</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block/keyed.html">equate.block.keyed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block/lsh.html">equate.block.lsh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block/metablock.html">equate.block.metablock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block/metrics.html">equate.block.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block/score.html">equate.block.score</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/cluster.html">equate.cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/cluster/classify.html">equate.cluster.classify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/compare.html">equate.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/compare/calibrate.html">equate.compare.calibrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/compare/numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/compare/string.html">equate.compare.string</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/compare/vector.html">equate.compare.vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/compare/vectorize.html">equate.compare.vectorize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/facade.html">equate.facade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching.html">equate.matching</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching/assign.html">equate.matching.assign</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching/soft.html">equate.matching.soft</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/registry.html">equate.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">equate.compare</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for equate.compare</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;The compare stage (②): score how alike two (featurized) items are.</span>
+
+<span class="sd">There are two routes (decision register / doc 00-taxonomy):</span>
+
+<span class="sd">- **featurize-then-compare** (:func:`featurized`) — an *indexable* vector metric over</span>
+<span class="sd">  independent representations (what the legacy ``similarity_matrix`` does); only this</span>
+<span class="sd">  route can drive an ANN/LSH index;</span>
+<span class="sd">- **direct pairwise compare** (:func:`direct`) — an *opaque* scorer ``h(a, b) -&gt; float``</span>
+<span class="sd">  (edit distance, a cross-encoder/LLM); it can only re-rank a candidate set.</span>
+
+<span class="sd">Pairwise comparators are ``(a, b) -&gt; float`` callables; select one by name via the</span>
+<span class="sd">:data:`comparators` registry or pass a callable. Each carries a</span>
+<span class="sd">:class:`equate.base.ComparatorMeta` (polarity / bounded / is_metric / is_symmetric) so</span>
+<span class="sd">the framework adapts — never treating a non-metric as a metric, keeping directional</span>
+<span class="sd">comparators (Monge-Elkan, containment) directional until the matcher boundary (D3).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">Registry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComparatorMeta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate._vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">cosine_similarity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.featurize</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_featurizer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">string</span> <span class="k">as</span> <span class="n">_string</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">numeric_geo</span> <span class="k">as</span> <span class="n">_ng</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">vector</span> <span class="k">as</span> <span class="n">_vec</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare.vectorize</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">comparison_vector</span><span class="p">,</span>
+    <span class="n">weighted_sum</span><span class="p">,</span>
+    <span class="n">mean</span><span class="p">,</span>
+    <span class="n">max_combiner</span><span class="p">,</span>
+    <span class="n">fellegi_sunter</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare.calibrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">platt</span><span class="p">,</span> <span class="n">isotonic</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;comparators&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;resolve_comparator&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;direct&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;featurized&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;comparison_vector&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;weighted_sum&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;mean&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;max_combiner&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;fellegi_sunter&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;threshold&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;platt&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;isotonic&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">#: the compare-stage strategy registry (name -&gt; lazy factory)</span>
+<span class="n">comparators</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;comparator&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_const</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A factory returning a fixed comparator; passing config is a clear error.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">factory</span><span class="p">(</span><span class="o">**</span><span class="n">config</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">config</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;comparator </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> takes no configuration; got </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="k">return</span> <span class="n">factory</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_configurable</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A factory returning ``fn``, partially applied with any keyword config.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">factory</span><span class="p">(</span><span class="o">**</span><span class="n">config</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">partial</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">)</span> <span class="k">if</span> <span class="n">config</span> <span class="k">else</span> <span class="n">fn</span>
+
+    <span class="k">return</span> <span class="n">factory</span>
+
+
+<span class="c1"># Fixed pairwise comparators (core, or lazy-on-first-call for optional-dep ones).</span>
+<span class="k">for</span> <span class="n">_name</span><span class="p">,</span> <span class="n">_fn</span> <span class="ow">in</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s1">&#39;ratio&#39;</span><span class="p">,</span> <span class="n">_string</span><span class="o">.</span><span class="n">ratio</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;levenshtein&#39;</span><span class="p">,</span> <span class="n">_string</span><span class="o">.</span><span class="n">levenshtein</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;levenshtein_distance&#39;</span><span class="p">,</span> <span class="n">_string</span><span class="o">.</span><span class="n">levenshtein_distance</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;jaro_winkler&#39;</span><span class="p">,</span> <span class="n">_string</span><span class="o">.</span><span class="n">jaro_winkler</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;cosine&#39;</span><span class="p">,</span> <span class="n">_vec</span><span class="o">.</span><span class="n">cosine</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;dot&#39;</span><span class="p">,</span> <span class="n">_vec</span><span class="o">.</span><span class="n">dot</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;angular&#39;</span><span class="p">,</span> <span class="n">_vec</span><span class="o">.</span><span class="n">angular_distance</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;haversine&#39;</span><span class="p">,</span> <span class="n">_ng</span><span class="o">.</span><span class="n">haversine</span><span class="p">),</span>
+<span class="p">]:</span>
+    <span class="n">comparators</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">_name</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">_fn</span><span class="p">,</span> <span class="n">_name</span><span class="p">),</span> <span class="n">meta</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">_fn</span><span class="p">,</span> <span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+
+<span class="c1"># Configurable pairwise comparators (accept keyword config, applied via functools.partial).</span>
+<span class="n">comparators</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+    <span class="s1">&#39;monge_elkan&#39;</span><span class="p">,</span> <span class="n">_configurable</span><span class="p">(</span><span class="n">_string</span><span class="o">.</span><span class="n">monge_elkan</span><span class="p">),</span> <span class="n">meta</span><span class="o">=</span><span class="n">_string</span><span class="o">.</span><span class="n">monge_elkan</span><span class="o">.</span><span class="n">meta</span>
+<span class="p">)</span>
+<span class="n">comparators</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+    <span class="s1">&#39;phonetic&#39;</span><span class="p">,</span> <span class="n">_configurable</span><span class="p">(</span><span class="n">_string</span><span class="o">.</span><span class="n">phonetic_match</span><span class="p">),</span> <span class="n">meta</span><span class="o">=</span><span class="n">_string</span><span class="o">.</span><span class="n">phonetic_match</span><span class="o">.</span><span class="n">meta</span>
+<span class="p">)</span>
+
+<span class="c1"># Comparator factories (build a configured comparator from config).</span>
+<span class="n">comparators</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;exp_decay&#39;</span><span class="p">,</span> <span class="n">_ng</span><span class="o">.</span><span class="n">exp_decay</span><span class="p">)</span>
+<span class="n">comparators</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;linear_decay&#39;</span><span class="p">,</span> <span class="n">_ng</span><span class="o">.</span><span class="n">linear_decay</span><span class="p">)</span>
+<span class="n">comparators</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;gaussian_decay&#39;</span><span class="p">,</span> <span class="n">_ng</span><span class="o">.</span><span class="n">gaussian_decay</span><span class="p">)</span>
+<span class="n">comparators</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;geo&#39;</span><span class="p">,</span> <span class="n">_ng</span><span class="o">.</span><span class="n">geo_similarity</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="resolve_comparator">
+<a class="viewcode-back" href="../../module_docs/equate/compare.html#equate.compare.resolve_comparator">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_comparator</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve ``spec`` to a pairwise comparator.</span>
+
+<span class="sd">    A callable passes through; a registered name (``str``) is built via its factory</span>
+<span class="sd">    (``**config`` forwarded, so an unknown option raises instead of being ignored).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">spec</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">comparators</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;comparator spec must be a registered name or a callable, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="direct">
+<a class="viewcode-back" href="../../module_docs/equate/compare.html#equate.compare.direct">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">direct</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrap an opaque pairwise scorer ``h(a, b) -&gt; float`` into a score-matrix builder</span>
+<span class="sd">    ``build(A, B) -&gt; ndarray``. Marked **not indexable** — usable only to re-rank a</span>
+<span class="sd">    candidate set, never to drive an ANN/LSH index.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+        <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>  <span class="c1"># materialize: B is iterated once per row of A</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">A</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">B</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">h</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">B</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">A</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+    <span class="n">build</span><span class="o">.</span><span class="n">comparator</span> <span class="o">=</span> <span class="n">h</span>
+    <span class="n">build</span><span class="o">.</span><span class="n">meta</span> <span class="o">=</span> <span class="n">meta</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">ComparatorMeta</span><span class="p">()</span>
+    <span class="n">build</span><span class="o">.</span><span class="n">indexable</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">build</span></div>
+
+
+
+<div class="viewcode-block" id="featurized">
+<a class="viewcode-back" href="../../module_docs/equate/compare.html#equate.compare.featurized">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">featurized</span><span class="p">(</span><span class="n">featurizer</span><span class="o">=</span><span class="s1">&#39;tfidf&#39;</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a score-matrix builder that featurizes both collections then applies a</span>
+<span class="sd">    vector ``metric`` (default cosine over the two matrices). Marked **indexable** — the</span>
+<span class="sd">    featurize-then-compare route; this is what the legacy ``similarity_matrix`` does.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">metric</span> <span class="o">=</span> <span class="n">metric</span> <span class="k">if</span> <span class="n">metric</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">cosine_similarity</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+        <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+        <span class="n">feat</span> <span class="o">=</span> <span class="n">resolve_featurizer</span><span class="p">(</span><span class="n">featurizer</span><span class="p">,</span> <span class="n">corpus</span><span class="o">=</span><span class="n">A</span> <span class="o">+</span> <span class="n">B</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">metric</span><span class="p">(</span><span class="n">feat</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">feat</span><span class="p">(</span><span class="n">B</span><span class="p">))</span>
+
+    <span class="n">build</span><span class="o">.</span><span class="n">indexable</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">build</span><span class="o">.</span><span class="n">meta</span> <span class="o">=</span> <span class="n">meta</span> <span class="ow">or</span> <span class="n">ComparatorMeta</span><span class="p">(</span>
+        <span class="n">polarity</span><span class="o">=</span><span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="n">bounded</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">is_metric</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">is_symmetric</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">build</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

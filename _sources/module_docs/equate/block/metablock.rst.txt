@@ -1,0 +1,4 @@
+equate.block.metablock
+======================
+.. automodule:: equate.block.metablock
+   :members:

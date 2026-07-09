@@ -1,0 +1,4 @@
+equate.block.metrics
+====================
+.. automodule:: equate.block.metrics
+   :members:

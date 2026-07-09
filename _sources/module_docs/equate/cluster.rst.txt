@@ -1,0 +1,4 @@
+equate.cluster
+==============
+.. automodule:: equate.cluster
+   :members:

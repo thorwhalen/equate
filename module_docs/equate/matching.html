@@ -1,0 +1,219 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.matching &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="equate.matching.assign" href="matching/assign.html" />
+    <link rel="prev" title="equate.featurize.tfidf" href="featurize/tfidf.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_vector.html">equate._vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block.html">equate.block</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block/ann.html">equate.block.ann</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block/keyed.html">equate.block.keyed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block/lsh.html">equate.block.lsh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block/metablock.html">equate.block.metablock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block/metrics.html">equate.block.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block/score.html">equate.block.score</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cluster.html">equate.cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cluster/classify.html">equate.cluster.classify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare.html">equate.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare/calibrate.html">equate.compare.calibrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare/numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare/string.html">equate.compare.string</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare/vector.html">equate.compare.vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare/vectorize.html">equate.compare.vectorize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="facade.html">equate.facade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">equate.matching</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#equate.matching.greedy_matching"><code class="docutils literal notranslate"><span class="pre">greedy_matching()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.matching.harden"><code class="docutils literal notranslate"><span class="pre">harden()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.matching.matchers"><code class="docutils literal notranslate"><span class="pre">matchers</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.matching.optimal_matching"><code class="docutils literal notranslate"><span class="pre">optimal_matching()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.matching.resolve_matcher"><code class="docutils literal notranslate"><span class="pre">resolve_matcher()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.matching.soft_match"><code class="docutils literal notranslate"><span class="pre">soft_match()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.matching.stable_matching"><code class="docutils literal notranslate"><span class="pre">stable_matching()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="matching/assign.html">equate.matching.assign</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matching/soft.html">equate.matching.soft</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">equate.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">equate.matching</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/equate/matching.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-equate.matching">
+<span id="equate-matching"></span><h1>equate.matching<a class="headerlink" href="#module-equate.matching" title="Link to this heading"></a></h1>
+<p>The match stage (③): turn a score matrix into a correspondence.</p>
+<p>A <em>Matcher</em> is a strategy over a score structure — the choice is the <strong>objective</strong>, not
+the algorithm (decision register D4). Select by name via the <a class="reference internal" href="#equate.matching.matchers" title="equate.matching.matchers"><code class="xref py py-data docutils literal notranslate"><span class="pre">matchers</span></code></a> registry or
+pass a callable <code class="docutils literal notranslate"><span class="pre">(scores,</span> <span class="pre">*,</span> <span class="pre">sense)</span> <span class="pre">-&gt;</span> <span class="pre">pairs</span></code>. The optimal matcher is sparse-aware
+(routes a blocked matrix to the sparse LAP); soft matching (optimal transport) lives in a
+parallel <a class="reference internal" href="#equate.matching.soft_match" title="equate.matching.soft_match"><code class="xref py py-func docutils literal notranslate"><span class="pre">soft_match()</span></code></a> / <a class="reference internal" href="#equate.matching.harden" title="equate.matching.harden"><code class="xref py py-func docutils literal notranslate"><span class="pre">harden()</span></code></a> seam.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.matching.greedy_matching">
+<span class="sig-prename descclassname"><span class="pre">equate.matching.</span></span><span class="sig-name descname"><span class="pre">greedy_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maximize'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/matching/assign.html#greedy_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.matching.greedy_matching" title="Link to this definition"></a></dt>
+<dd><p>Greedy 1:1: repeatedly take the best still-available <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code>, removing both.</p>
+<p>Order-dependent and not globally optimal, but fast. For a sparse matrix only the
+stored (candidate) cells are considered — an absent cell is never a match.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.matching.harden">
+<span class="sig-prename descclassname"><span class="pre">equate.matching.</span></span><span class="sig-name descname"><span class="pre">harden</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plan</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/matching/soft.html#harden"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.matching.harden" title="Link to this definition"></a></dt>
+<dd><p>Recover a hard 1:1 assignment from a transport <code class="docutils literal notranslate"><span class="pre">plan</span></code> (LAP maximizing mass).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="equate.matching.matchers">
+<span class="sig-prename descclassname"><span class="pre">equate.matching.</span></span><span class="sig-name descname"><span class="pre">matchers</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;equate.registry.Registry</span> <span class="pre">object&gt;</span></span><a class="headerlink" href="#equate.matching.matchers" title="Link to this definition"></a></dt>
+<dd><p>the match-stage strategy registry (name -&gt; lazy factory)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.matching.optimal_matching">
+<span class="sig-prename descclassname"><span class="pre">equate.matching.</span></span><span class="sig-name descname"><span class="pre">optimal_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maximize'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/matching/assign.html#optimal_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.matching.optimal_matching" title="Link to this definition"></a></dt>
+<dd><p>Globally optimal 1:1 assignment (the linear assignment problem).</p>
+<p>A dense matrix goes straight to <code class="docutils literal notranslate"><span class="pre">linear_sum_assignment</span></code> on <code class="docutils literal notranslate"><span class="pre">to_cost(scores,</span> <span class="pre">sense)</span></code>.
+A <strong>sparse (blocked)</strong> matrix honors the <em>candidate</em> semantics: absent cells are
+worst-cased (via <code class="docutils literal notranslate"><span class="pre">to_cost</span></code>/<code class="docutils literal notranslate"><span class="pre">_sparse_to_cost</span></code>), the LAP is solved on that cost, and
+any assignment landing on a non-candidate (absent) cell is dropped — so a row with no
+candidate is left unmatched (a <em>partial</em> matching), and an all-absent matrix yields no
+matches. This densifies the cost; a non-densifying sparse LAP is a future optimization
+(scipy’s sparse solver silently drops explicitly-stored zero-score candidates, so it is
+not used here).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.matching.resolve_matcher">
+<span class="sig-prename descclassname"><span class="pre">equate.matching.</span></span><span class="sig-name descname"><span class="pre">resolve_matcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'optimal'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/matching.html#resolve_matcher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.matching.resolve_matcher" title="Link to this definition"></a></dt>
+<dd><p>Resolve <code class="docutils literal notranslate"><span class="pre">spec</span></code> to a matcher <code class="docutils literal notranslate"><span class="pre">(scores,</span> <span class="pre">*,</span> <span class="pre">sense)</span> <span class="pre">-&gt;</span> <span class="pre">pairs</span></code>.</p>
+<p>A callable passes through; a registered name (or a facade <code class="docutils literal notranslate"><span class="pre">how=</span></code> alias like
+<code class="docutils literal notranslate"><span class="pre">'assign'</span> <span class="pre">-&gt;</span> <span class="pre">'optimal'</span></code>) is built via the registry.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.matching.soft_match">
+<span class="sig-prename descclassname"><span class="pre">equate.matching.</span></span><span class="sig-name descname"><span class="pre">soft_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maximize'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/matching/soft.html#soft_match"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.matching.soft_match" title="Link to this definition"></a></dt>
+<dd><p>Entropic optimal-transport (Sinkhorn) plan over the cost derived from <code class="docutils literal notranslate"><span class="pre">scores</span></code>.</p>
+<p>Returns a dense transport-plan matrix whose rows/cols sum to the marginals <code class="docutils literal notranslate"><span class="pre">a</span></code>/<code class="docutils literal notranslate"><span class="pre">b</span></code>
+(uniform by default). Requires <code class="docutils literal notranslate"><span class="pre">equate[ot]</span></code> (POT). <code class="docutils literal notranslate"><span class="pre">reg</span></code> (entropic regularization)
+must be &gt; 0 (<code class="docutils literal notranslate"><span class="pre">reg=0</span></code> divides by zero inside Sinkhorn).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.matching.stable_matching">
+<span class="sig-prename descclassname"><span class="pre">equate.matching.</span></span><span class="sig-name descname"><span class="pre">stable_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maximize'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/matching/assign.html#stable_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.matching.stable_matching" title="Link to this definition"></a></dt>
+<dd><p>Gale-Shapley stable matching (optimizes stability, not total score).</p>
+<p>See <a class="reference internal" href="util.html#equate.util.stable_marriage_matching" title="equate.util.stable_marriage_matching"><code class="xref py py-func docutils literal notranslate"><span class="pre">equate.util.stable_marriage_matching()</span></code></a>. A sparse (blocked) matrix routes
+through <code class="docutils literal notranslate"><span class="pre">to_cost</span></code> (absent cells worst-cased), is ranked by that cost, and
+hole-assignments are dropped — so an absent cell never out-ranks a real candidate.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="featurize/tfidf.html" class="btn btn-neutral float-left" title="equate.featurize.tfidf" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="matching/assign.html" class="btn btn-neutral float-right" title="equate.matching.assign" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

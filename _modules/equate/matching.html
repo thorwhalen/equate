@@ -1,0 +1,223 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.matching &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/_vector.html">equate._vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block.html">equate.block</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block/ann.html">equate.block.ann</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block/keyed.html">equate.block.keyed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block/lsh.html">equate.block.lsh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block/metablock.html">equate.block.metablock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block/metrics.html">equate.block.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block/score.html">equate.block.score</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/cluster.html">equate.cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/cluster/classify.html">equate.cluster.classify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/compare.html">equate.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/compare/calibrate.html">equate.compare.calibrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/compare/numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/compare/string.html">equate.compare.string</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/compare/vector.html">equate.compare.vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/compare/vectorize.html">equate.compare.vectorize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/facade.html">equate.facade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching.html">equate.matching</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching/assign.html">equate.matching.assign</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching/soft.html">equate.matching.soft</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/registry.html">equate.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">equate.matching</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for equate.matching</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;The match stage (③): turn a score matrix into a correspondence.</span>
+
+<span class="sd">A *Matcher* is a strategy over a score structure — the choice is the **objective**, not</span>
+<span class="sd">the algorithm (decision register D4). Select by name via the :data:`matchers` registry or</span>
+<span class="sd">pass a callable ``(scores, *, sense) -&gt; pairs``. The optimal matcher is sparse-aware</span>
+<span class="sd">(routes a blocked matrix to the sparse LAP); soft matching (optimal transport) lives in a</span>
+<span class="sd">parallel :func:`soft_match` / :func:`harden` seam.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">issparse</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">Registry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.matching.assign</span><span class="w"> </span><span class="kn">import</span> <span class="n">optimal_matching</span><span class="p">,</span> <span class="n">greedy_matching</span><span class="p">,</span> <span class="n">stable_matching</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.matching.soft</span><span class="w"> </span><span class="kn">import</span> <span class="n">soft_match</span><span class="p">,</span> <span class="n">harden</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;matchers&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;resolve_matcher&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;optimal_matching&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;greedy_matching&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;stable_matching&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;soft_match&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;harden&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">#: the match-stage strategy registry (name -&gt; lazy factory)</span>
+<span class="n">matchers</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;matcher&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_const</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Factory returning a fixed matcher; passing config is a clear error.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">factory</span><span class="p">(</span><span class="o">**</span><span class="n">config</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">config</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;matcher </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> takes no configuration; got </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">fn</span>
+
+    <span class="k">return</span> <span class="n">factory</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_max_weight_matcher</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;maximize&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Maximum-weight bipartite matching via networkx — requires ``equate[graph]``.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">equate.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">maximal_matching</span>
+
+    <span class="n">S</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span> <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">maximal_matching</span><span class="p">(</span><span class="o">-</span><span class="n">S</span> <span class="k">if</span> <span class="n">sense</span> <span class="o">==</span> <span class="s1">&#39;minimize&#39;</span> <span class="k">else</span> <span class="n">S</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_kuhn_munkres_matcher</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;maximize&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Hungarian assignment via networkx — requires ``equate[graph]``.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">equate.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">kuhn_munkres_matching</span>
+
+    <span class="n">S</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span> <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span> <span class="k">else</span> <span class="n">scores</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">kuhn_munkres_matching</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">))</span>
+
+
+<span class="n">matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;optimal&#39;</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">optimal_matching</span><span class="p">,</span> <span class="s1">&#39;optimal&#39;</span><span class="p">))</span>
+<span class="n">matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;hungarian&#39;</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">optimal_matching</span><span class="p">,</span> <span class="s1">&#39;hungarian&#39;</span><span class="p">))</span>  <span class="c1"># alias</span>
+<span class="n">matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;greedy&#39;</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">greedy_matching</span><span class="p">,</span> <span class="s1">&#39;greedy&#39;</span><span class="p">))</span>
+<span class="n">matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;stable&#39;</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">stable_matching</span><span class="p">,</span> <span class="s1">&#39;stable&#39;</span><span class="p">))</span>
+<span class="n">matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;max_weight&#39;</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">_max_weight_matcher</span><span class="p">,</span> <span class="s1">&#39;max_weight&#39;</span><span class="p">))</span>
+<span class="n">matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;kuhn_munkres&#39;</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">_kuhn_munkres_matcher</span><span class="p">,</span> <span class="s1">&#39;kuhn_munkres&#39;</span><span class="p">))</span>
+
+<span class="c1">#: facade ``how=`` objective aliases -&gt; registered matcher names</span>
+<span class="n">_HOW_ALIASES</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;assign&#39;</span><span class="p">:</span> <span class="s1">&#39;optimal&#39;</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="resolve_matcher">
+<a class="viewcode-back" href="../../module_docs/equate/matching.html#equate.matching.resolve_matcher">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_matcher</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="s1">&#39;optimal&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve ``spec`` to a matcher ``(scores, *, sense) -&gt; pairs``.</span>
+
+<span class="sd">    A callable passes through; a registered name (or a facade ``how=`` alias like</span>
+<span class="sd">    ``&#39;assign&#39; -&gt; &#39;optimal&#39;``) is built via the registry.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">spec</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">matchers</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">_HOW_ALIASES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">spec</span><span class="p">),</span> <span class="o">**</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;matcher spec must be a registered name or a callable, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

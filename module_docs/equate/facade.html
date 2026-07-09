@@ -1,0 +1,208 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.facade &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="equate.featurize" href="featurize.html" />
+    <link rel="prev" title="equate.examples.site_names" href="examples/site_names.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_vector.html">equate._vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block.html">equate.block</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block/ann.html">equate.block.ann</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block/keyed.html">equate.block.keyed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block/lsh.html">equate.block.lsh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block/metablock.html">equate.block.metablock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block/metrics.html">equate.block.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="block/score.html">equate.block.score</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cluster.html">equate.cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cluster/classify.html">equate.cluster.classify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare.html">equate.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare/calibrate.html">equate.compare.calibrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare/numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare/string.html">equate.compare.string</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare/vector.html">equate.compare.vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare/vectorize.html">equate.compare.vectorize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">equate.facade</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#equate.facade.dedupe"><code class="docutils literal notranslate"><span class="pre">dedupe()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.facade.match"><code class="docutils literal notranslate"><span class="pre">match()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.facade.resolve"><code class="docutils literal notranslate"><span class="pre">resolve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matching.html">equate.matching</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matching/assign.html">equate.matching.assign</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matching/soft.html">equate.matching.soft</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">equate.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">equate.facade</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/equate/facade.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-equate.facade">
+<span id="equate-facade"></span><h1>equate.facade<a class="headerlink" href="#module-equate.facade" title="Link to this heading"></a></h1>
+<p>The equate facade: the one-line <code class="docutils literal notranslate"><span class="pre">match(A,</span> <span class="pre">B)</span></code> entry point.</p>
+<p>Wires the pipeline — featurize → compare (over the blocker’s candidates) → match — with
+sensible defaults, and returns a structured <a class="reference internal" href="base.html#equate.base.Matching" title="equate.base.Matching"><code class="xref py py-class docutils literal notranslate"><span class="pre">equate.base.Matching</span></code></a>. Every stage is
+swappable by one keyword (decision register D4): <code class="docutils literal notranslate"><span class="pre">featurize=</span></code>, <code class="docutils literal notranslate"><span class="pre">compare=</span></code>, <code class="docutils literal notranslate"><span class="pre">block=</span></code>,
+<code class="docutils literal notranslate"><span class="pre">how=</span></code>. This is the canonical case (doc 10 §1): two collections -&gt; optimally-matched
+(and scored) pairs, zero config.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.facade.dedupe">
+<span class="sig-prename descclassname"><span class="pre">equate.facade.</span></span><span class="sig-name descname"><span class="pre">dedupe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">compare</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ratio'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'connected_components'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/facade.html#dedupe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.facade.dedupe" title="Link to this definition"></a></dt>
+<dd><p>Deduplicate a single collection into entity groups.</p>
+<p>Self-compares <code class="docutils literal notranslate"><span class="pre">A</span></code>’s candidate pairs, keeps those passing <code class="docutils literal notranslate"><span class="pre">threshold</span></code>, and clusters
+them -&gt; a <a class="reference internal" href="base.html#equate.base.Partition" title="equate.base.Partition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Partition</span></code></a> over <code class="docutils literal notranslate"><span class="pre">A</span></code> (iterate it for the duplicate
+<code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> pairs; <code class="docutils literal notranslate"><span class="pre">.groups()</span></code> for the clusters). <code class="docutils literal notranslate"><span class="pre">block</span></code> (a blocker) restricts the
+candidate pairs (self-join); the default compares all <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">&lt;</span> <span class="pre">j</span></code> pairs. <code class="docutils literal notranslate"><span class="pre">cluster</span></code> is
+<code class="docutils literal notranslate"><span class="pre">'connected_components'</span></code> (transitive closure) or <code class="docutils literal notranslate"><span class="pre">'correlation'</span></code>. <code class="docutils literal notranslate"><span class="pre">sense</span></code> defaults
+to the comparator’s declared polarity — a <em>distance</em> comparator (e.g.
+<code class="docutils literal notranslate"><span class="pre">levenshtein_distance</span></code>) uses <code class="docutils literal notranslate"><span class="pre">'minimize'</span></code> so <em>lower</em> scores link, a similarity uses
+<code class="docutils literal notranslate"><span class="pre">'maximize'</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">equate</span><span class="w"> </span><span class="kn">import</span> <span class="n">dedupe</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dedupe</span><span class="p">([</span><span class="s1">&#39;Jon Smith&#39;</span><span class="p">,</span> <span class="s1">&#39;Jon Smyth&#39;</span><span class="p">,</span> <span class="s1">&#39;Kate Doe&#39;</span><span class="p">],</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
+<span class="go">{0: [0, 1], 1: [2]}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.facade.match">
+<span class="sig-prename descclassname"><span class="pre">equate.facade.</span></span><span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">featurize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compare</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">how</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'assign'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'connected_components'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maximize'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/facade.html#match"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.facade.match" title="Link to this definition"></a></dt>
+<dd><p>Match two collections into a <a class="reference internal" href="base.html#equate.base.Matching" title="equate.base.Matching"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matching</span></code></a> of scored <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> pairs.</p>
+<p>Pipeline (each stage swappable by one keyword):</p>
+<ul class="simple">
+<li><p><strong>featurize / compare</strong> — with <code class="docutils literal notranslate"><span class="pre">compare=None</span></code> (default), the <em>vector route</em>:
+featurize both sides with <code class="docutils literal notranslate"><span class="pre">featurize</span></code> (TF-IDF by default) and score by cosine.
+With a <code class="docutils literal notranslate"><span class="pre">compare</span></code> comparator (a registered name or a callable), the <em>direct
+pairwise route</em> on the raw items.</p></li>
+<li><p><strong>block</strong> — <code class="docutils literal notranslate"><span class="pre">None</span></code> (default) scores all pairs (dense); a blocker (name/callable)
+scores only the candidate pairs into a sparse matrix, and the matcher stays sparse-aware.</p></li>
+<li><p><strong>how</strong> — the matcher objective: <code class="docutils literal notranslate"><span class="pre">'assign'</span></code> (optimal 1:1, the default),
+<code class="docutils literal notranslate"><span class="pre">'greedy'</span></code>, <code class="docutils literal notranslate"><span class="pre">'stable'</span></code>, or <code class="docutils literal notranslate"><span class="pre">'soft'</span></code> (an optimal-transport plan; <code class="docutils literal notranslate"><span class="pre">.plan</span></code> is set).</p></li>
+</ul>
+<p>Returns a <code class="docutils literal notranslate"><span class="pre">Matching</span></code>: iterate it for <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> pairs, <code class="docutils literal notranslate"><span class="pre">dict(...)</span></code> it for a mapping,
+<code class="docutils literal notranslate"><span class="pre">.labeled_pairs()</span></code> for <code class="docutils literal notranslate"><span class="pre">(A[i],</span> <span class="pre">B[j])</span></code>; <code class="docutils literal notranslate"><span class="pre">.scores</span></code> holds each matched pair’s score.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;apple pie&#39;</span><span class="p">,</span> <span class="s1">&#39;banana split&#39;</span><span class="p">,</span> <span class="s1">&#39;cherry tart&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;cherry tarte&#39;</span><span class="p">,</span> <span class="s1">&#39;aple pie&#39;</span><span class="p">,</span> <span class="s1">&#39;banana split&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">match</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">compare</span><span class="o">=</span><span class="s1">&#39;ratio&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">dict</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">labeled_pairs</span><span class="p">())</span>
+<span class="go">{&#39;apple pie&#39;: &#39;aple pie&#39;, &#39;banana split&#39;: &#39;banana split&#39;, &#39;cherry tart&#39;: &#39;cherry tarte&#39;}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.facade.resolve">
+<span class="sig-prename descclassname"><span class="pre">equate.facade.</span></span><span class="sig-name descname"><span class="pre">resolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">collections</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/facade.html#resolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.facade.resolve" title="Link to this definition"></a></dt>
+<dd><p>Resolve entities across multiple collections: pool them (in order) and
+<a class="reference internal" href="#equate.facade.dedupe" title="equate.facade.dedupe"><code class="xref py py-func docutils literal notranslate"><span class="pre">dedupe()</span></code></a> -&gt; a Partition over the pooled items. Generalizes cross-collection
+matching to n-way linkage. Accepts the same keywords as <a class="reference internal" href="#equate.facade.dedupe" title="equate.facade.dedupe"><code class="xref py py-func docutils literal notranslate"><span class="pre">dedupe()</span></code></a>.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="examples/site_names.html" class="btn btn-neutral float-left" title="equate.examples.site_names" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="featurize.html" class="btn btn-neutral float-right" title="equate.featurize" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

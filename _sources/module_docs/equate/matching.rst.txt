@@ -1,0 +1,4 @@
+equate.matching
+===============
+.. automodule:: equate.matching
+   :members:

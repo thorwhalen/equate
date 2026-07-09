@@ -1,0 +1,201 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.block.keyed &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="equate.block.lsh" href="lsh.html" />
+    <link rel="prev" title="equate.block.ann" href="ann.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../_vector.html">equate._vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../block.html">equate.block</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ann.html">equate.block.ann</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">equate.block.keyed</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#equate.block.keyed.first_chars"><code class="docutils literal notranslate"><span class="pre">first_chars()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.block.keyed.key_blocking"><code class="docutils literal notranslate"><span class="pre">key_blocking()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.block.keyed.phonetic_key"><code class="docutils literal notranslate"><span class="pre">phonetic_key()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.block.keyed.qgram_keys"><code class="docutils literal notranslate"><span class="pre">qgram_keys()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.block.keyed.sorted_neighborhood"><code class="docutils literal notranslate"><span class="pre">sorted_neighborhood()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equate.block.keyed.whole_value"><code class="docutils literal notranslate"><span class="pre">whole_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="lsh.html">equate.block.lsh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metablock.html">equate.block.metablock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metrics.html">equate.block.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="score.html">equate.block.score</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cluster.html">equate.cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cluster/classify.html">equate.cluster.classify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../compare.html">equate.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../compare/calibrate.html">equate.compare.calibrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../compare/numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../compare/string.html">equate.compare.string</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../compare/vector.html">equate.compare.vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../compare/vectorize.html">equate.compare.vectorize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../facade.html">equate.facade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../matching.html">equate.matching</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../matching/assign.html">equate.matching.assign</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../matching/soft.html">equate.matching.soft</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../registry.html">equate.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">equate.block.keyed</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/module_docs/equate/block/keyed.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-equate.block.keyed">
+<span id="equate-block-keyed"></span><h1>equate.block.keyed<a class="headerlink" href="#module-equate.block.keyed" title="Link to this heading"></a></h1>
+<p>Keyed blocking (stage ② scalability): emit candidate pairs that share a blocking key.</p>
+<p>A <em>blocker</em> proposes which pairs are worth scoring, avoiding the O(n*m) all-pairs
+blow-up — equivalently, it decides which cells of the score matrix to leave uncomputed
+(decision register D1). Keyed blocking groups items by a cheap key (or several keys per
+item, e.g. token / q-gram blocking) and emits the within-group pairs. Standard, token,
+q-gram, and phonetic blocking are all <em>one</em> algorithm parameterized by the key function.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.block.keyed.first_chars">
+<span class="sig-prename descclassname"><span class="pre">equate.block.keyed.</span></span><span class="sig-name descname"><span class="pre">first_chars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;class</span> <span class="pre">'str'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lowercase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/equate/block/keyed.html#first_chars"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.block.keyed.first_chars" title="Link to this definition"></a></dt>
+<dd><p>Key function: the first <code class="docutils literal notranslate"><span class="pre">n</span></code> characters (standard blocking).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.block.keyed.key_blocking">
+<span class="sig-prename descclassname"><span class="pre">equate.block.keyed.</span></span><span class="sig-name descname"><span class="pre">key_blocking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key_fn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/equate/block/keyed.html#key_blocking"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.block.keyed.key_blocking" title="Link to this definition"></a></dt>
+<dd><p>Return a blocker emitting candidate <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> for items sharing a blocking key.</p>
+<p><code class="docutils literal notranslate"><span class="pre">key_fn</span></code> maps an item to an <em>iterable of keys</em> (an item may land in several blocks
+— token/q-gram blocking). Cross-collection <code class="docutils literal notranslate"><span class="pre">blocker(A,</span> <span class="pre">B)</span></code> yields <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> with
+<code class="docutils literal notranslate"><span class="pre">i</span></code> indexing <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">j</span></code> indexing <code class="docutils literal notranslate"><span class="pre">B</span></code>; a self-join <code class="docutils literal notranslate"><span class="pre">blocker(A)</span></code> (dedup)
+yields each <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">&lt;</span> <span class="pre">j</span></code> pair once. Lazy: candidate pairs are generated, never a matrix.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.block.keyed.phonetic_key">
+<span class="sig-prename descclassname"><span class="pre">equate.block.keyed.</span></span><span class="sig-name descname"><span class="pre">phonetic_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'soundex'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;class</span> <span class="pre">'str'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/equate/block/keyed.html#phonetic_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.block.keyed.phonetic_key" title="Link to this definition"></a></dt>
+<dd><p>Key function: a phonetic code (<code class="docutils literal notranslate"><span class="pre">soundex</span></code> / <code class="docutils literal notranslate"><span class="pre">metaphone</span></code> / <code class="docutils literal notranslate"><span class="pre">nysiis</span></code>) via
+<code class="docutils literal notranslate"><span class="pre">jellyfish</span></code> — requires <code class="docutils literal notranslate"><span class="pre">equate[phonetic]</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.block.keyed.qgram_keys">
+<span class="sig-prename descclassname"><span class="pre">equate.block.keyed.</span></span><span class="sig-name descname"><span class="pre">qgram_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;class</span> <span class="pre">'str'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lowercase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/equate/block/keyed.html#qgram_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.block.keyed.qgram_keys" title="Link to this definition"></a></dt>
+<dd><p>Key function: the set of character q-grams (q-gram / token blocking).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.block.keyed.sorted_neighborhood">
+<span class="sig-prename descclassname"><span class="pre">equate.block.keyed.</span></span><span class="sig-name descname"><span class="pre">sorted_neighborhood</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sort_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;class</span> <span class="pre">'str'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/equate/block/keyed.html#sorted_neighborhood"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.block.keyed.sorted_neighborhood" title="Link to this definition"></a></dt>
+<dd><p>Sorted-neighborhood blocker: sort items by <code class="docutils literal notranslate"><span class="pre">sort_key</span></code> and emit pairs within a
+sliding window of <code class="docutils literal notranslate"><span class="pre">window</span></code> neighbours. Robust to the key-equality brittleness of
+standard blocking.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.block.keyed.whole_value">
+<span class="sig-prename descclassname"><span class="pre">equate.block.keyed.</span></span><span class="sig-name descname"><span class="pre">whole_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;class</span> <span class="pre">'str'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lowercase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/equate/block/keyed.html#whole_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.block.keyed.whole_value" title="Link to this definition"></a></dt>
+<dd><p>Key function: the whole (optionally lowercased) value — exact-key blocking.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ann.html" class="btn btn-neutral float-left" title="equate.block.ann" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="lsh.html" class="btn btn-neutral float-right" title="equate.block.lsh" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -51,12 +51,31 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/_dependencies.html">equate._dependencies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/_vector.html">equate._vector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/block.html">equate.block</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/block/ann.html">equate.block.ann</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/block/keyed.html">equate.block.keyed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/block/lsh.html">equate.block.lsh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/block/metablock.html">equate.block.metablock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/block/metrics.html">equate.block.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/block/score.html">equate.block.score</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/cluster.html">equate.cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/cluster/classify.html">equate.cluster.classify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/compare.html">equate.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/compare/calibrate.html">equate.compare.calibrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/compare/numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/compare/string.html">equate.compare.string</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/compare/vector.html">equate.compare.vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/compare/vectorize.html">equate.compare.vectorize</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/completion.html">equate.completion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/examples.html">equate.examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/facade.html">equate.facade</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/featurize.html">equate.featurize</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/matching.html">equate.matching</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/matching/assign.html">equate.matching.assign</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/matching/soft.html">equate.matching.soft</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/registry.html">equate.registry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/util.html">equate.util</a></li>
 </ul>
@@ -116,6 +135,119 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/equate/base.html#equate.base.to_cost"><code class="docutils literal notranslate"><span class="pre">to_cost()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/block.html">equate.block</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block.html#equate.block.all_pairs"><code class="docutils literal notranslate"><span class="pre">all_pairs()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block.html#equate.block.ann_blocking"><code class="docutils literal notranslate"><span class="pre">ann_blocking()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block.html#equate.block.blockers"><code class="docutils literal notranslate"><span class="pre">blockers</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block.html#equate.block.blocking_metrics"><code class="docutils literal notranslate"><span class="pre">blocking_metrics()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block.html#equate.block.brute_knn_blocking"><code class="docutils literal notranslate"><span class="pre">brute_knn_blocking()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block.html#equate.block.first_chars"><code class="docutils literal notranslate"><span class="pre">first_chars()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block.html#equate.block.key_blocking"><code class="docutils literal notranslate"><span class="pre">key_blocking()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block.html#equate.block.minhash_lsh_blocking"><code class="docutils literal notranslate"><span class="pre">minhash_lsh_blocking()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block.html#equate.block.phonetic_key"><code class="docutils literal notranslate"><span class="pre">phonetic_key()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block.html#equate.block.qgram_keys"><code class="docutils literal notranslate"><span class="pre">qgram_keys()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block.html#equate.block.resolve_blocker"><code class="docutils literal notranslate"><span class="pre">resolve_blocker()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block.html#equate.block.score_candidates"><code class="docutils literal notranslate"><span class="pre">score_candidates()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block.html#equate.block.sorted_neighborhood"><code class="docutils literal notranslate"><span class="pre">sorted_neighborhood()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block.html#equate.block.whole_value"><code class="docutils literal notranslate"><span class="pre">whole_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/block/ann.html">equate.block.ann</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block/ann.html#equate.block.ann.ann_blocking"><code class="docutils literal notranslate"><span class="pre">ann_blocking()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block/ann.html#equate.block.ann.brute_knn_blocking"><code class="docutils literal notranslate"><span class="pre">brute_knn_blocking()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/block/keyed.html">equate.block.keyed</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block/keyed.html#equate.block.keyed.first_chars"><code class="docutils literal notranslate"><span class="pre">first_chars()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block/keyed.html#equate.block.keyed.key_blocking"><code class="docutils literal notranslate"><span class="pre">key_blocking()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block/keyed.html#equate.block.keyed.phonetic_key"><code class="docutils literal notranslate"><span class="pre">phonetic_key()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block/keyed.html#equate.block.keyed.qgram_keys"><code class="docutils literal notranslate"><span class="pre">qgram_keys()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block/keyed.html#equate.block.keyed.sorted_neighborhood"><code class="docutils literal notranslate"><span class="pre">sorted_neighborhood()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block/keyed.html#equate.block.keyed.whole_value"><code class="docutils literal notranslate"><span class="pre">whole_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/block/lsh.html">equate.block.lsh</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block/lsh.html#equate.block.lsh.minhash_lsh_blocking"><code class="docutils literal notranslate"><span class="pre">minhash_lsh_blocking()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/block/metablock.html">equate.block.metablock</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block/metablock.html#equate.block.metablock.dedupe_pairs"><code class="docutils literal notranslate"><span class="pre">dedupe_pairs()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block/metablock.html#equate.block.metablock.prune_frequent"><code class="docutils literal notranslate"><span class="pre">prune_frequent()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/block/metrics.html">equate.block.metrics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block/metrics.html#equate.block.metrics.blocking_metrics"><code class="docutils literal notranslate"><span class="pre">blocking_metrics()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/block/score.html">equate.block.score</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/block/score.html#equate.block.score.score_candidates"><code class="docutils literal notranslate"><span class="pre">score_candidates()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/cluster.html">equate.cluster</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/cluster.html#equate.cluster.canonicalize"><code class="docutils literal notranslate"><span class="pre">canonicalize()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/cluster.html#equate.cluster.clusterers"><code class="docutils literal notranslate"><span class="pre">clusterers</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/cluster.html#equate.cluster.connected_components"><code class="docutils literal notranslate"><span class="pre">connected_components()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/cluster.html#equate.cluster.correlation_clustering"><code class="docutils literal notranslate"><span class="pre">correlation_clustering()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/cluster.html#equate.cluster.resolve_clusterer"><code class="docutils literal notranslate"><span class="pre">resolve_clusterer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/cluster/classify.html">equate.cluster.classify</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/cluster/classify.html#equate.cluster.classify.classify"><code class="docutils literal notranslate"><span class="pre">classify()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/cluster/classify.html#equate.cluster.classify.estimate_mu_em"><code class="docutils literal notranslate"><span class="pre">estimate_mu_em()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/compare.html">equate.compare</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare.html#equate.compare.comparators"><code class="docutils literal notranslate"><span class="pre">comparators</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare.html#equate.compare.comparison_vector"><code class="docutils literal notranslate"><span class="pre">comparison_vector()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare.html#equate.compare.direct"><code class="docutils literal notranslate"><span class="pre">direct()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare.html#equate.compare.featurized"><code class="docutils literal notranslate"><span class="pre">featurized()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare.html#equate.compare.fellegi_sunter"><code class="docutils literal notranslate"><span class="pre">fellegi_sunter()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare.html#equate.compare.isotonic"><code class="docutils literal notranslate"><span class="pre">isotonic()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare.html#equate.compare.max_combiner"><code class="docutils literal notranslate"><span class="pre">max_combiner()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare.html#equate.compare.mean"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare.html#equate.compare.platt"><code class="docutils literal notranslate"><span class="pre">platt()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare.html#equate.compare.resolve_comparator"><code class="docutils literal notranslate"><span class="pre">resolve_comparator()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare.html#equate.compare.threshold"><code class="docutils literal notranslate"><span class="pre">threshold()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare.html#equate.compare.weighted_sum"><code class="docutils literal notranslate"><span class="pre">weighted_sum()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/compare/calibrate.html">equate.compare.calibrate</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/calibrate.html#equate.compare.calibrate.isotonic"><code class="docutils literal notranslate"><span class="pre">isotonic()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/calibrate.html#equate.compare.calibrate.platt"><code class="docutils literal notranslate"><span class="pre">platt()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/calibrate.html#equate.compare.calibrate.threshold"><code class="docutils literal notranslate"><span class="pre">threshold()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/compare/numeric_geo.html">equate.compare.numeric_geo</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/numeric_geo.html#equate.compare.numeric_geo.exp_decay"><code class="docutils literal notranslate"><span class="pre">exp_decay()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/numeric_geo.html#equate.compare.numeric_geo.gaussian_decay"><code class="docutils literal notranslate"><span class="pre">gaussian_decay()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/numeric_geo.html#equate.compare.numeric_geo.geo_similarity"><code class="docutils literal notranslate"><span class="pre">geo_similarity()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/numeric_geo.html#equate.compare.numeric_geo.haversine"><code class="docutils literal notranslate"><span class="pre">haversine()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/numeric_geo.html#equate.compare.numeric_geo.linear_decay"><code class="docutils literal notranslate"><span class="pre">linear_decay()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/compare/string.html">equate.compare.string</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/string.html#equate.compare.string.jaro_winkler"><code class="docutils literal notranslate"><span class="pre">jaro_winkler()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/string.html#equate.compare.string.levenshtein"><code class="docutils literal notranslate"><span class="pre">levenshtein()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/string.html#equate.compare.string.levenshtein_distance"><code class="docutils literal notranslate"><span class="pre">levenshtein_distance()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/string.html#equate.compare.string.monge_elkan"><code class="docutils literal notranslate"><span class="pre">monge_elkan()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/string.html#equate.compare.string.phonetic_match"><code class="docutils literal notranslate"><span class="pre">phonetic_match()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/string.html#equate.compare.string.ratio"><code class="docutils literal notranslate"><span class="pre">ratio()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/compare/vector.html">equate.compare.vector</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/vector.html#equate.compare.vector.angular_distance"><code class="docutils literal notranslate"><span class="pre">angular_distance()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/vector.html#equate.compare.vector.cosine"><code class="docutils literal notranslate"><span class="pre">cosine()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/vector.html#equate.compare.vector.dot"><code class="docutils literal notranslate"><span class="pre">dot()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/compare/vectorize.html">equate.compare.vectorize</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/vectorize.html#equate.compare.vectorize.comparison_vector"><code class="docutils literal notranslate"><span class="pre">comparison_vector()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/vectorize.html#equate.compare.vectorize.fellegi_sunter"><code class="docutils literal notranslate"><span class="pre">fellegi_sunter()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/vectorize.html#equate.compare.vectorize.max_combiner"><code class="docutils literal notranslate"><span class="pre">max_combiner()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/vectorize.html#equate.compare.vectorize.mean"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/compare/vectorize.html#equate.compare.vectorize.weighted_sum"><code class="docutils literal notranslate"><span class="pre">weighted_sum()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/completion.html">equate.completion</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/equate/completion.html#equate.completion.greedy_matching"><code class="docutils literal notranslate"><span class="pre">greedy_matching()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/equate/completion.html#equate.completion.hungarian_matching"><code class="docutils literal notranslate"><span class="pre">hungarian_matching()</span></code></a></li>
@@ -127,6 +259,12 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/examples.html">equate.examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/facade.html">equate.facade</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/facade.html#equate.facade.dedupe"><code class="docutils literal notranslate"><span class="pre">dedupe()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/facade.html#equate.facade.match"><code class="docutils literal notranslate"><span class="pre">match()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/facade.html#equate.facade.resolve"><code class="docutils literal notranslate"><span class="pre">resolve()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/featurize.html">equate.featurize</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/equate/featurize.html#equate.featurize.FeaturizerMeta"><code class="docutils literal notranslate"><span class="pre">FeaturizerMeta</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/equate/featurize.html#equate.featurize.TfidfFeaturizer"><code class="docutils literal notranslate"><span class="pre">TfidfFeaturizer</span></code></a></li>
@@ -146,6 +284,27 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/equate/featurize/tfidf.html#equate.featurize.tfidf.TfidfFeaturizer"><code class="docutils literal notranslate"><span class="pre">TfidfFeaturizer</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/equate/featurize/tfidf.html#equate.featurize.tfidf.char_ngrams"><code class="docutils literal notranslate"><span class="pre">char_ngrams()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/equate/featurize/tfidf.html#equate.featurize.tfidf.mk_tfidf"><code class="docutils literal notranslate"><span class="pre">mk_tfidf()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/matching.html">equate.matching</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/matching.html#equate.matching.greedy_matching"><code class="docutils literal notranslate"><span class="pre">greedy_matching()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/matching.html#equate.matching.harden"><code class="docutils literal notranslate"><span class="pre">harden()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/matching.html#equate.matching.matchers"><code class="docutils literal notranslate"><span class="pre">matchers</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/matching.html#equate.matching.optimal_matching"><code class="docutils literal notranslate"><span class="pre">optimal_matching()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/matching.html#equate.matching.resolve_matcher"><code class="docutils literal notranslate"><span class="pre">resolve_matcher()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/matching.html#equate.matching.soft_match"><code class="docutils literal notranslate"><span class="pre">soft_match()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/matching.html#equate.matching.stable_matching"><code class="docutils literal notranslate"><span class="pre">stable_matching()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/matching/assign.html">equate.matching.assign</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/matching/assign.html#equate.matching.assign.greedy_matching"><code class="docutils literal notranslate"><span class="pre">greedy_matching()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/matching/assign.html#equate.matching.assign.optimal_matching"><code class="docutils literal notranslate"><span class="pre">optimal_matching()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/matching/assign.html#equate.matching.assign.stable_matching"><code class="docutils literal notranslate"><span class="pre">stable_matching()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/matching/soft.html">equate.matching.soft</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/matching/soft.html#equate.matching.soft.harden"><code class="docutils literal notranslate"><span class="pre">harden()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/matching/soft.html#equate.matching.soft.soft_match"><code class="docutils literal notranslate"><span class="pre">soft_match()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/registry.html">equate.registry</a><ul>

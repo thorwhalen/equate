@@ -1,0 +1,252 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.block &mdash; equate 0.0.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/_vector.html">equate._vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block.html">equate.block</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block/ann.html">equate.block.ann</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block/keyed.html">equate.block.keyed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block/lsh.html">equate.block.lsh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block/metablock.html">equate.block.metablock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block/metrics.html">equate.block.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/block/score.html">equate.block.score</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/cluster.html">equate.cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/cluster/classify.html">equate.cluster.classify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/compare.html">equate.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/compare/calibrate.html">equate.compare.calibrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/compare/numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/compare/string.html">equate.compare.string</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/compare/vector.html">equate.compare.vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/compare/vectorize.html">equate.compare.vectorize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/facade.html">equate.facade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching.html">equate.matching</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching/assign.html">equate.matching.assign</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching/soft.html">equate.matching.soft</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/registry.html">equate.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">equate.block</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for equate.block</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;The block stage (② scalability): candidate generation.</span>
+
+<span class="sd">A *blocker* is ``Callable[(A[, B]), Iterable[(i, j)]]`` yielding candidate index pairs</span>
+<span class="sd">**lazily** — never a materialized matrix. The default :func:`all_pairs` is the</span>
+<span class="sd">correctness baseline (the dense path is a degenerate blocker). Blocking is precisely the</span>
+<span class="sd">decision to leave most cells of the score matrix uncomputed (decision register D1);</span>
+<span class="sd">scoring a candidate stream yields a sparse ``ScoreMatrix`` (:func:`score_candidates`).</span>
+
+<span class="sd">Select a blocker by name via the :data:`blockers` registry or pass a callable. Blocking</span>
+<span class="sd">quality is measured with :func:`blocking_metrics` (PC / RR / PQ).</span>
+
+<span class="sd">A blocker requests a **self-join** (dedup within one collection, yielding ``i &lt; j``) via</span>
+<span class="sd">the single-argument form ``blocker(A)``. The two-argument ``blocker(A, B)`` is a</span>
+<span class="sd">cross-join. Self-join is detected by object *identity*, so ``blocker(A, A)`` is also a</span>
+<span class="sd">self-join, but ``blocker(A, list(A))`` — a value-equal *copy* — is a cross-join; use the</span>
+<span class="sd">single-argument form to be unambiguous.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">Registry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.block.keyed</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">key_blocking</span><span class="p">,</span>
+    <span class="n">sorted_neighborhood</span><span class="p">,</span>
+    <span class="n">first_chars</span><span class="p">,</span>
+    <span class="n">qgram_keys</span><span class="p">,</span>
+    <span class="n">whole_value</span><span class="p">,</span>
+    <span class="n">phonetic_key</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.block.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">blocking_metrics</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.block.score</span><span class="w"> </span><span class="kn">import</span> <span class="n">score_candidates</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.block</span><span class="w"> </span><span class="kn">import</span> <span class="n">metablock</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.block.ann</span><span class="w"> </span><span class="kn">import</span> <span class="n">brute_knn_blocking</span><span class="p">,</span> <span class="n">ann_blocking</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.block.lsh</span><span class="w"> </span><span class="kn">import</span> <span class="n">minhash_lsh_blocking</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;blockers&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;all_pairs&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;resolve_blocker&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;key_blocking&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;sorted_neighborhood&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;first_chars&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;qgram_keys&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;whole_value&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;phonetic_key&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;blocking_metrics&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;score_candidates&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;metablock&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;brute_knn_blocking&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ann_blocking&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;minhash_lsh_blocking&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">#: the block-stage strategy registry (name -&gt; lazy factory)</span>
+<span class="n">blockers</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;blocker&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="all_pairs">
+<a class="viewcode-back" href="../../module_docs/equate/block.html#equate.block.all_pairs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">all_pairs</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The correctness-baseline blocker: every pair (dense). A self-join yields ``i &lt; j``.</span>
+
+<span class="sd">    &gt;&gt;&gt; list(all_pairs([&#39;a&#39;, &#39;b&#39;], [&#39;x&#39;, &#39;y&#39;]))</span>
+<span class="sd">    [(0, 0), (0, 1), (1, 0), (1, 1)]</span>
+<span class="sd">    &gt;&gt;&gt; list(all_pairs([&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]))          # self-join: i &lt; j</span>
+<span class="sd">    [(0, 1), (0, 2), (1, 2)]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">self_join</span> <span class="o">=</span> <span class="n">B</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">B</span> <span class="ow">is</span> <span class="n">A</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">A</span> <span class="k">if</span> <span class="n">self_join</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)):</span>
+        <span class="n">js</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">))</span> <span class="k">if</span> <span class="n">self_join</span> <span class="k">else</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">B</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">js</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_const_blocker</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Factory returning a fixed blocker; passing config is a clear error.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">factory</span><span class="p">(</span><span class="o">**</span><span class="n">config</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">config</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;blocker </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> takes no configuration; got </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">fn</span>
+
+    <span class="k">return</span> <span class="n">factory</span>
+
+
+<span class="n">blockers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;all_pairs&#39;</span><span class="p">,</span> <span class="n">_const_blocker</span><span class="p">(</span><span class="n">all_pairs</span><span class="p">,</span> <span class="s1">&#39;all_pairs&#39;</span><span class="p">))</span>
+<span class="n">blockers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="n">key_blocking</span><span class="p">)</span>
+<span class="n">blockers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;sorted_neighborhood&#39;</span><span class="p">,</span> <span class="n">sorted_neighborhood</span><span class="p">)</span>
+<span class="n">blockers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;brute_knn&#39;</span><span class="p">,</span> <span class="n">brute_knn_blocking</span><span class="p">)</span>
+<span class="n">blockers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;ann&#39;</span><span class="p">,</span> <span class="n">ann_blocking</span><span class="p">)</span>
+<span class="n">blockers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;minhash_lsh&#39;</span><span class="p">,</span> <span class="n">minhash_lsh_blocking</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="resolve_blocker">
+<a class="viewcode-back" href="../../module_docs/equate/block.html#equate.block.resolve_blocker">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_blocker</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve ``spec`` to a blocker ``(A[, B]) -&gt; Iterable[(i, j)]``.</span>
+
+<span class="sd">    - ``None`` -&gt; :func:`all_pairs` (the dense baseline);</span>
+<span class="sd">    - a registered name (``str``) -&gt; built via its factory (``**config`` forwarded);</span>
+<span class="sd">    - a callable -&gt; returned as-is.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">all_pairs</span>
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">spec</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">blockers</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;blocker spec must be None, a registered name, or a callable, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

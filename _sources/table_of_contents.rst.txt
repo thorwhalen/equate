@@ -6,11 +6,30 @@
    module_docs/equate/_dependencies
    module_docs/equate/_vector
    module_docs/equate/base
+   module_docs/equate/block
+   module_docs/equate/block/ann
+   module_docs/equate/block/keyed
+   module_docs/equate/block/lsh
+   module_docs/equate/block/metablock
+   module_docs/equate/block/metrics
+   module_docs/equate/block/score
+   module_docs/equate/cluster
+   module_docs/equate/cluster/classify
+   module_docs/equate/compare
+   module_docs/equate/compare/calibrate
+   module_docs/equate/compare/numeric_geo
+   module_docs/equate/compare/string
+   module_docs/equate/compare/vector
+   module_docs/equate/compare/vectorize
    module_docs/equate/completion
    module_docs/equate/examples
    module_docs/equate/examples/site_names
+   module_docs/equate/facade
    module_docs/equate/featurize
    module_docs/equate/featurize/text
    module_docs/equate/featurize/tfidf
+   module_docs/equate/matching
+   module_docs/equate/matching/assign
+   module_docs/equate/matching/soft
    module_docs/equate/registry
    module_docs/equate/util

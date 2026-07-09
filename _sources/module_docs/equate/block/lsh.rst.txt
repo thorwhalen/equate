@@ -1,0 +1,4 @@
+equate.block.lsh
+================
+.. automodule:: equate.block.lsh
+   :members:

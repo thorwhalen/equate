@@ -1,0 +1,4 @@
+equate.block.score
+==================
+.. automodule:: equate.block.score
+   :members:
