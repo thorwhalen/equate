@@ -5,7 +5,7 @@ different comparators (decision register D2), because their score spaces differ.
 
 from equate._dependencies import require
 
-__all__ = ['threshold', 'platt', 'isotonic']
+__all__ = ["threshold", "platt", "isotonic"]
 
 
 def threshold(t, *, hard=True):
@@ -25,7 +25,7 @@ def platt(scores, labels):
     """
     import numpy as np
 
-    lm = require('sklearn.linear_model', extra='sklearn', purpose='Platt calibration')
+    lm = require("sklearn.linear_model", extra="sklearn", purpose="Platt calibration")
     model = lm.LogisticRegression().fit(np.asarray(scores).reshape(-1, 1), labels)
 
     def cal(score):
@@ -40,8 +40,8 @@ def isotonic(scores, labels):
     Requires ``equate[sklearn]``. Returns a calibrator mapping a raw score to a
     probability.
     """
-    iso = require('sklearn.isotonic', extra='sklearn', purpose='isotonic calibration')
-    model = iso.IsotonicRegression(out_of_bounds='clip').fit(scores, labels)
+    iso = require("sklearn.isotonic", extra="sklearn", purpose="isotonic calibration")
+    model = iso.IsotonicRegression(out_of_bounds="clip").fit(scores, labels)
 
     def cal(score):
         return float(model.predict([score])[0])

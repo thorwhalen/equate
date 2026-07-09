@@ -10,11 +10,11 @@ import math
 from collections.abc import Mapping
 
 __all__ = [
-    'comparison_vector',
-    'weighted_sum',
-    'mean',
-    'max_combiner',
-    'fellegi_sunter',
+    "comparison_vector",
+    "weighted_sum",
+    "mean",
+    "max_combiner",
+    "fellegi_sunter",
 ]
 
 

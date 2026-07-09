@@ -3,7 +3,7 @@ candidate set. Pair completeness (blocking recall) upper-bounds the whole system
 recall, so it is the metric to protect (doc 02-blocking).
 """
 
-__all__ = ['blocking_metrics']
+__all__ = ["blocking_metrics"]
 
 
 def blocking_metrics(candidate_pairs, true_pairs, *, n_a, n_b=None):
@@ -36,8 +36,8 @@ def blocking_metrics(candidate_pairs, true_pairs, *, n_a, n_b=None):
     tp = len(cand & true)
     rr = 1.0 - len(cand) / total if total else 0.0
     return {
-        'pair_completeness': tp / len(true) if true else 1.0,
-        'reduction_ratio': max(0.0, min(1.0, rr)),
-        'pairs_quality': tp / len(cand) if cand else 0.0,
-        'n_candidates': len(cand),
+        "pair_completeness": tp / len(true) if true else 1.0,
+        "reduction_ratio": max(0.0, min(1.0, rr)),
+        "pairs_quality": tp / len(cand) if cand else 0.0,
+        "n_candidates": len(cand),
     }

@@ -7,7 +7,7 @@ These back equate's default (vector) compare path so it needs no scikit-learn:
 import numpy as np
 from scipy.sparse import issparse, diags
 
-__all__ = ['l2_normalize', 'cosine_similarity']
+__all__ = ["l2_normalize", "cosine_similarity"]
 
 
 def l2_normalize(X):

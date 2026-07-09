@@ -32,25 +32,25 @@ from equate.block.ann import brute_knn_blocking, ann_blocking
 from equate.block.lsh import minhash_lsh_blocking
 
 __all__ = [
-    'blockers',
-    'all_pairs',
-    'resolve_blocker',
-    'key_blocking',
-    'sorted_neighborhood',
-    'first_chars',
-    'qgram_keys',
-    'whole_value',
-    'phonetic_key',
-    'blocking_metrics',
-    'score_candidates',
-    'metablock',
-    'brute_knn_blocking',
-    'ann_blocking',
-    'minhash_lsh_blocking',
+    "blockers",
+    "all_pairs",
+    "resolve_blocker",
+    "key_blocking",
+    "sorted_neighborhood",
+    "first_chars",
+    "qgram_keys",
+    "whole_value",
+    "phonetic_key",
+    "blocking_metrics",
+    "score_candidates",
+    "metablock",
+    "brute_knn_blocking",
+    "ann_blocking",
+    "minhash_lsh_blocking",
 ]
 
 #: the block-stage strategy registry (name -> lazy factory)
-blockers = Registry('blocker')
+blockers = Registry("blocker")
 
 
 def all_pairs(A, B=None):
@@ -83,12 +83,12 @@ def _const_blocker(fn, name):
     return factory
 
 
-blockers.register('all_pairs', _const_blocker(all_pairs, 'all_pairs'))
-blockers.register('key', key_blocking)
-blockers.register('sorted_neighborhood', sorted_neighborhood)
-blockers.register('brute_knn', brute_knn_blocking)
-blockers.register('ann', ann_blocking)
-blockers.register('minhash_lsh', minhash_lsh_blocking)
+blockers.register("all_pairs", _const_blocker(all_pairs, "all_pairs"))
+blockers.register("key", key_blocking)
+blockers.register("sorted_neighborhood", sorted_neighborhood)
+blockers.register("brute_knn", brute_knn_blocking)
+blockers.register("ann", ann_blocking)
+blockers.register("minhash_lsh", minhash_lsh_blocking)
 
 
 def resolve_blocker(spec=None, **config):

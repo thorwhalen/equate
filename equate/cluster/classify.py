@@ -10,7 +10,7 @@ matching path stays score-only; classification is opt-in.
 
 import math
 
-__all__ = ['classify', 'estimate_mu_em']
+__all__ = ["classify", "estimate_mu_em"]
 
 
 def classify(weight, *, lower, upper):
@@ -27,10 +27,10 @@ def classify(weight, *, lower, upper):
     if lower > upper:
         raise ValueError(f"lower ({lower}) must be <= upper ({upper})")
     if weight >= upper:
-        return 'match'
+        return "match"
     if weight <= lower:
-        return 'non_match'
-    return 'possible_match'
+        return "non_match"
+    return "possible_match"
 
 
 def estimate_mu_em(comparison_vectors, *, iters=50, agree_threshold=0.5, eps=1e-6):

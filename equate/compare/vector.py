@@ -6,7 +6,7 @@ import numpy as np
 
 from equate.base import ComparatorMeta
 
-__all__ = ['cosine', 'dot', 'angular_distance']
+__all__ = ["cosine", "dot", "angular_distance"]
 
 
 def cosine(u, v):
@@ -36,7 +36,7 @@ def cosine(u, v):
 
 
 cosine.meta = ComparatorMeta(
-    polarity='similarity', bounded=True, is_metric=False, is_symmetric=True
+    polarity="similarity", bounded=True, is_metric=False, is_symmetric=True
 )
 
 
@@ -46,7 +46,7 @@ def dot(u, v):
 
 
 dot.meta = ComparatorMeta(
-    polarity='similarity', bounded=False, is_metric=False, is_symmetric=True
+    polarity="similarity", bounded=False, is_metric=False, is_symmetric=True
 )
 
 
@@ -57,5 +57,5 @@ def angular_distance(u, v):
 
 
 angular_distance.meta = ComparatorMeta(
-    polarity='distance', bounded=True, is_metric=True, is_symmetric=True
+    polarity="distance", bounded=True, is_metric=True, is_symmetric=True
 )

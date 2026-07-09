@@ -12,7 +12,7 @@ install, never a bare ``ImportError`` from a top-level import that would break
 import importlib
 import importlib.util
 
-__all__ = ['MissingDependencyError', 'require', 'have']
+__all__ = ["MissingDependencyError", "require", "have"]
 
 
 class MissingDependencyError(ImportError):
@@ -48,7 +48,7 @@ def require(name, *, extra=None, purpose=None):
         # Convert to "not installed" only when the requested package itself is the
         # missing module — not when a *present* package's import fails because one of
         # ITS dependencies is absent (e.name would be that deeper module).
-        if e.name not in (None, name, name.split('.')[0]):
+        if e.name not in (None, name, name.split(".")[0]):
             raise
         hint = f"pip install 'equate[{extra}]'" if extra else f"pip install {name}"
         because = f" for {purpose}" if purpose else ""
@@ -75,6 +75,6 @@ def have(name) -> bool:
     False
     """
     try:
-        return importlib.util.find_spec(name.split('.')[0]) is not None
+        return importlib.util.find_spec(name.split(".")[0]) is not None
     except (ImportError, ValueError):
         return False

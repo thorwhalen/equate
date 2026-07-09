@@ -14,15 +14,17 @@ from equate.base import ComparatorMeta
 from equate._dependencies import require
 
 __all__ = [
-    'ratio',
-    'levenshtein_distance',
-    'levenshtein',
-    'monge_elkan',
-    'jaro_winkler',
-    'phonetic_match',
+    "ratio",
+    "levenshtein_distance",
+    "levenshtein",
+    "monge_elkan",
+    "jaro_winkler",
+    "phonetic_match",
 ]
 
-_SIM = ComparatorMeta(polarity='similarity', bounded=True, is_metric=False, is_symmetric=True)
+_SIM = ComparatorMeta(
+    polarity="similarity", bounded=True, is_metric=False, is_symmetric=True
+)
 
 
 def ratio(a, b):
@@ -52,7 +54,7 @@ def levenshtein_distance(a, b):
 
 
 levenshtein_distance.meta = ComparatorMeta(
-    polarity='distance', bounded=False, is_metric=True, is_symmetric=True
+    polarity="distance", bounded=False, is_metric=True, is_symmetric=True
 )
 
 
@@ -79,30 +81,30 @@ def monge_elkan(a, b, *, sim=ratio, tokenize=str.split):
 
 
 monge_elkan.meta = ComparatorMeta(
-    polarity='similarity', bounded=True, is_metric=False, is_symmetric=False
+    polarity="similarity", bounded=True, is_metric=False, is_symmetric=False
 )
 
 
 def jaro_winkler(a, b):
     """Jaro-Winkler similarity via ``rapidfuzz`` — requires ``equate[fuzzy]``."""
-    rf = require('rapidfuzz', extra='fuzzy', purpose='Jaro-Winkler similarity')
+    rf = require("rapidfuzz", extra="fuzzy", purpose="Jaro-Winkler similarity")
     return rf.distance.JaroWinkler.normalized_similarity(a, b)
 
 
 jaro_winkler.meta = _SIM
 
 
-def phonetic_match(a, b, *, algorithm='metaphone'):
+def phonetic_match(a, b, *, algorithm="metaphone"):
     """Boolean phonetic-code agreement via ``jellyfish`` — requires ``equate[phonetic]``.
 
     Returns 1.0 when the two strings share a phonetic code (``metaphone`` by default,
     or ``soundex`` / ``nysiis``), else 0.0.
     """
-    jf = require('jellyfish', extra='phonetic', purpose='phonetic matching')
+    jf = require("jellyfish", extra="phonetic", purpose="phonetic matching")
     encode = getattr(jf, algorithm)
     return 1.0 if encode(a) == encode(b) else 0.0
 
 
 phonetic_match.meta = ComparatorMeta(
-    polarity='similarity', bounded=True, is_metric=False, is_symmetric=True
+    polarity="similarity", bounded=True, is_metric=False, is_symmetric=True
 )

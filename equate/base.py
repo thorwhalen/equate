@@ -27,19 +27,19 @@ import numpy as np
 from scipy.sparse import issparse
 
 __all__ = [
-    'Sense',
-    'Featurizer',
-    'FeaturizerMeta',
-    'Comparator',
-    'ComparatorMeta',
-    'Blocker',
-    'Matcher',
-    'to_cost',
-    'ScoreMatrix',
-    'Explanation',
-    'Candidate',
-    'Matching',
-    'Partition',
+    "Sense",
+    "Featurizer",
+    "FeaturizerMeta",
+    "Comparator",
+    "ComparatorMeta",
+    "Blocker",
+    "Matcher",
+    "to_cost",
+    "ScoreMatrix",
+    "Explanation",
+    "Candidate",
+    "Matching",
+    "Partition",
 ]
 
 # --- Stage protocols (structural: a plain callable/lambda satisfies each) ---------
@@ -47,7 +47,7 @@ __all__ = [
 
 #: Whether higher scores are better (``'maximize'``, a similarity) or lower scores
 #: are better (``'minimize'``, a distance/cost).
-Sense = Literal['maximize', 'minimize']
+Sense = Literal["maximize", "minimize"]
 
 #: ① Featurize — map each object to a comparable representation (batched). ``id`` and
 #: any ``key=`` function (``str.lower``, ``operator.attrgetter('name')``) are valid.
@@ -83,7 +83,7 @@ class ComparatorMeta:
     (roadmap #4) attaches it when registering strategies.
     """
 
-    polarity: Literal['similarity', 'distance'] = 'similarity'
+    polarity: Literal["similarity", "distance"] = "similarity"
     bounded: bool = False
     is_metric: bool = False
     is_symmetric: bool = True
@@ -106,7 +106,7 @@ class FeaturizerMeta:
     - ``truncatable_to``: Matryoshka dims the embedding can be safely truncated to.
     """
 
-    output_kinds: tuple = ('vector',)
+    output_kinds: tuple = ("vector",)
     normalize: bool = False
     dim: Optional[int] = None
     license: Optional[str] = None
@@ -116,7 +116,7 @@ class FeaturizerMeta:
     truncatable_to: tuple = ()
 
 
-def to_cost(scores, *, sense: Sense = 'maximize'):
+def to_cost(scores, *, sense: Sense = "maximize"):
     """Convert a score array to a **cost** array for minimization-based matchers.
 
     The single source of truth for the similarity->cost conversion, so every matcher
@@ -145,11 +145,11 @@ def to_cost(scores, *, sense: Sense = 'maximize'):
     >>> to_cost(S, sense='minimize') is S
     True
     """
-    if sense not in ('maximize', 'minimize'):
+    if sense not in ("maximize", "minimize"):
         raise ValueError(f"sense must be 'maximize' or 'minimize', got {sense!r}")
     if issparse(scores):
         return _sparse_to_cost(scores, sense=sense)
-    if sense == 'minimize':
+    if sense == "minimize":
         return scores
     arr = np.asarray(scores, dtype=float)
     if arr.size == 0:
@@ -170,7 +170,7 @@ def _sparse_to_cost(scores, *, sense: Sense):
     if scores.nnz == 0 or dense.size == 0:
         return dense
     stored_mask = _stored_mask(scores)
-    if sense == 'maximize':
+    if sense == "maximize":
         cost = float(scores.data.max()) - dense
     else:  # 'minimize': the stored values are already costs
         cost = dense.copy()
@@ -199,7 +199,7 @@ class ScoreMatrix:
     """
 
     data: Any
-    sense: Sense = 'maximize'
+    sense: Sense = "maximize"
     row_labels: Optional[Sequence] = None
     col_labels: Optional[Sequence] = None
 
@@ -219,7 +219,7 @@ class Explanation:
     A structured payload, never a printed string, so any UI can render it declaratively.
     """
 
-    summary: str = ''
+    summary: str = ""
     details: Mapping[str, Any] = field(default_factory=dict)
 
 

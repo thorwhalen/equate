@@ -6,7 +6,7 @@ blocking cheap and precision recovery optional (doc 02-blocking).
 
 from collections import Counter
 
-__all__ = ['dedupe_pairs', 'prune_frequent']
+__all__ = ["dedupe_pairs", "prune_frequent"]
 
 
 def dedupe_pairs(candidate_pairs):
@@ -34,13 +34,13 @@ def prune_frequent(candidate_pairs, *, max_degree, self_join=False):
             degree[i] += 1
             degree[j] += 1
         else:
-            degree[('a', i)] += 1
-            degree[('b', j)] += 1
+            degree[("a", i)] += 1
+            degree[("b", j)] += 1
 
     def keep(i, j):
         if self_join:
             return degree[i] <= max_degree and degree[j] <= max_degree
-        return degree[('a', i)] <= max_degree and degree[('b', j)] <= max_degree
+        return degree[("a", i)] <= max_degree and degree[("b", j)] <= max_degree
 
     for i, j in pairs:
         if keep(i, j):

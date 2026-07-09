@@ -10,7 +10,7 @@ accepts both, and users can register their own strategies without subclassing.
 from collections.abc import Callable
 from typing import Any, Optional
 
-__all__ = ['Registry']
+__all__ = ["Registry"]
 
 
 class Registry:
@@ -34,13 +34,16 @@ class Registry:
         self.kind = kind
         self._entries: dict = {}  # name -> (factory, meta)
 
-    def register(self, name: str, factory: Optional[Callable] = None, *, meta: Any = None):
+    def register(
+        self, name: str, factory: Optional[Callable] = None, *, meta: Any = None
+    ):
         """Register ``factory`` under ``name``. Usable as a decorator or directly.
 
         The factory is called lazily (by :meth:`create`/:meth:`resolve`), so any heavy
         import inside it fires only on use. ``meta`` is optional declared metadata
         (e.g. a ``FeaturizerMeta``/``ComparatorMeta``).
         """
+
         def deco(f):
             self._entries[name] = (f, meta)
             return f

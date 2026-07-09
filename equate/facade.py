@@ -16,7 +16,7 @@ from equate.block import resolve_blocker, score_candidates, all_pairs
 from equate.matching import resolve_matcher, soft_match, harden
 from equate.cluster import resolve_clusterer
 
-__all__ = ['match', 'dedupe', 'resolve']
+__all__ = ["match", "dedupe", "resolve"]
 
 
 def match(
@@ -26,10 +26,10 @@ def match(
     featurize=None,
     compare=None,
     block=None,
-    how='assign',
+    how="assign",
     threshold=None,
-    cluster='connected_components',
-    sense='maximize',
+    cluster="connected_components",
+    sense="maximize",
 ):
     """Match two collections into a :class:`~equate.base.Matching` of scored ``(i, j)`` pairs.
 
@@ -68,31 +68,40 @@ def match(
 
     if block is not None:
         candidates = list(resolve_blocker(block)(A, B))
-        scores = score_candidates(A, B, candidates, compare or 'ratio', sense=sense).data
+        scores = score_candidates(
+            A, B, candidates, compare or "ratio", sense=sense
+        ).data
     elif compare is not None:
         scores = direct(resolve_comparator(compare))(A, B)
     else:
-        scores = featurized(featurize or 'tfidf')(A, B)
+        scores = featurized(featurize or "tfidf")(A, B)
 
     # each matched pair's score is read from the score matrix (the similarity/score),
     # consistently for the hard and soft paths
     dense = scores.toarray() if issparse(scores) else np.asarray(scores)
 
-    if how == 'cluster':
+    if how == "cluster":
         # cluster the pooled A+B index space (B offset by len(A)) using the A-B match
         # edges above `threshold` — cross-collection entity resolution -> a Partition
         thr = 0.5 if threshold is None else threshold
         n_a = len(A)
         if issparse(scores):
             coo = scores.tocoo()
-            edges = [(int(i), n_a + int(j), float(v)) for i, j, v in zip(coo.row, coo.col, coo.data)]
+            edges = [
+                (int(i), n_a + int(j), float(v))
+                for i, j, v in zip(coo.row, coo.col, coo.data)
+            ]
         else:
             edges = [
-                (i, n_a + j, float(dense[i, j])) for i in range(n_a) for j in range(len(B))
+                (i, n_a + j, float(dense[i, j]))
+                for i in range(n_a)
+                for j in range(len(B))
             ]
-        return resolve_clusterer(cluster)(edges, n_a + len(B), threshold=thr, sense=sense)
+        return resolve_clusterer(cluster)(
+            edges, n_a + len(B), threshold=thr, sense=sense
+        )
 
-    if how == 'soft':
+    if how == "soft":
         plan = soft_match(scores, sense=sense)
         pairs = harden(plan)
         return Matching(
@@ -112,7 +121,15 @@ def match(
     )
 
 
-def dedupe(A, *, compare='ratio', block=None, threshold=0.7, cluster='connected_components', sense=None):
+def dedupe(
+    A,
+    *,
+    compare="ratio",
+    block=None,
+    threshold=0.7,
+    cluster="connected_components",
+    sense=None,
+):
     """Deduplicate a single collection into entity groups.
 
     Self-compares ``A``'s candidate pairs, keeps those passing ``threshold``, and clusters
@@ -131,9 +148,13 @@ def dedupe(A, *, compare='ratio', block=None, threshold=0.7, cluster='connected_
     A = list(A)
     comp = resolve_comparator(compare)
     if sense is None:
-        meta = getattr(comp, 'meta', None)
-        sense = 'minimize' if getattr(meta, 'polarity', None) == 'distance' else 'maximize'
-    candidates = list(resolve_blocker(block)(A)) if block is not None else list(all_pairs(A))
+        meta = getattr(comp, "meta", None)
+        sense = (
+            "minimize" if getattr(meta, "polarity", None) == "distance" else "maximize"
+        )
+    candidates = (
+        list(resolve_blocker(block)(A)) if block is not None else list(all_pairs(A))
+    )
     scored = [(i, j, float(comp(A[i], A[j]))) for i, j in candidates]
     return resolve_clusterer(cluster)(scored, len(A), threshold=threshold, sense=sense)
 

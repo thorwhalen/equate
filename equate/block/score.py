@@ -11,10 +11,10 @@ from scipy.sparse import csr_matrix
 from equate.base import ScoreMatrix
 from equate.compare import resolve_comparator
 
-__all__ = ['score_candidates']
+__all__ = ["score_candidates"]
 
 
-def score_candidates(A, B, candidate_pairs, comparator='ratio', *, sense='maximize'):
+def score_candidates(A, B, candidate_pairs, comparator="ratio", *, sense="maximize"):
     """Score each candidate ``(i, j)`` pair with ``comparator`` -> a sparse ScoreMatrix.
 
     ``comparator`` is a pairwise comparator (a registered name or a callable). Duplicate

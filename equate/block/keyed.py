@@ -12,12 +12,12 @@ from itertools import groupby, zip_longest
 from equate._dependencies import require
 
 __all__ = [
-    'key_blocking',
-    'sorted_neighborhood',
-    'first_chars',
-    'qgram_keys',
-    'whole_value',
-    'phonetic_key',
+    "key_blocking",
+    "sorted_neighborhood",
+    "first_chars",
+    "qgram_keys",
+    "whole_value",
+    "phonetic_key",
 ]
 
 
@@ -128,13 +128,13 @@ def whole_value(*, key=str, lowercase=True):
     return kf
 
 
-def phonetic_key(*, algorithm='soundex', key=str):
+def phonetic_key(*, algorithm="soundex", key=str):
     """Key function: a phonetic code (``soundex`` / ``metaphone`` / ``nysiis``) via
     ``jellyfish`` — requires ``equate[phonetic]``.
     """
 
     def kf(item):
-        jf = require('jellyfish', extra='phonetic', purpose='phonetic blocking')
+        jf = require("jellyfish", extra="phonetic", purpose="phonetic blocking")
         return [getattr(jf, algorithm)(str(key(item)))]
 
     return kf

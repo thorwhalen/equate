@@ -7,14 +7,16 @@ import math
 from equate.base import ComparatorMeta
 
 __all__ = [
-    'exp_decay',
-    'linear_decay',
-    'gaussian_decay',
-    'haversine',
-    'geo_similarity',
+    "exp_decay",
+    "linear_decay",
+    "gaussian_decay",
+    "haversine",
+    "geo_similarity",
 ]
 
-_SIM = ComparatorMeta(polarity='similarity', bounded=True, is_metric=False, is_symmetric=True)
+_SIM = ComparatorMeta(
+    polarity="similarity", bounded=True, is_metric=False, is_symmetric=True
+)
 
 
 def _default_distance(x, y):
@@ -75,7 +77,7 @@ def haversine(a, b):
 
 
 haversine.meta = ComparatorMeta(
-    polarity='distance', bounded=False, is_metric=True, is_symmetric=True
+    polarity="distance", bounded=False, is_metric=True, is_symmetric=True
 )
 
 

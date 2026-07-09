@@ -36,22 +36,22 @@ from equate.compare.vectorize import (
 from equate.compare.calibrate import threshold, platt, isotonic
 
 __all__ = [
-    'comparators',
-    'resolve_comparator',
-    'direct',
-    'featurized',
-    'comparison_vector',
-    'weighted_sum',
-    'mean',
-    'max_combiner',
-    'fellegi_sunter',
-    'threshold',
-    'platt',
-    'isotonic',
+    "comparators",
+    "resolve_comparator",
+    "direct",
+    "featurized",
+    "comparison_vector",
+    "weighted_sum",
+    "mean",
+    "max_combiner",
+    "fellegi_sunter",
+    "threshold",
+    "platt",
+    "isotonic",
 ]
 
 #: the compare-stage strategy registry (name -> lazy factory)
-comparators = Registry('comparator')
+comparators = Registry("comparator")
 
 
 def _const(obj, name):
@@ -78,30 +78,30 @@ def _configurable(fn):
 
 # Fixed pairwise comparators (core, or lazy-on-first-call for optional-dep ones).
 for _name, _fn in [
-    ('ratio', _string.ratio),
-    ('levenshtein', _string.levenshtein),
-    ('levenshtein_distance', _string.levenshtein_distance),
-    ('jaro_winkler', _string.jaro_winkler),
-    ('cosine', _vec.cosine),
-    ('dot', _vec.dot),
-    ('angular', _vec.angular_distance),
-    ('haversine', _ng.haversine),
+    ("ratio", _string.ratio),
+    ("levenshtein", _string.levenshtein),
+    ("levenshtein_distance", _string.levenshtein_distance),
+    ("jaro_winkler", _string.jaro_winkler),
+    ("cosine", _vec.cosine),
+    ("dot", _vec.dot),
+    ("angular", _vec.angular_distance),
+    ("haversine", _ng.haversine),
 ]:
-    comparators.register(_name, _const(_fn, _name), meta=getattr(_fn, 'meta', None))
+    comparators.register(_name, _const(_fn, _name), meta=getattr(_fn, "meta", None))
 
 # Configurable pairwise comparators (accept keyword config, applied via functools.partial).
 comparators.register(
-    'monge_elkan', _configurable(_string.monge_elkan), meta=_string.monge_elkan.meta
+    "monge_elkan", _configurable(_string.monge_elkan), meta=_string.monge_elkan.meta
 )
 comparators.register(
-    'phonetic', _configurable(_string.phonetic_match), meta=_string.phonetic_match.meta
+    "phonetic", _configurable(_string.phonetic_match), meta=_string.phonetic_match.meta
 )
 
 # Comparator factories (build a configured comparator from config).
-comparators.register('exp_decay', _ng.exp_decay)
-comparators.register('linear_decay', _ng.linear_decay)
-comparators.register('gaussian_decay', _ng.gaussian_decay)
-comparators.register('geo', _ng.geo_similarity)
+comparators.register("exp_decay", _ng.exp_decay)
+comparators.register("linear_decay", _ng.linear_decay)
+comparators.register("gaussian_decay", _ng.gaussian_decay)
+comparators.register("geo", _ng.geo_similarity)
 
 
 def resolve_comparator(spec, **config):
@@ -133,12 +133,12 @@ def direct(h, *, meta=None):
         return np.array([[h(a, b) for b in B] for a in A], dtype=float)
 
     build.comparator = h
-    build.meta = meta or getattr(h, 'meta', None) or ComparatorMeta()
+    build.meta = meta or getattr(h, "meta", None) or ComparatorMeta()
     build.indexable = False
     return build
 
 
-def featurized(featurizer='tfidf', metric=None, *, meta=None):
+def featurized(featurizer="tfidf", metric=None, *, meta=None):
     """Build a score-matrix builder that featurizes both collections then applies a
     vector ``metric`` (default cosine over the two matrices). Marked **indexable** — the
     featurize-then-compare route; this is what the legacy ``similarity_matrix`` does.
@@ -152,6 +152,6 @@ def featurized(featurizer='tfidf', metric=None, *, meta=None):
 
     build.indexable = True
     build.meta = meta or ComparatorMeta(
-        polarity='similarity', bounded=True, is_metric=False, is_symmetric=True
+        polarity="similarity", bounded=True, is_metric=False, is_symmetric=True
     )
     return build

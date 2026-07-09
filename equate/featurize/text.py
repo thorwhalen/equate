@@ -11,20 +11,24 @@ stages land — see the ``equate-dev-add-strategy`` skill.
 from equate.base import FeaturizerMeta
 from equate._dependencies import require
 
-__all__ = ['sbert_featurizer', 'openai_featurizer', 'SBERT_META', 'OPENAI_META']
+__all__ = ["sbert_featurizer", "openai_featurizer", "SBERT_META", "OPENAI_META"]
 
 # Single source of declared metadata for each embedder (mirrored into the registry).
-SBERT_META = FeaturizerMeta(output_kinds=('vector',), normalize=True, license='Apache-2.0')
-OPENAI_META = FeaturizerMeta(output_kinds=('vector',), normalize=False, license='proprietary')
+SBERT_META = FeaturizerMeta(
+    output_kinds=("vector",), normalize=True, license="Apache-2.0"
+)
+OPENAI_META = FeaturizerMeta(
+    output_kinds=("vector",), normalize=False, license="proprietary"
+)
 
 
-def sbert_featurizer(*, model='sentence-transformers/all-MiniLM-L6-v2'):
+def sbert_featurizer(*, model="sentence-transformers/all-MiniLM-L6-v2"):
     """Sentence-Transformers (SBERT) embedder — requires ``equate[embeddings]``.
 
     Returns a batch featurizer ``texts -> L2-normalized embedding matrix``.
     """
     st = require(
-        'sentence_transformers', extra='embeddings', purpose='SBERT text embeddings'
+        "sentence_transformers", extra="embeddings", purpose="SBERT text embeddings"
     )
     model_obj = st.SentenceTransformer(model)
 
@@ -35,12 +39,12 @@ def sbert_featurizer(*, model='sentence-transformers/all-MiniLM-L6-v2'):
     return featurize
 
 
-def openai_featurizer(*, model='text-embedding-3-small'):
+def openai_featurizer(*, model="text-embedding-3-small"):
     """OpenAI embeddings — requires ``equate[api]`` and an ``OPENAI_API_KEY``.
 
     Returns a batch featurizer ``texts -> embedding matrix``.
     """
-    openai = require('openai', extra='api', purpose='OpenAI text embeddings')
+    openai = require("openai", extra="api", purpose="OpenAI text embeddings")
     client = openai.OpenAI()
 
     def featurize(texts):

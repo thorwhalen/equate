@@ -14,7 +14,7 @@ from scipy.sparse import csr_matrix
 from equate.base import FeaturizerMeta
 from equate._vector import l2_normalize
 
-__all__ = ['TfidfFeaturizer', 'mk_tfidf', 'char_ngrams', 'DFLT_NGRAM_RANGE']
+__all__ = ["TfidfFeaturizer", "mk_tfidf", "char_ngrams", "DFLT_NGRAM_RANGE"]
 
 DFLT_NGRAM_RANGE = (2, 4)
 
@@ -36,7 +36,7 @@ def char_ngrams(text, ngram_range=DFLT_NGRAM_RANGE, *, lowercase=True):
     """
     if lowercase:
         text = text.lower()
-    padded = f' {text} '
+    padded = f" {text} "
     lo, hi = ngram_range
     grams = []
     for n in range(lo, hi + 1):
@@ -54,7 +54,7 @@ class TfidfFeaturizer:
     """
 
     #: declared metadata (see equate.base.FeaturizerMeta)
-    meta = FeaturizerMeta(output_kinds=('vector',), normalize=True, license='core')
+    meta = FeaturizerMeta(output_kinds=("vector",), normalize=True, license="core")
 
     def __init__(self, *, ngram_range=DFLT_NGRAM_RANGE, lowercase=True):
         self.ngram_range = ngram_range
@@ -84,7 +84,7 @@ class TfidfFeaturizer:
 
     def transform(self, texts):
         if self.vocabulary_ is None:
-            raise RuntimeError('TfidfFeaturizer must be fit before transform')
+            raise RuntimeError("TfidfFeaturizer must be fit before transform")
         texts = list(texts)
         vocab = self.vocabulary_
         rows, cols, data = [], [], []

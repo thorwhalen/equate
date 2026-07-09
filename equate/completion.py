@@ -34,7 +34,7 @@ def transform_text(text, transformer):
 
 
 def mk_text_to_vect(*learn_texts):
-    grub = require('grub', extra='grub', purpose='the legacy grub TF-IDF featurizer')
+    grub = require("grub", extra="grub", purpose="the legacy grub TF-IDF featurizer")
 
     docs = dict(enumerate(chain(*learn_texts)))
     s = grub.SearchStore(docs)
@@ -105,9 +105,9 @@ def maximal_matching(similarity_matrix):
     G = nx.Graph()
     for i in range(similarity_matrix.shape[0]):
         for j in range(similarity_matrix.shape[1]):
-            G.add_edge(f'key_{i}', f'value_{j}', weight=similarity_matrix[i, j])
+            G.add_edge(f"key_{i}", f"value_{j}", weight=similarity_matrix[i, j])
     matching = nx.max_weight_matching(G, maxcardinality=True)
-    return [(int(u.split('_')[1]), int(v.split('_')[1])) for u, v in matching]
+    return [(int(u.split("_")[1]), int(v.split("_")[1])) for u, v in matching]
 
 
 def stable_marriage_matching(similarity_matrix):
@@ -156,12 +156,12 @@ def kuhn_munkres_matching(similarity_matrix):
     G = nx.Graph()
     for i in range(similarity_matrix.shape[0]):
         for j in range(similarity_matrix.shape[1]):
-            G.add_edge(f'key_{i}', f'value_{j}', weight=-similarity_matrix[i, j])
+            G.add_edge(f"key_{i}", f"value_{j}", weight=-similarity_matrix[i, j])
     matching = nx.algorithms.bipartite.matching.minimum_weight_full_matching(
-        G, weight='weight'
+        G, weight="weight"
     )
     return [
-        (int(u.split('_')[1]), int(v.split('_')[1]))
+        (int(u.split("_")[1]), int(v.split("_")[1]))
         for u, v in matching.items()
-        if u.startswith('key_')
+        if u.startswith("key_")
     ]

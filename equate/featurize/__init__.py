@@ -19,17 +19,17 @@ from equate.featurize.tfidf import (
 from equate.featurize import text as _text
 
 __all__ = [
-    'featurizers',
-    'identity',
-    'resolve_featurizer',
-    'TfidfFeaturizer',
-    'mk_tfidf',
-    'char_ngrams',
-    'FeaturizerMeta',
+    "featurizers",
+    "identity",
+    "resolve_featurizer",
+    "TfidfFeaturizer",
+    "mk_tfidf",
+    "char_ngrams",
+    "FeaturizerMeta",
 ]
 
 #: the featurize-stage strategy registry (name -> lazy factory)
-featurizers = Registry('featurizer')
+featurizers = Registry("featurizer")
 
 
 def identity(objects):
@@ -40,15 +40,15 @@ def identity(objects):
     return list(objects)
 
 
-identity.meta = FeaturizerMeta(output_kinds=('scalar', 'structured'))
+identity.meta = FeaturizerMeta(output_kinds=("scalar", "structured"))
 
 
-@featurizers.register('identity', meta=identity.meta)
+@featurizers.register("identity", meta=identity.meta)
 def _identity_factory():
     return identity
 
 
-@featurizers.register('tfidf', meta=TfidfFeaturizer.meta)
+@featurizers.register("tfidf", meta=TfidfFeaturizer.meta)
 def _tfidf_factory(*, ngram_range=DFLT_NGRAM_RANGE, lowercase=True):
     """Build a char-n-gram TF-IDF featurizer (unfit; ``resolve_featurizer`` fits it)."""
     return TfidfFeaturizer(ngram_range=ngram_range, lowercase=lowercase)
@@ -56,8 +56,8 @@ def _tfidf_factory(*, ngram_range=DFLT_NGRAM_RANGE, lowercase=True):
 
 # Dense embedders (optional extras) — registered as lazy factories. The metadata is
 # defined once (in text.py) and mirrored here, so the two copies cannot diverge.
-featurizers.register('sbert', _text.sbert_featurizer, meta=_text.SBERT_META)
-featurizers.register('openai', _text.openai_featurizer, meta=_text.OPENAI_META)
+featurizers.register("sbert", _text.sbert_featurizer, meta=_text.SBERT_META)
+featurizers.register("openai", _text.openai_featurizer, meta=_text.OPENAI_META)
 
 
 def resolve_featurizer(spec=None, *, corpus=None, **config):
@@ -74,7 +74,7 @@ def resolve_featurizer(spec=None, *, corpus=None, **config):
     half-built object that only fails later inside ``transform``.
     """
     if spec is None:
-        spec = 'tfidf'
+        spec = "tfidf"
     # A callable passed directly is assumed ready-to-use and is returned UNCHANGED —
     # never re-fit (which would mutate a caller-supplied fitted featurizer in place and
     # discard its state). Only a featurizer we just built from a name is fit here.
@@ -86,7 +86,7 @@ def resolve_featurizer(spec=None, *, corpus=None, **config):
             f"got {type(spec).__name__}"
         )
     feat = featurizers.create(spec, **config)
-    fit = getattr(feat, 'fit', None)
+    fit = getattr(feat, "fit", None)
     if callable(fit):
         if corpus is None:
             raise ValueError(
@@ -94,7 +94,9 @@ def resolve_featurizer(spec=None, *, corpus=None, **config):
                 f"(e.g. resolve_featurizer({spec!r}, corpus=your_texts))"
             )
         feat = fit(corpus) or feat
-    if not hasattr(feat, 'meta'):  # make the declared metadata reachable off the featurizer
+    if not hasattr(
+        feat, "meta"
+    ):  # make the declared metadata reachable off the featurizer
         try:
             feat.meta = featurizers.meta(spec)
         except (AttributeError, TypeError):

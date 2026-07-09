@@ -11,14 +11,14 @@ import numpy as np
 from equate._dependencies import require
 from equate._vector import l2_normalize
 
-__all__ = ['brute_knn_blocking', 'ann_blocking']
+__all__ = ["brute_knn_blocking", "ann_blocking"]
 
 
 def _dense(X):
-    return X.toarray() if hasattr(X, 'toarray') else np.asarray(X, dtype=float)
+    return X.toarray() if hasattr(X, "toarray") else np.asarray(X, dtype=float)
 
 
-def brute_knn_blocking(featurizer='tfidf', *, k=5):
+def brute_knn_blocking(featurizer="tfidf", *, k=5):
     """Blocker: featurize both sides and emit each A-item's top-``k`` nearest B-items by
     cosine (pure numpy; exact; fine for small/medium collections). A self-join excludes
     the trivial self-match *before* ranking (so ties among duplicates can't over-produce)
@@ -50,9 +50,9 @@ def brute_knn_blocking(featurizer='tfidf', *, k=5):
     return blocker
 
 
-def ann_blocking(featurizer='tfidf', *, k=5, ef_construction=200, m=16):
+def ann_blocking(featurizer="tfidf", *, k=5, ef_construction=200, m=16):
     """Blocker using an hnswlib approximate-NN cosine index — requires ``equate[ann]``."""
-    hnswlib = require('hnswlib', extra='ann', purpose='ANN blocking')
+    hnswlib = require("hnswlib", extra="ann", purpose="ANN blocking")
     from equate.featurize import resolve_featurizer
 
     def blocker(A, B=None):
@@ -62,9 +62,9 @@ def ann_blocking(featurizer='tfidf', *, k=5, ef_construction=200, m=16):
         if not A or not B:
             return
         feat = resolve_featurizer(featurizer, corpus=A + B)
-        XA = _dense(feat(A)).astype('float32')
-        XB = _dense(feat(B)).astype('float32')
-        index = hnswlib.Index(space='cosine', dim=XB.shape[1])
+        XA = _dense(feat(A)).astype("float32")
+        XB = _dense(feat(B)).astype("float32")
+        index = hnswlib.Index(space="cosine", dim=XB.shape[1])
         index.init_index(max_elements=len(B), ef_construction=ef_construction, M=m)
         index.add_items(XB, list(range(len(B))))
         kk = min(k + (1 if self_join else 0), len(B))

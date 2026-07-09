@@ -15,17 +15,17 @@ from equate.matching.assign import optimal_matching, greedy_matching, stable_mat
 from equate.matching.soft import soft_match, harden
 
 __all__ = [
-    'matchers',
-    'resolve_matcher',
-    'optimal_matching',
-    'greedy_matching',
-    'stable_matching',
-    'soft_match',
-    'harden',
+    "matchers",
+    "resolve_matcher",
+    "optimal_matching",
+    "greedy_matching",
+    "stable_matching",
+    "soft_match",
+    "harden",
 ]
 
 #: the match-stage strategy registry (name -> lazy factory)
-matchers = Registry('matcher')
+matchers = Registry("matcher")
 
 
 def _const(fn, name):
@@ -41,15 +41,15 @@ def _const(fn, name):
     return factory
 
 
-def _max_weight_matcher(scores, *, sense='maximize'):
+def _max_weight_matcher(scores, *, sense="maximize"):
     """Maximum-weight bipartite matching via networkx — requires ``equate[graph]``."""
     from equate.util import maximal_matching
 
     S = scores.toarray() if issparse(scores) else np.asarray(scores, dtype=float)
-    return list(maximal_matching(-S if sense == 'minimize' else S))
+    return list(maximal_matching(-S if sense == "minimize" else S))
 
 
-def _kuhn_munkres_matcher(scores, *, sense='maximize'):
+def _kuhn_munkres_matcher(scores, *, sense="maximize"):
     """Hungarian assignment via networkx — requires ``equate[graph]``."""
     from equate.util import kuhn_munkres_matching
 
@@ -57,18 +57,18 @@ def _kuhn_munkres_matcher(scores, *, sense='maximize'):
     return list(kuhn_munkres_matching(S, sense=sense))
 
 
-matchers.register('optimal', _const(optimal_matching, 'optimal'))
-matchers.register('hungarian', _const(optimal_matching, 'hungarian'))  # alias
-matchers.register('greedy', _const(greedy_matching, 'greedy'))
-matchers.register('stable', _const(stable_matching, 'stable'))
-matchers.register('max_weight', _const(_max_weight_matcher, 'max_weight'))
-matchers.register('kuhn_munkres', _const(_kuhn_munkres_matcher, 'kuhn_munkres'))
+matchers.register("optimal", _const(optimal_matching, "optimal"))
+matchers.register("hungarian", _const(optimal_matching, "hungarian"))  # alias
+matchers.register("greedy", _const(greedy_matching, "greedy"))
+matchers.register("stable", _const(stable_matching, "stable"))
+matchers.register("max_weight", _const(_max_weight_matcher, "max_weight"))
+matchers.register("kuhn_munkres", _const(_kuhn_munkres_matcher, "kuhn_munkres"))
 
 #: facade ``how=`` objective aliases -> registered matcher names
-_HOW_ALIASES = {'assign': 'optimal'}
+_HOW_ALIASES = {"assign": "optimal"}
 
 
-def resolve_matcher(spec='optimal', **config):
+def resolve_matcher(spec="optimal", **config):
     """Resolve ``spec`` to a matcher ``(scores, *, sense) -> pairs``.
 
     A callable passes through; a registered name (or a facade ``how=`` alias like

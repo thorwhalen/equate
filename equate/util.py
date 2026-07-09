@@ -23,7 +23,7 @@ def ensure_sparse(matrix):
     return matrix
 
 
-def match_greedily(keys, values, *, score_func=None, minimum_score=-float('infinity')):
+def match_greedily(keys, values, *, score_func=None, minimum_score=-float("infinity")):
     """Generates the best (key, value) matches of each key of keys with a value of
     values. The score_func is used to gauge the strength of a match. If not provided,
     the default score_func is ``difflib.SequenceMatcher(None, a, b).ratio()`` — a
@@ -67,7 +67,7 @@ def mk_text_to_vect(*learn_texts):
     extra). The default text featurizer is now equate's pure numpy/scipy char-n-gram
     TF-IDF — see :func:`equate.featurize.mk_tfidf`.
     """
-    grub = require('grub', extra='grub', purpose='the legacy grub TF-IDF featurizer')
+    grub = require("grub", extra="grub", purpose="the legacy grub TF-IDF featurizer")
 
     docs = dict(enumerate(chain(*learn_texts)))
     s = grub.SearchStore(docs)
@@ -96,7 +96,7 @@ def similarity_matrix(keys, values, *, obj_to_vect=None, similarity_func=None):
     if obj_to_vect is None:
         from equate.featurize import resolve_featurizer
 
-        obj_to_vect = resolve_featurizer('tfidf', corpus=keys + values)
+        obj_to_vect = resolve_featurizer("tfidf", corpus=keys + values)
     key_vectors, value_vectors = obj_to_vect(keys), obj_to_vect(values)
     return similarity_func(key_vectors, value_vectors)
 
@@ -119,7 +119,7 @@ def greedy_matching(similarity_matrix):
         similarity_matrix[:, j] = 0  # Remove this column for subsequent iterations
 
 
-def hungarian_matching(similarity_matrix, *, sense='maximize', cost_matrix=None):
+def hungarian_matching(similarity_matrix, *, sense="maximize", cost_matrix=None):
     """
     Hungarian Algorithm (Optimal Matching): Finds the optimal 1:1 assignment,
     minimizing the total cost (equivalently, maximizing the total similarity).
@@ -144,17 +144,19 @@ def maximal_matching(similarity_matrix):
     :param similarity_matrix: A sparse matrix of similarities.
     :return: List of tuples (row_index, col_index) for matched pairs.
     """
-    nx = require('networkx', extra='graph', purpose='the maximal_matching graph matcher')
+    nx = require(
+        "networkx", extra="graph", purpose="the maximal_matching graph matcher"
+    )
 
     G = nx.Graph()
     for i in range(similarity_matrix.shape[0]):
         for j in range(similarity_matrix.shape[1]):
-            G.add_edge(f'key_{i}', f'value_{j}', weight=similarity_matrix[i, j])
+            G.add_edge(f"key_{i}", f"value_{j}", weight=similarity_matrix[i, j])
     matching = nx.max_weight_matching(G, maxcardinality=True)
-    return ((int(u.split('_')[1]), int(v.split('_')[1])) for u, v in matching)
+    return ((int(u.split("_")[1]), int(v.split("_")[1])) for u, v in matching)
 
 
-def stable_marriage_matching(similarity_matrix, *, sense='maximize'):
+def stable_marriage_matching(similarity_matrix, *, sense="maximize"):
     """
     Stable Marriage Problem (Gale-Shapley Algorithm):
     Solves the stable marriage problem, ensuring a stable matching. Note this
@@ -194,7 +196,7 @@ def stable_marriage_matching(similarity_matrix, *, sense='maximize'):
     return [(man, woman) for woman, man in woman_partner.items()]
 
 
-def kuhn_munkres_matching(similarity_matrix, *, sense='maximize'):
+def kuhn_munkres_matching(similarity_matrix, *, sense="maximize"):
     """
     Kuhn-Munkres Algorithm: Another implementation of the Hungarian algorithm using
     the `networkx` package (requires the optional ``equate[graph]`` extra).
@@ -203,20 +205,20 @@ def kuhn_munkres_matching(similarity_matrix, *, sense='maximize'):
         costs via the ``to_cost`` SSOT.
     :return: List of tuples (row_index, col_index) for matched pairs.
     """
-    nx = require('networkx', extra='graph', purpose='the kuhn_munkres_matching matcher')
+    nx = require("networkx", extra="graph", purpose="the kuhn_munkres_matching matcher")
 
     cost = to_cost(similarity_matrix, sense=sense)
     G = nx.Graph()
     for i in range(similarity_matrix.shape[0]):
         for j in range(similarity_matrix.shape[1]):
-            G.add_edge(f'key_{i}', f'value_{j}', weight=cost[i, j])
+            G.add_edge(f"key_{i}", f"value_{j}", weight=cost[i, j])
     matching = nx.algorithms.bipartite.matching.minimum_weight_full_matching(
-        G, weight='weight'
+        G, weight="weight"
     )
     return [
-        (int(u.split('_')[1]), int(v.split('_')[1]))
+        (int(u.split("_")[1]), int(v.split("_")[1]))
         for u, v in matching.items()
-        if u.startswith('key_')
+        if u.startswith("key_")
     ]
 
 

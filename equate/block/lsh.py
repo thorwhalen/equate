@@ -5,7 +5,7 @@ comparing all pairs.
 
 from equate._dependencies import require
 
-__all__ = ['minhash_lsh_blocking']
+__all__ = ["minhash_lsh_blocking"]
 
 
 def _default_tokenize(item):
@@ -16,14 +16,14 @@ def minhash_lsh_blocking(tokenize=_default_tokenize, *, threshold=0.5, num_perm=
     """Blocker: MinHash-LSH over token sets; emit candidate pairs whose estimated Jaccard
     similarity is at least ``threshold``. Requires ``equate[lsh]``.
     """
-    datasketch = require('datasketch', extra='lsh', purpose='MinHash-LSH blocking')
+    datasketch = require("datasketch", extra="lsh", purpose="MinHash-LSH blocking")
     MinHash = datasketch.MinHash
     MinHashLSH = datasketch.MinHashLSH
 
     def _minhash(item):
         m = MinHash(num_perm=num_perm)
         for token in tokenize(item):
-            m.update(str(token).encode('utf8'))
+            m.update(str(token).encode("utf8"))
         return m
 
     def blocker(A, B=None):

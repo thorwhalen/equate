@@ -13,10 +13,10 @@ from scipy.sparse import issparse
 
 from equate.base import to_cost
 
-__all__ = ['optimal_matching', 'greedy_matching', 'stable_matching']
+__all__ = ["optimal_matching", "greedy_matching", "stable_matching"]
 
 
-def optimal_matching(scores, *, sense='maximize'):
+def optimal_matching(scores, *, sense="maximize"):
     """Globally optimal 1:1 assignment (the linear assignment problem).
 
     A dense matrix goes straight to ``linear_sum_assignment`` on ``to_cost(scores, sense)``.
@@ -28,7 +28,9 @@ def optimal_matching(scores, *, sense='maximize'):
     (scipy's sparse solver silently drops explicitly-stored zero-score candidates, so it is
     not used here).
     """
-    cost = to_cost(scores, sense=sense)  # handles sparse via _sparse_to_cost (holes worst-cased)
+    cost = to_cost(
+        scores, sense=sense
+    )  # handles sparse via _sparse_to_cost (holes worst-cased)
     row, col = linear_sum_assignment(cost)
     if issparse(scores):
         from equate.base import _stored_mask
@@ -38,7 +40,7 @@ def optimal_matching(scores, *, sense='maximize'):
     return list(zip(row.tolist(), col.tolist()))
 
 
-def greedy_matching(scores, *, sense='maximize'):
+def greedy_matching(scores, *, sense="maximize"):
     """Greedy 1:1: repeatedly take the best still-available ``(i, j)``, removing both.
 
     Order-dependent and not globally optimal, but fast. For a sparse matrix only the
@@ -52,7 +54,7 @@ def greedy_matching(scores, *, sense='maximize'):
         S = np.asarray(scores, dtype=float)
         shape = S.shape
         entries = [(i, j, S[i, j]) for i in range(shape[0]) for j in range(shape[1])]
-    entries.sort(key=lambda e: e[2], reverse=(sense == 'maximize'))
+    entries.sort(key=lambda e: e[2], reverse=(sense == "maximize"))
     used_i, used_j, pairs = set(), set(), []
     for i, j, _ in entries:
         if i in used_i or j in used_j:
@@ -65,7 +67,7 @@ def greedy_matching(scores, *, sense='maximize'):
     return pairs
 
 
-def stable_matching(scores, *, sense='maximize'):
+def stable_matching(scores, *, sense="maximize"):
     """Gale-Shapley stable matching (optimizes stability, not total score).
 
     See :func:`equate.util.stable_marriage_matching`. A sparse (blocked) matrix routes
@@ -79,6 +81,8 @@ def stable_matching(scores, *, sense='maximize'):
 
         stored = _stored_mask(scores)
         cost = to_cost(scores, sense=sense)  # dense, absent cells worst-cased
-        pairs = stable_marriage_matching(cost, sense='minimize')  # rank by cost ascending
+        pairs = stable_marriage_matching(
+            cost, sense="minimize"
+        )  # rank by cost ascending
         return [(i, j) for i, j in pairs if stored[i, j]]
     return stable_marriage_matching(scores, sense=sense)

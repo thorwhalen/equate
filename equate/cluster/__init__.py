@@ -16,11 +16,11 @@ from equate.registry import Registry
 from equate.base import Partition
 
 __all__ = [
-    'clusterers',
-    'resolve_clusterer',
-    'connected_components',
-    'correlation_clustering',
-    'canonicalize',
+    "clusterers",
+    "resolve_clusterer",
+    "connected_components",
+    "correlation_clustering",
+    "canonicalize",
 ]
 
 
@@ -32,7 +32,11 @@ def _edges(pairs, n, *, threshold, sense):
     ``'minimize'``). Every index is validated ``0 <= idx < n`` with a clear error (a raw
     negative index would otherwise silently alias to another item).
     """
-    keep = (lambda s: s >= threshold) if sense == 'maximize' else (lambda s: s <= threshold)
+    keep = (
+        (lambda s: s >= threshold)
+        if sense == "maximize"
+        else (lambda s: s <= threshold)
+    )
     for p in pairs:
         if len(p) == 3:
             i, j, s = p
@@ -46,7 +50,7 @@ def _edges(pairs, n, *, threshold, sense):
         yield i, j
 
 
-def connected_components(pairs, n, *, threshold=None, sense='maximize'):
+def connected_components(pairs, n, *, threshold=None, sense="maximize"):
     """Partition ``n`` items into connected components of the match graph (union-find).
 
     Accepts either 2-tuple edges ``(i, j)`` or 3-tuple scored edges ``(i, j, score)`` — in
@@ -83,7 +87,7 @@ def connected_components(pairs, n, *, threshold=None, sense='maximize'):
     return Partition(labels)
 
 
-def correlation_clustering(scored_pairs, n, *, threshold=0.0, sense='maximize'):
+def correlation_clustering(scored_pairs, n, *, threshold=0.0, sense="maximize"):
     """Cluster ``n`` items to minimize disagreements (the greedy Pivot algorithm).
 
     ``scored_pairs`` is an iterable of ``(i, j, score)``; an edge is *positive* when its
@@ -112,14 +116,14 @@ def correlation_clustering(scored_pairs, n, *, threshold=0.0, sense='maximize'):
 
 #: the resolve/cluster strategy registry — a clusterer is
 #: ``(scored_pairs, n, *, threshold) -> Partition``.
-clusterers = Registry('clusterer')
+clusterers = Registry("clusterer")
 # Both accept the uniform (scored_pairs, n, *, threshold, sense) contract, so either the
 # string spec or the public callable works with resolve_clusterer.
-clusterers.register('connected_components', lambda: connected_components)
-clusterers.register('correlation', lambda: correlation_clustering)
+clusterers.register("connected_components", lambda: connected_components)
+clusterers.register("correlation", lambda: correlation_clustering)
 
 
-def resolve_clusterer(spec='connected_components'):
+def resolve_clusterer(spec="connected_components"):
     """Resolve ``spec`` to a clusterer ``(scored_pairs, n, *, threshold, sense) -> Partition``."""
     if callable(spec):
         return spec
@@ -156,7 +160,9 @@ def _majority_merge(records):
     fields = {f for r in records if isinstance(r, Mapping) for f in r}
     out = {}
     for f in fields:
-        vals = [r[f] for r in records if isinstance(r, Mapping) and r.get(f) is not None]
+        vals = [
+            r[f] for r in records if isinstance(r, Mapping) and r.get(f) is not None
+        ]
         if vals:
             out[f] = _mode(vals)
     return out
@@ -165,17 +171,19 @@ def _majority_merge(records):
 def _merge(records, policy):
     if not records:
         return None
-    if policy == 'first':
+    if policy == "first":
         return records[0]
-    if policy == 'most_complete':
-        return max(records, key=_completeness)  # ties -> first-max (first in cluster order)
+    if policy == "most_complete":
+        return max(
+            records, key=_completeness
+        )  # ties -> first-max (first in cluster order)
     return _majority_merge(records)
 
 
-_CANONICALIZE_POLICIES = ('first', 'most_complete', 'majority')
+_CANONICALIZE_POLICIES = ("first", "most_complete", "majority")
 
 
-def canonicalize(partition, records, *, policy='most_complete'):
+def canonicalize(partition, records, *, policy="most_complete"):
     """Merge each cluster of ``partition`` into one golden record from ``records``.
 
     ``policy``: ``'first'`` (keep the first member), ``'most_complete'`` (fewest missing
