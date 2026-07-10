@@ -25,22 +25,35 @@ def solve_constrained(cost, forced=(), forbidden=()):
     """
     cost = np.asarray(cost, dtype=float)
     n, m = cost.shape
+    forced = list(forced)
+    forced_set = {tuple(e) for e in forced}
+    forbidden_set = {tuple(e) for e in forbidden}
+    forced_rows = [i for i, _ in forced]
+    forced_cols = [j for _, j in forced]
+    # the forced edges must be a valid, feasible partial matching
+    if (
+        forced_set & forbidden_set  # a forced edge is also forbidden
+        or len(set(forced_rows)) != len(forced_rows)  # two forced edges share a row
+        or len(set(forced_cols)) != len(forced_cols)  # ... or share a column
+        or any(not np.isfinite(cost[i, j]) for i, j in forced)  # impossible forced edge
+    ):
+        return None
+
     constrained = cost.copy()
     for i, j in forbidden:
         constrained[i, j] = np.inf
 
-    forced = list(forced)
-    forced_rows = {i for i, _ in forced}
-    forced_cols = {j for _, j in forced}
     assignment = {i: j for i, j in forced}
     total = sum(cost[i, j] for i, j in forced)
-
-    free_rows = [i for i in range(n) if i not in forced_rows]
-    free_cols = [j for j in range(m) if j not in forced_cols]
+    forced_row_set, forced_col_set = set(forced_rows), set(forced_cols)
+    free_rows = [i for i in range(n) if i not in forced_row_set]
+    free_cols = [j for j in range(m) if j not in forced_col_set]
     if free_rows and free_cols:
+        # NOTE: no per-row finiteness pre-check — for a TALL subproblem (more free rows
+        # than cols) some rows are legitimately left unmatched, so an all-inf free row is
+        # not infeasible. scipy raises ValueError on genuine infeasibility (caught below),
+        # and the post-check rejects any inf edge scipy is forced to use.
         sub = constrained[np.ix_(free_rows, free_cols)]
-        if not np.isfinite(sub).any(axis=1).all():  # a free row with no finite column
-            return None
         try:
             rows, cols = linear_sum_assignment(sub)
         except ValueError:

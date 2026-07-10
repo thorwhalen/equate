@@ -10,8 +10,6 @@ replayable log.
 
 from dataclasses import dataclass, field
 
-from scipy.sparse import issparse
-
 from equate.base import to_cost
 from equate.interactive.kbest import solve_constrained
 
@@ -45,8 +43,9 @@ def reoptimize(scores, constraints=None, *, sense='maximize'):
     is a cheap constrained re-solve, not a from-scratch recompute.
     """
     constraints = constraints or ConstraintSet()
-    dense = scores.toarray() if issparse(scores) else scores
-    cost = to_cost(dense, sense=sense)
+    # to_cost handles a sparse (blocked) matrix via _sparse_to_cost, worst-casing absent
+    # cells; densifying first would take the dense branch and lose that (a #7-class bug)
+    cost = to_cost(scores, sense=sense)
     result = solve_constrained(cost, constraints.forced, constraints.forbidden)
     if result is None:
         raise ValueError("the constraints are infeasible — no valid assignment exists")

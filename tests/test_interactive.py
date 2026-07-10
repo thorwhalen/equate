@@ -119,3 +119,44 @@ def test_review_queue_surfaces_most_uncertain_first():
 def test_uncertainty_sampling_returns_n_most_uncertain():
     store = CandidateStore.from_scores(SCORES, k=3)
     assert uncertainty_sampling(store, n=1) == [0]
+
+
+# --- review-driven fixes ----------------------------------------------------------
+
+def test_k_best_tall_matrix_enumerates_all():
+    # n > m: the old per-row feasibility pre-check pruned these; must enumerate all 4
+    result = k_best_assignments([[3], [2], [5], [1]], 4)
+    assert [c for _, c in result] == [1.0, 2.0, 3.0, 5.0]
+    assert [a for a, _ in result] == [{3: 0}, {1: 0}, {0: 0}, {2: 0}]
+
+
+def test_k_best_rectangular_two_by_one():
+    assert k_best_assignments([[3], [2]], 2) == [({1: 0}, 2.0), ({0: 0}, 3.0)]
+
+
+def test_solve_constrained_rejects_invalid_forced_edges():
+    inf_cost = np.array([[np.inf, 5.0], [5.0, 1.0]])
+    assert solve_constrained(inf_cost, forced=[(0, 0)]) is None  # impossible forced edge
+    cost = np.array([[1.0, 2.0], [2.0, 1.0]])
+    assert solve_constrained(cost, forced=[(0, 0)], forbidden=[(0, 0)]) is None  # contradiction
+    assert solve_constrained(cost, forced=[(0, 0), (1, 0)]) is None  # two forced share col 0
+
+
+def test_reoptimize_sparse_worst_cases_absent_cells():
+    # only the anti-diagonal is a candidate (negative scores); must pick real candidates,
+    # not the never-scored holes (the #7-class sparse regression)
+    S = csr_matrix(([-0.3, -0.4], ([0, 1], [1, 0])), shape=(2, 2))
+    assert dict(reoptimize(S)) == {0: 1, 1: 0}
+
+
+def test_candidate_store_ranks_nan_last_and_ties_by_lower_index():
+    store = CandidateStore.from_scores(np.array([[0.5, 0.5, float("nan")]]), k=3)
+    cols = [j for j, _ in store.top(0, 3)]
+    assert cols[:2] == [0, 1]  # tie broken by lower index
+    assert cols[2] == 2  # NaN sorts last, not first
+
+
+def test_margin_infinite_for_single_or_no_candidates():
+    store = CandidateStore(candidates={0: [(0, 0.9)], 1: []})
+    assert store.margin(0) == float("inf")  # a single candidate is unambiguous
+    assert store.margin(1) == float("inf")  # no candidates -> nothing uncertain
