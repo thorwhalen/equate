@@ -28,6 +28,11 @@
    module_docs/equate/featurize
    module_docs/equate/featurize/text
    module_docs/equate/featurize/tfidf
+   module_docs/equate/interactive
+   module_docs/equate/interactive/candidate_store
+   module_docs/equate/interactive/constraints
+   module_docs/equate/interactive/kbest
+   module_docs/equate/interactive/review
    module_docs/equate/matching
    module_docs/equate/matching/assign
    module_docs/equate/matching/soft

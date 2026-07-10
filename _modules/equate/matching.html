@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>equate.matching &mdash; equate 0.0.11 documentation</title>
+  <title>equate.matching &mdash; equate 0.0.12 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/documentation_options.js?v=3bbcec59"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -72,6 +72,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize.html">equate.featurize</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive.html">equate.interactive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive/candidate_store.html">equate.interactive.candidate_store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive/constraints.html">equate.interactive.constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive/kbest.html">equate.interactive.kbest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive/review.html">equate.interactive.review</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching.html">equate.matching</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching/assign.html">equate.matching.assign</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching/soft.html">equate.matching.soft</a></li>
@@ -121,17 +126,17 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.matching.soft</span><span class="w"> </span><span class="kn">import</span> <span class="n">soft_match</span><span class="p">,</span> <span class="n">harden</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s1">&#39;matchers&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;resolve_matcher&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;optimal_matching&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;greedy_matching&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;stable_matching&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;soft_match&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;harden&#39;</span><span class="p">,</span>
+    <span class="s2">&quot;matchers&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;resolve_matcher&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;optimal_matching&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;greedy_matching&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;stable_matching&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;soft_match&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;harden&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 <span class="c1">#: the match-stage strategy registry (name -&gt; lazy factory)</span>
-<span class="n">matchers</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;matcher&#39;</span><span class="p">)</span>
+<span class="n">matchers</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s2">&quot;matcher&quot;</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_const</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
@@ -147,15 +152,15 @@
     <span class="k">return</span> <span class="n">factory</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_max_weight_matcher</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;maximize&#39;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_max_weight_matcher</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s2">&quot;maximize&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Maximum-weight bipartite matching via networkx — requires ``equate[graph]``.&quot;&quot;&quot;</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">equate.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">maximal_matching</span>
 
     <span class="n">S</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span> <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">maximal_matching</span><span class="p">(</span><span class="o">-</span><span class="n">S</span> <span class="k">if</span> <span class="n">sense</span> <span class="o">==</span> <span class="s1">&#39;minimize&#39;</span> <span class="k">else</span> <span class="n">S</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">maximal_matching</span><span class="p">(</span><span class="o">-</span><span class="n">S</span> <span class="k">if</span> <span class="n">sense</span> <span class="o">==</span> <span class="s2">&quot;minimize&quot;</span> <span class="k">else</span> <span class="n">S</span><span class="p">))</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_kuhn_munkres_matcher</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;maximize&#39;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_kuhn_munkres_matcher</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s2">&quot;maximize&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Hungarian assignment via networkx — requires ``equate[graph]``.&quot;&quot;&quot;</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">equate.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">kuhn_munkres_matching</span>
 
@@ -163,20 +168,20 @@
     <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">kuhn_munkres_matching</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">))</span>
 
 
-<span class="n">matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;optimal&#39;</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">optimal_matching</span><span class="p">,</span> <span class="s1">&#39;optimal&#39;</span><span class="p">))</span>
-<span class="n">matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;hungarian&#39;</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">optimal_matching</span><span class="p">,</span> <span class="s1">&#39;hungarian&#39;</span><span class="p">))</span>  <span class="c1"># alias</span>
-<span class="n">matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;greedy&#39;</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">greedy_matching</span><span class="p">,</span> <span class="s1">&#39;greedy&#39;</span><span class="p">))</span>
-<span class="n">matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;stable&#39;</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">stable_matching</span><span class="p">,</span> <span class="s1">&#39;stable&#39;</span><span class="p">))</span>
-<span class="n">matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;max_weight&#39;</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">_max_weight_matcher</span><span class="p">,</span> <span class="s1">&#39;max_weight&#39;</span><span class="p">))</span>
-<span class="n">matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;kuhn_munkres&#39;</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">_kuhn_munkres_matcher</span><span class="p">,</span> <span class="s1">&#39;kuhn_munkres&#39;</span><span class="p">))</span>
+<span class="n">matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;optimal&quot;</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">optimal_matching</span><span class="p">,</span> <span class="s2">&quot;optimal&quot;</span><span class="p">))</span>
+<span class="n">matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;hungarian&quot;</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">optimal_matching</span><span class="p">,</span> <span class="s2">&quot;hungarian&quot;</span><span class="p">))</span>  <span class="c1"># alias</span>
+<span class="n">matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;greedy&quot;</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">greedy_matching</span><span class="p">,</span> <span class="s2">&quot;greedy&quot;</span><span class="p">))</span>
+<span class="n">matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;stable&quot;</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">stable_matching</span><span class="p">,</span> <span class="s2">&quot;stable&quot;</span><span class="p">))</span>
+<span class="n">matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;max_weight&quot;</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">_max_weight_matcher</span><span class="p">,</span> <span class="s2">&quot;max_weight&quot;</span><span class="p">))</span>
+<span class="n">matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;kuhn_munkres&quot;</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">_kuhn_munkres_matcher</span><span class="p">,</span> <span class="s2">&quot;kuhn_munkres&quot;</span><span class="p">))</span>
 
 <span class="c1">#: facade ``how=`` objective aliases -&gt; registered matcher names</span>
-<span class="n">_HOW_ALIASES</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;assign&#39;</span><span class="p">:</span> <span class="s1">&#39;optimal&#39;</span><span class="p">}</span>
+<span class="n">_HOW_ALIASES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;assign&quot;</span><span class="p">:</span> <span class="s2">&quot;optimal&quot;</span><span class="p">}</span>
 
 
 <div class="viewcode-block" id="resolve_matcher">
 <a class="viewcode-back" href="../../module_docs/equate/matching.html#equate.matching.resolve_matcher">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">resolve_matcher</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="s1">&#39;optimal&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_matcher</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="s2">&quot;optimal&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve ``spec`` to a matcher ``(scores, *, sense) -&gt; pairs``.</span>
 
 <span class="sd">    A callable passes through; a registered name (or a facade ``how=`` alias like</span>

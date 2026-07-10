@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>equate.matching.assign &mdash; equate 0.0.11 documentation</title>
+  <title>equate.matching.assign &mdash; equate 0.0.12 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../../_static/documentation_options.js?v=3bbcec59"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -72,6 +72,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/featurize.html">equate.featurize</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive.html">equate.interactive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive/candidate_store.html">equate.interactive.candidate_store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive/constraints.html">equate.interactive.constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive/kbest.html">equate.interactive.kbest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive/review.html">equate.interactive.review</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/matching.html">equate.matching</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/matching/assign.html">equate.matching.assign</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/matching/soft.html">equate.matching.soft</a></li>
@@ -120,12 +125,12 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_cost</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;optimal_matching&#39;</span><span class="p">,</span> <span class="s1">&#39;greedy_matching&#39;</span><span class="p">,</span> <span class="s1">&#39;stable_matching&#39;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;optimal_matching&quot;</span><span class="p">,</span> <span class="s2">&quot;greedy_matching&quot;</span><span class="p">,</span> <span class="s2">&quot;stable_matching&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="optimal_matching">
 <a class="viewcode-back" href="../../../module_docs/equate/matching/assign.html#equate.matching.optimal_matching">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">optimal_matching</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;maximize&#39;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">optimal_matching</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s2">&quot;maximize&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Globally optimal 1:1 assignment (the linear assignment problem).</span>
 
 <span class="sd">    A dense matrix goes straight to ``linear_sum_assignment`` on ``to_cost(scores, sense)``.</span>
@@ -137,7 +142,9 @@
 <span class="sd">    (scipy&#39;s sparse solver silently drops explicitly-stored zero-score candidates, so it is</span>
 <span class="sd">    not used here).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">cost</span> <span class="o">=</span> <span class="n">to_cost</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">)</span>  <span class="c1"># handles sparse via _sparse_to_cost (holes worst-cased)</span>
+    <span class="n">cost</span> <span class="o">=</span> <span class="n">to_cost</span><span class="p">(</span>
+        <span class="n">scores</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span>
+    <span class="p">)</span>  <span class="c1"># handles sparse via _sparse_to_cost (holes worst-cased)</span>
     <span class="n">row</span><span class="p">,</span> <span class="n">col</span> <span class="o">=</span> <span class="n">linear_sum_assignment</span><span class="p">(</span><span class="n">cost</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">scores</span><span class="p">):</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">equate.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">_stored_mask</span>
@@ -150,7 +157,7 @@
 
 <div class="viewcode-block" id="greedy_matching">
 <a class="viewcode-back" href="../../../module_docs/equate/matching/assign.html#equate.matching.greedy_matching">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">greedy_matching</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;maximize&#39;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">greedy_matching</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s2">&quot;maximize&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Greedy 1:1: repeatedly take the best still-available ``(i, j)``, removing both.</span>
 
 <span class="sd">    Order-dependent and not globally optimal, but fast. For a sparse matrix only the</span>
@@ -164,7 +171,7 @@
         <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="n">shape</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">shape</span>
         <span class="n">entries</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">S</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
-    <span class="n">entries</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="p">(</span><span class="n">sense</span> <span class="o">==</span> <span class="s1">&#39;maximize&#39;</span><span class="p">))</span>
+    <span class="n">entries</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="p">(</span><span class="n">sense</span> <span class="o">==</span> <span class="s2">&quot;maximize&quot;</span><span class="p">))</span>
     <span class="n">used_i</span><span class="p">,</span> <span class="n">used_j</span><span class="p">,</span> <span class="n">pairs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">(),</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">used_i</span> <span class="ow">or</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">used_j</span><span class="p">:</span>
@@ -180,7 +187,7 @@
 
 <div class="viewcode-block" id="stable_matching">
 <a class="viewcode-back" href="../../../module_docs/equate/matching/assign.html#equate.matching.stable_matching">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">stable_matching</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;maximize&#39;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">stable_matching</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s2">&quot;maximize&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Gale-Shapley stable matching (optimizes stability, not total score).</span>
 
 <span class="sd">    See :func:`equate.util.stable_marriage_matching`. A sparse (blocked) matrix routes</span>
@@ -194,7 +201,9 @@
 
         <span class="n">stored</span> <span class="o">=</span> <span class="n">_stored_mask</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
         <span class="n">cost</span> <span class="o">=</span> <span class="n">to_cost</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">)</span>  <span class="c1"># dense, absent cells worst-cased</span>
-        <span class="n">pairs</span> <span class="o">=</span> <span class="n">stable_marriage_matching</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;minimize&#39;</span><span class="p">)</span>  <span class="c1"># rank by cost ascending</span>
+        <span class="n">pairs</span> <span class="o">=</span> <span class="n">stable_marriage_matching</span><span class="p">(</span>
+            <span class="n">cost</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s2">&quot;minimize&quot;</span>
+        <span class="p">)</span>  <span class="c1"># rank by cost ascending</span>
         <span class="k">return</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">pairs</span> <span class="k">if</span> <span class="n">stored</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]]</span>
     <span class="k">return</span> <span class="n">stable_marriage_matching</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">)</span></div>
 

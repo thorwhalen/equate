@@ -1,0 +1,4 @@
+equate.interactive
+==================
+.. automodule:: equate.interactive
+   :members:

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>equate.facade &mdash; equate 0.0.11 documentation</title>
+  <title>equate.facade &mdash; equate 0.0.12 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/documentation_options.js?v=3bbcec59"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -72,6 +72,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize.html">equate.featurize</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive.html">equate.interactive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive/candidate_store.html">equate.interactive.candidate_store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive/constraints.html">equate.interactive.constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive/kbest.html">equate.interactive.kbest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive/review.html">equate.interactive.review</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching.html">equate.matching</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching/assign.html">equate.matching.assign</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching/soft.html">equate.matching.soft</a></li>
@@ -122,7 +127,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.matching</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_matcher</span><span class="p">,</span> <span class="n">soft_match</span><span class="p">,</span> <span class="n">harden</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.cluster</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_clusterer</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;match&#39;</span><span class="p">,</span> <span class="s1">&#39;dedupe&#39;</span><span class="p">,</span> <span class="s1">&#39;resolve&#39;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;match&quot;</span><span class="p">,</span> <span class="s2">&quot;dedupe&quot;</span><span class="p">,</span> <span class="s2">&quot;resolve&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="match">
@@ -134,10 +139,10 @@
     <span class="n">featurize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">compare</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">block</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">how</span><span class="o">=</span><span class="s1">&#39;assign&#39;</span><span class="p">,</span>
+    <span class="n">how</span><span class="o">=</span><span class="s2">&quot;assign&quot;</span><span class="p">,</span>
     <span class="n">threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">cluster</span><span class="o">=</span><span class="s1">&#39;connected_components&#39;</span><span class="p">,</span>
-    <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;maximize&#39;</span><span class="p">,</span>
+    <span class="n">cluster</span><span class="o">=</span><span class="s2">&quot;connected_components&quot;</span><span class="p">,</span>
+    <span class="n">sense</span><span class="o">=</span><span class="s2">&quot;maximize&quot;</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Match two collections into a :class:`~equate.base.Matching` of scored ``(i, j)`` pairs.</span>
 
@@ -176,31 +181,40 @@
 
     <span class="k">if</span> <span class="n">block</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">candidates</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">resolve_blocker</span><span class="p">(</span><span class="n">block</span><span class="p">)(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">))</span>
-        <span class="n">scores</span> <span class="o">=</span> <span class="n">score_candidates</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">candidates</span><span class="p">,</span> <span class="n">compare</span> <span class="ow">or</span> <span class="s1">&#39;ratio&#39;</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">)</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">score_candidates</span><span class="p">(</span>
+            <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">candidates</span><span class="p">,</span> <span class="n">compare</span> <span class="ow">or</span> <span class="s2">&quot;ratio&quot;</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">data</span>
     <span class="k">elif</span> <span class="n">compare</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">scores</span> <span class="o">=</span> <span class="n">direct</span><span class="p">(</span><span class="n">resolve_comparator</span><span class="p">(</span><span class="n">compare</span><span class="p">))(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">scores</span> <span class="o">=</span> <span class="n">featurized</span><span class="p">(</span><span class="n">featurize</span> <span class="ow">or</span> <span class="s1">&#39;tfidf&#39;</span><span class="p">)(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">featurized</span><span class="p">(</span><span class="n">featurize</span> <span class="ow">or</span> <span class="s2">&quot;tfidf&quot;</span><span class="p">)(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
 
     <span class="c1"># each matched pair&#39;s score is read from the score matrix (the similarity/score),</span>
     <span class="c1"># consistently for the hard and soft paths</span>
     <span class="n">dense</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span> <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">how</span> <span class="o">==</span> <span class="s1">&#39;cluster&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">how</span> <span class="o">==</span> <span class="s2">&quot;cluster&quot;</span><span class="p">:</span>
         <span class="c1"># cluster the pooled A+B index space (B offset by len(A)) using the A-B match</span>
         <span class="c1"># edges above `threshold` — cross-collection entity resolution -&gt; a Partition</span>
         <span class="n">thr</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="k">if</span> <span class="n">threshold</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">threshold</span>
         <span class="n">n_a</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">scores</span><span class="p">):</span>
             <span class="n">coo</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">tocoo</span><span class="p">()</span>
-            <span class="n">edges</span> <span class="o">=</span> <span class="p">[(</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">n_a</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">j</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">coo</span><span class="o">.</span><span class="n">row</span><span class="p">,</span> <span class="n">coo</span><span class="o">.</span><span class="n">col</span><span class="p">,</span> <span class="n">coo</span><span class="o">.</span><span class="n">data</span><span class="p">)]</span>
+            <span class="n">edges</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">n_a</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">j</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">coo</span><span class="o">.</span><span class="n">row</span><span class="p">,</span> <span class="n">coo</span><span class="o">.</span><span class="n">col</span><span class="p">,</span> <span class="n">coo</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+            <span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">edges</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">n_a</span> <span class="o">+</span> <span class="n">j</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">dense</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_a</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">B</span><span class="p">))</span>
+                <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">n_a</span> <span class="o">+</span> <span class="n">j</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">dense</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]))</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_a</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">B</span><span class="p">))</span>
             <span class="p">]</span>
-        <span class="k">return</span> <span class="n">resolve_clusterer</span><span class="p">(</span><span class="n">cluster</span><span class="p">)(</span><span class="n">edges</span><span class="p">,</span> <span class="n">n_a</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">B</span><span class="p">),</span> <span class="n">threshold</span><span class="o">=</span><span class="n">thr</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">resolve_clusterer</span><span class="p">(</span><span class="n">cluster</span><span class="p">)(</span>
+            <span class="n">edges</span><span class="p">,</span> <span class="n">n_a</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">B</span><span class="p">),</span> <span class="n">threshold</span><span class="o">=</span><span class="n">thr</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span>
+        <span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">how</span> <span class="o">==</span> <span class="s1">&#39;soft&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">how</span> <span class="o">==</span> <span class="s2">&quot;soft&quot;</span><span class="p">:</span>
         <span class="n">plan</span> <span class="o">=</span> <span class="n">soft_match</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">)</span>
         <span class="n">pairs</span> <span class="o">=</span> <span class="n">harden</span><span class="p">(</span><span class="n">plan</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Matching</span><span class="p">(</span>
@@ -223,7 +237,15 @@
 
 <div class="viewcode-block" id="dedupe">
 <a class="viewcode-back" href="../../module_docs/equate/facade.html#equate.facade.dedupe">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">dedupe</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">compare</span><span class="o">=</span><span class="s1">&#39;ratio&#39;</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">cluster</span><span class="o">=</span><span class="s1">&#39;connected_components&#39;</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">dedupe</span><span class="p">(</span>
+    <span class="n">A</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">compare</span><span class="o">=</span><span class="s2">&quot;ratio&quot;</span><span class="p">,</span>
+    <span class="n">block</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+    <span class="n">cluster</span><span class="o">=</span><span class="s2">&quot;connected_components&quot;</span><span class="p">,</span>
+    <span class="n">sense</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Deduplicate a single collection into entity groups.</span>
 
 <span class="sd">    Self-compares ``A``&#39;s candidate pairs, keeps those passing ``threshold``, and clusters</span>
@@ -242,9 +264,13 @@
     <span class="n">A</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
     <span class="n">comp</span> <span class="o">=</span> <span class="n">resolve_comparator</span><span class="p">(</span><span class="n">compare</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">sense</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">meta</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">comp</span><span class="p">,</span> <span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">sense</span> <span class="o">=</span> <span class="s1">&#39;minimize&#39;</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="s1">&#39;polarity&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;distance&#39;</span> <span class="k">else</span> <span class="s1">&#39;maximize&#39;</span>
-    <span class="n">candidates</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">resolve_blocker</span><span class="p">(</span><span class="n">block</span><span class="p">)(</span><span class="n">A</span><span class="p">))</span> <span class="k">if</span> <span class="n">block</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_pairs</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">comp</span><span class="p">,</span> <span class="s2">&quot;meta&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">sense</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;minimize&quot;</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="s2">&quot;polarity&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;distance&quot;</span> <span class="k">else</span> <span class="s2">&quot;maximize&quot;</span>
+        <span class="p">)</span>
+    <span class="n">candidates</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="nb">list</span><span class="p">(</span><span class="n">resolve_blocker</span><span class="p">(</span><span class="n">block</span><span class="p">)(</span><span class="n">A</span><span class="p">))</span> <span class="k">if</span> <span class="n">block</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_pairs</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>
+    <span class="p">)</span>
     <span class="n">scored</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">comp</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">A</span><span class="p">[</span><span class="n">j</span><span class="p">])))</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">resolve_clusterer</span><span class="p">(</span><span class="n">cluster</span><span class="p">)(</span><span class="n">scored</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">)</span></div>
 

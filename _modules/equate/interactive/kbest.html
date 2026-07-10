@@ -1,0 +1,263 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.interactive.kbest &mdash; equate 0.0.12 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=3bbcec59"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/_vector.html">equate._vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block.html">equate.block</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block/ann.html">equate.block.ann</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block/keyed.html">equate.block.keyed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block/lsh.html">equate.block.lsh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block/metablock.html">equate.block.metablock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block/metrics.html">equate.block.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block/score.html">equate.block.score</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/cluster.html">equate.cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/cluster/classify.html">equate.cluster.classify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/compare.html">equate.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/compare/calibrate.html">equate.compare.calibrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/compare/numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/compare/string.html">equate.compare.string</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/compare/vector.html">equate.compare.vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/compare/vectorize.html">equate.compare.vectorize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/facade.html">equate.facade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive.html">equate.interactive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive/candidate_store.html">equate.interactive.candidate_store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive/constraints.html">equate.interactive.constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive/kbest.html">equate.interactive.kbest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive/review.html">equate.interactive.review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/matching.html">equate.matching</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/matching/assign.html">equate.matching.assign</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/matching/soft.html">equate.matching.soft</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/registry.html">equate.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">equate.interactive.kbest</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for equate.interactive.kbest</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;k-best assignments via Murty&#39;s algorithm (in-house; pure numpy/scipy).</span>
+
+<span class="sd">Enumerating the k lowest-cost assignments *in order* is the substrate for interactive</span>
+<span class="sd">re-optimization: retain the top-k global matchings so that when a user confirms or rejects</span>
+<span class="sd">an edge, the next-best consistent assignment is already known (decision register D10 /</span>
+<span class="sd">doc 08-interactive). No well-maintained pure-Python Murty exists on PyPI, so equate ships</span>
+<span class="sd">one. ``solve_constrained`` (a LAP with forced / forbidden edges) is also the primitive the</span>
+<span class="sd">interactive re-optimization uses directly.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">heapq</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">linear_sum_assignment</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;solve_constrained&#39;</span><span class="p">,</span> <span class="s1">&#39;k_best_assignments&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="solve_constrained">
+<a class="viewcode-back" href="../../../module_docs/equate/interactive/kbest.html#equate.interactive.solve_constrained">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">solve_constrained</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">forced</span><span class="o">=</span><span class="p">(),</span> <span class="n">forbidden</span><span class="o">=</span><span class="p">()):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Minimum-cost assignment of ``cost`` with edge constraints.</span>
+
+<span class="sd">    ``forced`` = ``(i, j)`` edges that MUST be in the assignment; ``forbidden`` = ``(i, j)``</span>
+<span class="sd">    edges that must NOT. Returns ``(assignment: {i: j}, total_cost)`` or ``None`` if the</span>
+<span class="sd">    constraints admit no valid assignment.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cost</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">cost</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">forced</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">forced</span><span class="p">)</span>
+    <span class="n">forced_set</span> <span class="o">=</span> <span class="p">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">forced</span><span class="p">}</span>
+    <span class="n">forbidden_set</span> <span class="o">=</span> <span class="p">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">forbidden</span><span class="p">}</span>
+    <span class="n">forced_rows</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">forced</span><span class="p">]</span>
+    <span class="n">forced_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">forced</span><span class="p">]</span>
+    <span class="c1"># the forced edges must be a valid, feasible partial matching</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">forced_set</span> <span class="o">&amp;</span> <span class="n">forbidden_set</span>  <span class="c1"># a forced edge is also forbidden</span>
+        <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">forced_rows</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">forced_rows</span><span class="p">)</span>  <span class="c1"># two forced edges share a row</span>
+        <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">forced_cols</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">forced_cols</span><span class="p">)</span>  <span class="c1"># ... or share a column</span>
+        <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">cost</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">forced</span><span class="p">)</span>  <span class="c1"># impossible forced edge</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">constrained</span> <span class="o">=</span> <span class="n">cost</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">forbidden</span><span class="p">:</span>
+        <span class="n">constrained</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+    <span class="n">assignment</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">j</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">forced</span><span class="p">}</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">cost</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">forced</span><span class="p">)</span>
+    <span class="n">forced_row_set</span><span class="p">,</span> <span class="n">forced_col_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">forced_rows</span><span class="p">),</span> <span class="nb">set</span><span class="p">(</span><span class="n">forced_cols</span><span class="p">)</span>
+    <span class="n">free_rows</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">forced_row_set</span><span class="p">]</span>
+    <span class="n">free_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">if</span> <span class="n">j</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">forced_col_set</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">free_rows</span> <span class="ow">and</span> <span class="n">free_cols</span><span class="p">:</span>
+        <span class="c1"># NOTE: no per-row finiteness pre-check — for a TALL subproblem (more free rows</span>
+        <span class="c1"># than cols) some rows are legitimately left unmatched, so an all-inf free row is</span>
+        <span class="c1"># not infeasible. scipy raises ValueError on genuine infeasibility (caught below),</span>
+        <span class="c1"># and the post-check rejects any inf edge scipy is forced to use.</span>
+        <span class="n">sub</span> <span class="o">=</span> <span class="n">constrained</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">free_rows</span><span class="p">,</span> <span class="n">free_cols</span><span class="p">)]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">linear_sum_assignment</span><span class="p">(</span><span class="n">sub</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">ri</span><span class="p">,</span> <span class="n">ci</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">cols</span><span class="o">.</span><span class="n">tolist</span><span class="p">()):</span>
+            <span class="n">gi</span><span class="p">,</span> <span class="n">gj</span> <span class="o">=</span> <span class="n">free_rows</span><span class="p">[</span><span class="n">ri</span><span class="p">],</span> <span class="n">free_cols</span><span class="p">[</span><span class="n">ci</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">constrained</span><span class="p">[</span><span class="n">gi</span><span class="p">,</span> <span class="n">gj</span><span class="p">]):</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="n">assignment</span><span class="p">[</span><span class="n">gi</span><span class="p">]</span> <span class="o">=</span> <span class="n">gj</span>
+            <span class="n">total</span> <span class="o">+=</span> <span class="n">cost</span><span class="p">[</span><span class="n">gi</span><span class="p">,</span> <span class="n">gj</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">assignment</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">total</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="k_best_assignments">
+<a class="viewcode-back" href="../../../module_docs/equate/interactive/kbest.html#equate.interactive.k_best_assignments">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">k_best_assignments</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The ``k`` lowest-cost assignments of ``cost``, in increasing-cost order (Murty).</span>
+
+<span class="sd">    Returns a list of ``(assignment: {i: j}, total_cost)`` — fewer than ``k`` if there are</span>
+<span class="sd">    not that many feasible assignments.</span>
+
+<span class="sd">    &gt;&gt;&gt; [c for _, c in k_best_assignments([[1, 2], [2, 1]], 2)]</span>
+<span class="sd">    [2.0, 4.0]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cost</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">solve_constrained</span><span class="p">(</span><span class="n">cost</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># heap entries: (total_cost, tiebreak, forced, forbidden, assignment)</span>
+    <span class="n">heap</span> <span class="o">=</span> <span class="p">[(</span><span class="n">root</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">counter</span><span class="p">,</span> <span class="p">(),</span> <span class="p">(),</span> <span class="n">root</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+    <span class="k">while</span> <span class="n">heap</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">k</span><span class="p">:</span>
+        <span class="n">total</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">forced</span><span class="p">,</span> <span class="n">forbidden</span><span class="p">,</span> <span class="n">assignment</span> <span class="o">=</span> <span class="n">heapq</span><span class="o">.</span><span class="n">heappop</span><span class="p">(</span><span class="n">heap</span><span class="p">)</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">assignment</span><span class="p">,</span> <span class="n">total</span><span class="p">))</span>
+
+        <span class="c1"># Murty partitioning: split the solution space on each non-forced edge in turn —</span>
+        <span class="c1"># forbid it (a new subproblem), then force it for the subsequent splits.</span>
+        <span class="n">forced_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">forced</span><span class="p">)</span>
+        <span class="n">cur_forced</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">forced</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">assignment</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">forced_set</span><span class="p">]:</span>
+            <span class="n">child</span> <span class="o">=</span> <span class="n">solve_constrained</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">cur_forced</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">forbidden</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">edge</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">child</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">counter</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span>
+                    <span class="n">heap</span><span class="p">,</span>
+                    <span class="p">(</span>
+                        <span class="n">child</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                        <span class="n">counter</span><span class="p">,</span>
+                        <span class="nb">tuple</span><span class="p">(</span><span class="n">cur_forced</span><span class="p">),</span>
+                        <span class="nb">tuple</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">forbidden</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">edge</span><span class="p">]),</span>
+                        <span class="n">child</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+            <span class="n">cur_forced</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">results</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

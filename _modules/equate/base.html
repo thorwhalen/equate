@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>equate.base &mdash; equate 0.0.11 documentation</title>
+  <title>equate.base &mdash; equate 0.0.12 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/documentation_options.js?v=3bbcec59"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -72,6 +72,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize.html">equate.featurize</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive.html">equate.interactive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive/candidate_store.html">equate.interactive.candidate_store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive/constraints.html">equate.interactive.constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive/kbest.html">equate.interactive.kbest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive/review.html">equate.interactive.review</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching.html">equate.matching</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching/assign.html">equate.matching.assign</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching/soft.html">equate.matching.soft</a></li>
@@ -133,19 +138,19 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">issparse</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s1">&#39;Sense&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;Featurizer&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;FeaturizerMeta&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;Comparator&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;ComparatorMeta&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;Blocker&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;Matcher&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;to_cost&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;ScoreMatrix&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;Explanation&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;Candidate&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;Matching&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;Partition&#39;</span><span class="p">,</span>
+    <span class="s2">&quot;Sense&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Featurizer&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;FeaturizerMeta&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Comparator&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ComparatorMeta&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Blocker&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Matcher&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;to_cost&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ScoreMatrix&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Explanation&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Candidate&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Matching&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Partition&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 <span class="c1"># --- Stage protocols (structural: a plain callable/lambda satisfies each) ---------</span>
@@ -153,7 +158,7 @@
 
 <span class="c1">#: Whether higher scores are better (``&#39;maximize&#39;``, a similarity) or lower scores</span>
 <span class="c1">#: are better (``&#39;minimize&#39;``, a distance/cost).</span>
-<span class="n">Sense</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;maximize&#39;</span><span class="p">,</span> <span class="s1">&#39;minimize&#39;</span><span class="p">]</span>
+<span class="n">Sense</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;maximize&quot;</span><span class="p">,</span> <span class="s2">&quot;minimize&quot;</span><span class="p">]</span>
 
 <span class="c1">#: ① Featurize — map each object to a comparable representation (batched). ``id`` and</span>
 <span class="c1">#: any ``key=`` function (``str.lower``, ``operator.attrgetter(&#39;name&#39;)``) are valid.</span>
@@ -191,7 +196,7 @@
 <span class="sd">    (roadmap #4) attaches it when registering strategies.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">polarity</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;distance&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;similarity&#39;</span>
+    <span class="n">polarity</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;similarity&quot;</span><span class="p">,</span> <span class="s2">&quot;distance&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;similarity&quot;</span>
     <span class="n">bounded</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">is_metric</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">is_symmetric</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></div>
@@ -217,7 +222,7 @@
 <span class="sd">    - ``truncatable_to``: Matryoshka dims the embedding can be safely truncated to.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">output_kinds</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;vector&#39;</span><span class="p">,)</span>
+    <span class="n">output_kinds</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;vector&quot;</span><span class="p">,)</span>
     <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">dim</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">license</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -230,7 +235,7 @@
 
 <div class="viewcode-block" id="to_cost">
 <a class="viewcode-back" href="../../module_docs/equate/base.html#equate.base.to_cost">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">to_cost</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sense</span><span class="p">:</span> <span class="n">Sense</span> <span class="o">=</span> <span class="s1">&#39;maximize&#39;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">to_cost</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sense</span><span class="p">:</span> <span class="n">Sense</span> <span class="o">=</span> <span class="s2">&quot;maximize&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a score array to a **cost** array for minimization-based matchers.</span>
 
 <span class="sd">    The single source of truth for the similarity-&gt;cost conversion, so every matcher</span>
@@ -259,11 +264,11 @@
 <span class="sd">    &gt;&gt;&gt; to_cost(S, sense=&#39;minimize&#39;) is S</span>
 <span class="sd">    True</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">sense</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;maximize&#39;</span><span class="p">,</span> <span class="s1">&#39;minimize&#39;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">sense</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;maximize&quot;</span><span class="p">,</span> <span class="s2">&quot;minimize&quot;</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sense must be &#39;maximize&#39; or &#39;minimize&#39;, got </span><span class="si">{</span><span class="n">sense</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">scores</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">_sparse_to_cost</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">sense</span> <span class="o">==</span> <span class="s1">&#39;minimize&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">sense</span> <span class="o">==</span> <span class="s2">&quot;minimize&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">scores</span>
     <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -285,7 +290,7 @@
     <span class="k">if</span> <span class="n">scores</span><span class="o">.</span><span class="n">nnz</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">dense</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">dense</span>
     <span class="n">stored_mask</span> <span class="o">=</span> <span class="n">_stored_mask</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">sense</span> <span class="o">==</span> <span class="s1">&#39;maximize&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">sense</span> <span class="o">==</span> <span class="s2">&quot;maximize&quot;</span><span class="p">:</span>
         <span class="n">cost</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="o">-</span> <span class="n">dense</span>
     <span class="k">else</span><span class="p">:</span>  <span class="c1"># &#39;minimize&#39;: the stored values are already costs</span>
         <span class="n">cost</span> <span class="o">=</span> <span class="n">dense</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -316,7 +321,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">data</span><span class="p">:</span> <span class="n">Any</span>
-    <span class="n">sense</span><span class="p">:</span> <span class="n">Sense</span> <span class="o">=</span> <span class="s1">&#39;maximize&#39;</span>
+    <span class="n">sense</span><span class="p">:</span> <span class="n">Sense</span> <span class="o">=</span> <span class="s2">&quot;maximize&quot;</span>
     <span class="n">row_labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">col_labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -342,7 +347,7 @@
 <span class="sd">    A structured payload, never a printed string, so any UI can render it declaratively.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">summary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">summary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
     <span class="n">details</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
 
 

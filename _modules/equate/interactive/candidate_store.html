@@ -1,0 +1,248 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>equate.interactive.candidate_store &mdash; equate 0.0.12 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=3bbcec59"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            equate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate.html">equate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/_dependencies.html">equate._dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/_vector.html">equate._vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/base.html">equate.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block.html">equate.block</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block/ann.html">equate.block.ann</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block/keyed.html">equate.block.keyed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block/lsh.html">equate.block.lsh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block/metablock.html">equate.block.metablock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block/metrics.html">equate.block.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/block/score.html">equate.block.score</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/cluster.html">equate.cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/cluster/classify.html">equate.cluster.classify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/compare.html">equate.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/compare/calibrate.html">equate.compare.calibrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/compare/numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/compare/string.html">equate.compare.string</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/compare/vector.html">equate.compare.vector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/compare/vectorize.html">equate.compare.vectorize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/completion.html">equate.completion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/examples.html">equate.examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/examples/site_names.html">equate.examples.site_names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/facade.html">equate.facade</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/featurize.html">equate.featurize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive.html">equate.interactive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive/candidate_store.html">equate.interactive.candidate_store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive/constraints.html">equate.interactive.constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive/kbest.html">equate.interactive.kbest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive/review.html">equate.interactive.review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/matching.html">equate.matching</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/matching/assign.html">equate.matching.assign</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/matching/soft.html">equate.matching.soft</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/registry.html">equate.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/util.html">equate.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">equate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">equate.interactive.candidate_store</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for equate.interactive.candidate_store</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;The CandidateStore: per left-item top-k candidates with scores — the SSOT for review</span>
+<span class="sd">and interactive re-optimization.</span>
+
+<span class="sd">Retaining the top-k candidates (not just the single best) is what lets a user edit a match</span>
+<span class="sd">and have the system re-solve from the remembered alternatives (doc 08-interactive). It is a</span>
+<span class="sd">plain dataclass so it serializes (e.g. persist with ``dol.cache_this`` to resume a session).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">issparse</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CandidateStore&#39;</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ranked</span><span class="p">(</span><span class="n">pairs</span><span class="p">,</span> <span class="n">sense</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sort ``(index, score)`` pairs best-first, deterministically.</span>
+
+<span class="sd">    Best score first (per ``sense``); NaN scores sort *last*; ties break by lower index —</span>
+<span class="sd">    the same ordering for the dense and sparse paths.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">key</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+        <span class="n">j</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">p</span>
+        <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>  <span class="c1"># NaN candidates go last</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span> <span class="k">if</span> <span class="n">sense</span> <span class="o">==</span> <span class="s1">&#39;maximize&#39;</span> <span class="k">else</span> <span class="n">s</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>  <span class="c1"># best first; ties -&gt; lower index</span>
+
+    <span class="k">return</span> <span class="p">[(</span><span class="nb">int</span><span class="p">(</span><span class="n">j</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">))</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">pairs</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)]</span>
+
+
+<div class="viewcode-block" id="CandidateStore">
+<a class="viewcode-back" href="../../../module_docs/equate/interactive/candidate_store.html#equate.interactive.CandidateStore">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CandidateStore</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Per left index ``i``, its top-k ``(right_index, score)`` candidates, best-first.</span>
+
+<span class="sd">    Iterating yields the top-1 ``(i, j)`` pairs, so ``dict(store)`` gives the greedy 1:n</span>
+<span class="sd">    match. ``row_labels`` / ``col_labels`` name the two collections.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">candidates</span><span class="p">:</span> <span class="nb">dict</span>  <span class="c1"># i -&gt; [(j, score), ...] best-first</span>
+    <span class="n">sense</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;maximize&#39;</span>
+    <span class="n">row_labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">col_labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="CandidateStore.from_scores">
+<a class="viewcode-back" href="../../../module_docs/equate/interactive/candidate_store.html#equate.interactive.CandidateStore.from_scores">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_scores</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;maximize&#39;</span><span class="p">,</span> <span class="n">row_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">col_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a store of each row&#39;s top-``k`` candidates from a (dense or sparse) score</span>
+<span class="sd">        matrix.</span>
+
+<span class="sd">        A **sparse** matrix considers only its stored (candidate) cells — which is exactly</span>
+<span class="sd">        the blocking semantics (an absent cell is not a candidate), so for a blocked matrix</span>
+<span class="sd">        this intentionally differs from the dense all-cells behavior regardless of ``sense``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">candidates</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">scores</span><span class="p">):</span>
+            <span class="n">csr</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">csr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="n">csr</span><span class="o">.</span><span class="n">indptr</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">csr</span><span class="o">.</span><span class="n">indptr</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="n">pairs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">csr</span><span class="o">.</span><span class="n">indices</span><span class="p">[</span><span class="n">lo</span><span class="p">:</span><span class="n">hi</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">csr</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">lo</span><span class="p">:</span><span class="n">hi</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+                <span class="n">candidates</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">_ranked</span><span class="p">(</span><span class="n">pairs</span><span class="p">,</span> <span class="n">sense</span><span class="p">)[:</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dense</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dense</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="n">dense</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">pairs</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dense</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+                <span class="n">candidates</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">_ranked</span><span class="p">(</span><span class="n">pairs</span><span class="p">,</span> <span class="n">sense</span><span class="p">)[:</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">candidates</span><span class="p">,</span> <span class="n">sense</span><span class="p">,</span> <span class="n">row_labels</span><span class="p">,</span> <span class="n">col_labels</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CandidateStore.top">
+<a class="viewcode-back" href="../../../module_docs/equate/interactive/candidate_store.html#equate.interactive.CandidateStore.top">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">top</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The top-``n`` ``(right_index, score)`` candidates for left item ``i``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidates</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">[])[:</span><span class="n">n</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="CandidateStore.margin">
+<a class="viewcode-back" href="../../../module_docs/equate/interactive/candidate_store.html#equate.interactive.CandidateStore.margin">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">margin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Confidence gap between item ``i``&#39;s top-1 and top-2 candidate scores.</span>
+
+<span class="sd">        A *small* margin means the top choice is uncertain (two close candidates) — the</span>
+<span class="sd">        signal for review triage and active-learning query selection. An item with 0 or 1</span>
+<span class="sd">        candidates is unambiguous (no rival to be confused with), so its margin is ``+inf``</span>
+<span class="sd">        — it sorts LAST in a most-uncertain-first queue, never spuriously to the front.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidates</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># top-1 pair per left item -&gt; a greedy 1:n mapping. NOTE: not injective — several</span>
+        <span class="c1"># left items can share the same best right item (use the match stage for a 1:1</span>
+        <span class="c1"># assignment).</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidates</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">c</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

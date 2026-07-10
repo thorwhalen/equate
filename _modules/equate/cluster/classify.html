@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>equate.cluster.classify &mdash; equate 0.0.11 documentation</title>
+  <title>equate.cluster.classify &mdash; equate 0.0.12 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../../_static/documentation_options.js?v=3bbcec59"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -72,6 +72,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/featurize.html">equate.featurize</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive.html">equate.interactive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive/candidate_store.html">equate.interactive.candidate_store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive/constraints.html">equate.interactive.constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive/kbest.html">equate.interactive.kbest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/interactive/review.html">equate.interactive.review</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/matching.html">equate.matching</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/matching/assign.html">equate.matching.assign</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/equate/matching/soft.html">equate.matching.soft</a></li>
@@ -117,7 +122,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;classify&#39;</span><span class="p">,</span> <span class="s1">&#39;estimate_mu_em&#39;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;classify&quot;</span><span class="p">,</span> <span class="s2">&quot;estimate_mu_em&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="classify">
@@ -136,10 +141,10 @@
     <span class="k">if</span> <span class="n">lower</span> <span class="o">&gt;</span> <span class="n">upper</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;lower (</span><span class="si">{</span><span class="n">lower</span><span class="si">}</span><span class="s2">) must be &lt;= upper (</span><span class="si">{</span><span class="n">upper</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">weight</span> <span class="o">&gt;=</span> <span class="n">upper</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s1">&#39;match&#39;</span>
+        <span class="k">return</span> <span class="s2">&quot;match&quot;</span>
     <span class="k">if</span> <span class="n">weight</span> <span class="o">&lt;=</span> <span class="n">lower</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s1">&#39;non_match&#39;</span>
-    <span class="k">return</span> <span class="s1">&#39;possible_match&#39;</span></div>
+        <span class="k">return</span> <span class="s2">&quot;non_match&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;possible_match&quot;</span></div>
 
 
 

@@ -1,0 +1,4 @@
+equate.interactive.candidate_store
+==================================
+.. automodule:: equate.interactive.candidate_store
+   :members:

@@ -1,0 +1,4 @@
+equate.interactive.kbest
+========================
+.. automodule:: equate.interactive.kbest
+   :members:

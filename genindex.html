@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; equate 0.0.11 documentation</title>
+  <title>Index &mdash; equate 0.0.12 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=0c446633"></script>
+      <script src="_static/documentation_options.js?v=3bbcec59"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -72,6 +72,11 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/featurize.html">equate.featurize</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/interactive.html">equate.interactive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/interactive/candidate_store.html">equate.interactive.candidate_store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/interactive/constraints.html">equate.interactive.constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/interactive/kbest.html">equate.interactive.kbest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/interactive/review.html">equate.interactive.review</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/matching.html">equate.matching</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/matching/assign.html">equate.matching.assign</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/matching/soft.html">equate.matching.soft</a></li>
@@ -126,6 +131,7 @@
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
  | <a href="#W"><strong>W</strong></a>
  
 </div>
@@ -176,6 +182,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/equate/base.html#equate.base.Candidate">Candidate (class in equate.base)</a>
 </li>
+      <li><a href="module_docs/equate/interactive.html#equate.interactive.CandidateStore">CandidateStore (class in equate.interactive)</a>
+
+      <ul>
+        <li><a href="module_docs/equate/interactive/candidate_store.html#equate.interactive.candidate_store.CandidateStore">(class in equate.interactive.candidate_store)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/equate/cluster.html#equate.cluster.canonicalize">canonicalize() (in module equate.cluster)</a>
 </li>
       <li><a href="module_docs/equate/featurize.html#equate.featurize.char_ngrams">char_ngrams() (in module equate.featurize)</a>
@@ -192,18 +204,30 @@
 </li>
       <li><a href="module_docs/equate/base.html#equate.base.ComparatorMeta">ComparatorMeta (class in equate.base)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/equate/compare.html#equate.compare.comparators">comparators (in module equate.compare)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/equate/compare.html#equate.compare.comparison_vector">comparison_vector() (in module equate.compare)</a>
 
       <ul>
         <li><a href="module_docs/equate/compare/vectorize.html#equate.compare.vectorize.comparison_vector">(in module equate.compare.vectorize)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/equate/interactive/constraints.html#equate.interactive.constraints.ConstraintSet.confirm">confirm() (equate.interactive.constraints.ConstraintSet method)</a>
+
+      <ul>
+        <li><a href="module_docs/equate/interactive.html#equate.interactive.ConstraintSet.confirm">(equate.interactive.ConstraintSet method)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/equate/cluster.html#equate.cluster.connected_components">connected_components() (in module equate.cluster)</a>
 </li>
+      <li><a href="module_docs/equate/interactive.html#equate.interactive.ConstraintSet">ConstraintSet (class in equate.interactive)</a>
+
+      <ul>
+        <li><a href="module_docs/equate/interactive/constraints.html#equate.interactive.constraints.ConstraintSet">(class in equate.interactive.constraints)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/equate/cluster.html#equate.cluster.correlation_clustering">correlation_clustering() (in module equate.cluster)</a>
 </li>
       <li><a href="module_docs/equate/compare/vector.html#equate.compare.vector.cosine">cosine() (in module equate.compare.vector)</a>
@@ -346,8 +370,6 @@
         <li><a href="module_docs/equate/compare/numeric_geo.html#module-equate.compare.numeric_geo">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     equate.compare.string
 
@@ -362,6 +384,8 @@
         <li><a href="module_docs/equate/compare/vector.html#module-equate.compare.vector">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     equate.compare.vectorize
 
@@ -409,6 +433,41 @@
 
       <ul>
         <li><a href="module_docs/equate/featurize/tfidf.html#module-equate.featurize.tfidf">module</a>
+</li>
+      </ul></li>
+      <li>
+    equate.interactive
+
+      <ul>
+        <li><a href="module_docs/equate/interactive.html#module-equate.interactive">module</a>
+</li>
+      </ul></li>
+      <li>
+    equate.interactive.candidate_store
+
+      <ul>
+        <li><a href="module_docs/equate/interactive/candidate_store.html#module-equate.interactive.candidate_store">module</a>
+</li>
+      </ul></li>
+      <li>
+    equate.interactive.constraints
+
+      <ul>
+        <li><a href="module_docs/equate/interactive/constraints.html#module-equate.interactive.constraints">module</a>
+</li>
+      </ul></li>
+      <li>
+    equate.interactive.kbest
+
+      <ul>
+        <li><a href="module_docs/equate/interactive/kbest.html#module-equate.interactive.kbest">module</a>
+</li>
+      </ul></li>
+      <li>
+    equate.interactive.review
+
+      <ul>
+        <li><a href="module_docs/equate/interactive/review.html#module-equate.interactive.review">module</a>
 </li>
       </ul></li>
       <li>
@@ -470,10 +529,10 @@
         <li><a href="module_docs/equate/featurize.html#equate.featurize.FeaturizerMeta">(class in equate.featurize)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/equate/featurize.html#equate.featurize.featurizers">featurizers (in module equate.featurize)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/equate/compare.html#equate.compare.fellegi_sunter">fellegi_sunter() (in module equate.compare)</a>
 
       <ul>
@@ -484,6 +543,12 @@
 
       <ul>
         <li><a href="module_docs/equate/block/keyed.html#equate.block.keyed.first_chars">(in module equate.block.keyed)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/equate/interactive/candidate_store.html#equate.interactive.candidate_store.CandidateStore.from_scores">from_scores() (equate.interactive.candidate_store.CandidateStore class method)</a>
+
+      <ul>
+        <li><a href="module_docs/equate/interactive.html#equate.interactive.CandidateStore.from_scores">(equate.interactive.CandidateStore class method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -564,6 +629,12 @@
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/equate/interactive.html#equate.interactive.k_best_assignments">k_best_assignments() (in module equate.interactive)</a>
+
+      <ul>
+        <li><a href="module_docs/equate/interactive/kbest.html#equate.interactive.kbest.k_best_assignments">(in module equate.interactive.kbest)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/equate/block.html#equate.block.key_blocking">key_blocking() (in module equate.block)</a>
 
       <ul>
@@ -602,6 +673,12 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/equate/interactive/candidate_store.html#equate.interactive.candidate_store.CandidateStore.margin">margin() (equate.interactive.candidate_store.CandidateStore method)</a>
+
+      <ul>
+        <li><a href="module_docs/equate/interactive.html#equate.interactive.CandidateStore.margin">(equate.interactive.CandidateStore method)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/equate/facade.html#equate.facade.match">match() (in module equate.facade)</a>
 </li>
       <li><a href="module_docs/equate/util.html#equate.util.match_greedily">match_greedily() (in module equate.util)</a>
@@ -710,6 +787,16 @@
 </li>
         <li><a href="module_docs/equate/featurize/tfidf.html#module-equate.featurize.tfidf">equate.featurize.tfidf</a>
 </li>
+        <li><a href="module_docs/equate/interactive.html#module-equate.interactive">equate.interactive</a>
+</li>
+        <li><a href="module_docs/equate/interactive/candidate_store.html#module-equate.interactive.candidate_store">equate.interactive.candidate_store</a>
+</li>
+        <li><a href="module_docs/equate/interactive/constraints.html#module-equate.interactive.constraints">equate.interactive.constraints</a>
+</li>
+        <li><a href="module_docs/equate/interactive/kbest.html#module-equate.interactive.kbest">equate.interactive.kbest</a>
+</li>
+        <li><a href="module_docs/equate/interactive/review.html#module-equate.interactive.review">equate.interactive.review</a>
+</li>
         <li><a href="module_docs/equate/matching.html#module-equate.matching">equate.matching</a>
 </li>
         <li><a href="module_docs/equate/matching/assign.html#module-equate.matching.assign">equate.matching.assign</a>
@@ -799,16 +886,28 @@
 </li>
       <li><a href="module_docs/equate/registry.html#equate.registry.Registry">Registry (class in equate.registry)</a>
 </li>
+      <li><a href="module_docs/equate/interactive/constraints.html#equate.interactive.constraints.ConstraintSet.reject">reject() (equate.interactive.constraints.ConstraintSet method)</a>
+
+      <ul>
+        <li><a href="module_docs/equate/interactive.html#equate.interactive.ConstraintSet.reject">(equate.interactive.ConstraintSet method)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/equate/interactive.html#equate.interactive.reoptimize">reoptimize() (in module equate.interactive)</a>
+
+      <ul>
+        <li><a href="module_docs/equate/interactive/constraints.html#equate.interactive.constraints.reoptimize">(in module equate.interactive.constraints)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/equate/_dependencies.html#equate._dependencies.require">require() (in module equate._dependencies)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/equate/registry.html#equate.registry.Registry.resolve">resolve() (equate.registry.Registry method)</a>
 
       <ul>
         <li><a href="module_docs/equate/facade.html#equate.facade.resolve">(in module equate.facade)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/equate/block.html#equate.block.resolve_blocker">resolve_blocker() (in module equate.block)</a>
 </li>
       <li><a href="module_docs/equate/cluster.html#equate.cluster.resolve_clusterer">resolve_clusterer() (in module equate.cluster)</a>
@@ -819,6 +918,12 @@
 </li>
       <li><a href="module_docs/equate/matching.html#equate.matching.resolve_matcher">resolve_matcher() (in module equate.matching)</a>
 </li>
+      <li><a href="module_docs/equate/interactive.html#equate.interactive.review_queue">review_queue() (in module equate.interactive)</a>
+
+      <ul>
+        <li><a href="module_docs/equate/interactive/review.html#equate.interactive.review.review_queue">(in module equate.interactive.review)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -843,12 +948,18 @@
         <li><a href="module_docs/equate/util.html#equate.util.similarity_matrix">(in module equate.util)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/equate/matching.html#equate.matching.soft_match">soft_match() (in module equate.matching)</a>
 
       <ul>
         <li><a href="module_docs/equate/matching/soft.html#equate.matching.soft.soft_match">(in module equate.matching.soft)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/equate/interactive.html#equate.interactive.solve_constrained">solve_constrained() (in module equate.interactive)</a>
+
+      <ul>
+        <li><a href="module_docs/equate/interactive/kbest.html#equate.interactive.kbest.solve_constrained">(in module equate.interactive.kbest)</a>
 </li>
       </ul></li>
       <li><a href="module_docs/equate/block.html#equate.block.sorted_neighborhood">sorted_neighborhood() (in module equate.block)</a>
@@ -893,6 +1004,24 @@
 
       <ul>
         <li><a href="module_docs/equate/base.html#equate.base.to_cost">(in module equate.base)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/equate/interactive/candidate_store.html#equate.interactive.candidate_store.CandidateStore.top">top() (equate.interactive.candidate_store.CandidateStore method)</a>
+
+      <ul>
+        <li><a href="module_docs/equate/interactive.html#equate.interactive.CandidateStore.top">(equate.interactive.CandidateStore method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/equate/interactive.html#equate.interactive.uncertainty_sampling">uncertainty_sampling() (in module equate.interactive)</a>
+
+      <ul>
+        <li><a href="module_docs/equate/interactive/review.html#equate.interactive.review.uncertainty_sampling">(in module equate.interactive.review)</a>
 </li>
       </ul></li>
   </ul></td>

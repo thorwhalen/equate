@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to equate’s documentation! &mdash; equate 0.0.11 documentation</title>
+  <title>Welcome to equate’s documentation! &mdash; equate 0.0.12 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=0c446633"></script>
+      <script src="_static/documentation_options.js?v=3bbcec59"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -74,6 +74,11 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/featurize.html">equate.featurize</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/interactive.html">equate.interactive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/interactive/candidate_store.html">equate.interactive.candidate_store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/interactive/constraints.html">equate.interactive.constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/interactive/kbest.html">equate.interactive.kbest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/interactive/review.html">equate.interactive.review</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/matching.html">equate.matching</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/matching/assign.html">equate.matching.assign</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/matching/soft.html">equate.matching.soft</a></li>
@@ -289,6 +294,35 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/equate/featurize/tfidf.html#equate.featurize.tfidf.mk_tfidf"><code class="docutils literal notranslate"><span class="pre">mk_tfidf()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/interactive.html">equate.interactive</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/interactive.html#equate.interactive.CandidateStore"><code class="docutils literal notranslate"><span class="pre">CandidateStore</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/interactive.html#equate.interactive.ConstraintSet"><code class="docutils literal notranslate"><span class="pre">ConstraintSet</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/interactive.html#equate.interactive.k_best_assignments"><code class="docutils literal notranslate"><span class="pre">k_best_assignments()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/interactive.html#equate.interactive.reoptimize"><code class="docutils literal notranslate"><span class="pre">reoptimize()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/interactive.html#equate.interactive.review_queue"><code class="docutils literal notranslate"><span class="pre">review_queue()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/interactive.html#equate.interactive.solve_constrained"><code class="docutils literal notranslate"><span class="pre">solve_constrained()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/interactive.html#equate.interactive.uncertainty_sampling"><code class="docutils literal notranslate"><span class="pre">uncertainty_sampling()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/interactive/candidate_store.html">equate.interactive.candidate_store</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/interactive/candidate_store.html#equate.interactive.candidate_store.CandidateStore"><code class="docutils literal notranslate"><span class="pre">CandidateStore</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/interactive/constraints.html">equate.interactive.constraints</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/interactive/constraints.html#equate.interactive.constraints.ConstraintSet"><code class="docutils literal notranslate"><span class="pre">ConstraintSet</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/interactive/constraints.html#equate.interactive.constraints.reoptimize"><code class="docutils literal notranslate"><span class="pre">reoptimize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/interactive/kbest.html">equate.interactive.kbest</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/interactive/kbest.html#equate.interactive.kbest.k_best_assignments"><code class="docutils literal notranslate"><span class="pre">k_best_assignments()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/interactive/kbest.html#equate.interactive.kbest.solve_constrained"><code class="docutils literal notranslate"><span class="pre">solve_constrained()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/equate/interactive/review.html">equate.interactive.review</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/interactive/review.html#equate.interactive.review.review_queue"><code class="docutils literal notranslate"><span class="pre">review_queue()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/equate/interactive/review.html#equate.interactive.review.uncertainty_sampling"><code class="docutils literal notranslate"><span class="pre">uncertainty_sampling()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/equate/matching.html">equate.matching</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/equate/matching.html#equate.matching.greedy_matching"><code class="docutils literal notranslate"><span class="pre">greedy_matching()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/equate/matching.html#equate.matching.harden"><code class="docutils literal notranslate"><span class="pre">harden()</span></code></a></li>
@@ -336,8 +370,8 @@
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
-<p>Release: 0.0.11</p>
-<p>Last change: Jul 09, 2026</p>
+<p>Release: 0.0.12</p>
+<p>Last change: Jul 10, 2026</p>
 </section>
 
 

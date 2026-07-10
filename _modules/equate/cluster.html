@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>equate.cluster &mdash; equate 0.0.11 documentation</title>
+  <title>equate.cluster &mdash; equate 0.0.12 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=0c446633"></script>
+      <script src="../../_static/documentation_options.js?v=3bbcec59"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -72,6 +72,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize.html">equate.featurize</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/text.html">equate.featurize.text</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/featurize/tfidf.html">equate.featurize.tfidf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive.html">equate.interactive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive/candidate_store.html">equate.interactive.candidate_store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive/constraints.html">equate.interactive.constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive/kbest.html">equate.interactive.kbest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/interactive/review.html">equate.interactive.review</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching.html">equate.matching</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching/assign.html">equate.matching.assign</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/equate/matching/soft.html">equate.matching.soft</a></li>
@@ -122,11 +127,11 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Partition</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s1">&#39;clusterers&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;resolve_clusterer&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;connected_components&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;correlation_clustering&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;canonicalize&#39;</span><span class="p">,</span>
+    <span class="s2">&quot;clusterers&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;resolve_clusterer&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;connected_components&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;correlation_clustering&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;canonicalize&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 
@@ -138,7 +143,11 @@
 <span class="sd">    ``&#39;minimize&#39;``). Every index is validated ``0 &lt;= idx &lt; n`` with a clear error (a raw</span>
 <span class="sd">    negative index would otherwise silently alias to another item).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">keep</span> <span class="o">=</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">)</span> <span class="k">if</span> <span class="n">sense</span> <span class="o">==</span> <span class="s1">&#39;maximize&#39;</span> <span class="k">else</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="n">threshold</span><span class="p">)</span>
+    <span class="n">keep</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sense</span> <span class="o">==</span> <span class="s2">&quot;maximize&quot;</span>
+        <span class="k">else</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="n">threshold</span><span class="p">)</span>
+    <span class="p">)</span>
     <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
             <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">p</span>
@@ -154,7 +163,7 @@
 
 <div class="viewcode-block" id="connected_components">
 <a class="viewcode-back" href="../../module_docs/equate/cluster.html#equate.cluster.connected_components">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">connected_components</span><span class="p">(</span><span class="n">pairs</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;maximize&#39;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">connected_components</span><span class="p">(</span><span class="n">pairs</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s2">&quot;maximize&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Partition ``n`` items into connected components of the match graph (union-find).</span>
 
 <span class="sd">    Accepts either 2-tuple edges ``(i, j)`` or 3-tuple scored edges ``(i, j, score)`` — in</span>
@@ -194,7 +203,7 @@
 
 <div class="viewcode-block" id="correlation_clustering">
 <a class="viewcode-back" href="../../module_docs/equate/cluster.html#equate.cluster.correlation_clustering">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">correlation_clustering</span><span class="p">(</span><span class="n">scored_pairs</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s1">&#39;maximize&#39;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">correlation_clustering</span><span class="p">(</span><span class="n">scored_pairs</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s2">&quot;maximize&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Cluster ``n`` items to minimize disagreements (the greedy Pivot algorithm).</span>
 
 <span class="sd">    ``scored_pairs`` is an iterable of ``(i, j, score)``; an edge is *positive* when its</span>
@@ -224,16 +233,16 @@
 
 <span class="c1">#: the resolve/cluster strategy registry — a clusterer is</span>
 <span class="c1">#: ``(scored_pairs, n, *, threshold) -&gt; Partition``.</span>
-<span class="n">clusterers</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;clusterer&#39;</span><span class="p">)</span>
+<span class="n">clusterers</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s2">&quot;clusterer&quot;</span><span class="p">)</span>
 <span class="c1"># Both accept the uniform (scored_pairs, n, *, threshold, sense) contract, so either the</span>
 <span class="c1"># string spec or the public callable works with resolve_clusterer.</span>
-<span class="n">clusterers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;connected_components&#39;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">connected_components</span><span class="p">)</span>
-<span class="n">clusterers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;correlation&#39;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">correlation_clustering</span><span class="p">)</span>
+<span class="n">clusterers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;connected_components&quot;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">connected_components</span><span class="p">)</span>
+<span class="n">clusterers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;correlation&quot;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">correlation_clustering</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="resolve_clusterer">
 <a class="viewcode-back" href="../../module_docs/equate/cluster.html#equate.cluster.resolve_clusterer">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">resolve_clusterer</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="s1">&#39;connected_components&#39;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_clusterer</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="s2">&quot;connected_components&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve ``spec`` to a clusterer ``(scored_pairs, n, *, threshold, sense) -&gt; Partition``.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">spec</span>
@@ -271,7 +280,9 @@
     <span class="n">fields</span> <span class="o">=</span> <span class="p">{</span><span class="n">f</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">r</span><span class="p">}</span>
     <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
-        <span class="n">vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">r</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">]</span>
         <span class="k">if</span> <span class="n">vals</span><span class="p">:</span>
             <span class="n">out</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="o">=</span> <span class="n">_mode</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">out</span>
@@ -280,19 +291,21 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_merge</span><span class="p">(</span><span class="n">records</span><span class="p">,</span> <span class="n">policy</span><span class="p">):</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">records</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s1">&#39;first&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;first&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">records</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s1">&#39;most_complete&#39;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">records</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">_completeness</span><span class="p">)</span>  <span class="c1"># ties -&gt; first-max (first in cluster order)</span>
+    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;most_complete&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="n">records</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">_completeness</span>
+        <span class="p">)</span>  <span class="c1"># ties -&gt; first-max (first in cluster order)</span>
     <span class="k">return</span> <span class="n">_majority_merge</span><span class="p">(</span><span class="n">records</span><span class="p">)</span>
 
 
-<span class="n">_CANONICALIZE_POLICIES</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;first&#39;</span><span class="p">,</span> <span class="s1">&#39;most_complete&#39;</span><span class="p">,</span> <span class="s1">&#39;majority&#39;</span><span class="p">)</span>
+<span class="n">_CANONICALIZE_POLICIES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;first&quot;</span><span class="p">,</span> <span class="s2">&quot;most_complete&quot;</span><span class="p">,</span> <span class="s2">&quot;majority&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="canonicalize">
 <a class="viewcode-back" href="../../module_docs/equate/cluster.html#equate.cluster.canonicalize">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">canonicalize</span><span class="p">(</span><span class="n">partition</span><span class="p">,</span> <span class="n">records</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><span class="s1">&#39;most_complete&#39;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">canonicalize</span><span class="p">(</span><span class="n">partition</span><span class="p">,</span> <span class="n">records</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><span class="s2">&quot;most_complete&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Merge each cluster of ``partition`` into one golden record from ``records``.</span>
 
 <span class="sd">    ``policy``: ``&#39;first&#39;`` (keep the first member), ``&#39;most_complete&#39;`` (fewest missing</span>
