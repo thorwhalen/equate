@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "equate"
-version = "0.0.12"
+version = "0.0.13"
 description = "Tools for matching things: featurize, compare, and match collections of objects (fuzzy correspondence, not exact equality)."
 readme = "README.md"
 license = "MIT"

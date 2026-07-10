@@ -13,7 +13,7 @@ from typing import Any, Optional
 import numpy as np
 from scipy.sparse import issparse
 
-__all__ = ['CandidateStore']
+__all__ = ["CandidateStore"]
 
 
 def _ranked(pairs, sense):
@@ -27,7 +27,11 @@ def _ranked(pairs, sense):
         j, s = p
         if math.isnan(s):
             return (1, 0.0, j)  # NaN candidates go last
-        return (0, -s if sense == 'maximize' else s, j)  # best first; ties -> lower index
+        return (
+            0,
+            -s if sense == "maximize" else s,
+            j,
+        )  # best first; ties -> lower index
 
     return [(int(j), float(s)) for j, s in sorted(pairs, key=key)]
 
@@ -41,12 +45,14 @@ class CandidateStore:
     """
 
     candidates: dict  # i -> [(j, score), ...] best-first
-    sense: str = 'maximize'
+    sense: str = "maximize"
     row_labels: Optional[list] = None
     col_labels: Optional[list] = None
 
     @classmethod
-    def from_scores(cls, scores, *, k=5, sense='maximize', row_labels=None, col_labels=None):
+    def from_scores(
+        cls, scores, *, k=5, sense="maximize", row_labels=None, col_labels=None
+    ):
         """Build a store of each row's top-``k`` candidates from a (dense or sparse) score
         matrix.
 
@@ -84,7 +90,7 @@ class CandidateStore:
         c = self.candidates.get(i, [])
         if len(c) >= 2:
             return abs(c[0][1] - c[1][1])
-        return float('inf')
+        return float("inf")
 
     def __iter__(self):
         # top-1 pair per left item -> a greedy 1:n mapping. NOTE: not injective — several

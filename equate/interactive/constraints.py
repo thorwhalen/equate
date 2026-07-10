@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from equate.base import to_cost
 from equate.interactive.kbest import solve_constrained
 
-__all__ = ['ConstraintSet', 'reoptimize']
+__all__ = ["ConstraintSet", "reoptimize"]
 
 
 @dataclass
@@ -35,7 +35,7 @@ class ConstraintSet:
         return self
 
 
-def reoptimize(scores, constraints=None, *, sense='maximize'):
+def reoptimize(scores, constraints=None, *, sense="maximize"):
     """Re-solve the optimal 1:1 assignment honoring ``constraints`` (confirmed/rejected).
 
     Returns the matched ``(i, j)`` pairs. Raises ``ValueError`` if the constraints are

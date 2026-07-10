@@ -13,7 +13,7 @@ import heapq
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
-__all__ = ['solve_constrained', 'k_best_assignments']
+__all__ = ["solve_constrained", "k_best_assignments"]
 
 
 def solve_constrained(cost, forced=(), forbidden=()):

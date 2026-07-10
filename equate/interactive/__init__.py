@@ -21,11 +21,11 @@ from equate.interactive.constraints import ConstraintSet, reoptimize
 from equate.interactive.review import review_queue, uncertainty_sampling
 
 __all__ = [
-    'CandidateStore',
-    'k_best_assignments',
-    'solve_constrained',
-    'ConstraintSet',
-    'reoptimize',
-    'review_queue',
-    'uncertainty_sampling',
+    "CandidateStore",
+    "k_best_assignments",
+    "solve_constrained",
+    "ConstraintSet",
+    "reoptimize",
+    "review_queue",
+    "uncertainty_sampling",
 ]

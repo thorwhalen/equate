@@ -7,7 +7,7 @@ items for an oracle to label (active learning). An ``Oracle`` is any callable
 ``(i, j) -> bool`` (a human, an LLM, or a crowd) — kept as a plain protocol, not a class.
 """
 
-__all__ = ['review_queue', 'uncertainty_sampling']
+__all__ = ["review_queue", "uncertainty_sampling"]
 
 
 def review_queue(candidate_store, *, most_uncertain_first=True):
