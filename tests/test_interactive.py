@@ -149,6 +149,21 @@ def test_reoptimize_sparse_worst_cases_absent_cells():
     assert dict(reoptimize(S)) == {0: 1, 1: 0}
 
 
+def test_reoptimize_drops_hole_assignments():
+    # forced-partial: both rows' only candidate is column 0, so the LAP must leave one row
+    # unmatched rather than assign the absent (1,1) hole (D11 — the review-flagged leak)
+    S = csr_matrix(([0.9, 0.8], ([0, 1], [0, 0])), shape=(2, 2))
+    assert dict(reoptimize(S, sense="maximize")) == {0: 0}
+    assert reoptimize(csr_matrix((2, 2)), sense="maximize") == []  # all-absent -> no matches
+
+
+def test_reoptimize_keeps_user_forced_edge_even_if_absent():
+    # a user-confirmed edge is an assertion that overrides blocking, so it is NOT dropped
+    S = csr_matrix(([0.9, 0.8], ([0, 1], [0, 0])), shape=(2, 2))
+    cs = ConstraintSet().confirm(1, 1)  # force the (1,1) hole
+    assert dict(reoptimize(S, cs, sense="maximize")) == {0: 0, 1: 1}
+
+
 def test_candidate_store_ranks_nan_last_and_ties_by_lower_index():
     store = CandidateStore.from_scores(np.array([[0.5, 0.5, float("nan")]]), k=3)
     cols = [j for j, _ in store.top(0, 3)]

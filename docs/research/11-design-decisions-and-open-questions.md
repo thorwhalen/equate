@@ -633,6 +633,59 @@ simpler* — is the single rule that lets `match(A, B)` always return "something
 
 ---
 
+## D11. Making the sparse hole-worst-casing structural (matchers consume `ScoreMatrix`)
+
+**(a) Decision.** D2 resolved that a blocked (sparse) score matrix routes through the
+`to_cost` SSOT, which worst-cases the structurally-absent (non-candidate) cells so the
+optimizer never prefers an unscored hole over a real pair. But `to_cost` dispatches on
+`issparse(scores)` and the worst-casing lives *only* in the sparse branch. Because
+`scipy.sparse` uses `0` as its fill value, **any caller that `.toarray()`s the raw scores
+before `to_cost` silently takes the dense branch and loses the worst-casing** — holes
+become real `0`s that can out-rank negative similarities or look cheapest for a minimize
+matcher. This one bug class recurred across stages (HIGHs in #7's sparse-LAP and #9's
+reoptimize; and it was found *shipped* in the `max_weight`/`kuhn_munkres` matchers, which
+densified-then-`to_cost`). Documentation alone does not fix an API shaped like a trap.
+
+**(b) Options.** (i) *Document the gotcha* — relies on every author remembering; keeps
+failing. (ii) *Fix each site + a conformance test* — catches present + future matchers but
+leaves the `.toarray()` temptation in place. (iii) *Make the sanctioned densify the only
+path* — matchers consume the `ScoreMatrix` and densify **only** through its worst-casing
+views, so the wrong array is never obtainable inside a matcher.
+
+**(c) Resolution — (iii), with (ii) as the backstop.** The `Matcher` input is the
+`ScoreMatrix` SSOT (already the compare→match carrier, D1/D2). It owns the fill semantics
+via `dense_cost()` (worst-cased cost, min-solvers), `dense_similarity()` (worst-cased
+similarity, argmax/max-weight), `candidate_mask()`, `stored_entries()` (iterate real
+candidates without densifying), and `drop_holes(pairs, *, keep=())` — the **one** place the
+"never select a hole" filter lives. A matcher never calls `.toarray()`.
+
+**Two distinct guarantees are needed — worst-casing alone is not enough.** Worst-casing
+stops a hole being *preferred*; it does not stop a hole being *assigned* when a
+full-cardinality solver is forced onto one (a row with no candidate; rows sharing their only
+candidate column). So every path also **drops** hole assignments, and that drop is enforced
+at the `resolve_matcher` **boundary** — not per-matcher — so the invariant never depends on
+an individual (or third-party) matcher's discipline. Per-matcher drops remain as idempotent
+defense in depth. A **registry-wide conformance test** sweeps every registered matcher over
+asymmetric, rectangular, and *forced-partial* blocked fixtures, asserting the result is
+hole-free **and injective** — so the bug class is un-shippable for future matchers (e.g.
+#10's soft-DTW / OT / GW families).
+
+> Both halves were learned in adversarial review: the first cut worst-cased correctly but
+> forgot to *drop* on the soft/OT, `reoptimize`, and legacy-matcher paths, and its fixture
+> (a transpose-symmetric 2×2 anti-diagonal admitting a complete matching) could catch
+> neither that nor a transposed-pair orientation bug. **A fixture that never forces a hole
+> does not test hole-dropping** — verify a conformance guard by mutating the code it guards.
+
+**(d) API / back-compat implication.** The native contract is `Matcher(ScoreMatrix) →
+pairs` (marked with `@scorematrix_matcher`; it reads `sense` off the matrix). The legacy
+`(scores, *, sense) → pairs` raw-array contract is still accepted — `resolve_matcher` hands
+a legacy callable a *pre-worst-cased* dense array (`ScoreMatrix.legacy_view()`), so even a
+third-party matcher that does its own `to_cost`/argmax stays correct. Shipped matcher
+*functions* still accept a raw array + `sense=` (via `ScoreMatrix.coerce`), so external
+PyPI call sites are unchanged.
+
+---
+
 ## Resolved score & data-model contract
 
 This section consolidates D2/D3/D4/D10 into the two contracts every module must honor.

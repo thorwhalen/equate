@@ -34,6 +34,7 @@ __all__ = [
     "ComparatorMeta",
     "Blocker",
     "Matcher",
+    "scorematrix_matcher",
     "to_cost",
     "ScoreMatrix",
     "Explanation",
@@ -62,8 +63,27 @@ Comparator = Callable[[Any, Any], float]
 #: correctness baseline.
 Blocker = Callable[..., Iterable[tuple]]
 
-#: ③ Match — turn a score structure into matched ``(i, j)`` pairs; accepts ``*, sense``.
+#: ③ Match — turn a score structure into matched ``(i, j)`` pairs. The **native**
+#: contract is ``Matcher(ScoreMatrix) -> pairs``: the matcher reads ``sense`` off the
+#: :class:`ScoreMatrix` and densifies **only** through its sanctioned views
+#: (``dense_cost`` / ``dense_similarity`` / ``candidate_mask`` / ``stored_entries``), so
+#: the sparse hole-worst-casing can never be bypassed (decision register D11). The
+#: legacy ``(scores, *, sense) -> pairs`` raw-array contract is still accepted — see
+#: :func:`scorematrix_matcher` and ``equate.matching.resolve_matcher``.
 Matcher = Callable[..., Iterable[tuple]]
+
+
+def scorematrix_matcher(fn):
+    """Mark ``fn`` as a **ScoreMatrix-native** matcher (``Matcher(ScoreMatrix) -> pairs``).
+
+    ``equate.matching.resolve_matcher`` hands a marked matcher the :class:`ScoreMatrix`
+    itself (so it can worst-case holes via the sanctioned views); an unmarked callable
+    that declares a ``sense`` parameter is treated as a *legacy* raw-array matcher and is
+    handed a pre-worst-cased dense array instead (:meth:`ScoreMatrix.legacy_view`). This
+    is the seam that lets the deep contract change stay back-compatible.
+    """
+    fn._scorematrix_native = True
+    return fn
 
 
 @dataclass(frozen=True)
@@ -203,13 +223,116 @@ class ScoreMatrix:
     row_labels: Optional[Sequence] = None
     col_labels: Optional[Sequence] = None
 
+    @classmethod
+    def coerce(cls, scores, *, sense: Optional[Sense] = None):
+        """Return a ``ScoreMatrix``, wrapping a raw dense/sparse ``scores`` if needed.
+
+        The single entry point every matcher uses so a raw array *or* a ``ScoreMatrix``
+        both work (back-compat) yet the matcher body only ever touches the sanctioned
+        views. A ``ScoreMatrix`` passes through unchanged (a conflicting ``sense`` is an
+        error, never a silent override); a raw array is wrapped with ``sense`` (default
+        ``'maximize'``).
+        """
+        if isinstance(scores, cls):
+            if sense is not None and sense != scores.sense:
+                raise ValueError(
+                    f"sense={sense!r} conflicts with the ScoreMatrix's own "
+                    f"sense={scores.sense!r}"
+                )
+            return scores
+        return cls(scores, sense="maximize" if sense is None else sense)
+
     @property
     def shape(self):
         return self.data.shape
 
-    def to_cost(self):
-        """Cost view of the scores, honouring ``sense`` (see :func:`to_cost`)."""
+    @property
+    def is_sparse(self) -> bool:
+        """Whether the underlying ``data`` is a ``scipy.sparse`` (blocked) matrix."""
+        return issparse(self.data)
+
+    def dense_cost(self):
+        """Worst-cased dense **cost** for min-solvers — the sanctioned densify.
+
+        Routes through the :func:`to_cost` SSOT, so a sparse (blocked) matrix has its
+        structurally-absent cells worst-cased (never cheaper than a real pair). **This
+        is why a matcher must never ``.toarray()`` the raw scores and then call**
+        ``to_cost`` — that takes the dense branch and silently loses the worst-casing
+        (the recurring bug class this method exists to make unreachable; D11).
+        """
         return to_cost(self.data, sense=self.sense)
+
+    #: back-compat alias for :meth:`dense_cost`.
+    to_cost = dense_cost
+
+    def dense_similarity(self):
+        """Worst-cased dense **similarity** (higher = better) for argmax / max-weight.
+
+        The negated :meth:`dense_cost`, so it is ``sense``-correct for both polarities
+        and absent cells are strictly the *lowest* value — never argmaxed, never a
+        preferred edge. Real cells keep their relative order.
+        """
+        return -self.dense_cost()
+
+    def candidate_mask(self):
+        """Boolean dense mask, ``True`` exactly on stored (candidate) cells.
+
+        A dense matrix has no holes (all ``True``); a sparse one marks only the cells the
+        blocker chose to score, so a matcher can drop any assignment that lands on a hole.
+        """
+        if self.is_sparse:
+            return _stored_mask(self.data)
+        return np.ones(np.asarray(self.data).shape, dtype=bool)
+
+    def stored_entries(self):
+        """Yield ``(i, j, score)`` for each candidate cell (every cell if dense).
+
+        The sanctioned way to iterate a blocked matrix's real candidates without
+        densifying — a sparse matrix yields only its stored cells.
+        """
+        if self.is_sparse:
+            coo = self.data.tocoo()
+            for i, j, v in zip(coo.row.tolist(), coo.col.tolist(), coo.data.tolist()):
+                yield int(i), int(j), float(v)
+        else:
+            S = np.asarray(self.data, dtype=float)
+            n, m = S.shape
+            for i in range(n):
+                for j in range(m):
+                    yield i, j, float(S[i, j])
+
+    def drop_holes(self, pairs, *, keep=()):
+        """Drop any ``(i, j)`` landing on a non-candidate (absent) cell — the D11 filter.
+
+        The single place the hole-dropping invariant lives, so **every** matcher/resolve
+        path routes its output through it instead of re-implementing the mask filter (the
+        soft/OT and ``reoptimize`` paths originally forgot to, and leaked holes). A dense
+        matrix has no holes (returned unchanged). ``keep`` is an allow-list of pairs to
+        retain even if absent — e.g. user-*forced* interactive edges, which are assertions
+        that override blocking.
+        """
+        if not self.is_sparse:
+            return list(pairs)
+        mask = self.candidate_mask()
+        keep = {tuple(p) for p in keep}
+        return [(i, j) for i, j in pairs if mask[i, j] or (i, j) in keep]
+
+    def score_at(self, i, j) -> float:
+        """The retained (raw) score at ``(i, j)`` — for reporting a matched pair.
+
+        A matched pair is always a stored cell, so reading the raw value is correct;
+        this is *not* a densify-then-match path (it never feeds ``to_cost``).
+        """
+        return float(self.data[i, j])
+
+    def legacy_view(self):
+        """Dense array for a *legacy* raw-array matcher, holes worst-cased in-orientation.
+
+        A pre-worst-cased dense array in the matrix's native ``sense`` orientation, so a
+        legacy ``(scores, *, sense)`` matcher that does its own ``to_cost`` / argmax stays
+        correct even though it never sees the sparse structure.
+        """
+        return self.dense_similarity() if self.sense == "maximize" else self.dense_cost()
 
 
 @dataclass

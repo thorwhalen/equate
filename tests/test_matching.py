@@ -163,3 +163,192 @@ def test_match_requires_two_collections():
 def test_match_featurize_and_compare_mutually_exclusive():
     with pytest.raises(ValueError):
         match(["a"], ["b"], featurize="tfidf", compare="ratio")
+
+
+# --- registry-wide hole-worst-casing conformance (the backstop guarding D11) -------
+# Every registered matcher must honour blocking: a structurally-absent (non-candidate)
+# cell must never be selected. This is the ONE invariant that makes the recurring
+# "densify-before-to_cost" bug class un-shippable for present AND future matchers — a
+# matcher that .toarray()s the raw scores (filling holes with 0) fails these sweeps.
+
+from equate.base import ScoreMatrix
+from equate import MissingDependencyError
+
+
+def _run_matcher_or_skip(name, sm):
+    """Resolve+run a registered matcher, skipping if its optional extra is absent."""
+    try:
+        return list(resolve_matcher(name)(sm))
+    except MissingDependencyError:
+        pytest.skip(f"matcher {name!r} needs an optional extra not installed here")
+
+
+def _assert_valid_partial_matching(name, pairs, sm):
+    """No pair lands on a hole (D11) AND the matching is injective (no i or j reused)."""
+    mask = sm.candidate_mask()
+    rows, cols = set(), set()
+    for i, j in pairs:
+        assert mask[i, j], f"{name} matched an absent hole ({i}, {j})"
+        assert i not in rows, f"{name} matched row {i} twice"
+        assert j not in cols, f"{name} matched col {j} twice"
+        rows.add(i)
+        cols.add(j)
+
+
+# ASYMMETRIC candidate structure on purpose: a cyclic permutation is NOT transpose-symmetric,
+# so a matcher that returns transposed (col, row) pairs — an orientation bug — is caught here
+# (a symmetric anti-diagonal fixture would silently pass it). Values are chosen so a hole,
+# if densified to 0, would win: negative for maximize, positive for minimize.
+_CYCLE = ([0, 1, 2], [1, 2, 0])  # candidates (0,1), (1,2), (2,0); diagonal + rest absent
+_RECT = ([0, 1], [1, 2])  # a 2x3 blocked matrix: candidates (0,1), (1,2)
+# FORCED-PARTIAL: all three rows' only candidate is column 0, so a full-cardinality solver
+# MUST assign two rows onto holes — this is the fixture that actually exercises drop_holes.
+# (_CYCLE/_RECT admit a complete real matching, so their raw LAP never lands on a hole and
+# a drop_holes regression would be invisible to them.)
+_FORCED = ([0, 1, 2], [0, 0, 0])
+
+
+@pytest.mark.parametrize("name", matchers.names())
+@pytest.mark.parametrize(
+    "sense,data,rowcol,shape",
+    [
+        ("maximize", [-0.9, -0.8, -0.7], _CYCLE, (3, 3)),
+        ("minimize", [5.0, 6.0, 7.0], _CYCLE, (3, 3)),
+        ("maximize", [-0.9, -0.8], _RECT, (2, 3)),  # rectangular blocked input
+        ("maximize", [-0.9, -0.8, -0.7], _FORCED, (3, 3)),  # forces hole assignments
+        ("minimize", [5.0, 6.0, 7.0], _FORCED, (3, 3)),
+    ],
+)
+def test_matcher_valid_partial_matching_on_blocked_input(name, sense, data, rowcol, shape):
+    sm = ScoreMatrix(csr_matrix((data, rowcol), shape=shape), sense=sense)
+    _assert_valid_partial_matching(name, _run_matcher_or_skip(name, sm), sm)
+
+
+@pytest.mark.parametrize("name", matchers.names())
+def test_matcher_leaves_row_without_candidate_unmatched(name):
+    # row 2 has NO candidate at all -> it must be left unmatched, never assigned a hole
+    sm = ScoreMatrix(csr_matrix(([0.9, 0.8], ([0, 1], [0, 1])), shape=(3, 3)), sense="maximize")
+    pairs = _run_matcher_or_skip(name, sm)
+    _assert_valid_partial_matching(name, pairs, sm)
+    assert dict(pairs) == {0: 0, 1: 1}
+
+
+def test_legacy_matcher_output_is_hole_filtered_at_the_boundary():
+    # D11 must not depend on a third-party matcher's discipline: resolve_matcher drops the
+    # holes a legacy raw-array matcher assigns (here a per-row argmax over a row of holes).
+    def per_row_argmax(scores, **kw):
+        arr = np.asarray(scores, dtype=float)
+        return [(i, int(arr[i].argmax())) for i in range(arr.shape[0])]
+
+    sm = ScoreMatrix(csr_matrix(([0.9, 0.8], ([0, 1], [0, 1])), shape=(3, 3)), sense="maximize")
+    pairs = list(resolve_matcher(per_row_argmax)(sm))
+    assert pairs == [(0, 0), (1, 1)]  # the (2, x) hole row 2 argmaxed into is dropped
+
+    # and end-to-end through the facade: no fabricated 0.0 score for a non-candidate
+    m = match(["aa", "bb", "zz"], ["aa", "bb", "qq"], compare="ratio",
+              block=lambda A, B: [(0, 0), (1, 1)], how=per_row_argmax)
+    assert list(m) == [(0, 0), (1, 1)] and 0.0 not in m.scores
+
+
+@pytest.mark.parametrize("sense", ["maximize", "minimize"])
+def test_soft_never_selects_a_hole(sense):
+    pytest.importorskip("ot")
+    # a shared-column block forces the transport plan to put mass on a hole (the case the
+    # anti-diagonal fixture missed): both rows' only candidate is column 0.
+    data = [-0.9, -0.8] if sense == "maximize" else [0.1, 0.2]
+    S = csr_matrix((data, ([0, 1], [0, 0])), shape=(2, 2))
+    sm = ScoreMatrix(S, sense=sense)
+    pairs = sm.drop_holes(harden(soft_match(sm)))
+    _assert_valid_partial_matching("soft", pairs, sm)
+    assert pairs == [(0, 0)] or pairs == [(1, 0)]  # only column 0 is a real candidate
+
+
+# --- ScoreMatrix as the native matcher input (the deep contract) ------------------
+
+def test_matchers_accept_scorematrix_natively():
+    S = csr_matrix(([0.9, 0.8, 0.7], ([0, 1, 2], [0, 1, 2])), shape=(3, 3))
+    sm = ScoreMatrix(S, sense="maximize")
+    assert dict(optimal_matching(sm)) == IDENTITY
+    assert dict(greedy_matching(sm)) == IDENTITY
+    assert dict(stable_matching(sm)) == IDENTITY
+
+
+def test_resolve_matcher_passes_scorematrix_to_native_and_dense_to_legacy():
+    # a NATIVE matcher (marked) receives the ScoreMatrix; a LEGACY raw-array callable
+    # (declares `sense`) receives a pre-worst-cased dense array, never the sparse object.
+    S = csr_matrix(([-0.9, -0.8], ([0, 1], [1, 0])), shape=(2, 2))
+    sm = ScoreMatrix(S, sense="maximize")
+    seen = {}
+
+    def legacy(scores, *, sense="maximize"):
+        seen["type"] = type(scores).__name__
+        seen["sense"] = sense
+        return []
+
+    resolve_matcher(legacy)(sm)
+    assert seen["type"] == "ndarray"  # got a dense view, not the csr_matrix
+    assert seen["sense"] == "maximize"
+
+
+def test_kuhn_munkres_and_max_weight_blocked_negative_scores():
+    pytest.importorskip("networkx")
+    # the exact regression: blocked matrix, negative real scores -> must pick the real
+    # anti-diagonal candidates, not the absent diagonal holes.
+    S = csr_matrix(([-0.9, -0.8], ([0, 1], [1, 0])), shape=(2, 2))
+    assert dict(resolve_matcher("kuhn_munkres")(S)) == {0: 1, 1: 0}
+    assert dict(resolve_matcher("max_weight")(S)) == {0: 1, 1: 0}
+
+
+def test_max_weight_asymmetric_and_rectangular_blocked():
+    # review regressions: max_weight used to return transposed pairs from networkx's
+    # unordered edges -> silent empty (asymmetric square) or IndexError (rectangular).
+    pytest.importorskip("networkx")
+    cyc = csr_matrix(([0.9, 0.8, 0.7], ([0, 1, 2], [1, 2, 0])), shape=(3, 3))
+    assert dict(resolve_matcher("max_weight")(cyc)) == {0: 1, 1: 2, 2: 0}
+    rect = csr_matrix(([0.9, 0.8], ([0, 1], [1, 2])), shape=(2, 3))
+    assert dict(resolve_matcher("max_weight")(rect)) == {0: 1, 1: 2}
+
+
+def test_maximal_matching_orients_edges():
+    # maximal_matching must return (row, col), never a transposed (col, row) pair
+    pytest.importorskip("networkx")
+    from equate.util import maximal_matching
+
+    # cyclic candidates on a dense matrix; the only max-weight matching is the cycle
+    S = np.array([[0.0, 0.9, 0.0], [0.0, 0.0, 0.8], [0.7, 0.0, 0.0]])
+    assert dict(maximal_matching(S)) == {0: 1, 1: 2, 2: 0}
+
+
+def test_resolve_matcher_legacy_contract_variants_get_raw_array():
+    # every legal shape of the legacy raw-array contract must still receive a raw array,
+    # not a ScoreMatrix (review: signature-sniffing for a literal `sense` misclassified these)
+    seen = {}
+
+    def kwargs_matcher(scores, **kw):
+        seen["kwargs"] = type(scores).__name__
+        return []
+
+    def named_dir_matcher(scores, *, direction="maximize"):
+        seen["named"] = type(scores).__name__
+        return []
+
+    def no_dir_matcher(scores):
+        seen["nodir"] = type(scores).__name__
+        return []
+
+    S = csr_matrix(([-0.9, -0.8], ([0, 1], [1, 0])), shape=(2, 2))
+    for key, m in [("kwargs", kwargs_matcher), ("named", named_dir_matcher), ("nodir", no_dir_matcher)]:
+        resolve_matcher(m)(S)
+        assert seen[key] == "ndarray", f"{key} matcher got {seen[key]}, not a raw array"
+
+
+def test_match_facade_accepts_legacy_kwargs_matcher():
+    # end-to-end back-compat: a custom raw-array matcher passed as how= still works
+    import numpy as np
+
+    def per_row_argmax(scores, **kw):
+        arr = np.asarray(scores, dtype=float)
+        return [(i, int(arr[i].argmax())) for i in range(arr.shape[0])]
+
+    m = match(KEYS, VALS, compare="ratio", how=per_row_argmax)
+    assert dict(m.labeled_pairs()) == EXPECTED

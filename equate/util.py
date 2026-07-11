@@ -153,7 +153,17 @@ def maximal_matching(similarity_matrix):
         for j in range(similarity_matrix.shape[1]):
             G.add_edge(f"key_{i}", f"value_{j}", weight=similarity_matrix[i, j])
     matching = nx.max_weight_matching(G, maxcardinality=True)
-    return ((int(u.split("_")[1]), int(v.split("_")[1])) for u, v in matching)
+
+    def _oriented(u, v):
+        # networkx returns each matched edge as an UNORDERED tuple, so the key_ (row) node
+        # may be either endpoint. Orient to (row, col) or pairs come out transposed — which
+        # silently corrupts rectangular/asymmetric results (and, with candidate masking, can
+        # index out of bounds). kuhn_munkres_matching guards the same way.
+        if u.startswith("key_"):
+            return int(u.split("_")[1]), int(v.split("_")[1])
+        return int(v.split("_")[1]), int(u.split("_")[1])
+
+    return (_oriented(u, v) for u, v in matching)
 
 
 def stable_marriage_matching(similarity_matrix, *, sense="maximize"):
