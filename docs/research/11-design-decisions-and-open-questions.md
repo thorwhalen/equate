@@ -676,13 +676,42 @@ hole-free **and injective** — so the bug class is un-shippable for future matc
 > neither that nor a transposed-pair orientation bug. **A fixture that never forces a hole
 > does not test hole-dropping** — verify a conformance guard by mutating the code it guards.
 
-**(d) API / back-compat implication.** The native contract is `Matcher(ScoreMatrix) →
+**(d) The worst-case fill must be a big-M, because a matcher optimizes a *total*.** The
+original fill — "one unit worse than the worst real *cell*" (`max_real_cost + 1`) — is not
+strong enough, and this is the subtlest half of D11. A LAP/max-weight solver compares whole
+*assignments*, so a hole priced just above the worst cell is a bargain the solver will
+happily buy: it takes one hole to save more than `1` elsewhere, `drop_holes` then deletes
+that pair, and the returned matching is **strictly dominated** by an all-real matching that
+was there for the taking — *fewer pairs and a worse score*. Reproduced on the default
+`how='assign'` path: the "optimal" matcher lost to the `greedy` heuristic (2 pairs / 23.0 vs
+3 pairs / 32.0) on ~3% of random blocked matrices. It bites exactly when the smallest stored
+similarity exceeds `1.0` — i.e. any **unbounded** comparator (`dot`, BM25, counts,
+Fellegi-Sunter log-odds; equate *ships* `dot` with `bounded=False`) — and never for a
+`[0,1]` comparator, which is why every existing `[0,1]` fixture missed it, and why the
+randomized conformance sweep now generates unbounded scores.
+
+The fill is therefore `_hole_fill()`: strictly beyond the largest *swing* any all-real
+assignment can have (`k·(|max| + |min|) + 1` over `k = min(n, m)` assigned cells). This
+makes the optimum **lexicographic**, which is the semantics blocking always meant:
+**use as many real candidate pairs as possible, then optimize the score among those.** An
+absent cell is not a bad option — it is *not an option*.
+
+**(e) API / back-compat implication.** The native contract is `Matcher(ScoreMatrix) →
 pairs` (marked with `@scorematrix_matcher`; it reads `sense` off the matrix). The legacy
 `(scores, *, sense) → pairs` raw-array contract is still accepted — `resolve_matcher` hands
-a legacy callable a *pre-worst-cased* dense array (`ScoreMatrix.legacy_view()`), so even a
+a legacy callable a hole-worst-cased dense array (`ScoreMatrix.legacy_view()`), so even a
 third-party matcher that does its own `to_cost`/argmax stays correct. Shipped matcher
 *functions* still accept a raw array + `sense=` (via `ScoreMatrix.coerce`), so external
 PyPI call sites are unchanged.
+
+> **`legacy_view()` must preserve the stored values.** The first cut returned
+> `dense_similarity()` (`S - S.max()`), which for a *hole-free* dense matrix is a pure
+> gratuitous rescale to all-nonpositive — silently breaking every `how=<callable>` matcher
+> that reads *absolute* scores (a threshold, a sign test, a `[0,1]` assumption), with no
+> error and a green test suite. Worst-casing only ever required the **holes** to be worse
+> than the real cells; it never required touching the real cells. The view now hands back
+> raw stored values and rewrites *only* the holes. Generalized lesson: **a fix that
+> normalizes data on a back-compat path is a breaking change wearing a correctness costume.**
 
 ---
 

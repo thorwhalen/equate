@@ -72,8 +72,16 @@ into each stage/concern; `docs/research/README.md` is the index.
    *assigned* when a full-cardinality solver is forced onto one (a row with no candidate).
    So hole assignments are also **dropped** — via the single `ScoreMatrix.drop_holes()`,
    enforced at the `resolve_matcher` **boundary** so the invariant never depends on a
-   matcher (or a third-party matcher) remembering to do it. A **registry-wide conformance
-   sweep** (`tests/test_matching.py`) runs every matcher over asymmetric / rectangular /
+   matcher (or a third-party matcher) remembering to do it.
+   **And the worst-case fill must be a big-M** (`_hole_fill()`), because a matcher optimizes
+   a *total*, not a cell: priced at `max_real_cost + 1` a hole is a *bargain* the solver buys
+   to save more than `1` elsewhere, and after `drop_holes` the result is strictly dominated
+   by an available all-real matching (fewer pairs *and* worse score — the "optimal" matcher
+   losing to `greedy`). Blocked matching is therefore **lexicographic: as many real pairs as
+   possible, then best score.** This only bites for **unbounded** comparators (`dot`, BM25,
+   counts — min stored score > 1), so **never write a `[0,1]`-only fixture for a blocking
+   test.** A **registry-wide conformance sweep** (`tests/test_matching.py`) runs every matcher
+   over randomized *unbounded* blocked inputs, plus asymmetric / rectangular /
    *forced-partial* blocked fixtures asserting hole-free **and injective** results. When you
    change that guard, **mutate the code it guards and confirm it fails** — the original
    fixture (a symmetric 2×2 admitting a complete matching) silently guarded nothing.

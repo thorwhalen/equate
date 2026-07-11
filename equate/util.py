@@ -157,7 +157,9 @@ def maximal_matching(similarity_matrix):
         "networkx", extra="graph", purpose="the maximal_matching graph matcher"
     )
 
-    sm = ScoreMatrix.coerce(similarity_matrix, sense="maximize")
+    # no explicit sense: a raw array is a *similarity* matrix (this function's documented
+    # contract), while a ScoreMatrix carries — and keeps — its own sense
+    sm = ScoreMatrix.coerce(similarity_matrix)
     # a 'minimize' matrix holds costs; negate so the max-weight solver still reads "better"
     polarity = 1.0 if sm.sense == "maximize" else -1.0
     G = nx.Graph()

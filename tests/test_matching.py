@@ -352,3 +352,100 @@ def test_match_facade_accepts_legacy_kwargs_matcher():
 
     m = match(KEYS, VALS, compare="ratio", how=per_row_argmax)
     assert dict(m.labeled_pairs()) == EXPECTED
+
+
+# --- randomized conformance: the property battery + the optimality differential ---------
+# The fixtures above all use [0, 1] scores, and THAT is why they missed the big-M defect:
+# a hole was worst-cased to `max_real_cost + 1`, which only beats one real CELL, while a LAP
+# compares TOTALS — so the solver bought a hole to save >1 elsewhere and drop_holes then
+# deleted the pair, returning a matching strictly dominated by an available all-real one.
+# Unbounded scores (dot products, BM25, counts — equate ships `dot` with bounded=False) are
+# the regime that exposes it, so these sweeps generate scores with a floor above 1.0.
+
+_OPTIMAL_FAMILY = ("optimal", "hungarian", "max_weight", "kuhn_munkres")
+
+
+def _random_blocked(rng, *, shape, density, low=1.5, high=100.0):
+    """A blocked (sparse) score matrix with unbounded scores; may leave rows/cols empty."""
+    n, m = shape
+    mask = rng.random((n, m)) < density
+    rows, cols = np.nonzero(mask)
+    data = rng.uniform(low, high, size=len(rows))
+    return csr_matrix((data, (rows, cols)), shape=shape)
+
+
+def _best_real_matching(sm):
+    """Brute-force ``(cardinality, total_score)`` of the best ALL-REAL matching.
+
+    The semantics blocking implies, and that the big-M makes the solvers obey: use as many
+    real candidate pairs as possible, then optimize the score among those. Exponential — for
+    tiny fixtures only.
+    """
+    from itertools import combinations, permutations
+
+    n, m = sm.shape
+    stored = {(i, j): v for i, j, v in sm.stored_entries()}
+    pick_best = max if sm.sense == "maximize" else min
+    for k in range(min(n, m), 0, -1):
+        totals = [
+            sum(stored[p] for p in pairs)
+            for rows in combinations(range(n), k)
+            for cols in permutations(range(m), k)
+            for pairs in [list(zip(rows, cols))]
+            if all(p in stored for p in pairs)
+        ]
+        if totals:
+            return k, pick_best(totals)
+    return 0, 0.0
+
+
+@pytest.mark.parametrize("sense", ["maximize", "minimize"])
+def test_every_matcher_returns_a_valid_partial_matching_under_fuzz(sense):
+    """Registry-wide: injective, in-bounds, hole-free, cardinality-sane — over random input."""
+    rng = np.random.default_rng(0xD11)
+    for name in matchers.names():
+        for trial in range(40):
+            shape = (int(rng.integers(1, 5)), int(rng.integers(1, 5)))
+            sm = ScoreMatrix(
+                _random_blocked(rng, shape=shape, density=float(rng.uniform(0.2, 1.0))),
+                sense=sense,
+            )
+            pairs = _run_matcher_or_skip(name, sm)
+            # in-bounds is what catches a transposed pair on a rectangular input
+            for i, j in pairs:
+                assert 0 <= i < shape[0] and 0 <= j < shape[1], (
+                    f"{name} returned out-of-bounds pair ({i}, {j}) for shape {shape} "
+                    f"[trial {trial}]"
+                )
+            _assert_valid_partial_matching(name, pairs, sm)
+            assert len(pairs) <= min(shape), f"{name} over-matched (trial {trial})"
+
+
+@pytest.mark.parametrize("sense", ["maximize", "minimize"])
+def test_optimal_family_is_never_dominated_by_an_available_all_real_matching(sense):
+    """An 'optimal' matcher must not lose to a matching that was there for the taking.
+
+    With the too-weak `max_real_cost + 1` hole penalty this failed on ~3% of random unbounded
+    inputs: `optimal` (the DEFAULT matcher) returned fewer pairs AND a worse total than a
+    feasible all-real matching — it was beaten by the `greedy` heuristic.
+    """
+    rng = np.random.default_rng(0xD11)
+    better = max if sense == "maximize" else min
+    for name in _OPTIMAL_FAMILY:
+        for trial in range(60):
+            shape = (int(rng.integers(1, 5)), int(rng.integers(1, 5)))
+            sm = ScoreMatrix(
+                _random_blocked(rng, shape=shape, density=float(rng.uniform(0.3, 1.0))),
+                sense=sense,
+            )
+            pairs = _run_matcher_or_skip(name, sm)
+            got_total = sum(sm.score_at(i, j) for i, j in pairs)
+            best_k, best_total = _best_real_matching(sm)
+            assert len(pairs) == best_k, (
+                f"{name} matched {len(pairs)} pairs but {best_k} real pairs were available "
+                f"(trial {trial}, sense={sense}, shape={shape})\n{sm.data.toarray()}"
+            )
+            assert better(got_total, best_total) == pytest.approx(got_total), (
+                f"{name} scored {got_total} but {best_total} was available "
+                f"(trial {trial}, sense={sense}, shape={shape})\n{sm.data.toarray()}"
+            )

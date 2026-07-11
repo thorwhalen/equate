@@ -19,8 +19,6 @@ For example, correlation, similarity, etc.
 
 from functools import partial
 from itertools import chain
-from scipy.optimize import linear_sum_assignment
-import numpy as np
 
 from equate._dependencies import require
 from equate._vector import cosine_similarity

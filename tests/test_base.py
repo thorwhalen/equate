@@ -206,14 +206,33 @@ def test_scorematrix_sparse_views_worst_case_holes():
     assert sm.score_at(0, 1) == -0.9  # retained raw score of a real candidate
 
 
-def test_scorematrix_legacy_view_orientation():
+def test_scorematrix_legacy_view_preserves_raw_scores():
+    """A legacy matcher may threshold on *absolute* scores, so it must see the real values.
+
+    Routing the legacy view through ``dense_similarity()`` rescaled a hole-free matrix to
+    ``S - S.max()`` (all <= 0), silently breaking every ``how=<callable>`` matcher that reads
+    absolute scores. A dense matrix has no holes, so it must come back untouched.
+    """
+    S = np.array([[0.9, 0.1], [0.2, 0.8]])
+    assert np.allclose(ScoreMatrix(S, sense="maximize").legacy_view(), S)
+    assert np.allclose(ScoreMatrix(S, sense="minimize").legacy_view(), S)
+
+
+def test_scorematrix_legacy_view_keeps_stored_values_and_worst_cases_holes():
+    """Sparse: stored scores keep their raw values; only the holes are rewritten (D11)."""
     csr = pytest.importorskip("scipy.sparse").csr_matrix
+    # stored: (0,1) = -0.9 and (1,0) = -0.8; the diagonal cells are HOLES
     S = csr(([-0.9, -0.8], ([0, 1], [1, 0])), shape=(2, 2))
-    # maximize -> similarity orientation; minimize -> cost orientation
-    assert np.allclose(ScoreMatrix(S, sense="maximize").legacy_view(),
-                       ScoreMatrix(S, sense="maximize").dense_similarity())
-    assert np.allclose(ScoreMatrix(S, sense="minimize").legacy_view(),
-                       ScoreMatrix(S, sense="minimize").dense_cost())
+
+    view = ScoreMatrix(S, sense="maximize").legacy_view()
+    assert view[0, 1] == -0.9 and view[1, 0] == -0.8  # raw stored values preserved
+    # a hole must be strictly the WORST similarity — never a 0.0 that beats a real -0.9
+    assert view[0, 0] < -0.9 and view[1, 1] < -0.9
+
+    view = ScoreMatrix(S, sense="minimize").legacy_view()
+    assert view[0, 1] == -0.9 and view[1, 0] == -0.8
+    # cost orientation: a hole is strictly the most expensive cell
+    assert view[0, 0] > -0.8 and view[1, 1] > -0.8
 
 
 def test_scorematrix_matcher_marker():
