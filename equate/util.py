@@ -141,17 +141,28 @@ def maximal_matching(similarity_matrix):
     Maximal Matching in Bipartite Graph: Finds a maximal matching in a bipartite graph.
     See https://www.geeksforgeeks.org/maximum-bipartite-matching/.
 
-    :param similarity_matrix: A sparse matrix of similarities.
-    :return: List of tuples (row_index, col_index) for matched pairs.
+    Accepts a dense array, a **sparse (blocked)** matrix, or a
+    :class:`~equate.base.ScoreMatrix`. Only *candidate* cells become graph edges, so a
+    structurally-absent cell is not an edge at all: it can be neither preferred nor
+    assigned, and max-cardinality is maximized over real candidates (D11). Reading the
+    matrix cell-by-cell instead would turn every hole into a real weight-``0.0`` edge —
+    which silently beats any negative similarity.
+
+    :param similarity_matrix: A dense/sparse matrix of similarities, or a ``ScoreMatrix``.
+    :return: Iterator of tuples (row_index, col_index) for matched pairs.
     """
+    from equate.base import ScoreMatrix
+
     nx = require(
         "networkx", extra="graph", purpose="the maximal_matching graph matcher"
     )
 
+    sm = ScoreMatrix.coerce(similarity_matrix, sense="maximize")
+    # a 'minimize' matrix holds costs; negate so the max-weight solver still reads "better"
+    polarity = 1.0 if sm.sense == "maximize" else -1.0
     G = nx.Graph()
-    for i in range(similarity_matrix.shape[0]):
-        for j in range(similarity_matrix.shape[1]):
-            G.add_edge(f"key_{i}", f"value_{j}", weight=similarity_matrix[i, j])
+    for i, j, score in sm.stored_entries():
+        G.add_edge(f"key_{i}", f"value_{j}", weight=polarity * score)
     matching = nx.max_weight_matching(G, maxcardinality=True)
 
     def _oriented(u, v):

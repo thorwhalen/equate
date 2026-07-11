@@ -177,14 +177,32 @@ def to_cost(scores, *, sense: Sense = "maximize"):
     return arr.max() - arr
 
 
+def _hole_fill(real, k: int, *, worst_is_high: bool) -> float:
+    """Value for a structurally-absent cell: worse than **any all-real assignment**.
+
+    A matcher optimizes a *total* over ``k = min(n, m)`` assigned cells, so making a hole
+    worse than the worst single real cell (``max_real + 1``) is **not enough**: the solver
+    happily buys one hole to save more than ``1`` elsewhere, the D11 filter then drops that
+    pair, and the result is a matching strictly *dominated* by an available all-real one
+    (fewer pairs *and* worse score). Only a **big-M** — strictly beyond the largest swing
+    any all-real assignment can have — makes the optimum lexicographic, which is the
+    semantics blocking actually means: *fewest holes first, best score second*.
+
+    ``worst_is_high`` selects the polarity: costs are worst when high, similarities when low.
+    """
+    lo, hi = float(np.min(real)), float(np.max(real))
+    span = k * (abs(hi) + abs(lo)) + 1.0
+    return hi + span if worst_is_high else lo - span
+
+
 def _sparse_to_cost(scores, *, sense: Sense):
     """``to_cost`` for a sparse (blocked) score matrix — see :func:`to_cost`.
 
     Densifies (a correctness stopgap until the sparse-LAP path in roadmap #6). The
     structurally-absent (non-candidate) cells get a cost strictly worse than any real
-    pair, so the optimizer never prefers an unscored hole over a scored pair — for
-    ``'maximize'`` this is the bug when stored similarities are negative; for
-    ``'minimize'`` it stops absent cells (densified to 0) from looking cheapest.
+    *assignment* (see :func:`_hole_fill`), so the optimizer never prefers an unscored hole
+    over a scored pair — for ``'maximize'`` this is the bug when stored similarities are
+    negative; for ``'minimize'`` it stops absent cells (densified to 0) from looking cheapest.
     """
     dense = np.asarray(scores.toarray(), dtype=float)
     if scores.nnz == 0 or dense.size == 0:
@@ -194,17 +212,23 @@ def _sparse_to_cost(scores, *, sense: Sense):
         cost = float(scores.data.max()) - dense
     else:  # 'minimize': the stored values are already costs
         cost = dense.copy()
-    # non-candidate cells become strictly worse than the worst real pair
-    worst = float(cost[stored_mask].max()) + 1.0
-    cost[~stored_mask] = worst
+    cost[~stored_mask] = _hole_fill(
+        cost[stored_mask], min(cost.shape), worst_is_high=True
+    )
     return cost
 
 
 def _stored_mask(scores):
-    """Boolean dense mask, True where the sparse matrix structurally stores a cell."""
-    ones = scores.copy()
-    ones.data = np.ones_like(ones.data)
-    return np.asarray(ones.toarray()) != 0
+    """Boolean dense mask, True where the sparse matrix structurally stores a cell.
+
+    Goes through ``.tocoo()`` so every scipy format works (``lil``/``dok`` have no flat
+    ``.data`` array parallel to the stored entries). An explicitly-stored ``0.0`` is a
+    **real candidate** (True) — a scored zero is not a hole.
+    """
+    coo = scores.tocoo()
+    mask = np.zeros(coo.shape, dtype=bool)
+    mask[coo.row, coo.col] = True
+    return mask
 
 
 @dataclass
@@ -222,6 +246,20 @@ class ScoreMatrix:
     sense: Sense = "maximize"
     row_labels: Optional[Sequence] = None
     col_labels: Optional[Sequence] = None
+
+    def __post_init__(self):
+        """Normalize ``data`` once, so every view can assume one representation.
+
+        Dense array-likes (a list of rows, an int array) become a float ``ndarray``; any
+        sparse format becomes ``csr``. Previously each matcher did its own ``np.asarray``;
+        now that ``ScoreMatrix`` owns every densify (D11), it must own the coercion too —
+        otherwise ``shape`` / ``score_at`` / ``dense_similarity`` break on the inputs the
+        matchers used to accept (a list of rows, a ``coo``/``lil``/``dok`` matrix).
+        """
+        if issparse(self.data):
+            self.data = self.data.tocsr()  # cheap no-op when already csr
+        else:
+            self.data = np.asarray(self.data, dtype=float)
 
     @classmethod
     def coerce(cls, scores, *, sense: Optional[Sense] = None):
@@ -326,13 +364,30 @@ class ScoreMatrix:
         return float(self.data[i, j])
 
     def legacy_view(self):
-        """Dense array for a *legacy* raw-array matcher, holes worst-cased in-orientation.
+        """Dense array for a *legacy* raw-array matcher: **raw** scores, holes worst-cased.
 
-        A pre-worst-cased dense array in the matrix's native ``sense`` orientation, so a
-        legacy ``(scores, *, sense)`` matcher that does its own ``to_cost`` / argmax stays
-        correct even though it never sees the sparse structure.
+        A legacy matcher may read *absolute* score values (a threshold, a sign test, a
+        ``[0, 1]`` assumption), so the stored values are handed over **unchanged** — a dense
+        matrix, having no holes, is returned exactly as a pre-``ScoreMatrix`` matcher used to
+        receive it. Only the structurally-absent cells of a sparse matrix are rewritten, to a
+        sentinel strictly worse than any real assignment in this matrix's own orientation
+        (:func:`_hole_fill`), so the D11 guarantee survives the trip through a matcher that
+        never sees the sparse structure.
+
+        Routing this through ``dense_similarity()`` instead — i.e. ``S - S.max()`` — would
+        silently rescale a *hole-free* matrix to be all-nonpositive and break every legacy
+        matcher that reads absolute scores.
         """
-        return self.dense_similarity() if self.sense == "maximize" else self.dense_cost()
+        if not self.is_sparse:
+            return self.data  # no holes: nothing to worst-case
+        dense = np.asarray(self.data.toarray(), dtype=float)
+        mask = self.candidate_mask()
+        if not mask.any():
+            return dense
+        dense[~mask] = _hole_fill(
+            dense[mask], min(dense.shape), worst_is_high=(self.sense == "minimize")
+        )
+        return dense
 
 
 @dataclass

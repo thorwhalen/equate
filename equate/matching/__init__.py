@@ -7,6 +7,7 @@ pass a callable ``(scores, *, sense) -> pairs``. The optimal matcher is sparse-a
 parallel :func:`soft_match` / :func:`harden` seam.
 """
 
+import functools
 import inspect
 
 from equate.base import ScoreMatrix, scorematrix_matcher
@@ -45,14 +46,15 @@ def _const(fn, name):
 def _max_weight_matcher(scores, *, sense=None):
     """Maximum-weight bipartite matching via networkx — requires ``equate[graph]``.
 
-    Feeds :meth:`~equate.base.ScoreMatrix.dense_similarity` (holes strictly worst, so an
-    absent cell is never a preferred edge) and drops any hole assignment forced by
-    max-cardinality via :meth:`~equate.base.ScoreMatrix.candidate_mask`.
+    Hands the :class:`~equate.base.ScoreMatrix` straight to ``maximal_matching``, which
+    builds graph edges from *candidate cells only* — so an absent cell is never an edge, and
+    max-cardinality is maximized over real candidates. The boundary ``drop_holes`` is then a
+    no-op safety net rather than the thing standing between a hole and the result (D11).
     """
     from equate.util import maximal_matching
 
     sm = ScoreMatrix.coerce(scores, sense=sense)
-    return sm.drop_holes(list(maximal_matching(sm.dense_similarity())))
+    return sm.drop_holes(list(maximal_matching(sm)))
 
 
 @scorematrix_matcher
@@ -106,20 +108,28 @@ def _accepts_sense(matcher) -> bool:
         params = inspect.signature(matcher).parameters
     except (ValueError, TypeError):
         return False
-    return "sense" in params or any(
-        p.kind == p.VAR_KEYWORD for p in params.values()
+    # a POSITIONAL_ONLY `sense` cannot be passed by keyword — calling it that way is a
+    # TypeError, so such a matcher is called with the array alone
+    return any(
+        (p.name == "sense" and p.kind != p.POSITIONAL_ONLY) or p.kind == p.VAR_KEYWORD
+        for p in params.values()
     )
 
 
 def resolve_matcher(spec="optimal", **config):
     """Resolve ``spec`` to a runner ``(scores_or_scorematrix, *, sense=None) -> pairs``.
 
-    A callable passes through; a registered name (or a facade ``how=`` alias like
-    ``'assign' -> 'optimal'``) is built via the registry. The returned runner coerces its
-    argument to a :class:`~equate.base.ScoreMatrix` and then either hands that matrix to a
-    **native** matcher (so it worst-cases holes through the sanctioned views) or hands a
-    **legacy** raw-array matcher a pre-worst-cased dense array — so the sparse
-    hole-worst-casing holds no matter which contract the matcher follows (D11).
+    A registered name (or a facade ``how=`` alias like ``'assign' -> 'optimal'``) is built
+    via the registry; a callable is used as-is. The returned runner coerces its argument to
+    a :class:`~equate.base.ScoreMatrix` and then either hands that matrix to a **native**
+    matcher (so it worst-cases holes through the sanctioned views) or hands a **legacy**
+    raw-array matcher a hole-worst-cased dense array — so the sparse hole-worst-casing holds
+    no matter which contract the matcher follows (D11).
+
+    Note this returns a *runner*, not ``spec`` itself: unlike the pre-D11 version it is no
+    longer an identity passthrough for a callable (``resolve_matcher(f) is f`` was true, and
+    is not any more). The runner carries the wrapped matcher's ``__name__``/``__doc__``, and
+    the original is recoverable via ``__wrapped__``.
     """
     if isinstance(spec, str):
         matcher = matchers.create(_HOW_ALIASES.get(spec, spec), **config)
@@ -133,6 +143,7 @@ def resolve_matcher(spec="optimal", **config):
     legacy = _is_legacy_matcher(matcher)
     pass_sense = legacy and _accepts_sense(matcher)
 
+    @functools.wraps(matcher)
     def run(scores, *, sense=None):
         sm = ScoreMatrix.coerce(scores, sense=sense)
         if not legacy:
