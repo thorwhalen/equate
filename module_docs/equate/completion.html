@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>equate.completion &mdash; equate 0.0.12 documentation</title>
+  <title>equate.completion &mdash; equate 0.0.13 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=3bbcec59"></script>
+      <script src="../../_static/documentation_options.js?v=9fc46840"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -69,12 +69,7 @@
 <li class="toctree-l1"><a class="reference internal" href="compare/vector.html">equate.compare.vector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compare/vectorize.html">equate.compare.vectorize</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">equate.completion</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#equate.completion.greedy_matching"><code class="docutils literal notranslate"><span class="pre">greedy_matching()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#equate.completion.hungarian_matching"><code class="docutils literal notranslate"><span class="pre">hungarian_matching()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#equate.completion.kuhn_munkres_matching"><code class="docutils literal notranslate"><span class="pre">kuhn_munkres_matching()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#equate.completion.maximal_matching"><code class="docutils literal notranslate"><span class="pre">maximal_matching()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#equate.completion.similarity_matrix"><code class="docutils literal notranslate"><span class="pre">similarity_matrix()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#equate.completion.stable_marriage_matching"><code class="docutils literal notranslate"><span class="pre">stable_marriage_matching()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">equate.examples</a></li>
@@ -140,60 +135,6 @@ import is lazy (behind the optional <code class="docutils literal notranslate"><
 does not fail on a default numpy/scipy-only install.</p>
 </div>
 <dl class="py function">
-<dt class="sig sig-object py" id="equate.completion.greedy_matching">
-<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">greedy_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/completion.html#greedy_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.greedy_matching" title="Link to this definition"></a></dt>
-<dd><p>Greedy Algorithm: Iteratively picks the highest similarity pair and removes the
-matched items from the pool.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>similarity_matrix</strong> – A sparse matrix of similarities.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>List of tuples (row_index, col_index) for matched pairs.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="equate.completion.hungarian_matching">
-<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">hungarian_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/completion.html#hungarian_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.hungarian_matching" title="Link to this definition"></a></dt>
-<dd><p>Hungarian Algorithm (Optimal Matching): Finds the optimal matching, minimizing the
-total cost.
-:param similarity_matrix: A sparse matrix of similarities.
-:return: List of tuples (row_index, col_index) for matched pairs.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="equate.completion.kuhn_munkres_matching">
-<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">kuhn_munkres_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/completion.html#kuhn_munkres_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.kuhn_munkres_matching" title="Link to this definition"></a></dt>
-<dd><p>Kuhn-Munkres Algorithm: Another implementation of the Hungarian algorithm using
-the <cite>networkx</cite> package.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>similarity_matrix</strong> – A sparse matrix of similarities.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>List of tuples (row_index, col_index) for matched pairs.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="equate.completion.maximal_matching">
-<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">maximal_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/completion.html#maximal_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.maximal_matching" title="Link to this definition"></a></dt>
-<dd><p>Maximal Matching in Bipartite Graph: Finds a maximal matching in a bipartite graph.
-See <a class="reference external" href="https://www.geeksforgeeks.org/maximum-bipartite-matching/">https://www.geeksforgeeks.org/maximum-bipartite-matching/</a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>similarity_matrix</strong> – A sparse matrix of similarities.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>List of tuples (row_index, col_index) for matched pairs.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="equate.completion.similarity_matrix">
 <span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">similarity_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_to_vect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">cosine_similarity&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/completion.html#similarity_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.similarity_matrix" title="Link to this definition"></a></dt>
 <dd><p>Return a matrix of the similarity of the keys to the values.
@@ -209,22 +150,6 @@ embeddings.</p>
 <span class="go">[[0.54, 0.38, 0.0, 0.0], [0.0, 0.33, 0.0, 0.0], [0.0, 0.0, 0.0, 0.41]]</span>
 </pre></div>
 </div>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="equate.completion.stable_marriage_matching">
-<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">stable_marriage_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/completion.html#stable_marriage_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.stable_marriage_matching" title="Link to this definition"></a></dt>
-<dd><p>Stable Marriage Problem (Gale-Shapley Algorithm):
-Solves the stable marriage problem, ensuring a stable matching.
-See: <a class="reference external" href="https://en.wikipedia.org/wiki/Stable_marriage_problem">https://en.wikipedia.org/wiki/Stable_marriage_problem</a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>similarity_matrix</strong> – A sparse matrix of similarities.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>List of tuples (row_index, col_index) for matched pairs.</p>
-</dd>
-</dl>
 </dd></dl>
 
 </section>

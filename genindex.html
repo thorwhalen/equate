@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; equate 0.0.12 documentation</title>
+  <title>Index &mdash; equate 0.0.13 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=3bbcec59"></script>
+      <script src="_static/documentation_options.js?v=9fc46840"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -182,6 +182,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/equate/base.html#equate.base.Candidate">Candidate (class in equate.base)</a>
 </li>
+      <li><a href="module_docs/equate/base.html#equate.base.ScoreMatrix.candidate_mask">candidate_mask() (equate.base.ScoreMatrix method)</a>
+</li>
       <li><a href="module_docs/equate/interactive.html#equate.interactive.CandidateStore">CandidateStore (class in equate.interactive)</a>
 
       <ul>
@@ -200,14 +202,16 @@
 </li>
       <li><a href="module_docs/equate/cluster.html#equate.cluster.clusterers">clusterers (in module equate.cluster)</a>
 </li>
+      <li><a href="module_docs/equate/base.html#equate.base.ScoreMatrix.coerce">coerce() (equate.base.ScoreMatrix class method)</a>
+</li>
       <li><a href="module_docs/equate/base.html#equate.base.Comparator">Comparator (in module equate.base)</a>
 </li>
       <li><a href="module_docs/equate/base.html#equate.base.ComparatorMeta">ComparatorMeta (class in equate.base)</a>
 </li>
-      <li><a href="module_docs/equate/compare.html#equate.compare.comparators">comparators (in module equate.compare)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/equate/compare.html#equate.compare.comparators">comparators (in module equate.compare)</a>
+</li>
       <li><a href="module_docs/equate/compare.html#equate.compare.comparison_vector">comparison_vector() (in module equate.compare)</a>
 
       <ul>
@@ -246,11 +250,17 @@
 </li>
       <li><a href="module_docs/equate/block/metablock.html#equate.block.metablock.dedupe_pairs">dedupe_pairs() (in module equate.block.metablock)</a>
 </li>
+      <li><a href="module_docs/equate/base.html#equate.base.ScoreMatrix.dense_cost">dense_cost() (equate.base.ScoreMatrix method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/equate/base.html#equate.base.ScoreMatrix.dense_similarity">dense_similarity() (equate.base.ScoreMatrix method)</a>
+</li>
       <li><a href="module_docs/equate/compare.html#equate.compare.direct">direct() (in module equate.compare)</a>
 </li>
       <li><a href="module_docs/equate/compare/vector.html#equate.compare.vector.dot">dot() (in module equate.compare.vector)</a>
+</li>
+      <li><a href="module_docs/equate/base.html#equate.base.ScoreMatrix.drop_holes">drop_holes() (equate.base.ScoreMatrix method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -561,11 +571,9 @@
 </li>
       <li><a href="module_docs/equate/compare/numeric_geo.html#equate.compare.numeric_geo.geo_similarity">geo_similarity() (in module equate.compare.numeric_geo)</a>
 </li>
-      <li><a href="module_docs/equate/completion.html#equate.completion.greedy_matching">greedy_matching() (in module equate.completion)</a>
+      <li><a href="module_docs/equate/matching.html#equate.matching.greedy_matching">greedy_matching() (in module equate.matching)</a>
 
       <ul>
-        <li><a href="module_docs/equate/matching.html#equate.matching.greedy_matching">(in module equate.matching)</a>
-</li>
         <li><a href="module_docs/equate/matching/assign.html#equate.matching.assign.greedy_matching">(in module equate.matching.assign)</a>
 </li>
         <li><a href="module_docs/equate/util.html#equate.util.greedy_matching">(in module equate.util)</a>
@@ -587,18 +595,14 @@
         <li><a href="module_docs/equate/matching/soft.html#equate.matching.soft.harden">(in module equate.matching.soft)</a>
 </li>
       </ul></li>
-      <li><a href="module_docs/equate/_dependencies.html#equate._dependencies.have">have() (in module equate._dependencies)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/equate/_dependencies.html#equate._dependencies.have">have() (in module equate._dependencies)</a>
+</li>
       <li><a href="module_docs/equate/compare/numeric_geo.html#equate.compare.numeric_geo.haversine">haversine() (in module equate.compare.numeric_geo)</a>
 </li>
-      <li><a href="module_docs/equate/completion.html#equate.completion.hungarian_matching">hungarian_matching() (in module equate.completion)</a>
-
-      <ul>
-        <li><a href="module_docs/equate/util.html#equate.util.hungarian_matching">(in module equate.util)</a>
+      <li><a href="module_docs/equate/util.html#equate.util.hungarian_matching">hungarian_matching() (in module equate.util)</a>
 </li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -606,6 +610,8 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/equate/featurize.html#equate.featurize.identity">identity() (in module equate.featurize)</a>
+</li>
+      <li><a href="module_docs/equate/base.html#equate.base.ScoreMatrix.is_sparse">is_sparse (equate.base.ScoreMatrix property)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -635,20 +641,16 @@
         <li><a href="module_docs/equate/interactive/kbest.html#equate.interactive.kbest.k_best_assignments">(in module equate.interactive.kbest)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/equate/block.html#equate.block.key_blocking">key_blocking() (in module equate.block)</a>
 
       <ul>
         <li><a href="module_docs/equate/block/keyed.html#equate.block.keyed.key_blocking">(in module equate.block.keyed)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="module_docs/equate/completion.html#equate.completion.kuhn_munkres_matching">kuhn_munkres_matching() (in module equate.completion)</a>
-
-      <ul>
-        <li><a href="module_docs/equate/util.html#equate.util.kuhn_munkres_matching">(in module equate.util)</a>
+      <li><a href="module_docs/equate/util.html#equate.util.kuhn_munkres_matching">kuhn_munkres_matching() (in module equate.util)</a>
 </li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -658,6 +660,8 @@
       <li><a href="module_docs/equate/_vector.html#equate._vector.l2_normalize">l2_normalize() (in module equate._vector)</a>
 </li>
       <li><a href="module_docs/equate/base.html#equate.base.Matching.labeled_pairs">labeled_pairs() (equate.base.Matching method)</a>
+</li>
+      <li><a href="module_docs/equate/base.html#equate.base.ScoreMatrix.legacy_view">legacy_view() (equate.base.ScoreMatrix method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -697,12 +701,8 @@
         <li><a href="module_docs/equate/compare/vectorize.html#equate.compare.vectorize.max_combiner">(in module equate.compare.vectorize)</a>
 </li>
       </ul></li>
-      <li><a href="module_docs/equate/completion.html#equate.completion.maximal_matching">maximal_matching() (in module equate.completion)</a>
-
-      <ul>
-        <li><a href="module_docs/equate/util.html#equate.util.maximal_matching">(in module equate.util)</a>
+      <li><a href="module_docs/equate/util.html#equate.util.maximal_matching">maximal_matching() (in module equate.util)</a>
 </li>
-      </ul></li>
       <li><a href="module_docs/equate/compare.html#equate.compare.mean">mean() (in module equate.compare)</a>
 
       <ul>
@@ -932,6 +932,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/equate/featurize/text.html#equate.featurize.text.sbert_featurizer">sbert_featurizer() (in module equate.featurize.text)</a>
 </li>
+      <li><a href="module_docs/equate/base.html#equate.base.ScoreMatrix.score_at">score_at() (equate.base.ScoreMatrix method)</a>
+</li>
       <li><a href="module_docs/equate/block.html#equate.block.score_candidates">score_candidates() (in module equate.block)</a>
 
       <ul>
@@ -939,6 +941,8 @@
 </li>
       </ul></li>
       <li><a href="module_docs/equate/base.html#equate.base.ScoreMatrix">ScoreMatrix (class in equate.base)</a>
+</li>
+      <li><a href="module_docs/equate/base.html#equate.base.scorematrix_matcher">scorematrix_matcher() (in module equate.base)</a>
 </li>
       <li><a href="module_docs/equate/base.html#equate.base.Sense">Sense (in module equate.base)</a>
 </li>
@@ -948,14 +952,14 @@
         <li><a href="module_docs/equate/util.html#equate.util.similarity_matrix">(in module equate.util)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/equate/matching.html#equate.matching.soft_match">soft_match() (in module equate.matching)</a>
 
       <ul>
         <li><a href="module_docs/equate/matching/soft.html#equate.matching.soft.soft_match">(in module equate.matching.soft)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/equate/interactive.html#equate.interactive.solve_constrained">solve_constrained() (in module equate.interactive)</a>
 
       <ul>
@@ -968,18 +972,16 @@
         <li><a href="module_docs/equate/block/keyed.html#equate.block.keyed.sorted_neighborhood">(in module equate.block.keyed)</a>
 </li>
       </ul></li>
-      <li><a href="module_docs/equate/completion.html#equate.completion.stable_marriage_matching">stable_marriage_matching() (in module equate.completion)</a>
-
-      <ul>
-        <li><a href="module_docs/equate/util.html#equate.util.stable_marriage_matching">(in module equate.util)</a>
+      <li><a href="module_docs/equate/util.html#equate.util.stable_marriage_matching">stable_marriage_matching() (in module equate.util)</a>
 </li>
-      </ul></li>
       <li><a href="module_docs/equate/matching.html#equate.matching.stable_matching">stable_matching() (in module equate.matching)</a>
 
       <ul>
         <li><a href="module_docs/equate/matching/assign.html#equate.matching.assign.stable_matching">(in module equate.matching.assign)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/equate/base.html#equate.base.ScoreMatrix.stored_entries">stored_entries() (equate.base.ScoreMatrix method)</a>
+</li>
   </ul></td>
 </tr></table>
 

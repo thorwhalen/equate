@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>equate.completion &mdash; equate 0.0.12 documentation</title>
+  <title>equate.completion &mdash; equate 0.0.13 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=3bbcec59"></script>
+      <script src="../../_static/documentation_options.js?v=9fc46840"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -130,8 +130,6 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">linear_sum_assignment</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate._dependencies</span><span class="w"> </span><span class="kn">import</span> <span class="n">require</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate._vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">cosine_similarity</span>
@@ -176,124 +174,18 @@
 
 
 
-<div class="viewcode-block" id="greedy_matching">
-<a class="viewcode-back" href="../../module_docs/equate/completion.html#equate.completion.greedy_matching">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">greedy_matching</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Greedy Algorithm: Iteratively picks the highest similarity pair and removes the</span>
-<span class="sd">    matched items from the pool.</span>
-
-<span class="sd">    :param similarity_matrix: A sparse matrix of similarities.</span>
-<span class="sd">    :return: List of tuples (row_index, col_index) for matched pairs.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">matches</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-        <span class="k">if</span> <span class="n">similarity_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">nnz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">continue</span>
-        <span class="n">j</span> <span class="o">=</span> <span class="n">similarity_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">argmax</span><span class="p">()</span>
-        <span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
-        <span class="n">similarity_matrix</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Remove this column for subsequent iterations</span>
-    <span class="k">return</span> <span class="n">matches</span></div>
-
-
-
-<div class="viewcode-block" id="hungarian_matching">
-<a class="viewcode-back" href="../../module_docs/equate/completion.html#equate.completion.hungarian_matching">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">hungarian_matching</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Hungarian Algorithm (Optimal Matching): Finds the optimal matching, minimizing the</span>
-<span class="sd">    total cost.</span>
-<span class="sd">    :param similarity_matrix: A sparse matrix of similarities.</span>
-<span class="sd">    :return: List of tuples (row_index, col_index) for matched pairs.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">cost_matrix</span> <span class="o">=</span> <span class="n">similarity_matrix</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">similarity_matrix</span>
-    <span class="n">row_ind</span><span class="p">,</span> <span class="n">col_ind</span> <span class="o">=</span> <span class="n">linear_sum_assignment</span><span class="p">(</span><span class="n">cost_matrix</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">row_ind</span><span class="p">,</span> <span class="n">col_ind</span><span class="p">))</span></div>
-
-
-
-<div class="viewcode-block" id="maximal_matching">
-<a class="viewcode-back" href="../../module_docs/equate/completion.html#equate.completion.maximal_matching">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">maximal_matching</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Maximal Matching in Bipartite Graph: Finds a maximal matching in a bipartite graph.</span>
-<span class="sd">    See https://www.geeksforgeeks.org/maximum-bipartite-matching/.</span>
-
-<span class="sd">    :param similarity_matrix: A sparse matrix of similarities.</span>
-<span class="sd">    :return: List of tuples (row_index, col_index) for matched pairs.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
-
-    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
-            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;key_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;value_</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">similarity_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
-    <span class="n">matching</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">max_weight_matching</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">maxcardinality</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">[(</span><span class="nb">int</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]))</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">matching</span><span class="p">]</span></div>
-
-
-
-<div class="viewcode-block" id="stable_marriage_matching">
-<a class="viewcode-back" href="../../module_docs/equate/completion.html#equate.completion.stable_marriage_matching">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">stable_marriage_matching</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Stable Marriage Problem (Gale-Shapley Algorithm):</span>
-<span class="sd">    Solves the stable marriage problem, ensuring a stable matching.</span>
-<span class="sd">    See: https://en.wikipedia.org/wiki/Stable_marriage_problem</span>
-
-<span class="sd">    :param similarity_matrix: A sparse matrix of similarities.</span>
-<span class="sd">    :return: List of tuples (row_index, col_index) for matched pairs.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">distance_matrix</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">similarity_matrix</span>
-    <span class="n">men_prefs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">distance_matrix</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">women_prefs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">distance_matrix</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
-    <span class="n">couples</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">couples</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">similarity_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-        <span class="k">for</span> <span class="n">man</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-            <span class="k">if</span> <span class="n">man</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">couples</span><span class="p">:</span>
-                <span class="n">woman</span> <span class="o">=</span> <span class="n">men_prefs</span><span class="p">[</span><span class="n">man</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">woman</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">couples</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-                    <span class="n">couples</span><span class="p">[</span><span class="n">man</span><span class="p">]</span> <span class="o">=</span> <span class="n">woman</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">current_man</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">couples</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span>
-                        <span class="nb">list</span><span class="p">(</span><span class="n">couples</span><span class="o">.</span><span class="n">values</span><span class="p">())</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">woman</span><span class="p">)</span>
-                    <span class="p">]</span>
-                    <span class="k">if</span> <span class="nb">list</span><span class="p">(</span><span class="n">women_prefs</span><span class="p">[</span><span class="n">woman</span><span class="p">])</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">man</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">list</span><span class="p">(</span>
-                        <span class="n">women_prefs</span><span class="p">[</span><span class="n">woman</span><span class="p">]</span>
-                    <span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">current_man</span><span class="p">):</span>
-                        <span class="k">del</span> <span class="n">couples</span><span class="p">[</span><span class="n">current_man</span><span class="p">]</span>
-                        <span class="n">couples</span><span class="p">[</span><span class="n">man</span><span class="p">]</span> <span class="o">=</span> <span class="n">woman</span>
-        <span class="k">for</span> <span class="n">couple</span> <span class="ow">in</span> <span class="n">couples</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">men_prefs</span><span class="p">[</span><span class="n">couple</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">men_prefs</span><span class="p">[</span><span class="n">couple</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">1</span><span class="p">:]</span>
-    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">couples</span><span class="o">.</span><span class="n">items</span><span class="p">())</span></div>
-
-
-
-<div class="viewcode-block" id="kuhn_munkres_matching">
-<a class="viewcode-back" href="../../module_docs/equate/completion.html#equate.completion.kuhn_munkres_matching">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">kuhn_munkres_matching</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Kuhn-Munkres Algorithm: Another implementation of the Hungarian algorithm using</span>
-<span class="sd">    the `networkx` package.</span>
-
-<span class="sd">    :param similarity_matrix: A sparse matrix of similarities.</span>
-<span class="sd">    :return: List of tuples (row_index, col_index) for matched pairs.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
-
-    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
-            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;key_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;value_</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=-</span><span class="n">similarity_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
-    <span class="n">matching</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">algorithms</span><span class="o">.</span><span class="n">bipartite</span><span class="o">.</span><span class="n">matching</span><span class="o">.</span><span class="n">minimum_weight_full_matching</span><span class="p">(</span>
-        <span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="p">[</span>
-        <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">matching</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">u</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;key_&quot;</span><span class="p">)</span>
-    <span class="p">]</span></div>
-
+<span class="c1"># The matchers below used to be verbatim copies of ``equate.util``&#39;s, and they silently</span>
+<span class="c1"># drifted: the copies kept the networkx unordered-edge bug (transposed pairs) and the</span>
+<span class="c1"># densify-the-holes bug (an absent cell read as a real score of 0.0) long after ``util``</span>
+<span class="c1"># was fixed. Re-exporting instead of re-copying makes that divergence impossible, and keeps</span>
+<span class="c1"># ``from equate.completion import maximal_matching`` working for anyone already importing it.</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.util</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401  (re-exported for back-compat)</span>
+    <span class="n">greedy_matching</span><span class="p">,</span>
+    <span class="n">hungarian_matching</span><span class="p">,</span>
+    <span class="n">maximal_matching</span><span class="p">,</span>
+    <span class="n">stable_marriage_matching</span><span class="p">,</span>
+    <span class="n">kuhn_munkres_matching</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 
            </div>

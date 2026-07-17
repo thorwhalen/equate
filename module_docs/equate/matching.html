@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>equate.matching &mdash; equate 0.0.12 documentation</title>
+  <title>equate.matching &mdash; equate 0.0.13 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=3bbcec59"></script>
+      <script src="../../_static/documentation_options.js?v=9fc46840"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -130,10 +130,11 @@ pass a callable <code class="docutils literal notranslate"><span class="pre">(sc
 parallel <a class="reference internal" href="#equate.matching.soft_match" title="equate.matching.soft_match"><code class="xref py py-func docutils literal notranslate"><span class="pre">soft_match()</span></code></a> / <a class="reference internal" href="#equate.matching.harden" title="equate.matching.harden"><code class="xref py py-func docutils literal notranslate"><span class="pre">harden()</span></code></a> seam.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="equate.matching.greedy_matching">
-<span class="sig-prename descclassname"><span class="pre">equate.matching.</span></span><span class="sig-name descname"><span class="pre">greedy_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maximize'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/matching/assign.html#greedy_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.matching.greedy_matching" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">equate.matching.</span></span><span class="sig-name descname"><span class="pre">greedy_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/matching/assign.html#greedy_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.matching.greedy_matching" title="Link to this definition"></a></dt>
 <dd><p>Greedy 1:1: repeatedly take the best still-available <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code>, removing both.</p>
-<p>Order-dependent and not globally optimal, but fast. For a sparse matrix only the
-stored (candidate) cells are considered — an absent cell is never a match.</p>
+<p>Order-dependent and not globally optimal, but fast. Iterates
+<a class="reference internal" href="base.html#equate.base.ScoreMatrix.stored_entries" title="equate.base.ScoreMatrix.stored_entries"><code class="xref py py-meth docutils literal notranslate"><span class="pre">stored_entries()</span></code></a>, so for a sparse (blocked) matrix only
+the stored candidate cells are considered — an absent cell is never a match.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -150,42 +151,53 @@ stored (candidate) cells are considered — an absent cell is never a match.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="equate.matching.optimal_matching">
-<span class="sig-prename descclassname"><span class="pre">equate.matching.</span></span><span class="sig-name descname"><span class="pre">optimal_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maximize'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/matching/assign.html#optimal_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.matching.optimal_matching" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">equate.matching.</span></span><span class="sig-name descname"><span class="pre">optimal_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/matching/assign.html#optimal_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.matching.optimal_matching" title="Link to this definition"></a></dt>
 <dd><p>Globally optimal 1:1 assignment (the linear assignment problem).</p>
-<p>A dense matrix goes straight to <code class="docutils literal notranslate"><span class="pre">linear_sum_assignment</span></code> on <code class="docutils literal notranslate"><span class="pre">to_cost(scores,</span> <span class="pre">sense)</span></code>.
-A <strong>sparse (blocked)</strong> matrix honors the <em>candidate</em> semantics: absent cells are
-worst-cased (via <code class="docutils literal notranslate"><span class="pre">to_cost</span></code>/<code class="docutils literal notranslate"><span class="pre">_sparse_to_cost</span></code>), the LAP is solved on that cost, and
-any assignment landing on a non-candidate (absent) cell is dropped — so a row with no
-candidate is left unmatched (a <em>partial</em> matching), and an all-absent matrix yields no
-matches. This densifies the cost; a non-densifying sparse LAP is a future optimization
-(scipy’s sparse solver silently drops explicitly-stored zero-score candidates, so it is
-not used here).</p>
+<p>Accepts a <a class="reference internal" href="base.html#equate.base.ScoreMatrix" title="equate.base.ScoreMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreMatrix</span></code></a> (native) or a raw dense/sparse array with
+<code class="docutils literal notranslate"><span class="pre">sense=</span></code> (back-compat). Solves <code class="docutils literal notranslate"><span class="pre">linear_sum_assignment</span></code> on
+<a class="reference internal" href="base.html#equate.base.ScoreMatrix.dense_cost" title="equate.base.ScoreMatrix.dense_cost"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dense_cost()</span></code></a> — so a <strong>sparse (blocked)</strong> matrix has its
+absent cells worst-cased (never preferred over a real pair) and any assignment landing
+on a non-candidate cell is dropped via <a class="reference internal" href="base.html#equate.base.ScoreMatrix.candidate_mask" title="equate.base.ScoreMatrix.candidate_mask"><code class="xref py py-meth docutils literal notranslate"><span class="pre">candidate_mask()</span></code></a>:
+a row with no candidate is left unmatched (a <em>partial</em> matching), an all-absent matrix
+yields no matches. Densifying the cost is a correctness stopgap; a non-densifying
+sparse LAP is a future optimization (scipy’s sparse solver silently drops
+explicitly-stored zero-score candidates, so it is not used here).</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="equate.matching.resolve_matcher">
 <span class="sig-prename descclassname"><span class="pre">equate.matching.</span></span><span class="sig-name descname"><span class="pre">resolve_matcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'optimal'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/matching.html#resolve_matcher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.matching.resolve_matcher" title="Link to this definition"></a></dt>
-<dd><p>Resolve <code class="docutils literal notranslate"><span class="pre">spec</span></code> to a matcher <code class="docutils literal notranslate"><span class="pre">(scores,</span> <span class="pre">*,</span> <span class="pre">sense)</span> <span class="pre">-&gt;</span> <span class="pre">pairs</span></code>.</p>
-<p>A callable passes through; a registered name (or a facade <code class="docutils literal notranslate"><span class="pre">how=</span></code> alias like
-<code class="docutils literal notranslate"><span class="pre">'assign'</span> <span class="pre">-&gt;</span> <span class="pre">'optimal'</span></code>) is built via the registry.</p>
+<dd><p>Resolve <code class="docutils literal notranslate"><span class="pre">spec</span></code> to a runner <code class="docutils literal notranslate"><span class="pre">(scores_or_scorematrix,</span> <span class="pre">*,</span> <span class="pre">sense=None)</span> <span class="pre">-&gt;</span> <span class="pre">pairs</span></code>.</p>
+<p>A registered name (or a facade <code class="docutils literal notranslate"><span class="pre">how=</span></code> alias like <code class="docutils literal notranslate"><span class="pre">'assign'</span> <span class="pre">-&gt;</span> <span class="pre">'optimal'</span></code>) is built
+via the registry; a callable is used as-is. The returned runner coerces its argument to
+a <a class="reference internal" href="base.html#equate.base.ScoreMatrix" title="equate.base.ScoreMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreMatrix</span></code></a> and then either hands that matrix to a <strong>native</strong>
+matcher (so it worst-cases holes through the sanctioned views) or hands a <strong>legacy</strong>
+raw-array matcher a hole-worst-cased dense array — so the sparse hole-worst-casing holds
+no matter which contract the matcher follows (D11).</p>
+<p>Note this returns a <em>runner</em>, not <code class="docutils literal notranslate"><span class="pre">spec</span></code> itself: unlike the pre-D11 version it is no
+longer an identity passthrough for a callable (<code class="docutils literal notranslate"><span class="pre">resolve_matcher(f)</span> <span class="pre">is</span> <span class="pre">f</span></code> was true, and
+is not any more). The runner carries the wrapped matcher’s <code class="docutils literal notranslate"><span class="pre">__name__</span></code>/<code class="docutils literal notranslate"><span class="pre">__doc__</span></code>, and
+the original is recoverable via <code class="docutils literal notranslate"><span class="pre">__wrapped__</span></code>.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="equate.matching.soft_match">
-<span class="sig-prename descclassname"><span class="pre">equate.matching.</span></span><span class="sig-name descname"><span class="pre">soft_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maximize'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/matching/soft.html#soft_match"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.matching.soft_match" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">equate.matching.</span></span><span class="sig-name descname"><span class="pre">soft_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/matching/soft.html#soft_match"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.matching.soft_match" title="Link to this definition"></a></dt>
 <dd><p>Entropic optimal-transport (Sinkhorn) plan over the cost derived from <code class="docutils literal notranslate"><span class="pre">scores</span></code>.</p>
-<p>Returns a dense transport-plan matrix whose rows/cols sum to the marginals <code class="docutils literal notranslate"><span class="pre">a</span></code>/<code class="docutils literal notranslate"><span class="pre">b</span></code>
+<p>Accepts a <a class="reference internal" href="base.html#equate.base.ScoreMatrix" title="equate.base.ScoreMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreMatrix</span></code></a> (native) or a raw array with <code class="docutils literal notranslate"><span class="pre">sense=</span></code>.
+Returns a dense transport-plan matrix whose rows/cols sum to the marginals <code class="docutils literal notranslate"><span class="pre">a</span></code>/<code class="docutils literal notranslate"><span class="pre">b</span></code>
 (uniform by default). Requires <code class="docutils literal notranslate"><span class="pre">equate[ot]</span></code> (POT). <code class="docutils literal notranslate"><span class="pre">reg</span></code> (entropic regularization)
 must be &gt; 0 (<code class="docutils literal notranslate"><span class="pre">reg=0</span></code> divides by zero inside Sinkhorn).</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="equate.matching.stable_matching">
-<span class="sig-prename descclassname"><span class="pre">equate.matching.</span></span><span class="sig-name descname"><span class="pre">stable_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maximize'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/matching/assign.html#stable_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.matching.stable_matching" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">equate.matching.</span></span><span class="sig-name descname"><span class="pre">stable_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/equate/matching/assign.html#stable_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.matching.stable_matching" title="Link to this definition"></a></dt>
 <dd><p>Gale-Shapley stable matching (optimizes stability, not total score).</p>
-<p>See <a class="reference internal" href="util.html#equate.util.stable_marriage_matching" title="equate.util.stable_marriage_matching"><code class="xref py py-func docutils literal notranslate"><span class="pre">equate.util.stable_marriage_matching()</span></code></a>. A sparse (blocked) matrix routes
-through <code class="docutils literal notranslate"><span class="pre">to_cost</span></code> (absent cells worst-cased), is ranked by that cost, and
-hole-assignments are dropped — so an absent cell never out-ranks a real candidate.</p>
+<p>See <a class="reference internal" href="util.html#equate.util.stable_marriage_matching" title="equate.util.stable_marriage_matching"><code class="xref py py-func docutils literal notranslate"><span class="pre">equate.util.stable_marriage_matching()</span></code></a>. Ranks preferences by
+<a class="reference internal" href="base.html#equate.base.ScoreMatrix.dense_cost" title="equate.base.ScoreMatrix.dense_cost"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dense_cost()</span></code></a> (absent cells worst-cased), so a sparse
+(blocked) cell never out-ranks a real candidate; hole-assignments are then dropped via
+<a class="reference internal" href="base.html#equate.base.ScoreMatrix.candidate_mask" title="equate.base.ScoreMatrix.candidate_mask"><code class="xref py py-meth docutils literal notranslate"><span class="pre">candidate_mask()</span></code></a>.</p>
 </dd></dl>
 
 </section>
