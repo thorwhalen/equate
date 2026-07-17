@@ -46,7 +46,9 @@ def reoptimize(scores, constraints=None, *, sense="maximize"):
     # dense_cost worst-cases a sparse (blocked) matrix's absent cells (never densify first
     # — that loses the worst-casing, a #7-class bug); D11
     sm = ScoreMatrix.coerce(scores, sense=sense)
-    result = solve_constrained(sm.dense_cost(), constraints.forced, constraints.forbidden)
+    result = solve_constrained(
+        sm.dense_cost(), constraints.forced, constraints.forbidden
+    )
     if result is None:
         raise ValueError("the constraints are infeasible — no valid assignment exists")
     assignment, _ = result
