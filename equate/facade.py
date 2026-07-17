@@ -7,10 +7,7 @@ swappable by one keyword (decision register D4): ``featurize=``, ``compare=``, `
 (and scored) pairs, zero config.
 """
 
-import numpy as np
-from scipy.sparse import issparse
-
-from equate.base import Matching
+from equate.base import Matching, ScoreMatrix
 from equate.compare import resolve_comparator, direct, featurized
 from equate.block import resolve_blocker, score_candidates, all_pairs
 from equate.matching import resolve_matcher, soft_match, harden
@@ -76,46 +73,37 @@ def match(
     else:
         scores = featurized(featurize or "tfidf")(A, B)
 
-    # each matched pair's score is read from the score matrix (the similarity/score),
-    # consistently for the hard and soft paths
-    dense = scores.toarray() if issparse(scores) else np.asarray(scores)
+    # the ScoreMatrix SSOT carries sense + labels and owns every densify (holes
+    # worst-cased); a matched pair's retained score is read via sm.score_at(i, j)
+    sm = ScoreMatrix(scores, sense=sense, row_labels=A, col_labels=B)
 
     if how == "cluster":
         # cluster the pooled A+B index space (B offset by len(A)) using the A-B match
         # edges above `threshold` — cross-collection entity resolution -> a Partition
         thr = 0.5 if threshold is None else threshold
         n_a = len(A)
-        if issparse(scores):
-            coo = scores.tocoo()
-            edges = [
-                (int(i), n_a + int(j), float(v))
-                for i, j, v in zip(coo.row, coo.col, coo.data)
-            ]
-        else:
-            edges = [
-                (i, n_a + j, float(dense[i, j]))
-                for i in range(n_a)
-                for j in range(len(B))
-            ]
+        edges = [(int(i), n_a + int(j), v) for i, j, v in sm.stored_entries()]
         return resolve_clusterer(cluster)(
             edges, n_a + len(B), threshold=thr, sense=sense
         )
 
     if how == "soft":
-        plan = soft_match(scores, sense=sense)
-        pairs = harden(plan)
+        plan = soft_match(sm)
+        # harden() solves over the DENSE transport plan and knows nothing of blocking, so a
+        # forced-partial plan can put mass on a hole; drop those (D11) as every other path does
+        pairs = sm.drop_holes(harden(plan))
         return Matching(
             pairs=pairs,
-            scores=[float(dense[i, j]) for i, j in pairs],
+            scores=[sm.score_at(i, j) for i, j in pairs],
             plan=plan,
             row_labels=A,
             col_labels=B,
         )
 
-    pairs = list(resolve_matcher(how)(scores, sense=sense))
+    pairs = list(resolve_matcher(how)(sm))
     return Matching(
         pairs=pairs,
-        scores=[float(dense[i, j]) for i, j in pairs],
+        scores=[sm.score_at(i, j) for i, j in pairs],
         row_labels=A,
         col_labels=B,
     )

@@ -166,3 +166,80 @@ def test_comparator_meta_defaults_and_directionality():
     assert default.is_symmetric is True and default.is_metric is False
     directional = ComparatorMeta(polarity="distance", is_symmetric=False, bounded=True)
     assert directional.is_symmetric is False and directional.bounded is True
+
+
+# --- ScoreMatrix sanctioned densify views (the deep hole-worst-casing contract) ----
+
+def test_scorematrix_coerce_passthrough_wrap_and_conflict():
+    sm = ScoreMatrix(np.eye(2), sense="minimize")
+    assert ScoreMatrix.coerce(sm) is sm  # a ScoreMatrix passes through unchanged
+    assert ScoreMatrix.coerce(sm, sense="minimize") is sm  # matching sense is fine
+    wrapped = ScoreMatrix.coerce(np.eye(2))  # a raw array is wrapped, default maximize
+    assert isinstance(wrapped, ScoreMatrix) and wrapped.sense == "maximize"
+    with pytest.raises(ValueError):  # a conflicting sense is an error, never silent
+        ScoreMatrix.coerce(sm, sense="maximize")
+
+
+def test_scorematrix_dense_views_dense_input():
+    sm = ScoreMatrix(np.array([[0.9, 0.1], [0.2, 0.8]]), sense="maximize")
+    assert sm.is_sparse is False
+    np.testing.assert_allclose(sm.dense_cost(), sm.data.max() - sm.data)
+    np.testing.assert_allclose(sm.dense_similarity(), -sm.dense_cost())
+    assert sm.candidate_mask().all()  # a dense matrix has no holes
+    assert sm.score_at(0, 0) == 0.9
+
+
+def test_scorematrix_sparse_views_worst_case_holes():
+    csr = pytest.importorskip("scipy.sparse").csr_matrix
+    S = csr(([-0.9, -0.8], ([0, 1], [1, 0])), shape=(2, 2))
+    sm = ScoreMatrix(S, sense="maximize")
+    assert sm.is_sparse is True
+    mask = sm.candidate_mask()
+    assert mask.tolist() == [[False, True], [True, False]]  # only stored cells
+    cost = sm.dense_cost()
+    # every hole (absent cell) is strictly worse (higher cost) than every real cell
+    assert cost[~mask].min() > cost[mask].max()
+    # dense_similarity mirrors it: holes strictly lowest
+    sim = sm.dense_similarity()
+    assert sim[~mask].max() < sim[mask].min()
+    assert sorted(sm.stored_entries()) == [(0, 1, -0.9), (1, 0, -0.8)]
+    assert sm.score_at(0, 1) == -0.9  # retained raw score of a real candidate
+
+
+def test_scorematrix_legacy_view_preserves_raw_scores():
+    """A legacy matcher may threshold on *absolute* scores, so it must see the real values.
+
+    Routing the legacy view through ``dense_similarity()`` rescaled a hole-free matrix to
+    ``S - S.max()`` (all <= 0), silently breaking every ``how=<callable>`` matcher that reads
+    absolute scores. A dense matrix has no holes, so it must come back untouched.
+    """
+    S = np.array([[0.9, 0.1], [0.2, 0.8]])
+    assert np.allclose(ScoreMatrix(S, sense="maximize").legacy_view(), S)
+    assert np.allclose(ScoreMatrix(S, sense="minimize").legacy_view(), S)
+
+
+def test_scorematrix_legacy_view_keeps_stored_values_and_worst_cases_holes():
+    """Sparse: stored scores keep their raw values; only the holes are rewritten (D11)."""
+    csr = pytest.importorskip("scipy.sparse").csr_matrix
+    # stored: (0,1) = -0.9 and (1,0) = -0.8; the diagonal cells are HOLES
+    S = csr(([-0.9, -0.8], ([0, 1], [1, 0])), shape=(2, 2))
+
+    view = ScoreMatrix(S, sense="maximize").legacy_view()
+    assert view[0, 1] == -0.9 and view[1, 0] == -0.8  # raw stored values preserved
+    # a hole must be strictly the WORST similarity — never a 0.0 that beats a real -0.9
+    assert view[0, 0] < -0.9 and view[1, 1] < -0.9
+
+    view = ScoreMatrix(S, sense="minimize").legacy_view()
+    assert view[0, 1] == -0.9 and view[1, 0] == -0.8
+    # cost orientation: a hole is strictly the most expensive cell
+    assert view[0, 0] > -0.8 and view[1, 1] > -0.8
+
+
+def test_scorematrix_matcher_marker():
+    from equate.base import scorematrix_matcher
+
+    @scorematrix_matcher
+    def m(sm):
+        return []
+
+    assert m._scorematrix_native is True

@@ -7,9 +7,10 @@ pass a callable ``(scores, *, sense) -> pairs``. The optimal matcher is sparse-a
 parallel :func:`soft_match` / :func:`harden` seam.
 """
 
-import numpy as np
-from scipy.sparse import issparse
+import functools
+import inspect
 
+from equate.base import ScoreMatrix, scorematrix_matcher
 from equate.registry import Registry
 from equate.matching.assign import optimal_matching, greedy_matching, stable_matching
 from equate.matching.soft import soft_match, harden
@@ -41,20 +42,34 @@ def _const(fn, name):
     return factory
 
 
-def _max_weight_matcher(scores, *, sense="maximize"):
-    """Maximum-weight bipartite matching via networkx — requires ``equate[graph]``."""
+@scorematrix_matcher
+def _max_weight_matcher(scores, *, sense=None):
+    """Maximum-weight bipartite matching via networkx — requires ``equate[graph]``.
+
+    Hands the :class:`~equate.base.ScoreMatrix` straight to ``maximal_matching``, which
+    builds graph edges from *candidate cells only* — so an absent cell is never an edge, and
+    max-cardinality is maximized over real candidates. The boundary ``drop_holes`` is then a
+    no-op safety net rather than the thing standing between a hole and the result (D11).
+    """
     from equate.util import maximal_matching
 
-    S = scores.toarray() if issparse(scores) else np.asarray(scores, dtype=float)
-    return list(maximal_matching(-S if sense == "minimize" else S))
+    sm = ScoreMatrix.coerce(scores, sense=sense)
+    return sm.drop_holes(list(maximal_matching(sm)))
 
 
-def _kuhn_munkres_matcher(scores, *, sense="maximize"):
-    """Hungarian assignment via networkx — requires ``equate[graph]``."""
+@scorematrix_matcher
+def _kuhn_munkres_matcher(scores, *, sense=None):
+    """Hungarian assignment via networkx — requires ``equate[graph]``.
+
+    Feeds :meth:`~equate.base.ScoreMatrix.dense_cost` (absent cells worst-cased) as an
+    already-minimized cost and drops any hole assignment via
+    :meth:`~equate.base.ScoreMatrix.candidate_mask` — the sparse-safe counterpart to the
+    old densify-then-``to_cost`` path (which silently lost the worst-casing; D11).
+    """
     from equate.util import kuhn_munkres_matching
 
-    S = scores.toarray() if issparse(scores) else scores
-    return list(kuhn_munkres_matching(S, sense=sense))
+    sm = ScoreMatrix.coerce(scores, sense=sense)
+    return sm.drop_holes(list(kuhn_munkres_matching(sm.dense_cost(), sense="minimize")))
 
 
 matchers.register("optimal", _const(optimal_matching, "optimal"))
@@ -68,17 +83,78 @@ matchers.register("kuhn_munkres", _const(_kuhn_munkres_matcher, "kuhn_munkres"))
 _HOW_ALIASES = {"assign": "optimal"}
 
 
-def resolve_matcher(spec="optimal", **config):
-    """Resolve ``spec`` to a matcher ``(scores, *, sense) -> pairs``.
+def _is_legacy_matcher(matcher) -> bool:
+    """Whether ``matcher`` uses the legacy raw-array ``(scores, *, sense)`` contract.
 
-    A callable passes through; a registered name (or a facade ``how=`` alias like
-    ``'assign' -> 'optimal'``) is built via the registry.
+    **Native means explicitly opted in** via :func:`~equate.base.scorematrix_matcher`;
+    everything else is legacy and is handed a pre-worst-cased dense array. This is the
+    safe default: every pre-existing user matcher followed the raw-array contract (in any
+    of its legal shapes — ``sense=`` keyword, ``**kwargs``, a differently-named direction
+    arg, or no direction at all), so signature-sniffing for a literal ``sense`` parameter
+    would misclassify those as native and hand them a ``ScoreMatrix`` they cannot read. A
+    new ScoreMatrix-consuming matcher marks itself; nothing else changes contract.
     """
-    if callable(spec):
-        return spec
-    if isinstance(spec, str):
-        return matchers.create(_HOW_ALIASES.get(spec, spec), **config)
-    raise TypeError(
-        f"matcher spec must be a registered name or a callable, "
-        f"got {type(spec).__name__}"
+    return not getattr(matcher, "_scorematrix_native", False)
+
+
+def _accepts_sense(matcher) -> bool:
+    """Whether a legacy matcher can be handed ``sense=`` (has the param or ``**kwargs``).
+
+    Only decides *how* to call an already-classified legacy matcher — never native-vs-legacy.
+    A legacy matcher that omits ``sense`` (e.g. a plain ``(scores)`` argmax) is called with
+    just the array, so every legal shape of the raw-array contract keeps working.
+    """
+    try:
+        params = inspect.signature(matcher).parameters
+    except (ValueError, TypeError):
+        return False
+    # a POSITIONAL_ONLY `sense` cannot be passed by keyword — calling it that way is a
+    # TypeError, so such a matcher is called with the array alone
+    return any(
+        (p.name == "sense" and p.kind != p.POSITIONAL_ONLY) or p.kind == p.VAR_KEYWORD
+        for p in params.values()
     )
+
+
+def resolve_matcher(spec="optimal", **config):
+    """Resolve ``spec`` to a runner ``(scores_or_scorematrix, *, sense=None) -> pairs``.
+
+    A registered name (or a facade ``how=`` alias like ``'assign' -> 'optimal'``) is built
+    via the registry; a callable is used as-is. The returned runner coerces its argument to
+    a :class:`~equate.base.ScoreMatrix` and then either hands that matrix to a **native**
+    matcher (so it worst-cases holes through the sanctioned views) or hands a **legacy**
+    raw-array matcher a hole-worst-cased dense array — so the sparse hole-worst-casing holds
+    no matter which contract the matcher follows (D11).
+
+    Note this returns a *runner*, not ``spec`` itself: unlike the pre-D11 version it is no
+    longer an identity passthrough for a callable (``resolve_matcher(f) is f`` was true, and
+    is not any more). The runner carries the wrapped matcher's ``__name__``/``__doc__``, and
+    the original is recoverable via ``__wrapped__``.
+    """
+    if isinstance(spec, str):
+        matcher = matchers.create(_HOW_ALIASES.get(spec, spec), **config)
+    elif callable(spec):
+        matcher = spec
+    else:
+        raise TypeError(
+            f"matcher spec must be a registered name or a callable, "
+            f"got {type(spec).__name__}"
+        )
+    legacy = _is_legacy_matcher(matcher)
+    pass_sense = legacy and _accepts_sense(matcher)
+
+    @functools.wraps(matcher)
+    def run(scores, *, sense=None):
+        sm = ScoreMatrix.coerce(scores, sense=sense)
+        if not legacy:
+            pairs = matcher(sm)
+        else:
+            view = sm.legacy_view()
+            pairs = matcher(view, sense=sm.sense) if pass_sense else matcher(view)
+        # D11 is enforced HERE, at the boundary — so the invariant never depends on an
+        # individual matcher remembering to drop holes. A native matcher has already
+        # dropped them (this is idempotent); a legacy/third-party matcher that assigns a
+        # row with no candidate (worst-cased, but still assignable) is corrected here.
+        return sm.drop_holes(pairs)
+
+    return run

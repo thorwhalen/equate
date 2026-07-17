@@ -31,6 +31,13 @@ core stays open-closed and the default install stays light. Read
 5. **Scores respect the sense contract** — similarity is higher-is-better; matchers
    route through the shared `to_cost(scores, *, sense)` SSOT, never a bespoke
    conversion.
+6. **A matcher consumes a `ScoreMatrix` and densifies *only* via its worst-casing views**
+   — `dense_cost()` / `dense_similarity()` / `candidate_mask()` / `stored_entries()`; mark
+   it `@scorematrix_matcher`. **NEVER `.toarray()` the raw scores and then call `to_cost`**
+   — that drops the blocked matrix's hole-worst-casing (holes fill with `0` and out-rank
+   real negatives / look cheapest; decision register **D11**). Drop any assignment landing
+   on a `~candidate_mask()` cell. The registry-wide conformance sweep in
+   `tests/test_matching.py` will fail your matcher if it densifies-then-`to_cost`.
 
 ## Recipe
 
@@ -90,6 +97,8 @@ stage needs no map change — that's the point of the registry (placement test:
 - Adding `rapidfuzz`/`sentence-transformers`/`faiss`/`POT` to core `dependencies`.
 - A raw `import faiss` at module top (breaks `import equate` when the extra is absent).
 - A matcher that converts similarity→cost itself instead of `to_cost(..., sense=)`.
+- **A matcher that `.toarray()`s a sparse score matrix before `to_cost`** — silently drops
+  the blocked-cell worst-casing (D11). Use the `ScoreMatrix` worst-casing views instead.
 - Returning printed strings instead of a structured `Candidate`/`Matching`/`Explanation`.
 - Assuming a comparator is symmetric/metric when it isn't (silently corrupts blocking
   and assignment).

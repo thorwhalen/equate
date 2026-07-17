@@ -42,7 +42,7 @@ contracts, and the defaults.
 | **① Featurize** `φ` | `Callable[[Iterable[Object]], Sequence[Repr]]` — batched; **`id` / any `key=` fn is valid** (`featurize=str.lower`) | `key=` in `sorted`/`groupby` |
 | **② Compare** `g` | `Callable[[Repr, Repr], float]` (or batched `g(X,Y)->matrix`); two constructors — `featurized(φ, g=cosine)` (indexable) vs `direct(h)` (opaque, re-rank only) | `==`, `<` widened to a graded score |
 | **② Block** | `Callable[[Seq[Repr], Seq[Repr]], Iterable[(i,j)]]` — **lazy candidate pairs, never a materialized n×m matrix** | "don't compute most of the similarity matrix" |
-| **③ Match** `Σ` | `Callable[..., Iterable[(i,j)]]` — `(scores, *, sense=...) -> pairs`; a *family* (greedy, LAP, stable, soft/OT, clustering), not one algorithm | `groupby`/join widened to optimized correspondence |
+| **③ Match** `Σ` | native `Callable[[ScoreMatrix], Iterable[(i,j)]]` (mark with `@scorematrix_matcher`; reads `sense` off the matrix, densifies via its worst-casing views) — legacy `(scores, *, sense) -> pairs` still accepted (D11); a *family* (greedy, LAP, stable, soft/OT, clustering), not one algorithm | `groupby`/join widened to optimized correspondence |
 
 Deep dives live in the research corpus — read them, don't re-derive:
 `docs/research/00-taxonomy-and-terminology.md` (the canonical map + glossary),
@@ -61,6 +61,30 @@ into each stage/concern; `docs/research/README.md` is the index.
    Gale-Shapley). *Never* hand-roll a per-matcher conversion.
 2. **One sparse `ScoreMatrix` SSOT** flows compare → match, carrying `sense` + row/col
    labels. Blocking = leaving cells uncomputed (sparse), not a separate data model.
+   **Matchers consume the `ScoreMatrix` and densify *only* through its worst-casing views
+   — `dense_cost()` / `dense_similarity()` / `candidate_mask()` / `stored_entries()`.**
+   **NEVER `.toarray()` a raw sparse score matrix and then call `to_cost`:** `to_cost`'s
+   hole-worst-casing lives in its *sparse* branch, and `scipy.sparse` fills holes with
+   `0`, so densifying first silently turns non-candidate cells into real `0` scores that
+   out-rank negatives / look cheapest (decision register **D11** — this bug class was a
+   HIGH in #7 and #9 and shipped in `max_weight`/`kuhn_munkres`).
+   **Worst-casing is only half of it:** it stops a hole being *preferred*, not being
+   *assigned* when a full-cardinality solver is forced onto one (a row with no candidate).
+   So hole assignments are also **dropped** — via the single `ScoreMatrix.drop_holes()`,
+   enforced at the `resolve_matcher` **boundary** so the invariant never depends on a
+   matcher (or a third-party matcher) remembering to do it.
+   **And the worst-case fill must be a big-M** (`_hole_fill()`), because a matcher optimizes
+   a *total*, not a cell: priced at `max_real_cost + 1` a hole is a *bargain* the solver buys
+   to save more than `1` elsewhere, and after `drop_holes` the result is strictly dominated
+   by an available all-real matching (fewer pairs *and* worse score — the "optimal" matcher
+   losing to `greedy`). Blocked matching is therefore **lexicographic: as many real pairs as
+   possible, then best score.** This only bites for **unbounded** comparators (`dot`, BM25,
+   counts — min stored score > 1), so **never write a `[0,1]`-only fixture for a blocking
+   test.** A **registry-wide conformance sweep** (`tests/test_matching.py`) runs every matcher
+   over randomized *unbounded* blocked inputs, plus asymmetric / rectangular /
+   *forced-partial* blocked fixtures asserting hole-free **and injective** results. When you
+   change that guard, **mutate the code it guards and confirm it fails** — the original
+   fixture (a symmetric 2×2 admitting a complete matching) silently guarded nothing.
 3. **Comparators are not assumed symmetric or metric.** A comparator declares
    polarity (similarity vs distance), bounded?, is_metric, is_symmetric. cosine is a
    *similarity*, not a metric (use angular distance when the triangle inequality is
@@ -92,7 +116,8 @@ into each stage/concern; `docs/research/README.md` is the index.
   `Partition` (records→entity ids; the canonical *clustering* output, iterates as its
   point-estimate pairs) → `PartitionPosterior` (`equate[bayes]`; iterates as its point
   estimate). All JSON-serializable dataclasses.
-- **Two Matcher arities coexist:** flat `Matcher(scores, *, sense) → pairs` (unchanged)
+- **Two Matcher arities coexist:** flat `Matcher(ScoreMatrix) → pairs` (native; densifies
+  only via the matrix's worst-casing views — raw-array `(scores, *, sense)` still accepted, D11)
   and `QuadraticMatcher.align(G1, G2, *, node_affinity, seeds) → correspondence` for
   network alignment (it produces scores *and* correspondence jointly; reuses flat LAP
   as the inner extraction step). Sequence/graph *comparators* (DTW, NW/SW, GED) are

@@ -34,6 +34,13 @@ seam. Reimplement almost nothing computational; own the seams, contracts, defaul
 **Before touching the core, read the `equate-dev-architecture` skill.** It holds the
 stage protocols and the resolved contracts (score `sense` SSOT, sparse `ScoreMatrix`,
 directional/non-metric comparators, structured dataclass returns, transitivity-is-a-choice).
+One load-bearing invariant it now enforces (register **D11**): a matcher consumes a
+`ScoreMatrix` and densifies **only** via its worst-casing views — **never `.toarray()` a
+sparse score matrix before `to_cost`** (drops the blocked-cell worst-casing; a registry
+conformance test in `tests/test_matching.py` guards it). The hole fill is a **big-M**, so
+blocked matching is **lexicographic** (as many real pairs as possible, then best score);
+a per-cell fill lets the solver *buy* a hole. This is invisible to `[0,1]` scores — **test
+blocking with unbounded ones.**
 
 ## The research corpus (`docs/research/`)
 

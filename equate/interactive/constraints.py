@@ -10,7 +10,7 @@ replayable log.
 
 from dataclasses import dataclass, field
 
-from equate.base import to_cost
+from equate.base import ScoreMatrix
 from equate.interactive.kbest import solve_constrained
 
 __all__ = ["ConstraintSet", "reoptimize"]
@@ -43,11 +43,13 @@ def reoptimize(scores, constraints=None, *, sense="maximize"):
     is a cheap constrained re-solve, not a from-scratch recompute.
     """
     constraints = constraints or ConstraintSet()
-    # to_cost handles a sparse (blocked) matrix via _sparse_to_cost, worst-casing absent
-    # cells; densifying first would take the dense branch and lose that (a #7-class bug)
-    cost = to_cost(scores, sense=sense)
-    result = solve_constrained(cost, constraints.forced, constraints.forbidden)
+    # dense_cost worst-cases a sparse (blocked) matrix's absent cells (never densify first
+    # — that loses the worst-casing, a #7-class bug); D11
+    sm = ScoreMatrix.coerce(scores, sense=sense)
+    result = solve_constrained(sm.dense_cost(), constraints.forced, constraints.forbidden)
     if result is None:
         raise ValueError("the constraints are infeasible — no valid assignment exists")
     assignment, _ = result
-    return sorted(assignment.items())
+    # a full LAP can land on a non-candidate hole (worst-cased, never *preferred*, but still
+    # assignable in forced-partial / all-absent cases); drop those, but keep user-forced edges
+    return sorted(sm.drop_holes(assignment.items(), keep=constraints.forced))

@@ -19,8 +19,6 @@ For example, correlation, similarity, etc.
 
 from functools import partial
 from itertools import chain
-from scipy.optimize import linear_sum_assignment
-import numpy as np
 
 from equate._dependencies import require
 from equate._vector import cosine_similarity
@@ -62,106 +60,15 @@ def similarity_matrix(
     return similarity_func(key_vectors, value_vectors)
 
 
-def greedy_matching(similarity_matrix):
-    """
-    Greedy Algorithm: Iteratively picks the highest similarity pair and removes the
-    matched items from the pool.
-
-    :param similarity_matrix: A sparse matrix of similarities.
-    :return: List of tuples (row_index, col_index) for matched pairs.
-    """
-    matches = []
-    for i in range(similarity_matrix.shape[0]):
-        if similarity_matrix[i].nnz == 0:
-            continue
-        j = similarity_matrix[i].argmax()
-        matches.append((i, j))
-        similarity_matrix[:, j] = 0  # Remove this column for subsequent iterations
-    return matches
-
-
-def hungarian_matching(similarity_matrix):
-    """
-    Hungarian Algorithm (Optimal Matching): Finds the optimal matching, minimizing the
-    total cost.
-    :param similarity_matrix: A sparse matrix of similarities.
-    :return: List of tuples (row_index, col_index) for matched pairs.
-    """
-    cost_matrix = similarity_matrix.max() - similarity_matrix
-    row_ind, col_ind = linear_sum_assignment(cost_matrix)
-    return list(zip(row_ind, col_ind))
-
-
-def maximal_matching(similarity_matrix):
-    """
-    Maximal Matching in Bipartite Graph: Finds a maximal matching in a bipartite graph.
-    See https://www.geeksforgeeks.org/maximum-bipartite-matching/.
-
-    :param similarity_matrix: A sparse matrix of similarities.
-    :return: List of tuples (row_index, col_index) for matched pairs.
-    """
-    import networkx as nx
-
-    G = nx.Graph()
-    for i in range(similarity_matrix.shape[0]):
-        for j in range(similarity_matrix.shape[1]):
-            G.add_edge(f"key_{i}", f"value_{j}", weight=similarity_matrix[i, j])
-    matching = nx.max_weight_matching(G, maxcardinality=True)
-    return [(int(u.split("_")[1]), int(v.split("_")[1])) for u, v in matching]
-
-
-def stable_marriage_matching(similarity_matrix):
-    """
-    Stable Marriage Problem (Gale-Shapley Algorithm):
-    Solves the stable marriage problem, ensuring a stable matching.
-    See: https://en.wikipedia.org/wiki/Stable_marriage_problem
-
-    :param similarity_matrix: A sparse matrix of similarities.
-    :return: List of tuples (row_index, col_index) for matched pairs.
-    """
-    distance_matrix = 1 - similarity_matrix
-    men_prefs = np.argsort(distance_matrix, axis=1)
-    women_prefs = np.argsort(distance_matrix, axis=0).T
-    couples = {}
-    while len(couples) < similarity_matrix.shape[0]:
-        for man in range(similarity_matrix.shape[0]):
-            if man not in couples:
-                woman = men_prefs[man][0]
-                if woman not in couples.values():
-                    couples[man] = woman
-                else:
-                    current_man = list(couples.keys())[
-                        list(couples.values()).index(woman)
-                    ]
-                    if list(women_prefs[woman]).index(man) < list(
-                        women_prefs[woman]
-                    ).index(current_man):
-                        del couples[current_man]
-                        couples[man] = woman
-        for couple in couples.items():
-            men_prefs[couple[0]] = men_prefs[couple[0]][1:]
-    return list(couples.items())
-
-
-def kuhn_munkres_matching(similarity_matrix):
-    """
-    Kuhn-Munkres Algorithm: Another implementation of the Hungarian algorithm using
-    the `networkx` package.
-
-    :param similarity_matrix: A sparse matrix of similarities.
-    :return: List of tuples (row_index, col_index) for matched pairs.
-    """
-    import networkx as nx
-
-    G = nx.Graph()
-    for i in range(similarity_matrix.shape[0]):
-        for j in range(similarity_matrix.shape[1]):
-            G.add_edge(f"key_{i}", f"value_{j}", weight=-similarity_matrix[i, j])
-    matching = nx.algorithms.bipartite.matching.minimum_weight_full_matching(
-        G, weight="weight"
-    )
-    return [
-        (int(u.split("_")[1]), int(v.split("_")[1]))
-        for u, v in matching.items()
-        if u.startswith("key_")
-    ]
+# The matchers below used to be verbatim copies of ``equate.util``'s, and they silently
+# drifted: the copies kept the networkx unordered-edge bug (transposed pairs) and the
+# densify-the-holes bug (an absent cell read as a real score of 0.0) long after ``util``
+# was fixed. Re-exporting instead of re-copying makes that divergence impossible, and keeps
+# ``from equate.completion import maximal_matching`` working for anyone already importing it.
+from equate.util import (  # noqa: F401  (re-exported for back-compat)
+    greedy_matching,
+    hungarian_matching,
+    maximal_matching,
+    stable_marriage_matching,
+    kuhn_munkres_matching,
+)
