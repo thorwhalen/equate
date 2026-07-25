@@ -267,10 +267,11 @@ A Bayesian resolver's return type is **not** `Iterable[(i, j)]`. It is closer to
 ```python
 @dataclass
 class PartitionPosterior:
-    samples: Sequence[Partition]          # MCMC draws over clusterings
-    def link_probability(self, i, j) -> float: ...   # marginal P(i ≈ j)
+    samples: Sequence[Partition]  # MCMC draws over clusterings
+
+    def link_probability(self, i, j) -> float: ...  # marginal P(i ≈ j)
     def n_entities_posterior(self) -> Distribution: ...
-    def point_estimate(self, *, loss='B-cubed') -> Partition: ...
+    def point_estimate(self, *, loss="B-cubed") -> Partition: ...
 ```
 
 `equate` cannot make this the *default* return (it needs `pymc`/`numpyro`-class

@@ -511,11 +511,13 @@ Resolution = Callable[[Sequence[Value], ResolutionContext], Value]
 
 Canonicalizer = Callable[[Cluster], GoldenRecord]
 
+
 def survivorship(
-    rules: Mapping[str, Resolution] | Resolution = most_frequent,  # per-field or one default
+    rules: Mapping[str, Resolution]
+    | Resolution = most_frequent,  # per-field or one default
     *,
-    default: Resolution = coalesce,        # for fields not named in `rules`
-    consistency: Literal['per_field', 'row_coherent'] = 'per_field',
+    default: Resolution = coalesce,  # for fields not named in `rules`
+    consistency: Literal["per_field", "row_coherent"] = "per_field",
 ) -> Canonicalizer: ...
 ```
 

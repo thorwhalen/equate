@@ -35,8 +35,8 @@ different key), and say you know that a matching value string will differ from i
 key only by a few characters. In that case just do this:
 
 ```python
-keys = ['apple', 'banana', 'carrot']
-values = ['car', 'app', 'carob', 'cabana']
+keys = ["apple", "banana", "carrot"]
+values = ["car", "app", "carob", "cabana"]
 dict(match_greedily(keys, values))
 # == {'apple': 'app', 'banana': 'cabana', 'carrot': 'carob'}
 ```
@@ -54,8 +54,8 @@ Here's a more involved entry point:
 ```python
 from equate import match_keys_to_values
 
-keys = ['apple pie', 'apple crumble', 'banana split']
-values = ['american pie', 'big apple', 'american girl', 'banana republic']
+keys = ["apple pie", "apple crumble", "banana split"]
+values = ["american pie", "big apple", "american girl", "banana republic"]
 dict(match_keys_to_values(keys, values))
 # == {'apple pie': 'american pie',
 # 'apple crumble': 'big apple',
@@ -87,8 +87,8 @@ As a result, you should get finer matchings.
 ```python
 from equate import similarity_matrix
 
-keys = ['apple pie', 'apple crumble', 'banana split']
-values = ['american pie', 'big apple', 'american girl', 'banana republic']
+keys = ["apple pie", "apple crumble", "banana split"]
+values = ["american pie", "big apple", "american girl", "banana republic"]
 m = similarity_matrix(keys, values)
 m.round(2).tolist()
 # == [[0.54, 0.38, 0.0, 0.0], [0.0, 0.33, 0.0, 0.0], [0.0, 0.0, 0.0, 0.41]]
@@ -149,18 +149,23 @@ import requests
 import re
 from collections import Counter
 
-search_re = re.compile('(?<=pip install\W)[-\w]+')
+search_re = re.compile("(?<=pip install\W)[-\w]+")
+
 
 def pkg_name_options(query):
-    r = requests.get('https://www.google.com/search', params={'q': f'python "pip install" {query}'})
+    r = requests.get(
+        "https://www.google.com/search", params={"q": f'python "pip install" {query}'}
+    )
     if r.status_code == 200:
-        return Counter(filter(lambda x: x != query, p.findall(r.content.decode('latin-1')))).most_common()
-    
+        return Counter(
+            filter(lambda x: x != query, p.findall(r.content.decode("latin-1")))
+        ).most_common()
+
+
 def best_guess(query):
     t = pkg_name_options(query)
     if t:
         return t[0][0]
-        
 ```
 
 
@@ -221,7 +226,7 @@ import pandas as pd
 import numpy as np
 
 from equate.examples.site_names import (
-    DFLT_SITE_PKG_DIR,    
+    DFLT_SITE_PKG_DIR,
     site_packages_info_df,
     print_n_null_elements_in_each_column_containing_at_least_one,
     Lidx,

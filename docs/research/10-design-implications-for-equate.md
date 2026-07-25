@@ -37,9 +37,9 @@ library is ever a hard dependency.**
 > pairs, efficiently, with sensible defaults and no required configuration.
 
 ```python
-match(A, B)                       # → iterator of (a, b) or (a, b, score)
-match(A, B, k=3)                  # → top-3 candidates per a, with scores
-match(A, B, threshold=0.8)        # → boolean cut; unmatched a's allowed
+match(A, B)  # → iterator of (a, b) or (a, b, score)
+match(A, B, k=3)  # → top-3 candidates per a, with scores
+match(A, B, threshold=0.8)  # → boolean cut; unmatched a's allowed
 match(A, B, featurize=str.lower)  # → swap stage ① with a plain key function
 ```
 
@@ -82,10 +82,12 @@ interfaces over bespoke ABCs, and `dataclasses` for the few stateful configs.
 
 ```python
 # Stage protocols (structural; a plain lambda satisfies them)
-Featurizer  = Callable[[Iterable[Object]], Sequence[Repr]]     # ① batched; id() is valid
-Comparator  = Callable[[Repr, Repr], float]                    # ② or a batched g(X, Y) -> matrix
-Blocker     = Callable[[Sequence[Repr], Sequence[Repr]], Iterable[tuple[int, int]]]  # ② candidate pairs
-Matcher     = Callable[..., Iterable[tuple[int, int]]]         # ③ (scores, *, sense=...) -> pairs
+Featurizer = Callable[[Iterable[Object]], Sequence[Repr]]  # ① batched; id() is valid
+Comparator = Callable[[Repr, Repr], float]  # ② or a batched g(X, Y) -> matrix
+Blocker = Callable[
+    [Sequence[Repr], Sequence[Repr]], Iterable[tuple[int, int]]
+]  # ② candidate pairs
+Matcher = Callable[..., Iterable[tuple[int, int]]]  # ③ (scores, *, sense=...) -> pairs
 ```
 
 Design rules distilled from the corpus:

@@ -470,9 +470,10 @@ skill and the `dol` facade philosophy). Two orthogonal roles:
 from typing import Protocol, Iterable, Mapping, Sequence
 from collections.abc import MutableMapping
 
-Key = str            # object id
+Key = str  # object id
 Vector = Sequence[float]
-Filter = Mapping     # backend-native metadata predicate (structured blocking key)
+Filter = Mapping  # backend-native metadata predicate (structured blocking key)
+
 
 class VectorStore(MutableMapping[Key, Vector], Protocol):
     """CRUD over vectors keyed by object id — a dol store. Persistence,
@@ -480,15 +481,20 @@ class VectorStore(MutableMapping[Key, Vector], Protocol):
     `store[key] = vector` upserts; `del store[key]` deletes; iteration lists ids.
     Optional parallel stores hold metadata and sparse/text signatures."""
 
+
 class VectorIndex(Protocol):
     """The retrieval role layered over a VectorStore."""
+
     def search(
-        self, query: Vector, k: int, *,
-        filter: Filter | None = None,          # §5.1 filtered ANN = structured block
-        sparse: Vector | None = None,          # §5.2 hybrid: sparse side
-        fusion: str = 'rrf',                   # 'rrf' | 'dbsf' | 'alpha'
+        self,
+        query: Vector,
+        k: int,
+        *,
+        filter: Filter | None = None,  # §5.1 filtered ANN = structured block
+        sparse: Vector | None = None,  # §5.2 hybrid: sparse side
+        fusion: str = "rrf",  # 'rrf' | 'dbsf' | 'alpha'
     ) -> list[tuple[Key, float]]: ...
-    def build(self, *, metric: str = 'cosine', **index_params) -> None: ...
+    def build(self, *, metric: str = "cosine", **index_params) -> None: ...
 ```
 
 Every backend in §§2–4 satisfies this: an in-memory dict + FAISS/hnswlib

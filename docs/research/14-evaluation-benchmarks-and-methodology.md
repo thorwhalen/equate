@@ -525,13 +525,26 @@ Ship pure-`numpy`/stdlib implementations of the metrics that have no heavy deps,
 so *every* install can self-evaluate:
 
 ```python
-from equate.evaluate import pairwise_prf, bcubed, cluster_metrics, blocking_metrics, pr_auc, ranking_metrics
+from equate.evaluate import (
+    pairwise_prf,
+    bcubed,
+    cluster_metrics,
+    blocking_metrics,
+    pr_auc,
+    ranking_metrics,
+)
 
-pairwise_prf(pred_pairs, true_pairs)            # → Scores(precision, recall, f1, support)
-bcubed(pred_labels, true_labels)                # → Scores(precision, recall, f1)   B³, the default cluster metric
-cluster_metrics(pred_labels, true_labels)       # → {b3_f1, ari, v_measure, homogeneity, completeness, gmd}
-blocking_metrics(candidate_pairs, true_pairs, n_a, n_b)  # → {pair_completeness, reduction_ratio, pairs_quality}
-pr_auc(scores, y_true)                           # → average precision (threshold-free, imbalance-safe)
+pairwise_prf(pred_pairs, true_pairs)  # → Scores(precision, recall, f1, support)
+bcubed(
+    pred_labels, true_labels
+)  # → Scores(precision, recall, f1)   B³, the default cluster metric
+cluster_metrics(
+    pred_labels, true_labels
+)  # → {b3_f1, ari, v_measure, homogeneity, completeness, gmd}
+blocking_metrics(
+    candidate_pairs, true_pairs, n_a, n_b
+)  # → {pair_completeness, reduction_ratio, pairs_quality}
+pr_auc(scores, y_true)  # → average precision (threshold-free, imbalance-safe)
 ranking_metrics(ranked_candidates_per_query, gold)  # → {recall_at_k, mrr, map}
 ```
 
@@ -582,8 +595,10 @@ first use (behind a `[benchmarks]` extra, never a hard dep):
 ```python
 from equate.benchmarks import load, list_benchmarks
 
-list_benchmarks()                 # ['dblp_acm', 'abt_buy', 'walmart_amazon', 'wdc_products', ...]
-ds = load('wdc_products', variant='unseen_80pair')   # → Benchmark(train, val, test, gold, meta)
+list_benchmarks()  # ['dblp_acm', 'abt_buy', 'walmart_amazon', 'wdc_products', ...]
+ds = load(
+    "wdc_products", variant="unseen_80pair"
+)  # → Benchmark(train, val, test, gold, meta)
 ```
 
 - Loaders return a uniform `Benchmark` container (train/val/test frames + gold
@@ -604,13 +619,13 @@ from equate.evaluate import benchmark_matcher
 
 report = benchmark_matcher(
     my_matcher,
-    on=['dblp_acm', 'wdc_products'],   # CI sanity + generalization
-    metrics=['pairwise_f1', 'pr_auc', 'b3_f1'],
-    threshold='select_on_val',          # never on test
-    n_seeds=5,                           # mean ± std, significance
-    estimate_ci=True,                    # sampling-based CIs for large corpora (§7.4)
+    on=["dblp_acm", "wdc_products"],  # CI sanity + generalization
+    metrics=["pairwise_f1", "pr_auc", "b3_f1"],
+    threshold="select_on_val",  # never on test
+    n_seeds=5,  # mean ± std, significance
+    estimate_ci=True,  # sampling-based CIs for large corpora (§7.4)
 )
-report.to_markdown()                     # per-benchmark, per-metric, with base rate + difficulty
+report.to_markdown()  # per-benchmark, per-metric, with base rate + difficulty
 ```
 
 Behaviors that encode the methodology as defaults: selects threshold on

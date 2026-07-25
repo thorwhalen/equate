@@ -58,11 +58,17 @@ and is only *called* on use, so the heavy import is deferred:
 
 ```python
 # compare/__init__.py  (illustrative — match the real registry once it exists)
-@register_comparator("jaro_winkler", polarity="similarity", bounded=True,
-                     is_metric=False, is_symmetric=True)
+@register_comparator(
+    "jaro_winkler",
+    polarity="similarity",
+    bounded=True,
+    is_metric=False,
+    is_symmetric=True,
+)
 def _jaro_winkler_factory():
-    rapidfuzz = require("rapidfuzz", extra="fuzzy")   # check_requirements wrapper
+    rapidfuzz = require("rapidfuzz", extra="fuzzy")  # check_requirements wrapper
     from rapidfuzz.distance import JaroWinkler
+
     return lambda a, b: JaroWinkler.normalized_similarity(a, b)
 ```
 
