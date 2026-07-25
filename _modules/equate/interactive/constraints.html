@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>equate.interactive.constraints &mdash; equate 0.0.13 documentation</title>
+  <title>equate.interactive.constraints &mdash; equate 0.0.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=9fc46840"></script>
+      <script src="../../../_static/documentation_options.js?v=544df88d"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -168,7 +168,9 @@
     <span class="c1"># dense_cost worst-cases a sparse (blocked) matrix&#39;s absent cells (never densify first</span>
     <span class="c1"># — that loses the worst-casing, a #7-class bug); D11</span>
     <span class="n">sm</span> <span class="o">=</span> <span class="n">ScoreMatrix</span><span class="o">.</span><span class="n">coerce</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">)</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">solve_constrained</span><span class="p">(</span><span class="n">sm</span><span class="o">.</span><span class="n">dense_cost</span><span class="p">(),</span> <span class="n">constraints</span><span class="o">.</span><span class="n">forced</span><span class="p">,</span> <span class="n">constraints</span><span class="o">.</span><span class="n">forbidden</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">solve_constrained</span><span class="p">(</span>
+        <span class="n">sm</span><span class="o">.</span><span class="n">dense_cost</span><span class="p">(),</span> <span class="n">constraints</span><span class="o">.</span><span class="n">forced</span><span class="p">,</span> <span class="n">constraints</span><span class="o">.</span><span class="n">forbidden</span>
+    <span class="p">)</span>
     <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;the constraints are infeasible — no valid assignment exists&quot;</span><span class="p">)</span>
     <span class="n">assignment</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">result</span>
