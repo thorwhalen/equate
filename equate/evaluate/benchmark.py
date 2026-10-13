@@ -58,7 +58,9 @@ class Benchmark:
 benchmarks = Registry("benchmark")
 
 
-def _toy_names(*, n_entities: int = 60, n_distractors: int = 20, seed: int = 0) -> Benchmark:
+def _toy_names(
+    *, n_entities: int = 60, n_distractors: int = 20, seed: int = 0
+) -> Benchmark:
     """Generated person-like names; ``b`` holds a typo'd copy of each plus distractors."""
     rng = np.random.default_rng(seed)
     syllables = ["ka", "lo", "mi", "ra", "to", "ve", "su", "ni", "da", "pe", "zo", "ri"]
@@ -153,8 +155,10 @@ class BenchmarkReport:
         for name in dict.fromkeys(r.benchmark for r in self.rows):
             rows = [r for r in self.rows if r.benchmark == name]
             stats = {
-                m: (float(np.mean([getattr(r, m) for r in rows])),
-                    float(np.std([getattr(r, m) for r in rows])))
+                m: (
+                    float(np.mean([getattr(r, m) for r in rows])),
+                    float(np.std([getattr(r, m) for r in rows])),
+                )
                 for m in self._METRICS
             }
             stats["base_rate"] = float(np.mean([r.base_rate for r in rows]))
@@ -170,7 +174,8 @@ class BenchmarkReport:
             cells = [f"{s[m][0]:.3f} ± {s[m][1]:.3f}" for m in self._METRICS]
             difficulty = self.meta.get(name, {}).get("difficulty", "")
             lines.append(
-                f"| {name} | " + " | ".join(cells)
+                f"| {name} | "
+                + " | ".join(cells)
                 + f" | {s['base_rate']:.4f} | {s['n_seeds']} | {difficulty} |"
             )
         return "\n".join(lines)
@@ -213,7 +218,9 @@ def benchmark_matcher(
     (True, 2)
     """
     if matcher is not None and fit is not None:
-        raise ValueError("pass either matcher or fit (which returns the matcher), not both")
+        raise ValueError(
+            "pass either matcher or fit (which returns the matcher), not both"
+        )
     if matcher is None and fit is None:
         from equate.facade import match as matcher
     if isinstance(on, (str, Benchmark)):
@@ -248,20 +255,33 @@ def benchmark_matcher(
                 tr_a, tr_b = side(split.train)
                 va_a, va_b = side(split.val)
                 run = fit(
-                    [ds.a[i] for i in tr_a], [ds.b[j] for j in tr_b],
+                    [ds.a[i] for i in tr_a],
+                    [ds.b[j] for j in tr_b],
                     _subset_pairs(ds.gold, tr_a, tr_b),
-                    [ds.a[i] for i in va_a], [ds.b[j] for j in va_b],
+                    [ds.a[i] for i in va_a],
+                    [ds.b[j] for j in va_b],
                     _subset_pairs(ds.gold, va_a, va_b),
                 )
             start = time.perf_counter()
-            pred = {tuple(p) for p in run([ds.a[i] for i in test_a], [ds.b[j] for j in test_b])}
+            pred = {
+                tuple(p)
+                for p in run([ds.a[i] for i in test_a], [ds.b[j] for j in test_b])
+            }
             seconds = time.perf_counter() - start
             s = pairwise_prf(pred, gold)
             n_ta, n_tb = len(test_a), len(test_b)
             rows.append(
                 BenchmarkRow(
-                    ds.name, seed, s.precision, s.recall, s.f1, seconds,
-                    n_ta, n_tb, len(gold), len(gold) / (n_ta * n_tb),
+                    ds.name,
+                    seed,
+                    s.precision,
+                    s.recall,
+                    s.f1,
+                    seconds,
+                    n_ta,
+                    n_tb,
+                    len(gold),
+                    len(gold) / (n_ta * n_tb),
                 )
             )
             scored += 1

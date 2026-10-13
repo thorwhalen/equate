@@ -14,7 +14,11 @@ See ``docs/research/14-evaluation-benchmarks-and-methodology.md``.
 
 from equate.block.metrics import blocking_metrics
 from equate.evaluate.scores import Scores
-from equate.evaluate.labels import pairs_to_labels, labels_to_pairs, cross_pairs_to_labels
+from equate.evaluate.labels import (
+    pairs_to_labels,
+    labels_to_pairs,
+    cross_pairs_to_labels,
+)
 from equate.evaluate.metrics import pairwise_prf, bcubed, ceaf, cluster_metrics
 from equate.evaluate.ranking import pr_auc, select_threshold, ranking_metrics
 from equate.evaluate.split import Split, entity_split, assert_no_leakage

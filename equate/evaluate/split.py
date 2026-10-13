@@ -50,7 +50,10 @@ def entity_split(
     fractions = np.cumsum(ratios) / sum(ratios)
     cut1, cut2 = (np.round(fractions[:2] * len(entities))).astype(int)
     parts = (set(entities[:cut1]), set(entities[cut1:cut2]), set(entities[cut2:]))
-    idx = [tuple(int(i) for i in np.flatnonzero([e in part for e in ids])) for part in parts]
+    idx = [
+        tuple(int(i) for i in np.flatnonzero([e in part for e in ids]))
+        for part in parts
+    ]
     return Split(*idx)
 
 

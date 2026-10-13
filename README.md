@@ -114,10 +114,14 @@ Dependency-light metrics that return precision **and** recall (a `Scores`), neve
 ```python
 from equate.evaluate import pairwise_prf, bcubed, pairs_to_labels, benchmark_matcher
 
-pairwise_prf(predicted_pairs, gold_pairs)            # Scores(precision, recall, f1, support)
-bcubed(pairs_to_labels(predicted_pairs, n=n),        # B³, the default cluster metric
-       pairs_to_labels(gold_pairs, n=n))
-print(benchmark_matcher(on=["toy_names"]).to_markdown())  # equate.match, 3 seeds, entity splits
+pairwise_prf(predicted_pairs, gold_pairs)  # Scores(precision, recall, f1, support)
+bcubed(
+    pairs_to_labels(predicted_pairs, n=n),  # B³, the default cluster metric
+    pairs_to_labels(gold_pairs, n=n),
+)
+print(
+    benchmark_matcher(on=["toy_names"]).to_markdown()
+)  # equate.match, 3 seeds, entity splits
 ```
 
 Also there: `ceaf`, `cluster_metrics` (ARI and V-measure use scikit-learn when installed, numpy otherwise; `pip install 'equate[eval]'`), `blocking_metrics`, `pr_auc`, `ranking_metrics`, `select_threshold` (pass validation data), `entity_split` and `assert_no_leakage`. Benchmarks are a registry (`equate.evaluate.benchmarks`), so a new dataset is a registered loader.

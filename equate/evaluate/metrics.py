@@ -149,10 +149,16 @@ def _homogeneity_completeness_numpy(pred: np.ndarray, true: np.ndarray) -> tuple
     nz = table > 0
     # conditional entropies H(true | pred) and H(pred | true)
     h_true_given_pred = -(
-        table[nz] / n * np.log(table[nz] / np.broadcast_to(table.sum(axis=0), table.shape)[nz])
+        table[nz]
+        / n
+        * np.log(table[nz] / np.broadcast_to(table.sum(axis=0), table.shape)[nz])
     ).sum()
     h_pred_given_true = -(
-        table[nz] / n * np.log(table[nz] / np.broadcast_to(table.sum(axis=1)[:, None], table.shape)[nz])
+        table[nz]
+        / n
+        * np.log(
+            table[nz] / np.broadcast_to(table.sum(axis=1)[:, None], table.shape)[nz]
+        )
     ).sum()
     homogeneity = 1.0 if h_true == 0 else 1 - h_true_given_pred / h_true
     completeness = 1.0 if h_pred == 0 else 1 - h_pred_given_true / h_pred
@@ -176,10 +182,20 @@ def cluster_metrics(
     """
     pred, true = _check_labels(pred_labels, true_labels)
     if backend not in ("auto", "numpy", "sklearn"):
-        raise ValueError(f"backend must be 'auto', 'numpy' or 'sklearn', got {backend!r}")
+        raise ValueError(
+            f"backend must be 'auto', 'numpy' or 'sklearn', got {backend!r}"
+        )
     if len(pred) == 0:  # nothing to cluster: every metric is vacuously perfect
-        names = ("ari", "b3_f1", "b3_precision", "b3_recall", "ceaf_e_f1",
-                 "completeness", "homogeneity", "v_measure")
+        names = (
+            "ari",
+            "b3_f1",
+            "b3_precision",
+            "b3_recall",
+            "ceaf_e_f1",
+            "completeness",
+            "homogeneity",
+            "v_measure",
+        )
         return dict.fromkeys(names, 1.0)
     b3 = bcubed(pred, true)
     out = {

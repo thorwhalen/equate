@@ -66,7 +66,9 @@ def select_threshold(
     (0.3, 0.857)
     """
     if optimize not in ("f1", "precision", "recall"):
-        raise ValueError(f"optimize must be 'f1', 'precision' or 'recall', got {optimize!r}")
+        raise ValueError(
+            f"optimize must be 'f1', 'precision' or 'recall', got {optimize!r}"
+        )
     s, y = _sorted_by_score(scores, y_true)
     if len(s) == 0:
         raise ValueError("cannot select a threshold from no scores")
@@ -99,13 +101,13 @@ def ranking_metrics(
     rr, ap = [], []
     for q, truth in gold.items():
         truths = (
-            set(truth)
-            if isinstance(truth, (set, frozenset, list, tuple))
-            else {truth}
+            set(truth) if isinstance(truth, (set, frozenset, list, tuple)) else {truth}
         )
         if not truths:
             continue
-        cands = list(dict.fromkeys(ranked.get(q, ())))  # a repeated candidate counts once
+        cands = list(
+            dict.fromkeys(ranked.get(q, ()))
+        )  # a repeated candidate counts once
         hits = [i for i, c in enumerate(cands) if c in truths]
         for k in ks:
             recalls[k].append(len([i for i in hits if i < k]) / len(truths))
