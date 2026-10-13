@@ -1,0 +1,18 @@
+equate.interactive.constraints
+==============================
+
+.. automodule:: equate.interactive.constraints
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      reoptimize
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ConstraintSet
+   

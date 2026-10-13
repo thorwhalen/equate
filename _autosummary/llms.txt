@@ -1,0 +1,50 @@
+# equate
+
+> Tools for matching things: featurize, compare, and match collections of objects (fuzzy correspondence, not exact equality).
+
+
+## Pages in this subsection
+
+- [equate](equate.html.md): Tools for matching things: featurize, compare, and match collections of objects.
+- [equate.base](equate.base.html.md): Foundational contracts and data structures for equate.
+- [equate.block](equate.block.html.md): The block stage (② scalability): candidate generation.
+- [equate.block.metablock](equate.block.metablock.html.md): Meta-blocking (stage ②): refine a candidate set to raise precision without losing
+- [equate.block.ann](equate.block.ann.html.md): ANN / dense-vector blocking: candidate generation by nearest-neighbour search.
+- [equate.block.keyed](equate.block.keyed.html.md): Keyed blocking (stage ② scalability): emit candidate pairs that share a blocking key.
+- [equate.block.lsh](equate.block.lsh.html.md): MinHash-LSH blocking for set/token (Jaccard) similarity — requires &#96;equate&#91;lsh&#93;&#96;
+- [equate.block.metrics](equate.block.metrics.html.md): Blocking evaluation metrics (stage ②): quantify the recall/efficiency trade-off of a
+- [equate.block.score](equate.block.score.html.md): Score only the blocker’s candidate pairs into a sparse ScoreMatrix (decision D1).
+- [equate.cluster](equate.cluster.html.md): The resolve/cluster stage (③ grouping): turn pairwise matches into entity groups.
+- [equate.cluster.classify](equate.cluster.classify.html.md): Classification (the optional decide stage): map a comparison score to a decision.
+- [equate.compare](equate.compare.html.md): The compare stage (②): score how alike two (featurized) items are.
+- [equate.compare.calibrate](equate.compare.calibrate.html.md): Score calibration (stage ②): map raw comparator scores to a decision or a
+- [equate.compare.numeric_geo](equate.compare.numeric_geo.html.md): Numeric, date, and geospatial comparators (stage ②): turn a domain distance into a
+- [equate.compare.string](equate.compare.string.html.md): String comparators (stage ②): pairwise similarity between two strings.
+- [equate.compare.vector](equate.compare.vector.html.md): Vector comparators (stage ②): pairwise similarity/distance between two vectors.
+- [equate.compare.vectorize](equate.compare.vectorize.html.md): Multi-field record comparison (stage ②): build a per-pair &#42;comparison vector&#42; from
+- [equate.completion](equate.completion.html.md): Tools to complete missing data from other sources of the same data.
+- [equate.evaluate](equate.evaluate.html.md): Evaluate matchers honestly: metrics, leakage-aware splits, and a benchmark harness.
+- [equate.evaluate.benchmark](equate.evaluate.benchmark.html.md): Self-benchmarking: a benchmark registry and an honest-by-default harness.
+- [equate.evaluate.labels](equate.evaluate.labels.html.md): Convert between the two granularities: pairs and cluster labels.
+- [equate.evaluate.metrics](equate.evaluate.metrics.html.md): Pairwise and cluster-level match metrics, dependency-light.
+- [equate.evaluate.ranking](equate.evaluate.ranking.html.md): Threshold-free and ranking metrics, and threshold selection as its own step.
+- [equate.evaluate.scores](equate.evaluate.scores.html.md): The one score type every metric returns: precision and recall, never F1 alone.
+- [equate.evaluate.split](equate.evaluate.split.html.md): Leakage-aware splitting: split over entities, so test entities are unseen.
+- [equate.facade](equate.facade.html.md): The equate facade: the one-line &#96;match(A, B)&#96; entry point.
+- [equate.featurize](equate.featurize.html.md): The featurize stage (①): map objects to comparable representations.
+- [equate.featurize.text](equate.featurize.text.html.md): Dense text-embedding featurizers, behind optional extras.
+- [equate.featurize.tfidf](equate.featurize.tfidf.html.md): Pure-numpy/scipy character-n-gram TF-IDF — equate’s zero-heavy-dependency default
+- [equate.interactive](equate.interactive.html.md): The interactive stage: human-in-the-loop review and re-optimization.
+- [equate.interactive.candidate_store](equate.interactive.candidate_store.html.md): The CandidateStore: per left-item top-k candidates with scores — the SSOT for review
+- [equate.interactive.constraints](equate.interactive.constraints.html.md): Interactive constraints and re-optimization: every user edit is a constraint, not a
+- [equate.interactive.kbest](equate.interactive.kbest.html.md): k-best assignments via Murty’s algorithm (in-house; pure numpy/scipy).
+- [equate.interactive.review](equate.interactive.review.html.md): Human review triage and active-learning query selection.
+- [equate.matching](equate.matching.html.md): The match stage (③): turn a score matrix into a correspondence.
+- [equate.matching.assign](equate.matching.assign.html.md): Assignment matchers (stage ③): turn a score matrix into matched &#96;(i, j)&#96; pairs.
+- [equate.matching.soft](equate.matching.soft.html.md): Soft / optimal-transport matching (stage ③): a fractional transport plan rather than a
+- [equate.registry](equate.registry.html.md): A tiny name-keyed strategy registry with lazy factories (open-closed dispatch).
+- [equate.util](equate.util.html.md): Utils for equate.
+
+## Optional
+
+- [Top-level llms.txt](../llms.txt): Complete documentation index.

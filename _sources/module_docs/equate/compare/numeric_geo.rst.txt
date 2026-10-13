@@ -1,4 +1,0 @@
-equate.compare.numeric_geo
-==========================
-.. automodule:: equate.compare.numeric_geo
-   :members:

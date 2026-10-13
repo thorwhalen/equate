@@ -1,4 +1,0 @@
-equate.interactive.constraints
-==============================
-.. automodule:: equate.interactive.constraints
-   :members:

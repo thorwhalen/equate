@@ -1,4 +1,0 @@
-equate.featurize.tfidf
-======================
-.. automodule:: equate.featurize.tfidf
-   :members:

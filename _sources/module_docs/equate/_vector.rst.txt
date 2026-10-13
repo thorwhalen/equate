@@ -1,4 +1,0 @@
-equate._vector
-==============
-.. automodule:: equate._vector
-   :members:

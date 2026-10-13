@@ -1,0 +1,49 @@
+equate.evaluate
+===============
+
+.. automodule:: equate.evaluate
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      pairwise_prf
+      bcubed
+      ceaf
+      cluster_metrics
+      blocking_metrics
+      pr_auc
+      select_threshold
+      ranking_metrics
+      pairs_to_labels
+      labels_to_pairs
+      cross_pairs_to_labels
+      entity_split
+      assert_no_leakage
+      list_benchmarks
+      load_benchmark
+      benchmark_matcher
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Scores
+      Split
+      Benchmark
+      BenchmarkReport
+      BenchmarkRow
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   benchmark
+   labels
+   metrics
+   ranking
+   scores
+   split

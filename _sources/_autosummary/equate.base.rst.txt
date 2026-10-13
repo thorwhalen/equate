@@ -1,0 +1,35 @@
+equate.base
+===========
+
+.. automodule:: equate.base
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      Sense
+      Featurizer
+      Comparator
+      Blocker
+      Matcher
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      scorematrix_matcher
+      to_cost
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      FeaturizerMeta
+      ComparatorMeta
+      ScoreMatrix
+      Explanation
+      Candidate
+      Matching
+      Partition
+   

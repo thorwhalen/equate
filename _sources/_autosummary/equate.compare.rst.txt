@@ -1,0 +1,39 @@
+equate.compare
+==============
+
+.. automodule:: equate.compare
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      comparators
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      resolve_comparator
+      direct
+      featurized
+      comparison_vector
+      weighted_sum
+      mean
+      max_combiner
+      fellegi_sunter
+      threshold
+      platt
+      isotonic
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   calibrate
+   numeric_geo
+   string
+   vector
+   vectorize

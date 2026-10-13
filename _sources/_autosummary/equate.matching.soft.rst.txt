@@ -1,0 +1,13 @@
+equate.matching.soft
+====================
+
+.. automodule:: equate.matching.soft
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      soft_match
+      harden
+   

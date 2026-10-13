@@ -1,0 +1,14 @@
+equate.compare.vector
+=====================
+
+.. automodule:: equate.compare.vector
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      cosine
+      dot
+      angular_distance
+   

@@ -1,0 +1,14 @@
+equate.evaluate.ranking
+=======================
+
+.. automodule:: equate.evaluate.ranking
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      pr_auc
+      ranking_metrics
+      select_threshold
+   

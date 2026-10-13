@@ -1,4 +1,0 @@
-equate.block.keyed
-==================
-.. automodule:: equate.block.keyed
-   :members:

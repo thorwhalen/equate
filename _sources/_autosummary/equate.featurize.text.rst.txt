@@ -1,0 +1,13 @@
+equate.featurize.text
+=====================
+
+.. automodule:: equate.featurize.text
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      sbert_featurizer
+      openai_featurizer
+   

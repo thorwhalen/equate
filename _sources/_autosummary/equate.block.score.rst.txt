@@ -1,0 +1,12 @@
+equate.block.score
+==================
+
+.. automodule:: equate.block.score
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      score_candidates
+   

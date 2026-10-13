@@ -1,4 +1,0 @@
-equate.matching.assign
-======================
-.. automodule:: equate.matching.assign
-   :members:

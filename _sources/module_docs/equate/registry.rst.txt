@@ -1,4 +1,0 @@
-equate.registry
-===============
-.. automodule:: equate.registry
-   :members:

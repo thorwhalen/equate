@@ -1,0 +1,33 @@
+equate.interactive
+==================
+
+.. automodule:: equate.interactive
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      k_best_assignments
+      solve_constrained
+      reoptimize
+      review_queue
+      uncertainty_sampling
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      CandidateStore
+      ConstraintSet
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   candidate_store
+   constraints
+   kbest
+   review

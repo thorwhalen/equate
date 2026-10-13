@@ -1,0 +1,28 @@
+equate.evaluate.benchmark
+=========================
+
+.. automodule:: equate.evaluate.benchmark
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      benchmarks
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      benchmark_matcher
+      list_benchmarks
+      load_benchmark
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Benchmark
+      BenchmarkReport
+      BenchmarkRow
+   

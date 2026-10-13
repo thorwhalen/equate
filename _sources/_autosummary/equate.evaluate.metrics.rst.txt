@@ -1,0 +1,15 @@
+equate.evaluate.metrics
+=======================
+
+.. automodule:: equate.evaluate.metrics
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      bcubed
+      ceaf
+      cluster_metrics
+      pairwise_prf
+   

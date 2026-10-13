@@ -1,4 +1,0 @@
-equate.compare.vectorize
-========================
-.. automodule:: equate.compare.vectorize
-   :members:

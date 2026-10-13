@@ -1,0 +1,16 @@
+equate.compare.vectorize
+========================
+
+.. automodule:: equate.compare.vectorize
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      comparison_vector
+      weighted_sum
+      mean
+      max_combiner
+      fellegi_sunter
+   

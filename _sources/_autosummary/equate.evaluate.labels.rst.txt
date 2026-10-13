@@ -1,0 +1,14 @@
+equate.evaluate.labels
+======================
+
+.. automodule:: equate.evaluate.labels
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      cross_pairs_to_labels
+      labels_to_pairs
+      pairs_to_labels
+   

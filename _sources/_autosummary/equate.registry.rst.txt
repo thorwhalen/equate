@@ -1,0 +1,12 @@
+equate.registry
+===============
+
+.. automodule:: equate.registry
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Registry
+   

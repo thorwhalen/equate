@@ -1,0 +1,13 @@
+equate.interactive.review
+=========================
+
+.. automodule:: equate.interactive.review
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      review_queue
+      uncertainty_sampling
+   

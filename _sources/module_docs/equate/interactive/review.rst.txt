@@ -1,4 +1,0 @@
-equate.interactive.review
-=========================
-.. automodule:: equate.interactive.review
-   :members:

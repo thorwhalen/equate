@@ -1,0 +1,24 @@
+﻿equate
+======
+
+.. automodule:: equate
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   base
+   block
+   cluster
+   compare
+   completion
+   evaluate
+   facade
+   featurize
+   interactive
+   matching
+   registry
+   util

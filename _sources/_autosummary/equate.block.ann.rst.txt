@@ -1,0 +1,13 @@
+equate.block.ann
+================
+
+.. automodule:: equate.block.ann
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      brute_knn_blocking
+      ann_blocking
+   

@@ -1,0 +1,58 @@
+# equate
+
+> Tools for matching things: featurize, compare, and match collections of objects (fuzzy correspondence, not exact equality).
+
+
+## Pages
+
+- [Equate](index.html.md): This is a package with tools for matching things.
+- [API reference](api.html.md): | &#96;equate&#96;   | Tools for matching things: featurize, compare, and match collections of objects.   |
+- [equate](_autosummary/equate.html.md): Tools for matching things: featurize, compare, and match collections of objects.
+- [equate.base](_autosummary/equate.base.html.md): Foundational contracts and data structures for equate.
+- [equate.block](_autosummary/equate.block.html.md): The block stage (② scalability): candidate generation.
+- [equate.block.metablock](_autosummary/equate.block.metablock.html.md): Meta-blocking (stage ②): refine a candidate set to raise precision without losing
+- [equate.block.ann](_autosummary/equate.block.ann.html.md): ANN / dense-vector blocking: candidate generation by nearest-neighbour search.
+- [equate.block.keyed](_autosummary/equate.block.keyed.html.md): Keyed blocking (stage ② scalability): emit candidate pairs that share a blocking key.
+- [equate.block.lsh](_autosummary/equate.block.lsh.html.md): MinHash-LSH blocking for set/token (Jaccard) similarity — requires &#96;equate&#91;lsh&#93;&#96;
+- [equate.block.metrics](_autosummary/equate.block.metrics.html.md): Blocking evaluation metrics (stage ②): quantify the recall/efficiency trade-off of a
+- [equate.block.score](_autosummary/equate.block.score.html.md): Score only the blocker’s candidate pairs into a sparse ScoreMatrix (decision D1).
+- [equate.cluster](_autosummary/equate.cluster.html.md): The resolve/cluster stage (③ grouping): turn pairwise matches into entity groups.
+- [equate.cluster.classify](_autosummary/equate.cluster.classify.html.md): Classification (the optional decide stage): map a comparison score to a decision.
+- [equate.compare](_autosummary/equate.compare.html.md): The compare stage (②): score how alike two (featurized) items are.
+- [equate.compare.calibrate](_autosummary/equate.compare.calibrate.html.md): Score calibration (stage ②): map raw comparator scores to a decision or a
+- [equate.compare.numeric_geo](_autosummary/equate.compare.numeric_geo.html.md): Numeric, date, and geospatial comparators (stage ②): turn a domain distance into a
+- [equate.compare.string](_autosummary/equate.compare.string.html.md): String comparators (stage ②): pairwise similarity between two strings.
+- [equate.compare.vector](_autosummary/equate.compare.vector.html.md): Vector comparators (stage ②): pairwise similarity/distance between two vectors.
+- [equate.compare.vectorize](_autosummary/equate.compare.vectorize.html.md): Multi-field record comparison (stage ②): build a per-pair &#42;comparison vector&#42; from
+- [equate.completion](_autosummary/equate.completion.html.md): Tools to complete missing data from other sources of the same data.
+- [equate.evaluate](_autosummary/equate.evaluate.html.md): Evaluate matchers honestly: metrics, leakage-aware splits, and a benchmark harness.
+- [equate.evaluate.benchmark](_autosummary/equate.evaluate.benchmark.html.md): Self-benchmarking: a benchmark registry and an honest-by-default harness.
+- [equate.evaluate.labels](_autosummary/equate.evaluate.labels.html.md): Convert between the two granularities: pairs and cluster labels.
+- [equate.evaluate.metrics](_autosummary/equate.evaluate.metrics.html.md): Pairwise and cluster-level match metrics, dependency-light.
+- [equate.evaluate.ranking](_autosummary/equate.evaluate.ranking.html.md): Threshold-free and ranking metrics, and threshold selection as its own step.
+- [equate.evaluate.scores](_autosummary/equate.evaluate.scores.html.md): The one score type every metric returns: precision and recall, never F1 alone.
+- [equate.evaluate.split](_autosummary/equate.evaluate.split.html.md): Leakage-aware splitting: split over entities, so test entities are unseen.
+- [equate.facade](_autosummary/equate.facade.html.md): The equate facade: the one-line &#96;match(A, B)&#96; entry point.
+- [equate.featurize](_autosummary/equate.featurize.html.md): The featurize stage (①): map objects to comparable representations.
+- [equate.featurize.text](_autosummary/equate.featurize.text.html.md): Dense text-embedding featurizers, behind optional extras.
+- [equate.featurize.tfidf](_autosummary/equate.featurize.tfidf.html.md): Pure-numpy/scipy character-n-gram TF-IDF — equate’s zero-heavy-dependency default
+- [equate.interactive](_autosummary/equate.interactive.html.md): The interactive stage: human-in-the-loop review and re-optimization.
+- [equate.interactive.candidate_store](_autosummary/equate.interactive.candidate_store.html.md): The CandidateStore: per left-item top-k candidates with scores — the SSOT for review
+- [equate.interactive.constraints](_autosummary/equate.interactive.constraints.html.md): Interactive constraints and re-optimization: every user edit is a constraint, not a
+- [equate.interactive.kbest](_autosummary/equate.interactive.kbest.html.md): k-best assignments via Murty’s algorithm (in-house; pure numpy/scipy).
+- [equate.interactive.review](_autosummary/equate.interactive.review.html.md): Human review triage and active-learning query selection.
+- [equate.matching](_autosummary/equate.matching.html.md): The match stage (③): turn a score matrix into a correspondence.
+- [equate.matching.assign](_autosummary/equate.matching.assign.html.md): Assignment matchers (stage ③): turn a score matrix into matched &#96;(i, j)&#96; pairs.
+- [equate.matching.soft](_autosummary/equate.matching.soft.html.md): Soft / optimal-transport matching (stage ③): a fractional transport plan rather than a
+- [equate.registry](_autosummary/equate.registry.html.md): A tiny name-keyed strategy registry with lazy factories (open-closed dispatch).
+- [equate.util](_autosummary/equate.util.html.md): Utils for equate.
+- [For AI agents](ai-agents.html.md): &#96;equate&#96; ships artifacts for coding agents alongside its code. This page lists
+- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-10-13 18:26 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
+
+## Optional
+
+- [equate.md](equate.md): Complete documentation in a single file.
+
+## Build
+
+- [build_info.json](build_info.json): build provenance (commit, version, tool versions, whether the docs match the package)

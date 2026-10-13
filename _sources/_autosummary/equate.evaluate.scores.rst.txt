@@ -1,0 +1,12 @@
+equate.evaluate.scores
+======================
+
+.. automodule:: equate.evaluate.scores
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Scores
+   

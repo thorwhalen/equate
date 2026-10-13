@@ -1,0 +1,28 @@
+equate.cluster
+==============
+
+.. automodule:: equate.cluster
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      clusterers
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      resolve_clusterer
+      connected_components
+      correlation_clustering
+      canonicalize
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   classify

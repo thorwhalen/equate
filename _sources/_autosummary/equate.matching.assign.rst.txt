@@ -1,0 +1,14 @@
+equate.matching.assign
+======================
+
+.. automodule:: equate.matching.assign
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      optimal_matching
+      greedy_matching
+      stable_matching
+   

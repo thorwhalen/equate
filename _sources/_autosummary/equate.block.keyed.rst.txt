@@ -1,0 +1,17 @@
+equate.block.keyed
+==================
+
+.. automodule:: equate.block.keyed
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      key_blocking
+      sorted_neighborhood
+      first_chars
+      qgram_keys
+      whole_value
+      phonetic_key
+   

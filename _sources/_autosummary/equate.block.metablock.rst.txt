@@ -1,0 +1,13 @@
+equate.block.metablock
+======================
+
+.. automodule:: equate.block.metablock
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      dedupe_pairs
+      prune_frequent
+   

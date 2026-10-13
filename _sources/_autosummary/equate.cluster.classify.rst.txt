@@ -1,0 +1,13 @@
+equate.cluster.classify
+=======================
+
+.. automodule:: equate.cluster.classify
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      classify
+      estimate_mu_em
+   

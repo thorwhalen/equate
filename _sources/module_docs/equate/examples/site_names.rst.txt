@@ -1,4 +1,0 @@
-equate.examples.site_names
-==========================
-.. automodule:: equate.examples.site_names
-   :members:

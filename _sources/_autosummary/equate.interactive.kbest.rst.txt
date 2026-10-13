@@ -1,0 +1,13 @@
+equate.interactive.kbest
+========================
+
+.. automodule:: equate.interactive.kbest
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      solve_constrained
+      k_best_assignments
+   

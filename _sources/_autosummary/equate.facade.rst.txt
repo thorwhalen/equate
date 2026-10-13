@@ -1,0 +1,14 @@
+equate.facade
+=============
+
+.. automodule:: equate.facade
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      match
+      dedupe
+      resolve
+   

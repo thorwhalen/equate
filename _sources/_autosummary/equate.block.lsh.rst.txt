@@ -1,0 +1,12 @@
+equate.block.lsh
+================
+
+.. automodule:: equate.block.lsh
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      minhash_lsh_blocking
+   

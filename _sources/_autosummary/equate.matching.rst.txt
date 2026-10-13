@@ -1,0 +1,31 @@
+equate.matching
+===============
+
+.. automodule:: equate.matching
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      matchers
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      resolve_matcher
+      optimal_matching
+      greedy_matching
+      stable_matching
+      soft_match
+      harden
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   assign
+   soft

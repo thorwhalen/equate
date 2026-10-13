@@ -1,0 +1,12 @@
+equate.block.metrics
+====================
+
+.. automodule:: equate.block.metrics
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      blocking_metrics
+   

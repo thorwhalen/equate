@@ -1,0 +1,14 @@
+equate.completion
+=================
+
+.. automodule:: equate.completion
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      mk_text_to_vect
+      similarity_matrix
+      transform_text
+   

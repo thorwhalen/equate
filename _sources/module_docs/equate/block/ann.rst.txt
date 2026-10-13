@@ -1,4 +1,0 @@
-equate.block.ann
-================
-.. automodule:: equate.block.ann
-   :members:

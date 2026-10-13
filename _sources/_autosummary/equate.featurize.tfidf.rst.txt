@@ -1,0 +1,19 @@
+equate.featurize.tfidf
+======================
+
+.. automodule:: equate.featurize.tfidf
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      mk_tfidf
+      char_ngrams
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      TfidfFeaturizer
+   

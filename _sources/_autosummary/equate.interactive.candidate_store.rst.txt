@@ -1,0 +1,12 @@
+equate.interactive.candidate\_store
+===================================
+
+.. automodule:: equate.interactive.candidate_store
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      CandidateStore
+   

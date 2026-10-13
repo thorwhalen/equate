@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "built_at": "2026-10-13T18:26:22Z",
+  "package": {
+    "name": "equate",
+    "version": "0.0.15",
+    "display_name": "equate",
+    "source": "pyproject.toml"
+  },
+  "git": {
+    "available": true,
+    "commit": "8ad1004a0812a6b3bd32481033ad22c0a0c2e349",
+    "short_commit": "8ad1004",
+    "branch": "master",
+    "tags": [],
+    "dirty": false,
+    "remote_url": "https://github.com/thorwhalen/equate",
+    "commit_url": "https://github.com/thorwhalen/equate/commit/8ad1004a0812a6b3bd32481033ad22c0a0c2e349",
+    "error": null
+  },
+  "ci": {
+    "provider": "github",
+    "repository": "thorwhalen/equate",
+    "sha": "8ad1004a0812a6b3bd32481033ad22c0a0c2e349",
+    "sha_in_history": true,
+    "ref": "refs/heads/master",
+    "ref_name": "master",
+    "run_id": "38446509561",
+    "run_url": "https://github.com/thorwhalen/equate/actions/runs/38446509561",
+    "server_url": "https://github.com"
+  },
+  "tools": {
+    "epythet": "0.2.17",
+    "sphinx": "9.1.0",
+    "docutils": "0.22.4",
+    "python": "3.12.15"
+  },
+  "config": {
+    "theme": "auto",
+    "html_theme": "furo",
+    "accent": "#56489b",
+    "mode": "auto",
+    "api_generator": "autosummary",
+    "ignore": [
+      "tests/",
+      "scrap/",
+      "examples/"
+    ],
+    "agent_outputs": true,
+    "aggregates": [
+      "md"
+    ],
+    "ai_artifacts": true,
+    "provenance": true,
+    "docs_dir": "docsrc"
+  },
+  "site": {
+    "modules_documented": 39,
+    "objects_documented": 220
+  },
+  "pypi": {
+    "checked": true,
+    "latest": "0.0.16",
+    "relation": "behind",
+    "error": null
+  },
+  "reproduce": "git clone https://github.com/thorwhalen/equate && cd equate\ngit checkout 8ad1004a0812a6b3bd32481033ad22c0a0c2e349\npip install \"epythet==0.2.17\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "warnings": [],
+  "alignment": {
+    "aligned": false,
+    "notes": [
+      "The documented version (0.0.15) is behind the latest release on PyPI (0.0.16): `pip install equate` gives newer code than these docs describe."
+    ]
+  }
+}

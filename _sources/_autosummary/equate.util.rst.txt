@@ -1,0 +1,22 @@
+equate.util
+===========
+
+.. automodule:: equate.util
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      ensure_sparse
+      greedy_matching
+      hungarian_matching
+      kuhn_munkres_matching
+      match_greedily
+      match_keys_to_values
+      maximal_matching
+      mk_text_to_vect
+      similarity_matrix
+      stable_marriage_matching
+      transform_text
+   

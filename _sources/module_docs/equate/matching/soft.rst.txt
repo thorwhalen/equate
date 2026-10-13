@@ -1,4 +1,0 @@
-equate.matching.soft
-====================
-.. automodule:: equate.matching.soft
-   :members:

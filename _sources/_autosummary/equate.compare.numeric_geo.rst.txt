@@ -1,0 +1,16 @@
+equate.compare.numeric\_geo
+===========================
+
+.. automodule:: equate.compare.numeric_geo
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      exp_decay
+      linear_decay
+      gaussian_decay
+      haversine
+      geo_similarity
+   

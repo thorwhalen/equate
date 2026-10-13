@@ -1,0 +1,36 @@
+equate.featurize
+================
+
+.. automodule:: equate.featurize
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      featurizers
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      identity
+      resolve_featurizer
+      mk_tfidf
+      char_ngrams
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      TfidfFeaturizer
+      FeaturizerMeta
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   text
+   tfidf

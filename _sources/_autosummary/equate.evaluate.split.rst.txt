@@ -1,0 +1,19 @@
+equate.evaluate.split
+=====================
+
+.. automodule:: equate.evaluate.split
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      assert_no_leakage
+      entity_split
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Split
+   

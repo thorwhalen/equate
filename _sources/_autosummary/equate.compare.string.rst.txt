@@ -1,0 +1,17 @@
+equate.compare.string
+=====================
+
+.. automodule:: equate.compare.string
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      ratio
+      levenshtein_distance
+      levenshtein
+      monge_elkan
+      jaro_winkler
+      phonetic_match
+   
