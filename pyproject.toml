@@ -48,6 +48,8 @@ phonetic = ["jellyfish"]
 # --- featurization: embeddings (featurize stage) ---
 embeddings = ["sentence-transformers"]
 api = ["openai", "cohere"]
+# --- evaluation: sklearn backs ARI / V-measure when present (numpy fallback otherwise) ---
+eval = ["scikit-learn"]
 # --- blocking / candidate generation (block stage) ---
 ann = ["hnswlib"]
 lsh = ["datasketch"]
