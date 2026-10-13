@@ -15,11 +15,17 @@ from equate.evaluate.scores import Scores
 
 
 def _sorted_by_score(scores, y_true) -> tuple[np.ndarray, np.ndarray]:
-    s, y = np.asarray(scores, dtype=float), np.asarray(y_true).astype(bool)
-    if s.shape != y.shape or s.ndim != 1:
+    s, raw = np.asarray(scores, dtype=float), np.asarray(y_true)
+    if s.shape != raw.shape or s.ndim != 1:
         raise ValueError(
-            f"scores and y_true must be 1-D and the same length; got {s.shape}, {y.shape}"
+            f"scores and y_true must be 1-D and the same length; got {s.shape}, {raw.shape}"
         )
+    if raw.size and not set(np.unique(raw).tolist()) <= {0, 1}:
+        raise ValueError(
+            "y_true must hold 0/1 (or False/True); got values "
+            f"{sorted(set(np.unique(raw).tolist()))[:5]} — map a -1/+1 encoding first"
+        )
+    y = raw.astype(bool)
     order = np.argsort(-s, kind="mergesort")
     return s[order], y[order]
 
@@ -99,7 +105,7 @@ def ranking_metrics(
         )
         if not truths:
             continue
-        cands = list(ranked.get(q, ()))
+        cands = list(dict.fromkeys(ranked.get(q, ())))  # a repeated candidate counts once
         hits = [i for i, c in enumerate(cands) if c in truths]
         for k in ks:
             recalls[k].append(len([i for i in hits if i < k]) / len(truths))

@@ -109,7 +109,7 @@ At the time of writing this, the default `matcher` used by `match_keys_to_values
 
 ## Measuring a matcher: `equate.evaluate`
 
-Dependency-light metrics that return precision **and** recall (a `Scores`), never F1 alone, plus a harness that scores a matcher on unseen-entity splits and reports the cost and base rate next to every number.
+Dependency-light metrics that return precision **and** recall (a `Scores`), never F1 alone, plus a harness that scores a matcher (pairwise) on unseen-entity splits and reports the cost and base rate next to every number. Loaders for the standard benchmark suites are not shipped yet (#15).
 
 ```python
 from equate.evaluate import pairwise_prf, bcubed, pairs_to_labels, benchmark_matcher

@@ -9,11 +9,11 @@ releases CI publishes to PyPI.
 **`equate.evaluate`**, an evaluation and benchmark harness (#11). It is dependency-light: numpy and scipy, with scikit-learn optional via `equate[eval]`.
 
 - `Scores` is a frozen dataclass: precision, recall, F1 derived from them, and support. Every metric returns it, so F1 never travels alone.
-- Pairwise: `pairwise_prf`. Cluster: `bcubed` (the default), `ceaf` (entity or mention; the alignment goes through the `matchers` registry), and `cluster_metrics` (adds ARI, V-measure, homogeneity and completeness, from sklearn when installed and numpy otherwise; the two agree).
+- Pairwise: `pairwise_prf`. Cluster: `bcubed` (the default), `ceaf` (entity or mention; the alignment goes through the `matchers` registry), and `cluster_metrics` (adds ARI, V-measure, homogeneity and completeness, from sklearn when installed and numpy otherwise; the two agree on every non-empty input, and an empty one is vacuously 1.0).
 - Granularity is explicit: `pairs_to_labels` (union-find closure), `labels_to_pairs`, and `cross_pairs_to_labels` for two tables.
 - Threshold-free and ranking: `pr_auc` (tie-aware average precision), `ranking_metrics` (recall@k, MRR, MAP), and `select_threshold`, kept separate from scoring so it is chosen on validation data.
 - Leakage: `entity_split` splits by entity, so test entities are unseen. `assert_no_leakage` is the post-hoc guard.
-- Benchmarks: a `benchmarks` registry with a generated `toy_names`, plus `benchmark_matcher`. It scores the test part only, fits a trainable matcher on train and validation only (after asserting no leakage), and reports a wall-clock cost column, the test base rate and the difficulty, with mean ± std over seeds.
+- Benchmarks: a `benchmarks` registry with a generated `toy_names`, plus `benchmark_matcher`. It scores the test part only, pairwise, and skips with a warning any seed whose test part has no gold pair. It fits a trainable matcher on train and validation only (after asserting no leakage), and reports a wall-clock cost column, the test base rate and the difficulty, with mean ± std over seeds. Loaders for Abt-Buy, Amazon-Google, DBLP-ACM and WDC Products are deferred to #15.
 - `blocking_metrics` is re-exported from `equate.block`, the single implementation.
 
 ## 0.0.14 — 2026-07-17

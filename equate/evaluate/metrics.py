@@ -177,6 +177,10 @@ def cluster_metrics(
     pred, true = _check_labels(pred_labels, true_labels)
     if backend not in ("auto", "numpy", "sklearn"):
         raise ValueError(f"backend must be 'auto', 'numpy' or 'sklearn', got {backend!r}")
+    if len(pred) == 0:  # nothing to cluster: every metric is vacuously perfect
+        names = ("ari", "b3_f1", "b3_precision", "b3_recall", "ceaf_e_f1",
+                 "completeness", "homogeneity", "v_measure")
+        return dict.fromkeys(names, 1.0)
     b3 = bcubed(pred, true)
     out = {
         "b3_precision": b3.precision,

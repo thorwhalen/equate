@@ -37,7 +37,11 @@ def entity_split(
     >>> sorted(s.train + s.val + s.test) == list(range(10))
     True
     """
-    if len(ratios) != 3 or any(r < 0 for r in ratios) or not sum(ratios):
+    if (
+        len(ratios) != 3
+        or not all(np.isfinite(r) and r >= 0 for r in ratios)
+        or not sum(ratios)
+    ):
         raise ValueError(f"ratios must be three non-negative numbers, got {ratios!r}")
     ids = np.asarray(entity_ids)
     entities = np.unique(ids)

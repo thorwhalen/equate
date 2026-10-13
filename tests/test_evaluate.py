@@ -183,3 +183,45 @@ def test_benchmark_is_a_plain_container():
     assert ds.base_rate == 1.0
     r = benchmark_matcher(lambda a, b: [(0, 0)] if a and b else [], on=[ds], n_seeds=1, ratios=(0, 0, 1))
     assert r.rows[0].f1 == 1.0
+
+
+# --- regressions from the adversarial review -----------------------------------
+
+
+def test_harness_skips_a_test_part_with_no_gold_instead_of_scoring_it_perfect():
+    ds = Benchmark("tiny", ["a", "b"], ["a", "b"], frozenset({(0, 0), (1, 1)}))
+    with pytest.warns(UserWarning, match="no gold pair"):
+        with pytest.raises(ValueError, match="too small"):
+            benchmark_matcher(lambda a, b: [], on=[ds], n_seeds=3, ratios=(1, 1, 0))
+
+
+def test_harness_rejects_matcher_and_fit_together_and_accepts_a_single_name():
+    with pytest.raises(ValueError, match="either matcher or fit"):
+        benchmark_matcher(lambda a, b: [], fit=lambda *a: None)
+    assert benchmark_matcher(on="toy_names", n_seeds=1).rows[0].benchmark == "toy_names"
+
+
+def test_ranking_counts_a_repeated_candidate_once():
+    m = ranking_metrics({"q": ["a", "a", "b"]}, {"q": "a"}, ks=(2,))
+    assert m["recall_at_2"] == 1.0 and m["map"] == 1.0
+
+
+def test_pm_one_labels_are_refused():
+    with pytest.raises(ValueError, match="0/1"):
+        pr_auc([0.1, 0.9], [1, -1])
+
+
+def test_empty_cluster_metrics_agree_across_backends():
+    assert cluster_metrics([], [], backend="numpy")["b3_f1"] == 1.0
+
+
+def test_nan_ratio_is_refused():
+    with pytest.raises(ValueError):
+        entity_split([0, 1, 2], ratios=(float("nan"), 0.2, 0.2))
+
+
+@pytest.mark.parametrize("seed", range(10))
+def test_toy_gold_is_unambiguous(seed):
+    ds = load_benchmark("toy_names", n_entities=200, seed=seed)
+    assert len(set(ds.a)) == len(ds.a) and len(set(ds.b)) == len(ds.b)
+    assert not set(ds.a) & set(ds.b)

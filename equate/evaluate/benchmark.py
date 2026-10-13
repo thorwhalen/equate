@@ -4,23 +4,31 @@
 resistance (research doc 14, §8.4): it splits **by entity** so test entities are unseen,
 fits a trainable matcher on train only (and asserts the split did not leak), scores the
 test part only, reports the test **base rate** and a **cost column** (wall-clock seconds)
-next to every score, and repeats over seeds so a number comes with its spread.
+next to every score, and repeats over seeds so a number comes with its spread. A seed
+whose test part holds no gold pair is skipped with a warning rather than scored as a
+vacuous perfect 1.0.
+
+The scores are **pairwise** (precision, recall, F1). B³ is deliberately not reported for
+a two-table matching: every unmatched record is a singleton there, and singletons score
+well under B³ whatever the matcher did — an empty prediction would read ~0.75.
 
 Benchmarks are a registry, so adding one is registering a loader, not editing the core.
 The built-in ``toy_names`` is generated (no download, deterministic): enough to exercise a
 matcher and this harness in CI. Loaders for the standard suites (Abt-Buy, Amazon-Google,
-DBLP-ACM, WDC Products) attach here as lazily-fetched optional benchmarks.
+DBLP-ACM, WDC Products) are not shipped yet; they will register here as lazily-fetched
+optional benchmarks (equate#15).
 """
 
 import time
+import warnings
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from typing import Optional
 
 import numpy as np
 
-from equate.evaluate.labels import cross_pairs_to_labels, pairs_to_labels
-from equate.evaluate.metrics import bcubed, pairwise_prf
+from equate.evaluate.labels import cross_pairs_to_labels
+from equate.evaluate.metrics import pairwise_prf
 from equate.evaluate.split import assert_no_leakage, entity_split
 from equate.registry import Registry
 
@@ -55,10 +63,17 @@ def _toy_names(*, n_entities: int = 60, n_distractors: int = 20, seed: int = 0) 
     rng = np.random.default_rng(seed)
     syllables = ["ka", "lo", "mi", "ra", "to", "ve", "su", "ni", "da", "pe", "zo", "ri"]
 
+    used: set = set()
+
     def name():
-        first = "".join(rng.choice(syllables, size=rng.integers(2, 4)))
-        last = "".join(rng.choice(syllables, size=rng.integers(2, 4)))
-        return f"{first.title()} {last.title()}"
+        # unique across a AND b, and never equal to a typo'd copy, so gold is unambiguous
+        while True:
+            first = "".join(rng.choice(syllables, size=rng.integers(2, 4)))
+            last = "".join(rng.choice(syllables, size=rng.integers(2, 4)))
+            s = f"{first.title()} {last.title()}"
+            if s not in used:
+                used.add(s)
+                return s
 
     def typo(s):
         i = int(rng.integers(1, len(s) - 1))
@@ -70,7 +85,13 @@ def _toy_names(*, n_entities: int = 60, n_distractors: int = 20, seed: int = 0) 
         return s[: i - 1] + s[i] + s[i - 1] + s[i + 1 :]  # swap two
 
     a = [name() for _ in range(n_entities)]
-    b_true = [typo(s) for s in a]
+    b_true = []
+    for s in a:
+        t = typo(s)
+        while t in used:
+            t = typo(s)
+        used.add(t)
+        b_true.append(t)
     b_all = b_true + [name() for _ in range(n_distractors)]
     order = rng.permutation(len(b_all))
     position = {int(old): new for new, old in enumerate(order)}
@@ -110,7 +131,6 @@ class BenchmarkRow:
     precision: float
     recall: float
     f1: float
-    b3_f1: float
     seconds: float
     n_a: int
     n_b: int
@@ -125,7 +145,7 @@ class BenchmarkReport:
     rows: tuple
     meta: dict = field(default_factory=dict)
 
-    _METRICS = ("precision", "recall", "f1", "b3_f1", "seconds")
+    _METRICS = ("precision", "recall", "f1", "seconds")
 
     def summary(self) -> dict:
         """``{benchmark: {metric: (mean, std), 'base_rate': mean, 'n_seeds': k}}``."""
@@ -143,9 +163,9 @@ class BenchmarkReport:
         return out
 
     def to_markdown(self) -> str:
-        """One row per benchmark: precision, recall, F1, B³-F1, seconds, base rate, difficulty."""
-        head = "| benchmark | precision | recall | F1 | B³ F1 | seconds | test base rate | seeds | difficulty |"
-        lines = [head, "|" + "---|" * 9]
+        """One row per benchmark: precision, recall, F1, seconds, base rate, difficulty."""
+        head = "| benchmark | precision | recall | F1 | seconds | test base rate | seeds | difficulty |"
+        lines = [head, "|" + "---|" * 8]
         for name, s in self.summary().items():
             cells = [f"{s[m][0]:.3f} ± {s[m][1]:.3f}" for m in self._METRICS]
             difficulty = self.meta.get(name, {}).get("difficulty", "")
@@ -174,8 +194,10 @@ def benchmark_matcher(
     """Score ``matcher`` on unseen-entity test splits of each benchmark in ``on``.
 
     ``matcher(a, b)`` returns ``(i, j)`` pairs (a :class:`~equate.base.Matching`
-    qualifies); the default is :func:`equate.match`. ``on`` holds benchmark names or
-    :class:`Benchmark` objects. For each of ``n_seeds`` seeds the records of ``a + b``
+    qualifies); the default is :func:`equate.match`. ``on`` is a benchmark name, a
+    :class:`Benchmark`, or an iterable of either. Scores are pairwise; a seed whose test
+    part has no gold pair is skipped with a warning, and a benchmark with no scorable
+    seed is an error. For each of ``n_seeds`` seeds the records of ``a + b``
     are split by entity (``ratios`` = train/val/test); only the **test** part is
     matched and scored, so a test entity was never seen in training.
 
@@ -190,8 +212,12 @@ def benchmark_matcher(
     >>> s['f1'][0] > 0.8, s['n_seeds']
     (True, 2)
     """
+    if matcher is not None and fit is not None:
+        raise ValueError("pass either matcher or fit (which returns the matcher), not both")
     if matcher is None and fit is None:
         from equate.facade import match as matcher
+    if isinstance(on, (str, Benchmark)):
+        on = [on]
     rows, meta = [], {}
     for spec in on:
         ds = spec if isinstance(spec, Benchmark) else load_benchmark(spec)
@@ -205,9 +231,17 @@ def benchmark_matcher(
                 [i - n_a for i in records if i >= n_a],
             )
 
+        scored = 0
         for seed in range(n_seeds):
             split = entity_split(entity, ratios=ratios, seed=seed)
             test_a, test_b = side(split.test)
+            gold = _subset_pairs(ds.gold, test_a, test_b)
+            if not gold:
+                warnings.warn(
+                    f"{ds.name} seed {seed}: the test part holds no gold pair "
+                    f"({len(test_a)} x {len(test_b)} records) — skipped, not scored as 1.0"
+                )
+                continue
             run = matcher
             if fit is not None:
                 assert_no_leakage(entity, split.train, split.val, split.test)
@@ -219,20 +253,21 @@ def benchmark_matcher(
                     [ds.a[i] for i in va_a], [ds.b[j] for j in va_b],
                     _subset_pairs(ds.gold, va_a, va_b),
                 )
-            gold = _subset_pairs(ds.gold, test_a, test_b)
             start = time.perf_counter()
             pred = {tuple(p) for p in run([ds.a[i] for i in test_a], [ds.b[j] for j in test_b])}
             seconds = time.perf_counter() - start
             s = pairwise_prf(pred, gold)
             n_ta, n_tb = len(test_a), len(test_b)
-            b3 = bcubed(
-                pairs_to_labels(((i, n_ta + j) for i, j in pred), n=n_ta + n_tb),
-                pairs_to_labels(((i, n_ta + j) for i, j in gold), n=n_ta + n_tb),
-            )
             rows.append(
                 BenchmarkRow(
-                    ds.name, seed, s.precision, s.recall, s.f1, b3.f1, seconds,
-                    n_ta, n_tb, len(gold), len(gold) / (n_ta * n_tb) if n_ta * n_tb else 0.0,
+                    ds.name, seed, s.precision, s.recall, s.f1, seconds,
+                    n_ta, n_tb, len(gold), len(gold) / (n_ta * n_tb),
                 )
+            )
+            scored += 1
+        if not scored:
+            raise ValueError(
+                f"{ds.name}: no seed produced a test part with a gold pair; the "
+                f"benchmark is too small for ratios={ratios!r}"
             )
     return BenchmarkReport(tuple(rows), meta)
