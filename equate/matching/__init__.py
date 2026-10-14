@@ -14,6 +14,13 @@ from equate.base import ScoreMatrix, scorematrix_matcher
 from equate.registry import Registry
 from equate.matching.assign import optimal_matching, greedy_matching, stable_matching
 from equate.matching.soft import soft_match, harden
+from equate.matching.quadratic import (
+    quadratic_matchers,
+    resolve_quadratic_matcher,
+    align,
+    isorank,
+    rrwm,
+)
 
 __all__ = [
     "matchers",
@@ -23,6 +30,11 @@ __all__ = [
     "stable_matching",
     "soft_match",
     "harden",
+    "quadratic_matchers",
+    "resolve_quadratic_matcher",
+    "align",
+    "isorank",
+    "rrwm",
 ]
 
 #: the match-stage strategy registry (name -> lazy factory)

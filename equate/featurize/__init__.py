@@ -17,6 +17,12 @@ from equate.featurize.tfidf import (
     DFLT_NGRAM_RANGE,
 )
 from equate.featurize import text as _text
+from equate.featurize.graph import (
+    WLFeaturizer,
+    grakel_featurizer,
+    DFLT_WL_ITERATIONS,
+    GRAKEL_META,
+)
 
 __all__ = [
     "featurizers",
@@ -26,6 +32,8 @@ __all__ = [
     "mk_tfidf",
     "char_ngrams",
     "FeaturizerMeta",
+    "WLFeaturizer",
+    "grakel_featurizer",
 ]
 
 #: the featurize-stage strategy registry (name -> lazy factory)
@@ -58,6 +66,16 @@ def _tfidf_factory(*, ngram_range=DFLT_NGRAM_RANGE, lowercase=True):
 # defined once (in text.py) and mirrored here, so the two copies cannot diverge.
 featurizers.register("sbert", _text.sbert_featurizer, meta=_text.SBERT_META)
 featurizers.register("openai", _text.openai_featurizer, meta=_text.OPENAI_META)
+
+
+# Graph kernels (doc 12 §3.4, D8): graph -> vector, reclaiming the indexable route.
+@featurizers.register("wl", meta=WLFeaturizer.meta)
+def _wl_factory(*, iterations=DFLT_WL_ITERATIONS, label=None):
+    """Build a Weisfeiler-Lehman featurizer (unfit; ``resolve_featurizer`` fits it)."""
+    return WLFeaturizer(iterations=iterations, label=label)
+
+
+featurizers.register("grakel", grakel_featurizer, meta=GRAKEL_META)
 
 
 def resolve_featurizer(spec=None, *, corpus=None, **config):
