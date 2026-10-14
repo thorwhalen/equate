@@ -278,3 +278,106 @@ def test_rrwm_real_pygmtools_recovers_an_isomorphism():
     m = align(A, P @ A @ P.T, how="rrwm")
     # node a of G2 is node perm[a] of G1
     assert {i: j for i, j in m} == {int(perm[a]): a for a in range(6)}
+
+
+# --- review fixes -----------------------------------------------------------------
+
+
+def test_explicit_zero_weights_are_not_edges():
+    a = as_graph({0: {0: 0.0, 1: 1.0}, 1: {0: 1.0}})
+    b = as_graph(np.array([[0, 1], [1, 0]]))
+    from scipy.sparse import csr_matrix
+
+    c = as_graph(csr_matrix(([0.0, 1.0, 1.0], ([0, 0, 1], [0, 1, 0])), shape=(2, 2)))
+    assert a.adjacency.nnz == b.adjacency.nnz == c.adjacency.nnz == 2
+    wl = WLFeaturizer().fit([a, b])
+    X = wl([a, b, c]).toarray()
+    assert np.allclose(X[0], X[1]) and np.allclose(X[1], X[2])
+
+
+def test_weight_shapes_networkx_users_hand_over():
+    nx = pytest.importorskip("networkx")
+    G = nx.Graph()
+    G.add_edge(0, 1, weight=None)
+    assert as_graph(G).adjacency.toarray().tolist() == [[0, 1], [1, 0]]
+    assert as_graph({0: {1: {"weight": 2}}, 1: {0: {"weight": 2}}}).adjacency[0, 1] == 2
+    M = nx.MultiGraph()
+    M.add_edge(0, 1, weight=5.0)
+    M.add_edge(0, 1, weight=7.0)
+    assert as_graph(M).adjacency.toarray().tolist() == [[0, 12], [12, 0]]
+
+
+def test_wl_labels_are_canonical():
+    G = {0: [1], 1: [0]}
+    py = WLFeaturizer(label=lambda v: [1, 2][v]).fit([G])
+    npy = WLFeaturizer(label=lambda v: np.array([1, 2])[v])
+    npy.vocabulary_ = py.vocabulary_
+    assert np.allclose(npy([G]).toarray(), py([G]).toarray())
+    sets = WLFeaturizer(label=lambda v: frozenset({"b", "a", v})).fit([G])
+    assert len(sets.vocabulary_) > 0
+
+
+def test_graphview_passthrough_refuses_a_label():
+    g = as_graph(TREE)
+    assert as_graph(g) is g
+    with pytest.raises(TypeError, match="GraphView"):
+        as_graph(g, label="color")
+
+
+def test_isorank_warns_when_it_does_not_converge_and_takes_sparse_priors():
+    from scipy.sparse import csr_matrix
+
+    with pytest.warns(RuntimeWarning, match="converge"):
+        isorank_scores(TREE, TREE, max_iter=2)
+    m = align(TREE, TREE, node_affinity=csr_matrix(np.eye(9) + 0.01))
+    assert dict(m) == {i: i for i in range(9)}
+
+
+def test_repeated_identical_seed_is_one_seed():
+    assert dict(align(TREE, TREE, seeds=[(0, 0), (0, 0)]))[0] == 0
+
+
+PATH4 = {0: [1], 1: [0, 2], 2: [1, 3], 3: [2]}
+PATH4_ABC = {"a": ["b"], "b": ["a", "c"], "c": ["b", "d"], "d": ["c"]}
+
+
+def test_rrwm_seeds_condition_the_solve_real_pygmtools():
+    pytest.importorskip("pygmtools")
+    m = align(PATH4, PATH4_ABC, how="rrwm", seeds=[(0, "d")])
+    assert dict(m.labeled_pairs()) == {
+        0: "d",
+        1: "c",
+        2: "b",
+        3: "a",
+    }  # edges preserved
+
+
+def test_rrwm_edgeless_graphs_do_not_crash_real_pygmtools():
+    pytest.importorskip("pygmtools")
+    assert len(align({0: [], 1: []}, {"a": [], "b": []}, how="rrwm")) == 2
+    assert len(align({0: []}, {"a": []}, how="rrwm")) == 1
+
+
+def test_rrwm_seed_removes_contradicting_assignments_from_K(monkeypatch):
+    seen = {}
+
+    def build_aff_mat(*a, **k):
+        return np.ones((1, 4, 4))
+
+    def rrwm_solver(K, n1, n2, backend, **kw):
+        seen["K"] = np.array(K[0])
+        return np.ones((1, 2, 2))
+
+    pygm = types.ModuleType("pygmtools")
+    pygm.utils = types.SimpleNamespace(
+        dense_to_sparse=lambda A, backend: (None, None, None),
+        build_aff_mat=build_aff_mat,
+        gaussian_aff_fn=lambda *a, **k: None,
+    )
+    pygm.rrwm = rrwm_solver
+    monkeypatch.setitem(sys.modules, "pygmtools", pygm)
+    align({0: [1], 1: [0]}, {0: [1], 1: [0]}, how="rrwm", seeds=[(0, 1)])
+    K = seen["K"]
+    # (i, j) -> j * n1 + i: seed (0, 1) is index 2; (0, 0)=0 and (1, 1)=3 contradict it
+    assert not K[[0, 3]].any() and not K[:, [0, 3]].any()
+    assert K[2, 2] == K.max()

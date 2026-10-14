@@ -43,6 +43,22 @@ def _digest(text):
     return hashlib.blake2b(text.encode(), digest_size=8).hexdigest()
 
 
+def _canonical(label):
+    """A label's process-independent text: numpy scalars as Python ones, sets sorted.
+
+    WL compares labels *across* graphs (and across processes, via the vocabulary), so
+    ``np.int64(1)`` and ``1`` must be one label, and a set's ``repr`` -- whose order
+    follows salted hashing -- must not leak in.
+    """
+    if hasattr(label, "item") and np.ndim(label) == 0:
+        label = label.item()
+    if isinstance(label, (set, frozenset)):
+        return "{" + ",".join(sorted(_canonical(x) for x in label)) + "}"
+    if isinstance(label, tuple):
+        return "(" + ",".join(_canonical(x) for x in label) + ")"
+    return repr(label)
+
+
 def _wl_label_sequences(g, iterations):
     """The WL labels of every node of ``g``, per round (round 0 = the node's own label).
 
@@ -51,7 +67,7 @@ def _wl_label_sequences(g, iterations):
     nodes in two graphs share a round-``h`` label iff their depth-``h`` unfolding trees
     (with labels) are equal (up to digest collisions).
     """
-    current = [_digest(repr(("L", lab))) for lab in g.labels]
+    current = [_digest("L:" + _canonical(lab)) for lab in g.labels]
     rounds = [current]
     for _ in range(iterations):
         current = [
@@ -72,7 +88,9 @@ class WLFeaturizer:
     seen in the corpus are ignored. A fitted instance is itself a batch featurizer.
 
     Two isomorphic graphs (same labels) always get the same vector; the converse holds
-    up to the WL test's power (it cannot tell some regular graphs apart).
+    up to the WL test's power (it cannot tell some regular graphs apart). Neighbors are
+    *out*-neighbors (a directed graph is refined along its edges), and edge weights are
+    ignored -- the subtree kernel counts structure, not strength.
 
     >>> path3 = {0: [1], 1: [0, 2], 2: [1]}
     >>> triangle = {0: [1, 2], 1: [0, 2], 2: [0, 1]}

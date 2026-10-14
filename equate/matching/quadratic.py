@@ -19,8 +19,10 @@ Use :func:`align` (also ``equate.align``), or pick a strategy from the
 """
 
 import functools
+import warnings
 
 import numpy as np
+from scipy.sparse import issparse
 
 from equate.base import Matching, ScoreMatrix
 from equate.registry import Registry
@@ -63,7 +65,9 @@ def _prior(g1, g2, node_affinity):
         E = np.array(
             [[float(node_affinity(u, v)) for v in g2.nodes] for u in g1.nodes],
             dtype=float,
-        ).reshape(shape)
+        ).reshape(shape)  # reshape: keeps an empty side's shape
+    elif issparse(node_affinity):
+        E = np.asarray(node_affinity.toarray(), dtype=float)
     else:
         E = np.asarray(node_affinity, dtype=float)
         if E.shape != shape:
@@ -82,7 +86,7 @@ def _seed_indices(g1, g2, seeds):
         return []
     idx1, idx2 = g1.index(), g2.index()
     pairs = []
-    for u, v in seeds:
+    for u, v in dict.fromkeys(tuple(s) for s in seeds):  # a repeated pair is one seed
         if u not in idx1:
             raise KeyError(f"seed node {u!r} is not a node of G1")
         if v not in idx2:
@@ -143,21 +147,33 @@ def isorank_scores(
     Iterates ``R <- alpha * W1 R W2^T + (1 - alpha) * E`` to its fixed point, where
     ``W`` is each graph's column-stochastic walk matrix and ``E`` the normalized prior
     (``node_affinity``; uniform when ``None``). ``seeds`` pin their rows/columns of the
-    prior to the given partner, so their anchoring propagates to the neighbors. Returned
-    as a ``ScoreMatrix`` (``sense='maximize'``) labeled with the two node lists.
+    prior to the given partner (at the prior's own top value), so their anchoring
+    propagates to the neighbors. A directed graph walks *against* its edges (the column
+    normalization uses in-degrees). Warns when ``max_iter`` runs out before ``tol``.
+    Returned as a ``ScoreMatrix`` (``sense='maximize'``) labeled with the two node lists.
+
+    The prior does real work: from topology alone (``node_affinity=None``) the scores
+    tend to the product of node degrees, which cannot tell equal-degree nodes apart. Pass
+    a node similarity (attributes, names, degrees) for anything but degree-distinct graphs.
     """
     if not 0 <= alpha <= 1:
         raise ValueError(f"alpha must be in [0, 1], got {alpha!r}")
     g1, g2 = as_graph(G1, label=label), as_graph(G2, label=label)
     if g1.n == 0 or g2.n == 0:
         return ScoreMatrix(
-            np.zeros((g1.n, g2.n)), row_labels=list(g1.nodes), col_labels=list(g2.nodes)
+            np.zeros((g1.n, g2.n)),
+            sense="maximize",
+            row_labels=list(g1.nodes),
+            col_labels=list(g2.nodes),
         )
     E = _prior(g1, g2, node_affinity)
+    top = (
+        float(E.max()) or 1.0
+    )  # a seed is as strong as the strongest prior, at any scale
     for i, j in _seed_indices(g1, g2, seeds):
         E[i, :] = 0.0
         E[:, j] = 0.0
-        E[i, j] = 1.0
+        E[i, j] = top
     total = E.sum()
     if total == 0:
         raise ValueError("node_affinity is all zero: there is no prior to propagate")
@@ -168,10 +184,17 @@ def isorank_scores(
         nxt = alpha * (W1 @ R @ W2.T) + (1 - alpha) * E
         s = nxt.sum()
         nxt = nxt / s if s > 0 else E.copy()
-        done = np.abs(nxt - R).sum() < tol
+        delta = np.abs(nxt - R).sum()
         R = nxt
-        if done:
+        if delta < tol:
             break
+    else:
+        warnings.warn(
+            f"IsoRank did not converge in max_iter={max_iter} iterations "
+            f"(last change {delta:.2e} > tol={tol:.0e}); raise max_iter or lower alpha",
+            RuntimeWarning,
+            stacklevel=2,
+        )
     return ScoreMatrix(
         R, sense="maximize", row_labels=list(g1.nodes), col_labels=list(g2.nodes)
     )
@@ -214,10 +237,13 @@ def rrwm(
     """Align two graphs with pygmtools' RRWM — requires ``equate[graph-matching]``.
 
     Builds the quadratic affinity ``K`` from Gaussian edge-weight agreement (bandwidth
-    ``sigma``) with ``node_affinity`` on its diagonal, solves it with
-    ``pygmtools.rrwm`` (``**rrwm_params`` forwarded), and extracts a 1:1 correspondence
-    with the flat ``extract`` matcher. Seeds are kept and their rows/columns excluded from
-    the extraction. Uses the numpy backend and never changes pygmtools' global backend.
+    ``sigma``) with ``node_affinity`` on its diagonal, solves it with ``pygmtools.rrwm``
+    (``**rrwm_params`` forwarded), and extracts a 1:1 correspondence with the flat
+    ``extract`` matcher. Seeds *condition* the solve: every assignment contradicting one
+    (its node paired elsewhere) is removed from ``K`` and the seed pair gets the top
+    affinity, so the rest is aligned around it; seeds are then kept as given. Graphs with
+    no edges and no prior fall back to a uniform node affinity. Uses the numpy backend
+    and never changes pygmtools' global backend.
     """
     pygm = require(
         "pygmtools", extra="graph-matching", purpose="quadratic graph matching"
@@ -246,11 +272,20 @@ def rrwm(
         edge_aff_fn=aff,
         backend=be,
     )
+    K = np.array(K, dtype=float)  # writable copy
+    diag = np.arange(K.shape[-1])
+    # pygmtools vectorizes X column-major: entry (i, j) sits at j * n1 + i
     if node_affinity is not None:
-        E = _prior(g1, g2, node_affinity)
-        # pygmtools vectorizes X column-major: entry (i, j) sits at j * n1 + i
-        diag = np.arange(K.shape[-1])
-        K[0, diag, diag] += E.ravel(order="F")
+        K[0, diag, diag] += _prior(g1, g2, node_affinity).ravel(order="F")
+    if not K.any():  # no edges, no prior: nothing to solve but a uniform guess
+        K[0, diag, diag] = 1.0
+    top = float(K.max())
+    for i, j in seed_pairs:
+        clash = [jj * g1.n + i for jj in range(g2.n) if jj != j]
+        clash += [j * g1.n + ii for ii in range(g1.n) if ii != i]
+        K[0, clash, :] = 0.0
+        K[0, :, clash] = 0.0
+        K[0, j * g1.n + i, j * g1.n + i] = top
     X = np.asarray(pygm.rrwm(K, n1, n2, backend=be, **rrwm_params))[0]
     return _extract(X, g1, g2, seed_pairs, extract)
 
@@ -287,7 +322,8 @@ def align(G1, G2, *, how="isorank", node_affinity=None, seeds=None, **config):
 
     ``how`` picks the quadratic matcher (``'isorank'`` core, ``'rrwm'`` via
     ``equate[graph-matching]``, or a callable); ``node_affinity`` is an optional prior
-    (an ``(n1, n2)`` array or a ``(u, v) -> float`` callable, non-negative); ``seeds`` are
+    (an ``(n1, n2)`` array or a ``(u, v) -> float`` callable, non-negative) and usually
+    what makes topology-only alignment work (see :func:`isorank_scores`); ``seeds`` are
     known ``(G1 node, G2 node)`` anchors. Other keywords configure the matcher (e.g.
     ``extract='greedy'``, ``alpha=0.9``). Graphs may be networkx graphs, ``{node:
     neighbors}`` mappings or adjacency matrices.
