@@ -136,7 +136,7 @@ from equate import match
 
 A = [[0, 1, 2, 3, 2], [5, 5, 6, 7, 7]]
 B = [[5, 6, 6, 7, 7], [0, 1, 1, 2, 3, 2]]
-dict(match(A, B, compare='dtw'))  # {0: 1, 1: 0}
+dict(match(A, B, compare="dtw"))  # {0: 1, 1: 0}
 ```
 
 The comparators are `'dtw'` (exact DTW in a Sakoe-Chiba band), `'subsequence_dtw'`, `'soft_dtw'`, `'needleman_wunsch'` and `'smith_waterman'`. A *distance* comparator such as `'dtw'` is minimized automatically, and `sense=` overrides that. `equate.compare.sequence.dtw.align(a, b)` returns an `Alignment(score, path)` with the element-level correspondence. Faster engines are optional: `pip install 'equate[timeseries]'` / `'equate[bio]'`, then pass `backend=`.
