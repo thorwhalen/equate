@@ -31,6 +31,7 @@ Each comparator returns a ``float``; its ``*_alignment`` twin (also reachable as
 """
 
 import math
+import numbers
 
 import numpy as np
 
@@ -54,9 +55,10 @@ __all__ = [
     "DFLT_GAP_SCORE",
 ]
 
-#: Sakoe-Chiba band half-width. A ``float`` is a fraction of the longer series' length,
-#: an ``int`` a number of cells, ``None`` unconstrained. The band is always widened by
-#: the length difference so two series of different lengths can still be aligned.
+#: Sakoe-Chiba band half-width (inclusive). A ``float`` is a fraction of the longer
+#: series' length (at least one cell), an ``int`` a number of cells (``0`` = no warping),
+#: ``None`` unconstrained. The band is always widened by the length difference so two
+#: series of different lengths can still be aligned.
 DFLT_DTW_WINDOW = 0.1
 #: soft-DTW temperature (``gamma -> 0`` recovers hard DTW).
 DFLT_SOFT_DTW_GAMMA = 1.0
@@ -91,7 +93,7 @@ def _check_backend(backend, allowed, *, what):
 
 def _as_series(x, *, what):
     """A sequence of numbers (or of equal-length vectors) -> a float array ``(n, d)``."""
-    arr = np.asarray(x, dtype=float)
+    arr = np.asarray(x if hasattr(x, "__len__") else list(x), dtype=float)
     if arr.ndim == 1:
         arr = arr[:, None]
     if arr.ndim != 2:
@@ -124,25 +126,36 @@ def _local_costs(a, b, local_cost, *, what):
 
 
 def _band(n, m, window):
-    """Half-width of the Sakoe-Chiba band, or ``None`` for unconstrained."""
+    """Half-width of the Sakoe-Chiba band (inclusive), or ``None`` for unconstrained.
+
+    An integral ``window`` is a number of cells (``0`` = the diagonal only, i.e. no
+    warping for equal lengths); a real one is a fraction of the longer series, rounded up
+    and at least one cell.
+    """
     if window is None:
         return None
-    if isinstance(window, bool) or not isinstance(window, (int, float)):
+    if isinstance(window, bool) or not isinstance(window, numbers.Real):
         raise TypeError(
             f"window must be an int, a float fraction, or None, got {window!r}"
         )
     if window < 0:
         raise ValueError(f"window must be non-negative, got {window!r}")
-    if isinstance(window, float):
-        return max(1, math.ceil(window * max(n, m)))
-    return max(1, int(window))
+    if isinstance(window, numbers.Integral):
+        return int(window)
+    return max(1, math.ceil(float(window) * max(n, m)))
 
 
-def _in_band(i, j, n, m, w):
-    """Cell ``(i, j)`` lies in the band: within ``w`` of the diagonal, widened by ``|n-m|``."""
+def _band_columns(i, n, m, w):
+    """The columns of row ``i`` inside the band, as a ``range``.
+
+    A cell is in the band when it lies within ``w`` of the diagonal, the band widened by
+    ``|n - m|`` so two series of different lengths can always be aligned.
+    """
     if w is None:
-        return True
-    return i - max(0, n - m) - w < j < i + max(0, m - n) + w
+        return range(m)
+    lo = max(0, i - max(0, n - m) - w)
+    hi = min(m - 1, i + max(0, m - n) + w)
+    return range(lo, hi + 1)
 
 
 def _traceback_dtw(D, i, j, *, stop_row0=False):
@@ -175,9 +188,7 @@ def _dtw_accumulate(C, w):
     D = np.full((n + 1, m + 1), np.inf)
     D[0, 0] = 0.0
     for i in range(n):
-        for j in range(m):
-            if not _in_band(i, j, n, m, w):
-                continue
+        for j in _band_columns(i, n, m, w):
             D[i + 1, j + 1] = C[i, j] + min(D[i, j], D[i, j + 1], D[i + 1, j])
     return D
 
@@ -222,7 +233,8 @@ def _dtw_dtaidistance(a, b, *, window, local_cost):
 
     X, Y = _as_series(a, what="dtw"), _as_series(b, what="dtw")
     w = _band(len(X), len(Y), window)
-    kw = {} if w is None else {"window": w}
+    # dtaidistance's ``window`` is exclusive (``1`` = the diagonal); ours is inclusive
+    kw = {} if w is None else {"window": w + 1}
     if X.shape[1] == 1:
         score = _dtw.distance(X[:, 0], Y[:, 0], **kw)
     else:
@@ -255,7 +267,8 @@ def subsequence_dtw_alignment(query, series, *, local_cost=None):
 
     Open-begin, open-end DTW: the query must be consumed whole, the series need not be.
     The path's ``j`` range is the matched span. Directional — ``(query, series)`` order
-    matters.
+    matters. A custom ``local_cost`` must be non-negative (a negative step cost would make
+    "start later" ill-defined).
 
     >>> al = subsequence_dtw_alignment([5, 6, 7], [0, 0, 5, 6, 7, 0])
     >>> al.score, al.path[0], al.path[-1]
@@ -265,6 +278,8 @@ def subsequence_dtw_alignment(query, series, *, local_cost=None):
     n, m = C.shape
     if n == 0 or m == 0:
         raise ValueError("subsequence_dtw: cannot align an empty sequence")
+    if (C < 0).any():
+        raise ValueError("subsequence_dtw: local_cost must be non-negative")
     D = np.full((n + 1, m + 1), np.inf)
     D[0, :] = 0.0  # free start anywhere in the series
     for i in range(n):
@@ -303,8 +318,8 @@ def soft_dtw(a, b, *, gamma=DFLT_SOFT_DTW_GAMMA, backend="numpy"):
     True
     """
     _check_backend(backend, _SOFT_DTW_BACKENDS, what="soft_dtw")
-    if gamma <= 0:
-        raise ValueError(f"soft_dtw: gamma must be positive, got {gamma!r}")
+    if isinstance(gamma, bool) or not isinstance(gamma, numbers.Real) or gamma <= 0:
+        raise ValueError(f"soft_dtw: gamma must be a positive number, got {gamma!r}")
     if backend == "tslearn":
         require("tslearn", extra="timeseries", purpose="soft-DTW")
         from tslearn.metrics import soft_dtw as _soft_dtw
@@ -343,37 +358,51 @@ def _scorer(substitution, match, mismatch):
     return lambda x, y: match if x == y else mismatch
 
 
+_DIAG, _UP, _LEFT, _STOP = 0, 1, 2, 3
+
+
 def _align_dp(a, b, *, local, substitution, match, mismatch, gap):
-    """Shared NW/SW dynamic program with traceback (linear gap penalty)."""
+    """Shared NW/SW dynamic program with traceback (linear gap penalty).
+
+    The traceback follows back-pointers recorded during the fill, never a recomputed
+    floating-point equality, so fractional scores and gaps are safe.
+    """
     a, b = list(a), list(b)
     n, m = len(a), len(b)
     sub = _scorer(substitution, match, mismatch)
+    S = np.array([[float(sub(x, y)) for y in b] for x in a], dtype=float).reshape(n, m)
     H = np.zeros((n + 1, m + 1))
+    ptr = np.full((n + 1, m + 1), _STOP, dtype=np.int8)
     if not local:
-        H[:, 0] = gap * np.arange(n + 1)
-        H[0, :] = gap * np.arange(m + 1)
+        for i in range(1, n + 1):
+            H[i, 0], ptr[i, 0] = H[i - 1, 0] + gap, _UP
+        for j in range(1, m + 1):
+            H[0, j], ptr[0, j] = H[0, j - 1] + gap, _LEFT
     for i in range(1, n + 1):
         for j in range(1, m + 1):
-            best = max(
-                H[i - 1, j - 1] + sub(a[i - 1], b[j - 1]),
+            moves = (
+                H[i - 1, j - 1] + S[i - 1, j - 1],
                 H[i - 1, j] + gap,
                 H[i, j - 1] + gap,
             )
-            H[i, j] = max(best, 0.0) if local else best
+            k = int(np.argmax(moves))  # ties prefer diagonal, then up
+            if local and moves[k] <= 0.0:
+                H[i, j], ptr[i, j] = 0.0, _STOP
+            else:
+                H[i, j], ptr[i, j] = moves[k], k
     if local:
         i, j = np.unravel_index(int(np.argmax(H)), H.shape)
         i, j = int(i), int(j)
     else:
         i, j = n, m
-    score = float(H[i, j])
+    score = float(H[i, j]) + 0.0  # normalize -0.0
     path = []
-    while i > 0 or j > 0:
-        if local and H[i, j] == 0:
-            break
-        if i > 0 and j > 0 and H[i, j] == H[i - 1, j - 1] + sub(a[i - 1], b[j - 1]):
+    while ptr[i, j] != _STOP:
+        move = ptr[i, j]
+        if move == _DIAG:
             path.append((i - 1, j - 1))
             i, j = i - 1, j - 1
-        elif i > 0 and H[i, j] == H[i - 1, j] + gap:
+        elif move == _UP:
             path.append((i - 1, None))
             i -= 1
         else:

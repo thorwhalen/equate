@@ -83,12 +83,12 @@ def test_unconstrained_dtw_matches_reference(a, b):
 
 
 @pytest.mark.parametrize("a,b", _SERIES)
-@pytest.mark.parametrize("w", [1, 2, 3])
+@pytest.mark.parametrize("w", [0, 1, 2, 3])
 def test_banded_dtw_matches_reference(a, b, w):
     n, m = len(a), len(b)
 
-    def allowed(i, j):
-        return i - max(0, n - m) - w < j < i + max(0, m - n) + w
+    def allowed(i, j):  # an inclusive half-width band, widened by |n - m|
+        return i - max(0, n - m) - w <= j <= i + max(0, m - n) + w
 
     al = Q.dtw_alignment(a, b, window=w)
     assert al.score == pytest.approx(_ref_dtw(a, b, allowed))
@@ -104,6 +104,21 @@ def test_float_window_is_a_fraction_of_the_longer_series():
         Q.dtw(a, b, window=-1)
     with pytest.raises(TypeError):
         Q.dtw(a, b, window="wide")
+    # numpy scalars are fine
+    assert Q.dtw(a, b, window=np.int64(2)) == Q.dtw(a, b, window=2)
+    assert Q.dtw(a, b, window=np.float32(0.1)) == Q.dtw(a, b, window=2)
+
+
+def test_window_zero_is_euclidean_and_the_default_still_warps_short_series():
+    a, b = [0, 1, 0, 1, 0], [1, 0, 1, 0, 1]
+    assert Q.dtw(a, b, window=0) == pytest.approx(math.sqrt(5))  # no warping
+    # the default band (0.1 of a short series -> one cell) still allows a shift
+    assert Q.dtw(a, b) == pytest.approx(Q.dtw(a, b, window=None))
+    assert Q.dtw(a, b) < Q.dtw(a, b, window=0)
+
+
+def test_dtw_accepts_iterators():
+    assert Q.dtw(iter([1, 2, 3]), (x for x in [1, 2, 3])) == 0.0
 
 
 def test_dtw_is_symmetric_and_zero_on_warped_copies():
@@ -122,7 +137,15 @@ def test_dtw_multivariate_and_custom_local_cost():
     # a custom local cost is accumulated without a square root (L1 DTW)
     assert Q.dtw([0, 0, 0], [1, 1, 1], local_cost=lambda x, y: abs(x - y)) == 3.0
     # ... and lets DTW align arbitrary objects (here: strings by length)
-    assert Q.dtw(["a", "bb"], ["a", "bb", "bb"], local_cost=lambda x, y: abs(len(x) - len(y)), window=None) == 0
+    assert (
+        Q.dtw(
+            ["a", "bb"],
+            ["a", "bb", "bb"],
+            local_cost=lambda x, y: abs(len(x) - len(y)),
+            window=None,
+        )
+        == 0
+    )
 
 
 def test_dtw_rejects_empty_and_unknown_backend():
@@ -141,6 +164,8 @@ def test_subsequence_dtw_finds_the_span_and_is_directional():
     assert sorted({i for i, _ in al.path}) == [0, 1, 2]
     assert Q.subsequence_dtw([1, 2, 3], series) < Q.dtw([1, 2, 3], series, window=None)
     assert Q.subsequence_dtw.meta.is_symmetric is False
+    with pytest.raises(ValueError, match="non-negative"):
+        Q.subsequence_dtw([0, 0], [0, 0, 0], local_cost=lambda x, y: -1.0)
 
 
 def test_soft_dtw_limits():
@@ -150,13 +175,20 @@ def test_soft_dtw_limits():
     # the soft-min is below the hard min, so soft-DTW lower-bounds squared DTW
     assert Q.soft_dtw(a, b, gamma=1.0) <= hard_squared
     assert Q.soft_dtw(a, a) < 0  # not a distance
-    with pytest.raises(ValueError):
-        Q.soft_dtw(a, b, gamma=0)
+    for bad in (0, -1, True):
+        with pytest.raises(ValueError):
+            Q.soft_dtw(a, b, gamma=bad)
 
 
 # --- Needleman-Wunsch / Smith-Waterman ------------------------------------------
 
-_PAIRS = [("GATTACA", "GCATGCU"), ("kitten", "sitting"), ("", "abc"), ("abc", ""), ("same", "same")]
+_PAIRS = [
+    ("GATTACA", "GCATGCU"),
+    ("kitten", "sitting"),
+    ("", "abc"),
+    ("abc", ""),
+    ("same", "same"),
+]
 
 
 @pytest.mark.parametrize("a,b", _PAIRS)
@@ -168,9 +200,34 @@ def test_needleman_wunsch_matches_reference(a, b):
     assert [j for _, j in al.path if j is not None] == list(range(len(b)))
     # and re-scoring the path gives the score
     rescored = sum(
-        -1 if i is None or j is None else (1 if a[i] == b[j] else -1) for i, j in al.path
+        -1 if i is None or j is None else (1 if a[i] == b[j] else -1)
+        for i, j in al.path
     )
     assert rescored == al.score
+
+
+@pytest.mark.parametrize("gap", [-0.7, -0.4, -0.1, -1 / 3])
+@pytest.mark.parametrize(
+    "a,b",
+    [("ACGT" * 5, "A"), ("bbaabaa", ""), ("A" * 30, "AB"), ("GATTACA", "GCATGCU")],
+)
+def test_needleman_wunsch_fractional_scores(a, b, gap):
+    al = Q.needleman_wunsch_alignment(a, b, gap=gap, mismatch=-0.3)
+    assert al.score == pytest.approx(_ref_nw(a, b, mismatch=-0.3, gap=gap))
+    assert [i for i, _ in al.path if i is not None] == list(range(len(a)))
+    assert [j for _, j in al.path if j is not None] == list(range(len(b)))
+    rescored = sum(
+        gap if i is None or j is None else (1 if a[i] == b[j] else -0.3)
+        for i, j in al.path
+    )
+    assert rescored == pytest.approx(al.score)
+    local = Q.smith_waterman_alignment(a, b, gap=gap, mismatch=-0.3)
+    assert all(i is None or 0 <= i < len(a) for i, _ in local.path)
+    assert all(j is None or 0 <= j < len(b) for _, j in local.path)
+
+
+def test_empty_alignment_score_is_plain_zero():
+    assert str(Q.needleman_wunsch("", "")) == "0.0"
 
 
 def test_smith_waterman_is_local_and_nonnegative():
@@ -213,13 +270,24 @@ def test_registered_with_polarity(name, sense):
     assert name in comparators
     assert polarity_sense(resolve_comparator(name)) == sense
     # configuring a comparator keeps its declared polarity
-    configured = resolve_comparator(name, **({"gap": -2} if sense == "maximize" else {}))
+    configured = resolve_comparator(
+        name, **({"gap": -2} if sense == "maximize" else {})
+    )
     assert polarity_sense(configured) == sense
 
 
 def test_configured_comparator_applies_its_config():
     banded = resolve_comparator("dtw", window=None)
     assert banded([0, 1, 2, 3], [0, 0, 0, 1, 2, 3]) == 0.0
+    assert banded.align([0, 1], [0, 0, 1]).path == ((0, 0), (0, 1), (1, 2))
+
+
+def test_a_users_partial_keeps_the_polarity():
+    from functools import partial
+
+    assert polarity_sense(partial(Q.dtw, window=None)) == "minimize"
+    A, B = [[0, 1, 2], [9, 9, 9]], [[9, 9, 8], [0, 1, 1, 2]]
+    assert dict(match(A, B, compare=partial(Q.dtw, window=None))) == {0: 1, 1: 0}
 
 
 def test_match_minimizes_a_distance_comparator_by_default():
@@ -259,12 +327,17 @@ def test_dtaidistance_backend_wiring(monkeypatch):
     dtw_mod.distance = lambda s1, s2, **kw: calls.append(("1d", list(s1), kw)) or 1.5
     ndim_mod.distance = lambda s1, s2, **kw: calls.append(("nd", s1.shape, kw)) or 2.5
     pkg.dtw, pkg.dtw_ndim = dtw_mod, ndim_mod
-    for name, mod in [("dtaidistance", pkg), ("dtaidistance.dtw", dtw_mod), ("dtaidistance.dtw_ndim", ndim_mod)]:
+    for name, mod in [
+        ("dtaidistance", pkg),
+        ("dtaidistance.dtw", dtw_mod),
+        ("dtaidistance.dtw_ndim", ndim_mod),
+    ]:
         _install(monkeypatch, name, mod)
 
     al = Q.dtw_alignment([1, 2, 3], [1, 2], window=1, backend="dtaidistance")
     assert al == Alignment(1.5, None, sense="minimize")
-    assert calls[-1] == ("1d", [1.0, 2.0, 3.0], {"window": 1})
+    # dtaidistance's window is exclusive: our inclusive half-width 1 is its window=2
+    assert calls[-1] == ("1d", [1.0, 2.0, 3.0], {"window": 2})
     assert Q.dtw([[0, 0]] * 3, [[1, 1]] * 3, window=None, backend="dtaidistance") == 2.5
     assert calls[-1] == ("nd", (3, 2), {})
     with pytest.raises(ValueError, match="local cost"):
@@ -297,7 +370,14 @@ def test_biopython_backend_wiring(monkeypatch):
     _install(monkeypatch, "Bio.Align", align)
 
     assert Q.smith_waterman("AC", "AC", gap=-2, backend="biopython") == 4.0
-    assert seen == {"mode": "local", "match_score": 1.0, "mismatch_score": -1.0, "gap_score": -2, "a": "AC", "b": "AC"}
+    assert seen == {
+        "mode": "local",
+        "match_score": 1.0,
+        "mismatch_score": -1.0,
+        "gap_score": -2,
+        "a": "AC",
+        "b": "AC",
+    }
     al = Q.needleman_wunsch_alignment("AC", "AC", backend="biopython")
     assert seen["mode"] == "global" and al.path is None and al.sense == "maximize"
     with pytest.raises(ValueError, match="substitution"):

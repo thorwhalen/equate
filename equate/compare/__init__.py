@@ -76,8 +76,11 @@ def _configurable(fn):
         if not config:
             return fn
         configured = partial(fn, **config)
-        # keep the declared metadata (polarity drives the facade's default ``sense``)
+        # keep the declared metadata (polarity drives the facade's default ``sense``) and
+        # an alignment twin, configured the same way
         configured.meta = getattr(fn, "meta", None)
+        if hasattr(fn, "align"):
+            configured.align = partial(fn.align, **config)
         return configured
 
     return factory
@@ -150,6 +153,11 @@ def polarity_sense(comparator, *, default="maximize"):
     'maximize'
     """
     meta = getattr(comparator, "meta", None)
+    while meta is None and isinstance(
+        comparator, partial
+    ):  # a user's partial(dtw, ...)
+        comparator = comparator.func
+        meta = getattr(comparator, "meta", None)
     polarity = getattr(meta, "polarity", None)
     if polarity == "distance":
         return "minimize"

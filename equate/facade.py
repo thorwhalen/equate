@@ -65,20 +65,19 @@ def match(
         )
     A = list(A)
     B = list(B)
+    comparator = (
+        resolve_comparator(compare or "ratio")
+        if (compare is not None or block is not None)
+        else None
+    )
     if sense is None:
-        sense = (
-            polarity_sense(resolve_comparator(compare or "ratio"))
-            if (compare is not None or block is not None)
-            else "maximize"
-        )
+        sense = "maximize" if comparator is None else polarity_sense(comparator)
 
     if block is not None:
         candidates = list(resolve_blocker(block)(A, B))
-        scores = score_candidates(
-            A, B, candidates, compare or "ratio", sense=sense
-        ).data
+        scores = score_candidates(A, B, candidates, comparator, sense=sense).data
     elif compare is not None:
-        scores = direct(resolve_comparator(compare))(A, B)
+        scores = direct(comparator)(A, B)
     else:
         scores = featurized(featurize or "tfidf")(A, B)
 
