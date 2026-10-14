@@ -42,6 +42,14 @@ blocked matching is **lexicographic** (as many real pairs as possible, then best
 a per-cell fill lets the solver *buy* a hole. This is invisible to `[0,1]` scores — **test
 blocking with unbounded ones.**
 
+**"Matcher" spans structured objects at two arities (D8, shipped in #10).** A *flat*
+matcher picks pairs from a `ScoreMatrix`; a *quadratic* matcher (`equate.align`,
+`matching/quadratic.py`) aligns the nodes of two graphs and produces scores and
+correspondence jointly. It never re-implements extraction: it hands its node-pair scores to
+a flat matcher (`extract=`). Sequence/graph *comparators* (DTW, NW/SW) are ordinary
+`direct` comparators that declare their polarity; graph *kernels* are featurizers. Before
+adding a structured strategy, decide which of these three seams it belongs to.
+
 ## The research corpus (`docs/research/`)
 
 Start at [`00-taxonomy-and-terminology.md`](../docs/research/00-taxonomy-and-terminology.md)

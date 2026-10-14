@@ -34,6 +34,7 @@ __all__ = [
     "ComparatorMeta",
     "Blocker",
     "Matcher",
+    "QuadraticMatcher",
     "scorematrix_matcher",
     "to_cost",
     "ScoreMatrix",
@@ -72,6 +73,15 @@ Blocker = Callable[..., Iterable[tuple]]
 #: legacy ``(scores, *, sense) -> pairs`` raw-array contract is still accepted — see
 #: :func:`scorematrix_matcher` and ``equate.matching.resolve_matcher``.
 Matcher = Callable[..., Iterable[tuple]]
+
+#: ③ Match, the *second arity* (decision register D8): align the nodes of **two
+#: structured objects** (graphs) — ``QuadraticMatcher(G1, G2, *, node_affinity=None,
+#: seeds=None) -> Matching``. Unlike a flat :data:`Matcher` it cannot start from a
+#: precomputed score matrix: it produces the node scores *and* the correspondence
+#: jointly (the cost of ``u <-> v`` depends on how their neighbors match — a quadratic
+#: assignment problem), reusing a flat matcher as its inner extraction step. See
+#: ``equate.matching.quadratic``.
+QuadraticMatcher = Callable[..., Any]
 
 
 def scorematrix_matcher(fn):

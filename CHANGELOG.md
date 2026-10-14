@@ -6,6 +6,13 @@ releases CI publishes to PyPI.
 
 ## Unreleased
 
+**Graph families** (part of #10; doc 12 §3-4, decision D8): matching for *graphs*, at both arities.
+
+- `equate.align(G1, G2, *, how='isorank', node_affinity=None, seeds=None)` adds the second matcher arity, a **quadratic matcher**. It aligns the *nodes* of two graphs and returns a `Matching` whose `.labeled_pairs()` gives `(G1 node, G2 node)` and whose `.plan` holds the node-pair scores. `'isorank'` is IsoRank in-house: numpy, an optional non-negative prior, and seeds that are kept and propagate. `'rrwm'` is pygmtools' reweighted random walk on the full quadratic affinity (new extra `equate[graph-matching]`; it uses the numpy backend and leaves the global backend alone). Both extract the final 1:1 correspondence with a **flat** matcher (`extract='optimal'` by default, any `resolve_matcher` spec). They live in a new `quadratic_matchers` registry, and the protocol is `equate.base.QuadraticMatcher`.
+- `featurize='wl'` is the Weisfeiler-Lehman subtree feature map (`WLFeaturizer`, core). It is a graph kernel used as a featurizer, so `match(graphs_a, graphs_b, featurize='wl')` takes the ordinary indexable cosine route. `featurize='grakel'` exposes any GraKeL kernel as an empirical kernel map (new extra `equate[graph-kernels]`).
+- Graphs can be networkx graphs (duck-typed; networkx is not required), `{node: neighbors}` mappings, or adjacency matrices (`equate._graph.as_graph`). Node labels come from `label=`, either an attribute name or a callable.
+- Not included: a PLANETALIGN backend (it is not on PyPI), FINAL/REGAL/CONE-Align, and Gromov-Wasserstein in `soft_match`. These are tracked as a follow-up.
+
 **Sequence-alignment comparators** (`equate.compare.sequence`, part of #10; doc 12, decision D8). Matching one level down: each one aligns the *elements* of two sequences, then scores the alignment. They are `direct(h)` comparators, and the collection-level matchers are unchanged.
 
 - `dtw`: exact DTW inside a Sakoe-Chiba band by default (`window=0.1` of the longer series, at least one cell; an int is an inclusive half-width in cells, so `0` means no warping; `None` means unconstrained). It is not FastDTW. Steps can be scalars or vectors, and `local_cost=` accepts any objects. `subsequence_dtw` finds the best sub-span (directional). `soft_dtw` is Cuturi & Blondel's soft-minimum; it is not a distance.

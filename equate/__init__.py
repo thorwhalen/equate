@@ -29,7 +29,14 @@ from equate.block import (
     blocking_metrics,
     score_candidates,
 )
-from equate.matching import matchers, resolve_matcher, soft_match, harden
+from equate.matching import (
+    matchers,
+    resolve_matcher,
+    soft_match,
+    harden,
+    quadratic_matchers,
+    align,
+)
 from equate.cluster import (
     clusterers,
     resolve_clusterer,

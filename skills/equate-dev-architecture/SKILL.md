@@ -145,12 +145,16 @@ equate/
 ├── featurize/      # featurizers registry + resolve_featurizer; identity/key-fn;  ← #4
 │                   #   tfidf.py = pure numpy/scipy char-n-gram TF-IDF (core default);
 │                   #   text.py = [sbert|openai|…] dense embedders behind extras (lazy)
+│                   #   graph.py = 'wl' Weisfeiler-Lehman (core) | 'grakel' [graph-kernels]  ← #10
 ├── compare/        # registry; direct() vs featurized(); string(difflib | rapidfuzz|jellyfish [extra]);  ← #5
 │                   #   numeric_geo(decay/haversine); vector(cosine/dot/angular); vectorize(combiners+FS); calibrate
 │                   #   sequence.py = DTW (banded)/subsequence/soft-DTW, NW/SW → Alignment(score,path)  ← #10
 ├── block/          # Blocker (lazy candidate pairs); all_pairs default; keyed/SNM blocking;  ← #6
 │                   #   brute_knn (core) + ann/lsh [extra]; metablock; score_candidates→sparse; PC/RR/PQ
+├── _graph.py       # as_graph(): networkx | {node: nbrs} | adjacency → GraphView (duck-typed)  ← #10
 ├── matching/       # registry; assign(optimal LAP + sparse routing, greedy, stable);  ← #7
+│                   #   quadratic.py = 2nd arity: align(G1,G2) — isorank (core), rrwm [graph-matching];
+│                   #     a quadratic matcher always extracts via a FLAT matcher (extract=)  ← #10
 │                   #   max_weight/kuhn_munkres [graph]; soft_match/harden [ot]; kbest(Murty) later
 ├── cluster/        # connected-components default; correlation; canonicalize (golden record);  ← #8
 │                   #   classify.py = Fellegi-Sunter 3-way decide + unsupervised EM (D5)

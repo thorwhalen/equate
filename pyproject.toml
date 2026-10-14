@@ -58,6 +58,9 @@ ann = ["hnswlib"]
 lsh = ["datasketch"]
 # --- matching (match stage) ---
 graph = ["networkx"]
+# --- structured objects: graph kernels (featurize) and quadratic graph matching ---
+graph-kernels = ["grakel"]
+graph-matching = ["pygmtools"]
 ot = ["POT"]
 # --- interactive: active learning + LLM (interactive stage) ---
 active = ["scikit-activeml"]
