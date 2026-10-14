@@ -33,6 +33,7 @@
 - [equate.evaluate.split](equate.evaluate.split.html.md): Leakage-aware splitting: split over entities, so test entities are unseen.
 - [equate.facade](equate.facade.html.md): The equate facade: the one-line &#96;match(A, B)&#96; entry point.
 - [equate.featurize](equate.featurize.html.md): The featurize stage (①): map objects to comparable representations.
+- [equate.featurize.graph](equate.featurize.graph.html.md): Graph featurizers (stage ①): turn whole graphs into vectors (graph kernels).
 - [equate.featurize.text](equate.featurize.text.html.md): Dense text-embedding featurizers, behind optional extras.
 - [equate.featurize.tfidf](equate.featurize.tfidf.html.md): Pure-numpy/scipy character-n-gram TF-IDF — equate’s zero-heavy-dependency default
 - [equate.interactive](equate.interactive.html.md): The interactive stage: human-in-the-loop review and re-optimization.
@@ -42,6 +43,7 @@
 - [equate.interactive.review](equate.interactive.review.html.md): Human review triage and active-learning query selection.
 - [equate.matching](equate.matching.html.md): The match stage (③): turn a score matrix into a correspondence.
 - [equate.matching.assign](equate.matching.assign.html.md): Assignment matchers (stage ③): turn a score matrix into matched &#96;(i, j)&#96; pairs.
+- [equate.matching.quadratic](equate.matching.quadratic.html.md): Quadratic matchers: align the &#42;nodes&#42; of two graphs (network alignment).
 - [equate.matching.soft](equate.matching.soft.html.md): Soft / optimal-transport matching (stage ③): a fractional transport plan rather than a
 - [equate.registry](equate.registry.html.md): A tiny name-keyed strategy registry with lazy factories (open-closed dispatch).
 - [equate.util](equate.util.html.md): Utils for equate.

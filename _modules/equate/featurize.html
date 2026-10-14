@@ -236,6 +236,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/equate.facade.html">equate.facade</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../_autosummary/equate.featurize.html">equate.featurize</a><input aria-label="Toggle navigation of equate.featurize" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.graph.html">equate.featurize.graph</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.text.html">equate.featurize.text</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.tfidf.html">equate.featurize.tfidf</a></li>
 </ul>
@@ -249,6 +250,7 @@
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../_autosummary/equate.matching.html">equate.matching</a><input aria-label="Toggle navigation of equate.matching" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.matching.assign.html">equate.matching.assign</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.matching.quadratic.html">equate.matching.quadratic</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.matching.soft.html">equate.matching.soft</a></li>
 </ul>
 </li>
@@ -311,6 +313,12 @@
     <span class="n">DFLT_NGRAM_RANGE</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.featurize</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span> <span class="k">as</span> <span class="n">_text</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.featurize.graph</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">WLFeaturizer</span><span class="p">,</span>
+    <span class="n">grakel_featurizer</span><span class="p">,</span>
+    <span class="n">DFLT_WL_ITERATIONS</span><span class="p">,</span>
+    <span class="n">GRAKEL_META</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"featurizers"</span><span class="p">,</span>
@@ -320,6 +328,8 @@
     <span class="s2">"mk_tfidf"</span><span class="p">,</span>
     <span class="s2">"char_ngrams"</span><span class="p">,</span>
     <span class="s2">"FeaturizerMeta"</span><span class="p">,</span>
+    <span class="s2">"WLFeaturizer"</span><span class="p">,</span>
+    <span class="s2">"grakel_featurizer"</span><span class="p">,</span>
 <span class="p">]</span>
 
 <span class="c1">#: the featurize-stage strategy registry (name -&gt; lazy factory)</span>
@@ -355,6 +365,16 @@
 <span class="c1"># defined once (in text.py) and mirrored here, so the two copies cannot diverge.</span>
 <span class="n">featurizers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">"sbert"</span><span class="p">,</span> <span class="n">_text</span><span class="o">.</span><span class="n">sbert_featurizer</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">_text</span><span class="o">.</span><span class="n">SBERT_META</span><span class="p">)</span>
 <span class="n">featurizers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">"openai"</span><span class="p">,</span> <span class="n">_text</span><span class="o">.</span><span class="n">openai_featurizer</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">_text</span><span class="o">.</span><span class="n">OPENAI_META</span><span class="p">)</span>
+
+
+<span class="c1"># Graph kernels (doc 12 §3.4, D8): graph -&gt; vector, reclaiming the indexable route.</span>
+<span class="nd">@featurizers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">"wl"</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">WLFeaturizer</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_wl_factory</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="n">DFLT_WL_ITERATIONS</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Build a Weisfeiler-Lehman featurizer (unfit; ``resolve_featurizer`` fits it)."""</span>
+    <span class="k">return</span> <span class="n">WLFeaturizer</span><span class="p">(</span><span class="n">iterations</span><span class="o">=</span><span class="n">iterations</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
+
+
+<span class="n">featurizers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">"grakel"</span><span class="p">,</span> <span class="n">grakel_featurizer</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">GRAKEL_META</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="resolve_featurizer">
@@ -430,7 +450,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=0adb0642"></script>
+</div><script src="../../_static/documentation_options.js?v=a39b7224"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

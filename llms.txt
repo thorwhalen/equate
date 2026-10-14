@@ -35,6 +35,7 @@
 - [equate.evaluate.split](_autosummary/equate.evaluate.split.html.md): Leakage-aware splitting: split over entities, so test entities are unseen.
 - [equate.facade](_autosummary/equate.facade.html.md): The equate facade: the one-line &#96;match(A, B)&#96; entry point.
 - [equate.featurize](_autosummary/equate.featurize.html.md): The featurize stage (①): map objects to comparable representations.
+- [equate.featurize.graph](_autosummary/equate.featurize.graph.html.md): Graph featurizers (stage ①): turn whole graphs into vectors (graph kernels).
 - [equate.featurize.text](_autosummary/equate.featurize.text.html.md): Dense text-embedding featurizers, behind optional extras.
 - [equate.featurize.tfidf](_autosummary/equate.featurize.tfidf.html.md): Pure-numpy/scipy character-n-gram TF-IDF — equate’s zero-heavy-dependency default
 - [equate.interactive](_autosummary/equate.interactive.html.md): The interactive stage: human-in-the-loop review and re-optimization.
@@ -44,11 +45,12 @@
 - [equate.interactive.review](_autosummary/equate.interactive.review.html.md): Human review triage and active-learning query selection.
 - [equate.matching](_autosummary/equate.matching.html.md): The match stage (③): turn a score matrix into a correspondence.
 - [equate.matching.assign](_autosummary/equate.matching.assign.html.md): Assignment matchers (stage ③): turn a score matrix into matched &#96;(i, j)&#96; pairs.
+- [equate.matching.quadratic](_autosummary/equate.matching.quadratic.html.md): Quadratic matchers: align the &#42;nodes&#42; of two graphs (network alignment).
 - [equate.matching.soft](_autosummary/equate.matching.soft.html.md): Soft / optimal-transport matching (stage ③): a fractional transport plan rather than a
 - [equate.registry](_autosummary/equate.registry.html.md): A tiny name-keyed strategy registry with lazy factories (open-closed dispatch).
 - [equate.util](_autosummary/equate.util.html.md): Utils for equate.
 - [For AI agents](ai-agents.html.md): &#96;equate&#96; ships artifacts for coding agents alongside its code. This page lists
-- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-10-14 07:08 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
+- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-10-14 07:23 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
 
 ## Optional
 

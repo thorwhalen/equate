@@ -236,6 +236,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/equate.facade.html">equate.facade</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../_autosummary/equate.featurize.html">equate.featurize</a><input aria-label="Toggle navigation of equate.featurize" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.graph.html">equate.featurize.graph</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.text.html">equate.featurize.text</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.tfidf.html">equate.featurize.tfidf</a></li>
 </ul>
@@ -249,6 +250,7 @@
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../_autosummary/equate.matching.html">equate.matching</a><input aria-label="Toggle navigation of equate.matching" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.matching.assign.html">equate.matching.assign</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.matching.quadratic.html">equate.matching.quadratic</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.matching.soft.html">equate.matching.soft</a></li>
 </ul>
 </li>
@@ -328,6 +330,7 @@
     <span class="s2">"ComparatorMeta"</span><span class="p">,</span>
     <span class="s2">"Blocker"</span><span class="p">,</span>
     <span class="s2">"Matcher"</span><span class="p">,</span>
+    <span class="s2">"QuadraticMatcher"</span><span class="p">,</span>
     <span class="s2">"scorematrix_matcher"</span><span class="p">,</span>
     <span class="s2">"to_cost"</span><span class="p">,</span>
     <span class="s2">"ScoreMatrix"</span><span class="p">,</span>
@@ -366,6 +369,15 @@
 <span class="c1">#: legacy ``(scores, *, sense) -&gt; pairs`` raw-array contract is still accepted — see</span>
 <span class="c1">#: :func:`scorematrix_matcher` and ``equate.matching.resolve_matcher``.</span>
 <span class="n">Matcher</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]]</span>
+
+<span class="c1">#: ③ Match, the *second arity* (decision register D8): align the nodes of **two</span>
+<span class="c1">#: structured objects** (graphs) — ``QuadraticMatcher(G1, G2, *, node_affinity=None,</span>
+<span class="c1">#: seeds=None) -&gt; Matching``. Unlike a flat :data:`Matcher` it cannot start from a</span>
+<span class="c1">#: precomputed score matrix: it produces the node scores *and* the correspondence</span>
+<span class="c1">#: jointly (the cost of ``u &lt;-&gt; v`` depends on how their neighbors match — a quadratic</span>
+<span class="c1">#: assignment problem), reusing a flat matcher as its inner extraction step. See</span>
+<span class="c1">#: ``equate.matching.quadratic``.</span>
+<span class="n">QuadraticMatcher</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="scorematrix_matcher">
@@ -888,7 +900,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=0adb0642"></script>
+</div><script src="../../_static/documentation_options.js?v=a39b7224"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

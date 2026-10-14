@@ -239,6 +239,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/equate.facade.html">equate.facade</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="_autosummary/equate.featurize.html">equate.featurize</a><input aria-label="Toggle navigation of equate.featurize" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.featurize.graph.html">equate.featurize.graph</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.featurize.text.html">equate.featurize.text</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.featurize.tfidf.html">equate.featurize.tfidf</a></li>
 </ul>
@@ -252,6 +253,7 @@
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="_autosummary/equate.matching.html">equate.matching</a><input aria-label="Toggle navigation of equate.matching" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.matching.assign.html">equate.matching.assign</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.matching.quadratic.html">equate.matching.quadratic</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.matching.soft.html">equate.matching.soft</a></li>
 </ul>
 </li>
@@ -418,7 +420,7 @@ At the time of writing this, we’ve implemented:
 
 <span class="n">A</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">]]</span>
 <span class="n">B</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">]]</span>
-<span class="nb">dict</span><span class="p">(</span><span class="n">match</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">compare</span><span class="o">=</span><span class="s1">'dtw'</span><span class="p">))</span>  <span class="c1"># {0: 1, 1: 0}</span>
+<span class="nb">dict</span><span class="p">(</span><span class="n">match</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">compare</span><span class="o">=</span><span class="s2">"dtw"</span><span class="p">))</span>  <span class="c1"># {0: 1, 1: 0}</span>
 </pre></div>
 </div>
 <p>The comparators are <code class="docutils literal notranslate"><span class="pre">'dtw'</span></code> (exact DTW in a Sakoe-Chiba band), <code class="docutils literal notranslate"><span class="pre">'subsequence_dtw'</span></code>, <code class="docutils literal notranslate"><span class="pre">'soft_dtw'</span></code>, <code class="docutils literal notranslate"><span class="pre">'needleman_wunsch'</span></code> and <code class="docutils literal notranslate"><span class="pre">'smith_waterman'</span></code>. A <em>distance</em> comparator such as <code class="docutils literal notranslate"><span class="pre">'dtw'</span></code> is minimized automatically, and <code class="docutils literal notranslate"><span class="pre">sense=</span></code> overrides that. <code class="docutils literal notranslate"><span class="pre">equate.compare.sequence.dtw.align(a,</span> <span class="pre">b)</span></code> returns an <code class="docutils literal notranslate"><span class="pre">Alignment(score,</span> <span class="pre">path)</span></code> with the element-level correspondence. Faster engines are optional: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'equate[timeseries]'</span></code> / <code class="docutils literal notranslate"><span class="pre">'equate[bio]'</span></code>, then pass <code class="docutils literal notranslate"><span class="pre">backend=</span></code>.</p>
@@ -728,7 +730,7 @@ Let’s try two…</p>
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-14 07:08 UTC from <a href="https://github.com/thorwhalen/equate/commit/2827dff2441dd8151d64068b4a3cbfa263a07c65">2827dff</a> (master) · equate 0.0.16 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-14 07:23 UTC from <a href="https://github.com/thorwhalen/equate/commit/26dfabbd5aaef584c5253d0dac2a2d4de23729bc">26dfabb</a> (master) · equate 0.0.17 · <a href="about-this-build.html">about this build</a></p>
         </article>
       </div>
       <footer>
@@ -764,7 +766,7 @@ Let’s try two…</p>
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=0adb0642"></script>
+</div><script src="_static/documentation_options.js?v=a39b7224"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

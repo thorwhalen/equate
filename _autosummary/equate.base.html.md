@@ -22,12 +22,13 @@ decisions realized here are documented in `docs/research/` — start with
 
 ### Module Attributes
 
-| [`Sense`](#equate.base.Sense)      | Whether higher scores are better (`'maximize'`, a similarity) or lower scores are better (`'minimize'`, a distance/cost).   |
-|-------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| [`Featurizer`](#equate.base.Featurizer) | ① Featurize — map each object to a comparable representation (batched).                                                     |
-| [`Comparator`](#equate.base.Comparator) | ② Compare — score how alike two representations are (higher = more alike by the canonical `'maximize'` sense).              |
-| [`Blocker`](#equate.base.Blocker)    | yield `(i, j)` index pairs lazily, never a materialized n×m matrix.                                                         |
-| [`Matcher`](#equate.base.Matcher)    | ③ Match — turn a score structure into matched `(i, j)` pairs.                                                               |
+| [`Sense`](#equate.base.Sense)            | Whether higher scores are better (`'maximize'`, a similarity) or lower scores are better (`'minimize'`, a distance/cost).               |
+|-------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| [`Featurizer`](#equate.base.Featurizer)       | ① Featurize — map each object to a comparable representation (batched).                                                                 |
+| [`Comparator`](#equate.base.Comparator)       | ② Compare — score how alike two representations are (higher = more alike by the canonical `'maximize'` sense).                          |
+| [`Blocker`](#equate.base.Blocker)          | yield `(i, j)` index pairs lazily, never a materialized n×m matrix.                                                                     |
+| [`Matcher`](#equate.base.Matcher)          | ③ Match — turn a score structure into matched `(i, j)` pairs.                                                                           |
+| [`QuadraticMatcher`](#equate.base.QuadraticMatcher) | align the nodes of \*\*two structured objects\*\* (graphs) — `QuadraticMatcher(G1, G2, *, node_affinity=None, seeds=None) -> Matching`. |
 
 ### Functions
 
@@ -193,6 +194,21 @@ Return `{cluster_id: [item_index, ...]}`.
 
 * **Return type:**
   [`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)]
+
+### equate.base.QuadraticMatcher
+
+align the nodes of \*\*two
+structured objects\*\* (graphs) — `QuadraticMatcher(G1, G2, *, node_affinity=None,
+seeds=None) -> Matching`. Unlike a flat [`Matcher`](#equate.base.Matcher) it cannot start from a
+precomputed score matrix: it produces the node scores *and* the correspondence
+jointly (the cost of `u <-> v` depends on how their neighbors match — a quadratic
+assignment problem), reusing a flat matcher as its inner extraction step. See
+`equate.matching.quadratic`.
+
+* **Type:**
+  ③ Match, the *second arity* (decision register D8)
+
+alias of [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[…], [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
 
 ### *class* equate.base.ScoreMatrix(data, sense='maximize', row_labels=None, col_labels=None)
 

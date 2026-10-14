@@ -1,0 +1,24 @@
+equate.matching.quadratic
+=========================
+
+.. automodule:: equate.matching.quadratic
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DFLT_ISORANK_ALPHA
+      DFLT_EDGE_SIGMA
+      quadratic_matchers
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      resolve_quadratic_matcher
+      align
+      isorank
+      isorank_scores
+      rrwm
+   

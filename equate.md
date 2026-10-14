@@ -1,4 +1,4 @@
-> built 2026-10-14 07:08 UTC from 2827dff (master) · equate 0.0.16. Details: build_info.json
+> built 2026-10-14 07:23 UTC from 26dfabb (master) · equate 0.0.17. Details: build_info.json
 
 # index.html.md
 
@@ -137,7 +137,7 @@ from equate import match
 
 A = [[0, 1, 2, 3, 2], [5, 5, 6, 7, 7]]
 B = [[5, 6, 6, 7, 7], [0, 1, 1, 2, 3, 2]]
-dict(match(A, B, compare='dtw'))  # {0: 1, 1: 0}
+dict(match(A, B, compare="dtw"))  # {0: 1, 1: 0}
 ```
 
 The comparators are `'dtw'` (exact DTW in a Sakoe-Chiba band), `'subsequence_dtw'`, `'soft_dtw'`, `'needleman_wunsch'` and `'smith_waterman'`. A *distance* comparator such as `'dtw'` is minimized automatically, and `sense=` overrides that. `equate.compare.sequence.dtw.align(a, b)` returns an `Alignment(score, path)` with the element-level correspondence. Faster engines are optional: `pip install 'equate[timeseries]'` / `'equate[bio]'`, then pass `backend=`.
@@ -498,12 +498,13 @@ decisions realized here are documented in `docs/research/` — start with
 
 ### Module Attributes
 
-| [`Sense`](_autosummary/equate.base.html.md#equate.base.Sense)      | Whether higher scores are better (`'maximize'`, a similarity) or lower scores are better (`'minimize'`, a distance/cost).   |
-|-------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| [`Featurizer`](_autosummary/equate.base.html.md#equate.base.Featurizer) | ① Featurize — map each object to a comparable representation (batched).                                                     |
-| [`Comparator`](_autosummary/equate.base.html.md#equate.base.Comparator) | ② Compare — score how alike two representations are (higher = more alike by the canonical `'maximize'` sense).              |
-| [`Blocker`](_autosummary/equate.base.html.md#equate.base.Blocker)    | yield `(i, j)` index pairs lazily, never a materialized n×m matrix.                                                         |
-| [`Matcher`](_autosummary/equate.base.html.md#equate.base.Matcher)    | ③ Match — turn a score structure into matched `(i, j)` pairs.                                                               |
+| [`Sense`](_autosummary/equate.base.html.md#equate.base.Sense)            | Whether higher scores are better (`'maximize'`, a similarity) or lower scores are better (`'minimize'`, a distance/cost).               |
+|-------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| [`Featurizer`](_autosummary/equate.base.html.md#equate.base.Featurizer)       | ① Featurize — map each object to a comparable representation (batched).                                                                 |
+| [`Comparator`](_autosummary/equate.base.html.md#equate.base.Comparator)       | ② Compare — score how alike two representations are (higher = more alike by the canonical `'maximize'` sense).                          |
+| [`Blocker`](_autosummary/equate.base.html.md#equate.base.Blocker)          | yield `(i, j)` index pairs lazily, never a materialized n×m matrix.                                                                     |
+| [`Matcher`](_autosummary/equate.base.html.md#equate.base.Matcher)          | ③ Match — turn a score structure into matched `(i, j)` pairs.                                                                           |
+| [`QuadraticMatcher`](_autosummary/equate.base.html.md#equate.base.QuadraticMatcher) | align the nodes of \*\*two structured objects\*\* (graphs) — `QuadraticMatcher(G1, G2, *, node_affinity=None, seeds=None) -> Matching`. |
 
 ### Functions
 
@@ -669,6 +670,21 @@ Return `{cluster_id: [item_index, ...]}`.
 
 * **Return type:**
   [`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)]
+
+### equate.base.QuadraticMatcher
+
+align the nodes of \*\*two
+structured objects\*\* (graphs) — `QuadraticMatcher(G1, G2, *, node_affinity=None,
+seeds=None) -> Matching`. Unlike a flat [`Matcher`](_autosummary/equate.base.html.md#equate.base.Matcher) it cannot start from a
+precomputed score matrix: it produces the node scores *and* the correspondence
+jointly (the cost of `u <-> v` depends on how their neighbors match — a quadratic
+assignment problem), reusing a flat matcher as its inner extraction step. See
+`equate.matching.quadratic`.
+
+* **Type:**
+  ③ Match, the *second arity* (decision register D8)
+
+alias of [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[…], [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
 
 ### *class* equate.base.ScoreMatrix(data, sense='maximize', row_labels=None, col_labels=None)
 
@@ -2831,6 +2847,91 @@ Resolve entities across multiple collections: pool them (in order) and
 matching to n-way linkage. Accepts the same keywords as [`dedupe()`](_autosummary/equate.facade.html.md#equate.facade.dedupe).
 
 
+# _autosummary/equate.featurize.graph.html.md
+
+# equate.featurize.graph
+
+Graph featurizers (stage ①): turn whole graphs into vectors (graph kernels).
+
+A graph kernel maps each graph to a feature vector, so matching a collection of graphs
+goes back to the *indexable* featurize-then-compare route: cosine scoring, ANN/LSH
+blocking, the flat matchers — with no special-casing in the match layer (doc `12` §3.4,
+decision D8).
+
+- [`WLFeaturizer`](_autosummary/equate.featurize.graph.html.md#equate.featurize.graph.WLFeaturizer) (`'wl'`, core) — the **Weisfeiler-Lehman subtree** feature map
+  (Shervashidze et al. 2011): relabel each node by its own label plus the multiset of
+  its neighbors’ labels, `iterations` times, and count the labels seen. Linear in the
+  number of edges per iteration; pure numpy/scipy.
+- [`grakel_featurizer()`](_autosummary/equate.featurize.graph.html.md#equate.featurize.graph.grakel_featurizer) (`'grakel'`, `equate[graph-kernels]`) — any GraKeL
+  kernel (WL, shortest-path, graphlet, …) as an *empirical kernel map*: a graph’s
+  vector is its kernel value against each corpus graph.
+
+Graphs may be networkx graphs, `{node: neighbors}` mappings or adjacency matrices
+(see `equate._graph.as_graph()`).
+
+### Module Attributes
+
+| [`DFLT_WL_ITERATIONS`](_autosummary/equate.featurize.graph.html.md#equate.featurize.graph.DFLT_WL_ITERATIONS)   | WL refinement rounds (the subtree depth).   |
+|-----------------------------------------------------------------------|---------------------------------------------|
+
+### Functions
+
+| [`grakel_featurizer`](_autosummary/equate.featurize.graph.html.md#equate.featurize.graph.grakel_featurizer)(\*[, kernel, label])   | A GraKeL graph kernel as a fittable featurizer — requires `equate[graph-kernels]`.   |
+|-------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+
+### Classes
+
+| [`WLFeaturizer`](_autosummary/equate.featurize.graph.html.md#equate.featurize.graph.WLFeaturizer)(\*[, iterations, label])   | Weisfeiler-Lehman subtree featurizer: `graphs -> L2-normalized sparse counts`.   |
+|------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+
+### equate.featurize.graph.DFLT_WL_ITERATIONS *= 3*
+
+WL refinement rounds (the subtree depth). 3-5 is the usual range.
+
+### *class* equate.featurize.graph.WLFeaturizer(, iterations=3, label=None)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+Weisfeiler-Lehman subtree featurizer: `graphs -> L2-normalized sparse counts`.
+
+Fit on a corpus of graphs to fix the vocabulary of WL labels (one column per label
+seen in any round), then transform graphs into count vectors over it; labels never
+seen in the corpus are ignored. A fitted instance is itself a batch featurizer.
+
+Two isomorphic graphs (same labels) always get the same vector; the converse holds
+up to the WL test’s power (it cannot tell some regular graphs apart). Neighbors are
+*out*-neighbors (a directed graph is refined along its edges), and edge weights are
+ignored – the subtree kernel counts structure, not strength.
+
+```pycon
+>>> path3 = {0: [1], 1: [0, 2], 2: [1]}
+>>> triangle = {0: [1, 2], 1: [0, 2], 2: [0, 1]}
+>>> wl = WLFeaturizer(iterations=2).fit([path3, triangle])
+>>> X = wl([path3, {'a': ['b'], 'b': ['a', 'c'], 'c': ['b']}, triangle])
+>>> cos = (X @ X.T).toarray()  # rows are L2-normalized
+>>> float(round(cos[0, 1], 6)), bool(cos[0, 2] < 1)  # isomorphic -> 1; path vs triangle < 1
+(1.0, True)
+```
+
+#### fit(graphs)
+
+Learn the WL-label vocabulary from `graphs`; returns `self`.
+
+#### transform(graphs)
+
+Count vectors (`csr`, one row per graph), L2-normalized.
+
+### equate.featurize.graph.grakel_featurizer(, kernel='WeisfeilerLehman', label=None, \*\*kernel_params)
+
+A GraKeL graph kernel as a fittable featurizer — requires `equate[graph-kernels]`.
+
+`kernel` names a class in `grakel.kernels` (`'WeisfeilerLehman'`,
+`'ShortestPath'`, `'GraphletSampling'`, …), built with `normalize=True` and
+`**kernel_params`. After `fit(corpus)`, a graph’s vector is its (normalized)
+kernel value against each corpus graph — the empirical kernel map, so cosine/ANN work
+on it like on any embedding.
+
+
 # _autosummary/equate.featurize.html.md
 
 # equate.featurize
@@ -2856,12 +2957,14 @@ fitting on a corpus, which [`resolve_featurizer()`](_autosummary/equate.featuriz
 | [`resolve_featurizer`](_autosummary/equate.featurize.html.md#equate.featurize.resolve_featurizer)([spec, corpus])                | Resolve `spec` to a ready-to-use batch featurizer.                                                                                                                                                |
 | [`mk_tfidf`](_autosummary/equate.featurize.html.md#equate.featurize.mk_tfidf)(\*learn_texts[, ngram_range, lowercase]) | Fit a char-n-gram TF-IDF on the given collection(s) and return the fitted, callable batch featurizer — the pure numpy/scipy replacement for the legacy grub-backed `equate.util.mk_text_to_vect`. |
 | [`char_ngrams`](_autosummary/equate.featurize.html.md#equate.featurize.char_ngrams)(text[, ngram_range, lowercase])       | Character n-grams of `text` over the inclusive `ngram_range`.                                                                                                                                     |
+| [`grakel_featurizer`](_autosummary/equate.featurize.html.md#equate.featurize.grakel_featurizer)(\*[, kernel, label])            | A GraKeL graph kernel as a fittable featurizer — requires `equate[graph-kernels]`.                                                                                                                |
 
 ### Classes
 
 | [`TfidfFeaturizer`](_autosummary/equate.featurize.html.md#equate.featurize.TfidfFeaturizer)(\*[, ngram_range, lowercase])   | Fittable char-n-gram TF-IDF featurizer producing L2-normalized sparse vectors.                                                                                                                                                                  |
 |--------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`FeaturizerMeta`](_autosummary/equate.featurize.html.md#equate.featurize.FeaturizerMeta)([output_kinds, normalize, ...])  | Declared properties of a featurizer (decision register D9), so the framework can pick a legal index/metric, auto-apply a required query/passage prefix, refuse a non-commercial model in a commercial context, and offer Matryoshka truncation. |
+| [`WLFeaturizer`](_autosummary/equate.featurize.html.md#equate.featurize.WLFeaturizer)(\*[, iterations, label])           | Weisfeiler-Lehman subtree featurizer: `graphs -> L2-normalized sparse counts`.                                                                                                                                                                  |
 
 ### *class* equate.featurize.FeaturizerMeta(output_kinds=('vector',), normalize=False, dim=None, license=None, max_seq_len=None, query_prefix=None, passage_prefix=None, truncatable_to=())
 
@@ -2895,6 +2998,39 @@ transform texts to vectors. A fitted instance is itself a batch featurizer, so
 
 declared metadata (see equate.base.FeaturizerMeta)
 
+### *class* equate.featurize.WLFeaturizer(, iterations=3, label=None)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+Weisfeiler-Lehman subtree featurizer: `graphs -> L2-normalized sparse counts`.
+
+Fit on a corpus of graphs to fix the vocabulary of WL labels (one column per label
+seen in any round), then transform graphs into count vectors over it; labels never
+seen in the corpus are ignored. A fitted instance is itself a batch featurizer.
+
+Two isomorphic graphs (same labels) always get the same vector; the converse holds
+up to the WL test’s power (it cannot tell some regular graphs apart). Neighbors are
+*out*-neighbors (a directed graph is refined along its edges), and edge weights are
+ignored – the subtree kernel counts structure, not strength.
+
+```pycon
+>>> path3 = {0: [1], 1: [0, 2], 2: [1]}
+>>> triangle = {0: [1, 2], 1: [0, 2], 2: [0, 1]}
+>>> wl = WLFeaturizer(iterations=2).fit([path3, triangle])
+>>> X = wl([path3, {'a': ['b'], 'b': ['a', 'c'], 'c': ['b']}, triangle])
+>>> cos = (X @ X.T).toarray()  # rows are L2-normalized
+>>> float(round(cos[0, 1], 6)), bool(cos[0, 2] < 1)  # isomorphic -> 1; path vs triangle < 1
+(1.0, True)
+```
+
+#### fit(graphs)
+
+Learn the WL-label vocabulary from `graphs`; returns `self`.
+
+#### transform(graphs)
+
+Count vectors (`csr`, one row per graph), L2-normalized.
+
 ### equate.featurize.char_ngrams(text, ngram_range=(2, 4), , lowercase=True)
 
 Character n-grams of `text` over the inclusive `ngram_range`.
@@ -2916,6 +3052,16 @@ tiny or empty inputs still yield a (single) feature rather than an all-zero vect
 ### equate.featurize.featurizers *= <equate.registry.Registry object>*
 
 the featurize-stage strategy registry (name -> lazy factory)
+
+### equate.featurize.grakel_featurizer(, kernel='WeisfeilerLehman', label=None, \*\*kernel_params)
+
+A GraKeL graph kernel as a fittable featurizer — requires `equate[graph-kernels]`.
+
+`kernel` names a class in `grakel.kernels` (`'WeisfeilerLehman'`,
+`'ShortestPath'`, `'GraphletSampling'`, …), built with `normalize=True` and
+`**kernel_params`. After `fit(corpus)`, a graph’s vector is its (normalized)
+kernel value against each corpus graph — the empirical kernel map, so cosine/ANN work
+on it like on any embedding.
 
 ### equate.featurize.identity(objects)
 
@@ -2945,9 +3091,10 @@ half-built object that only fails later inside `transform`.
 
 ### Modules
 
-| [`text`](_autosummary/equate.featurize.text.html.md#module-equate.featurize.text)   | Dense text-embedding featurizers, behind optional extras.                                                                 |
-|--------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
-| [`tfidf`](_autosummary/equate.featurize.tfidf.html.md#module-equate.featurize.tfidf) | Pure-numpy/scipy character-n-gram TF-IDF — equate's zero-heavy-dependency default text featurizer (decision register D9). |
+| [`graph`](_autosummary/equate.featurize.graph.html.md#module-equate.featurize.graph)   | Graph featurizers (stage ①): turn whole graphs into vectors (graph kernels).                                              |
+|----------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| [`text`](_autosummary/equate.featurize.text.html.md#module-equate.featurize.text)     | Dense text-embedding featurizers, behind optional extras.                                                                 |
+| [`tfidf`](_autosummary/equate.featurize.tfidf.html.md#module-equate.featurize.tfidf)   | Pure-numpy/scipy character-n-gram TF-IDF — equate's zero-heavy-dependency default text featurizer (decision register D9). |
 
 
 # _autosummary/equate.featurize.text.html.md
@@ -3440,13 +3587,36 @@ parallel [`soft_match()`](_autosummary/equate.matching.html.md#equate.matching.s
 
 ### Functions
 
-| [`resolve_matcher`](_autosummary/equate.matching.html.md#equate.matching.resolve_matcher)([spec])                    | Resolve `spec` to a runner `(scores_or_scorematrix, *, sense=None) -> pairs`.   |
-|---------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
-| [`optimal_matching`](_autosummary/equate.matching.html.md#equate.matching.optimal_matching)(scores, \*[, sense])      | Globally optimal 1:1 assignment (the linear assignment problem).                |
-| [`greedy_matching`](_autosummary/equate.matching.html.md#equate.matching.greedy_matching)(scores, \*[, sense])       | Greedy 1:1: repeatedly take the best still-available `(i, j)`, removing both.   |
-| [`stable_matching`](_autosummary/equate.matching.html.md#equate.matching.stable_matching)(scores, \*[, sense])       | Gale-Shapley stable matching (optimizes stability, not total score).            |
-| [`soft_match`](_autosummary/equate.matching.html.md#equate.matching.soft_match)(scores, \*[, sense, reg, a, b]) | Entropic optimal-transport (Sinkhorn) plan over the cost derived from `scores`. |
-| [`harden`](_autosummary/equate.matching.html.md#equate.matching.harden)(plan)                               | Recover a hard 1:1 assignment from a transport `plan` (LAP maximizing mass).    |
+| [`resolve_matcher`](_autosummary/equate.matching.html.md#equate.matching.resolve_matcher)([spec])                          | Resolve `spec` to a runner `(scores_or_scorematrix, *, sense=None) -> pairs`.                                                    |
+|---------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| [`optimal_matching`](_autosummary/equate.matching.html.md#equate.matching.optimal_matching)(scores, \*[, sense])            | Globally optimal 1:1 assignment (the linear assignment problem).                                                                 |
+| [`greedy_matching`](_autosummary/equate.matching.html.md#equate.matching.greedy_matching)(scores, \*[, sense])             | Greedy 1:1: repeatedly take the best still-available `(i, j)`, removing both.                                                    |
+| [`stable_matching`](_autosummary/equate.matching.html.md#equate.matching.stable_matching)(scores, \*[, sense])             | Gale-Shapley stable matching (optimizes stability, not total score).                                                             |
+| [`soft_match`](_autosummary/equate.matching.html.md#equate.matching.soft_match)(scores, \*[, sense, reg, a, b])       | Entropic optimal-transport (Sinkhorn) plan over the cost derived from `scores`.                                                  |
+| [`harden`](_autosummary/equate.matching.html.md#equate.matching.harden)(plan)                                     | Recover a hard 1:1 assignment from a transport `plan` (LAP maximizing mass).                                                     |
+| [`resolve_quadratic_matcher`](_autosummary/equate.matching.html.md#equate.matching.resolve_quadratic_matcher)([spec])                | A registered name (built with `**config`) or a callable `(G1, G2, **kw) -> Matching`.                                            |
+| [`align`](_autosummary/equate.matching.html.md#equate.matching.align)(G1, G2, \*[, how, node_affinity, seeds])   | Align the nodes of two graphs -> a [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching) of node pairs. |
+| [`isorank`](_autosummary/equate.matching.html.md#equate.matching.isorank)(G1, G2, \*[, node_affinity, seeds, ...]) | Align two graphs with IsoRank -> a [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching) of node pairs. |
+| [`rrwm`](_autosummary/equate.matching.html.md#equate.matching.rrwm)(G1, G2, \*[, node_affinity, seeds, ...])    | Align two graphs with pygmtools' RRWM — requires `equate[graph-matching]`.                                                       |
+
+### equate.matching.align(G1, G2, , how='isorank', node_affinity=None, seeds=None, \*\*config)
+
+Align the nodes of two graphs -> a [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching) of node pairs.
+
+`how` picks the quadratic matcher (`'isorank'` core, `'rrwm'` via
+`equate[graph-matching]`, or a callable); `node_affinity` is an optional prior
+(an `(n1, n2)` array or a `(u, v) -> float` callable, non-negative) and usually
+what makes topology-only alignment work (see `isorank_scores()`); `seeds` are
+known `(G1 node, G2 node)` anchors. Other keywords configure the matcher (e.g.
+`extract='greedy'`, `alpha=0.9`). Graphs may be networkx graphs, `{node:
+neighbors}` mappings or adjacency matrices.
+
+```pycon
+>>> star = {'hub': ['x', 'y', 'z'], 'x': ['hub'], 'y': ['hub'], 'z': ['hub']}
+>>> other = {0: [3], 1: [3], 2: [3], 3: [0, 1, 2]}
+>>> dict(align(star, other).labeled_pairs())['hub']
+3
+```
 
 ### equate.matching.greedy_matching(scores, , sense=None)
 
@@ -3459,6 +3629,22 @@ the stored candidate cells are considered — an absent cell is never a match.
 ### equate.matching.harden(plan)
 
 Recover a hard 1:1 assignment from a transport `plan` (LAP maximizing mass).
+
+### equate.matching.isorank(G1, G2, , node_affinity=None, seeds=None, extract='optimal', label=None, \*\*config)
+
+Align two graphs with IsoRank -> a [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching) of node pairs.
+
+`matching.labeled_pairs()` yields `(G1 node, G2 node)`; `.plan` holds the full
+IsoRank score matrix. `extract` is the flat matcher that turns it into a 1:1
+correspondence (any name or callable [`equate.matching.resolve_matcher()`](_autosummary/equate.matching.html.md#equate.matching.resolve_matcher) takes);
+`**config` goes to `isorank_scores()` (`alpha`, `max_iter`, `tol`).
+
+```pycon
+>>> G1 = {'a': ['b'], 'b': ['a', 'c', 'd'], 'c': ['b'], 'd': ['b', 'e'], 'e': ['d']}
+>>> G2 = {1: [2, 4], 2: [1], 3: [4], 4: [1, 3, 5], 5: [4]}  # the same graph, renamed
+>>> dict(isorank(G1, G2).labeled_pairs())['b'], dict(isorank(G1, G2).labeled_pairs())['d']
+(4, 1)
+```
 
 ### equate.matching.matchers *= <equate.registry.Registry object>*
 
@@ -3494,6 +3680,23 @@ longer an identity passthrough for a callable (`resolve_matcher(f) is f` was tru
 is not any more). The runner carries the wrapped matcher’s `__name__`/`__doc__`, and
 the original is recoverable via `__wrapped__`.
 
+### equate.matching.resolve_quadratic_matcher(spec='isorank', \*\*config)
+
+A registered name (built with `**config`) or a callable `(G1, G2, **kw) -> Matching`.
+
+### equate.matching.rrwm(G1, G2, , node_affinity=None, seeds=None, extract='optimal', label=None, sigma=1.0, \*\*rrwm_params)
+
+Align two graphs with pygmtools’ RRWM — requires `equate[graph-matching]`.
+
+Builds the quadratic affinity `K` from Gaussian edge-weight agreement (bandwidth
+`sigma`) with `node_affinity` on its diagonal, solves it with `pygmtools.rrwm`
+(`**rrwm_params` forwarded), and extracts a 1:1 correspondence with the flat
+`extract` matcher. Seeds *condition* the solve: every assignment contradicting one
+(its node paired elsewhere) is removed from `K` and the seed pair gets the top
+affinity, so the rest is aligned around it; seeds are then kept as given. Graphs with
+no edges and no prior fall back to a uniform node affinity. Uses the numpy backend
+and never changes pygmtools’ global backend.
+
 ### equate.matching.soft_match(scores, , sense=None, reg=0.1, a=None, b=None)
 
 Entropic optimal-transport (Sinkhorn) plan over the cost derived from `scores`.
@@ -3514,9 +3717,130 @@ See [`equate.util.stable_marriage_matching()`](_autosummary/equate.util.html.md#
 
 ### Modules
 
-| [`assign`](_autosummary/equate.matching.assign.html.md#module-equate.matching.assign)   | Assignment matchers (stage ③): turn a score matrix into matched `(i, j)` pairs.                                                                                                                                                                  |
-|-----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`soft`](_autosummary/equate.matching.soft.html.md#module-equate.matching.soft)       | Soft / optimal-transport matching (stage ③): a fractional transport plan rather than a hard assignment — the home for graded, partial, unequal-mass and cross-modal matching (and, later, soft-DTW / Gromov-Wasserstein — decision register D8). |
+| [`assign`](_autosummary/equate.matching.assign.html.md#module-equate.matching.assign)       | Assignment matchers (stage ③): turn a score matrix into matched `(i, j)` pairs.                                                                                                                                                                  |
+|---------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`quadratic`](_autosummary/equate.matching.quadratic.html.md#module-equate.matching.quadratic) | Quadratic matchers: align the *nodes* of two graphs (network alignment).                                                                                                                                                                         |
+| [`soft`](_autosummary/equate.matching.soft.html.md#module-equate.matching.soft)           | Soft / optimal-transport matching (stage ③): a fractional transport plan rather than a hard assignment — the home for graded, partial, unequal-mass and cross-modal matching (and, later, soft-DTW / Gromov-Wasserstein — decision register D8). |
+
+
+# _autosummary/equate.matching.quadratic.html.md
+
+# equate.matching.quadratic
+
+Quadratic matchers: align the *nodes* of two graphs (network alignment).
+
+The second matcher arity (decision register D8, doc `12` §4). A flat matcher picks
+pairs from a fixed score matrix; here how well `u` matches `v` \*depends on how their
+neighbors are matched\* — a quadratic assignment problem — so the scores and the
+correspondence are produced together, from the two graphs. Each quadratic matcher builds a
+node-pair score matrix and hands it to a **flat** matcher (`extract=`, default the
+optimal LAP) for the final 1:1 correspondence.
+
+- `'isorank'` (core) — IsoRank (Singh, Xu & Berger 2008): “two nodes match if their
+  neighbors match”, the stationary point of a random walk on the product graph, blended
+  with an optional prior `node_affinity`.
+- `'rrwm'` (`equate[graph-matching]`) — pygmtools’ reweighted random walk solver on
+  the full quadratic affinity (edge-weight agreement + `node_affinity`).
+
+Use [`align()`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.align) (also `equate.align`), or pick a strategy from the
+[`quadratic_matchers`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.quadratic_matchers) registry. `seeds` are known node correspondences
+(anchors): they are kept as given and steer the rest.
+
+### Module Attributes
+
+| [`DFLT_ISORANK_ALPHA`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.DFLT_ISORANK_ALPHA)   | weight of the topology term vs the `node_affinity` prior (1 = topology only).   |
+|-----------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| [`DFLT_EDGE_SIGMA`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.DFLT_EDGE_SIGMA)      | bandwidth of the Gaussian edge-weight agreement used by `'rrwm'`.               |
+| [`quadratic_matchers`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.quadratic_matchers)   | the quadratic-matcher strategy registry (name -> lazy factory)                  |
+
+### Functions
+
+| [`resolve_quadratic_matcher`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.resolve_quadratic_matcher)([spec])                | A registered name (built with `**config`) or a callable `(G1, G2, **kw) -> Matching`.                                            |
+|---------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| [`align`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.align)(G1, G2, \*[, how, node_affinity, seeds])   | Align the nodes of two graphs -> a [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching) of node pairs. |
+| [`isorank`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.isorank)(G1, G2, \*[, node_affinity, seeds, ...]) | Align two graphs with IsoRank -> a [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching) of node pairs. |
+| [`isorank_scores`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.isorank_scores)(G1, G2, \*[, node_affinity, ...]) | The IsoRank node-pair score matrix `R` (`n1 x n2`, sums to 1).                                                                   |
+| [`rrwm`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.rrwm)(G1, G2, \*[, node_affinity, seeds, ...])    | Align two graphs with pygmtools' RRWM — requires `equate[graph-matching]`.                                                       |
+
+### equate.matching.quadratic.DFLT_EDGE_SIGMA *= 1.0*
+
+bandwidth of the Gaussian edge-weight agreement used by `'rrwm'`.
+
+### equate.matching.quadratic.DFLT_ISORANK_ALPHA *= 0.8*
+
+weight of the topology term vs the `node_affinity` prior (1 = topology only).
+
+### equate.matching.quadratic.align(G1, G2, , how='isorank', node_affinity=None, seeds=None, \*\*config)
+
+Align the nodes of two graphs -> a [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching) of node pairs.
+
+`how` picks the quadratic matcher (`'isorank'` core, `'rrwm'` via
+`equate[graph-matching]`, or a callable); `node_affinity` is an optional prior
+(an `(n1, n2)` array or a `(u, v) -> float` callable, non-negative) and usually
+what makes topology-only alignment work (see [`isorank_scores()`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.isorank_scores)); `seeds` are
+known `(G1 node, G2 node)` anchors. Other keywords configure the matcher (e.g.
+`extract='greedy'`, `alpha=0.9`). Graphs may be networkx graphs, `{node:
+neighbors}` mappings or adjacency matrices.
+
+```pycon
+>>> star = {'hub': ['x', 'y', 'z'], 'x': ['hub'], 'y': ['hub'], 'z': ['hub']}
+>>> other = {0: [3], 1: [3], 2: [3], 3: [0, 1, 2]}
+>>> dict(align(star, other).labeled_pairs())['hub']
+3
+```
+
+### equate.matching.quadratic.isorank(G1, G2, , node_affinity=None, seeds=None, extract='optimal', label=None, \*\*config)
+
+Align two graphs with IsoRank -> a [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching) of node pairs.
+
+`matching.labeled_pairs()` yields `(G1 node, G2 node)`; `.plan` holds the full
+IsoRank score matrix. `extract` is the flat matcher that turns it into a 1:1
+correspondence (any name or callable [`equate.matching.resolve_matcher()`](_autosummary/equate.matching.html.md#equate.matching.resolve_matcher) takes);
+`**config` goes to [`isorank_scores()`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.isorank_scores) (`alpha`, `max_iter`, `tol`).
+
+```pycon
+>>> G1 = {'a': ['b'], 'b': ['a', 'c', 'd'], 'c': ['b'], 'd': ['b', 'e'], 'e': ['d']}
+>>> G2 = {1: [2, 4], 2: [1], 3: [4], 4: [1, 3, 5], 5: [4]}  # the same graph, renamed
+>>> dict(isorank(G1, G2).labeled_pairs())['b'], dict(isorank(G1, G2).labeled_pairs())['d']
+(4, 1)
+```
+
+### equate.matching.quadratic.isorank_scores(G1, G2, , node_affinity=None, seeds=None, alpha=0.8, max_iter=100, tol=1e-09, label=None)
+
+The IsoRank node-pair score matrix `R` (`n1 x n2`, sums to 1).
+
+Iterates `R <- alpha * W1 R W2^T + (1 - alpha) * E` to its fixed point, where
+`W` is each graph’s column-stochastic walk matrix and `E` the normalized prior
+(`node_affinity`; uniform when `None`). `seeds` pin their rows/columns of the
+prior to the given partner (at the prior’s own top value), so their anchoring
+propagates to the neighbors. A directed graph walks *against* its edges (the column
+normalization uses in-degrees). Warns when `max_iter` runs out before `tol`.
+Returned as a `ScoreMatrix` (`sense='maximize'`) labeled with the two node lists.
+
+The prior does real work: from topology alone (`node_affinity=None`) the scores
+tend to the product of node degrees, which cannot tell equal-degree nodes apart. Pass
+a node similarity (attributes, names, degrees) for anything but degree-distinct graphs.
+
+### equate.matching.quadratic.quadratic_matchers *= <equate.registry.Registry object>*
+
+the quadratic-matcher strategy registry (name -> lazy factory)
+
+### equate.matching.quadratic.resolve_quadratic_matcher(spec='isorank', \*\*config)
+
+A registered name (built with `**config`) or a callable `(G1, G2, **kw) -> Matching`.
+
+### equate.matching.quadratic.rrwm(G1, G2, , node_affinity=None, seeds=None, extract='optimal', label=None, sigma=1.0, \*\*rrwm_params)
+
+Align two graphs with pygmtools’ RRWM — requires `equate[graph-matching]`.
+
+Builds the quadratic affinity `K` from Gaussian edge-weight agreement (bandwidth
+`sigma`) with `node_affinity` on its diagonal, solves it with `pygmtools.rrwm`
+(`**rrwm_params` forwarded), and extracts a 1:1 correspondence with the flat
+`extract` matcher. Seeds *condition* the solve: every assignment contradicting one
+(its node paired elsewhere) is removed from `K` and the seed pair gets the top
+affinity, so the rest is aligned around it; seeds are then kept as given. Graphs with
+no edges and no prior fall back to a uniform node affinity. Uses the numpy backend
+and never changes pygmtools’ global backend.
 
 
 # _autosummary/equate.matching.soft.html.md
@@ -3771,18 +4095,16 @@ See: [https://en.wikipedia.org/wiki/Stable_marriage_problem](https://en.wikipedi
 
 # About this build
 
-This documentation was built on **2026-10-14 07:08 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/2827dff2441dd8151d64068b4a3cbfa263a07c65"><code>2827dff</code></a> on branch <code>master</code>, for **equate 0.0.16** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-14 07:23 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/26dfabbd5aaef584c5253d0dac2a2d4de23729bc"><code>26dfabb</code></a> on branch <code>master</code>, for **equate 0.0.17** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.16) is behind the latest release on PyPI (0.0.17): `pip install equate` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/equate/commit/2827dff2441dd8151d64068b4a3cbfa263a07c65"><code>2827dff2441dd8151d64068b4a3cbfa263a07c65</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/equate/commit/26dfabbd5aaef584c5253d0dac2a2d4de23729bc"><code>26dfabbd5aaef584c5253d0dac2a2d4de23729bc</code></a> |
 | Branch              | <code>master</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -3793,9 +4115,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/equate</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/38526263690">38526263690</a>    |
+| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/38527795590">38527795590</a>    |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>2827dff2441dd8151d64068b4a3cbfa263a07c65</code> (in the history of the built commit) |
+| Event commit | <code>26dfabbd5aaef584c5253d0dac2a2d4de23729bc</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -3820,13 +4142,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/equate/0.0.17/">0.0.17</a>, newer than the documented version (0.0.16).
+Latest release: <a href="https://pypi.org/project/equate/0.0.17/">0.0.17</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/equate && cd equate
-git checkout 2827dff2441dd8151d64068b4a3cbfa263a07c65
+git checkout 26dfabbd5aaef584c5253d0dac2a2d4de23729bc
 pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

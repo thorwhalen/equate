@@ -235,6 +235,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/equate.facade.html">equate.facade</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="_autosummary/equate.featurize.html">equate.featurize</a><input aria-label="Toggle navigation of equate.featurize" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.featurize.graph.html">equate.featurize.graph</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.featurize.text.html">equate.featurize.text</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.featurize.tfidf.html">equate.featurize.tfidf</a></li>
 </ul>
@@ -248,6 +249,7 @@
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="_autosummary/equate.matching.html">equate.matching</a><input aria-label="Toggle navigation of equate.matching" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.matching.assign.html">equate.matching.assign</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.matching.quadratic.html">equate.matching.quadratic</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.matching.soft.html">equate.matching.soft</a></li>
 </ul>
 </li>
@@ -299,20 +301,26 @@
   <h2>A</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="_autosummary/equate.matching.html#equate.matching.align">align() (in module equate.matching)</a>
+
+        <ul>
+          <li><a href="_autosummary/equate.matching.quadratic.html#equate.matching.quadratic.align">(in module equate.matching.quadratic)</a>
+</li>
+        </ul></li>
         <li><a href="_autosummary/equate.base.html#equate.base.Alignment">Alignment (class in equate.base)</a>
 </li>
         <li><a href="_autosummary/equate.block.html#equate.block.all_pairs">all_pairs() (in module equate.block)</a>
 </li>
         <li><a href="_autosummary/equate.compare.vector.html#equate.compare.vector.angular_distance">angular_distance() (in module equate.compare.vector)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="_autosummary/equate.block.html#equate.block.ann_blocking">ann_blocking() (in module equate.block)</a>
 
         <ul>
           <li><a href="_autosummary/equate.block.ann.html#equate.block.ann.ann_blocking">(in module equate.block.ann)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="_autosummary/equate.evaluate.html#equate.evaluate.Scores.as_dict">as_dict() (equate.evaluate.Scores method)</a>
 
         <ul>
@@ -493,11 +501,17 @@
 </li>
         <li><a href="_autosummary/equate.compare.sequence.html#equate.compare.sequence.DFLT_DTW_WINDOW">DFLT_DTW_WINDOW (in module equate.compare.sequence)</a>
 </li>
-        <li><a href="_autosummary/equate.compare.sequence.html#equate.compare.sequence.DFLT_MATCH_SCORE">DFLT_MATCH_SCORE (in module equate.compare.sequence)</a>
+        <li><a href="_autosummary/equate.matching.quadratic.html#equate.matching.quadratic.DFLT_EDGE_SIGMA">DFLT_EDGE_SIGMA (in module equate.matching.quadratic)</a>
+</li>
+        <li><a href="_autosummary/equate.matching.quadratic.html#equate.matching.quadratic.DFLT_ISORANK_ALPHA">DFLT_ISORANK_ALPHA (in module equate.matching.quadratic)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="_autosummary/equate.compare.sequence.html#equate.compare.sequence.DFLT_MATCH_SCORE">DFLT_MATCH_SCORE (in module equate.compare.sequence)</a>
+</li>
         <li><a href="_autosummary/equate.compare.sequence.html#equate.compare.sequence.DFLT_SOFT_DTW_GAMMA">DFLT_SOFT_DTW_GAMMA (in module equate.compare.sequence)</a>
+</li>
+        <li><a href="_autosummary/equate.featurize.graph.html#equate.featurize.graph.DFLT_WL_ITERATIONS">DFLT_WL_ITERATIONS (in module equate.featurize.graph)</a>
 </li>
         <li><a href="_autosummary/equate.compare.html#equate.compare.direct">direct() (in module equate.compare)</a>
 </li>
@@ -663,8 +677,6 @@
           <li><a href="_autosummary/equate.evaluate.html#module-equate.evaluate">module</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     equate.evaluate.benchmark
 
@@ -672,6 +684,8 @@
           <li><a href="_autosummary/equate.evaluate.benchmark.html#module-equate.evaluate.benchmark">module</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     equate.evaluate.labels
 
@@ -719,6 +733,13 @@
 
         <ul>
           <li><a href="_autosummary/equate.featurize.html#module-equate.featurize">module</a>
+</li>
+        </ul></li>
+        <li>
+    equate.featurize.graph
+
+        <ul>
+          <li><a href="_autosummary/equate.featurize.graph.html#module-equate.featurize.graph">module</a>
 </li>
         </ul></li>
         <li>
@@ -785,6 +806,13 @@
 </li>
         </ul></li>
         <li>
+    equate.matching.quadratic
+
+        <ul>
+          <li><a href="_autosummary/equate.matching.quadratic.html#module-equate.matching.quadratic">module</a>
+</li>
+        </ul></li>
+        <li>
     equate.matching.soft
 
         <ul>
@@ -839,12 +867,18 @@
           <li><a href="_autosummary/equate.compare.vectorize.html#equate.compare.vectorize.fellegi_sunter">(in module equate.compare.vectorize)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="_autosummary/equate.block.html#equate.block.first_chars">first_chars() (in module equate.block)</a>
 
         <ul>
           <li><a href="_autosummary/equate.block.keyed.html#equate.block.keyed.first_chars">(in module equate.block.keyed)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="_autosummary/equate.featurize.graph.html#equate.featurize.graph.WLFeaturizer.fit">fit() (equate.featurize.graph.WLFeaturizer method)</a>
+
+        <ul>
+          <li><a href="_autosummary/equate.featurize.html#equate.featurize.WLFeaturizer.fit">(equate.featurize.WLFeaturizer method)</a>
 </li>
         </ul></li>
         <li><a href="_autosummary/equate.evaluate.html#equate.evaluate.Scores.from_counts">from_counts() (equate.evaluate.Scores class method)</a>
@@ -877,6 +911,14 @@
 </li>
         <li><a href="_autosummary/equate.compare.numeric_geo.html#equate.compare.numeric_geo.geo_similarity">geo_similarity() (in module equate.compare.numeric_geo)</a>
 </li>
+        <li><a href="_autosummary/equate.featurize.html#equate.featurize.grakel_featurizer">grakel_featurizer() (in module equate.featurize)</a>
+
+        <ul>
+          <li><a href="_autosummary/equate.featurize.graph.html#equate.featurize.graph.grakel_featurizer">(in module equate.featurize.graph)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="_autosummary/equate.matching.html#equate.matching.greedy_matching">greedy_matching() (in module equate.matching)</a>
 
         <ul>
@@ -885,8 +927,6 @@
           <li><a href="_autosummary/equate.util.html#equate.util.greedy_matching">(in module equate.util)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="_autosummary/equate.base.html#equate.base.Partition.groups">groups() (equate.base.Partition method)</a>
 </li>
     </ul></td>
@@ -921,8 +961,16 @@
 </li>
         <li><a href="_autosummary/equate.base.html#equate.base.ScoreMatrix.is_sparse">is_sparse (equate.base.ScoreMatrix property)</a>
 </li>
+        <li><a href="_autosummary/equate.matching.html#equate.matching.isorank">isorank() (in module equate.matching)</a>
+
+        <ul>
+          <li><a href="_autosummary/equate.matching.quadratic.html#equate.matching.quadratic.isorank">(in module equate.matching.quadratic)</a>
+</li>
+        </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="_autosummary/equate.matching.quadratic.html#equate.matching.quadratic.isorank_scores">isorank_scores() (in module equate.matching.quadratic)</a>
+</li>
         <li><a href="_autosummary/equate.compare.html#equate.compare.isotonic">isotonic() (in module equate.compare)</a>
 
         <ul>
@@ -1123,6 +1171,8 @@
 </li>
           <li><a href="_autosummary/equate.featurize.html#module-equate.featurize">equate.featurize</a>
 </li>
+          <li><a href="_autosummary/equate.featurize.graph.html#module-equate.featurize.graph">equate.featurize.graph</a>
+</li>
           <li><a href="_autosummary/equate.featurize.text.html#module-equate.featurize.text">equate.featurize.text</a>
 </li>
           <li><a href="_autosummary/equate.featurize.tfidf.html#module-equate.featurize.tfidf">equate.featurize.tfidf</a>
@@ -1140,6 +1190,8 @@
           <li><a href="_autosummary/equate.matching.html#module-equate.matching">equate.matching</a>
 </li>
           <li><a href="_autosummary/equate.matching.assign.html#module-equate.matching.assign">equate.matching.assign</a>
+</li>
+          <li><a href="_autosummary/equate.matching.quadratic.html#module-equate.matching.quadratic">equate.matching.quadratic</a>
 </li>
           <li><a href="_autosummary/equate.matching.soft.html#module-equate.matching.soft">equate.matching.soft</a>
 </li>
@@ -1249,6 +1301,12 @@
 </li>
         </ul></li>
     </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="_autosummary/equate.matching.quadratic.html#equate.matching.quadratic.quadratic_matchers">quadratic_matchers (in module equate.matching.quadratic)</a>
+</li>
+        <li><a href="_autosummary/equate.base.html#equate.base.QuadraticMatcher">QuadraticMatcher (in module equate.base)</a>
+</li>
+    </ul></td>
   </tr></table>
 </section>
 
@@ -1280,14 +1338,14 @@
           <li><a href="_autosummary/equate.interactive.constraints.html#equate.interactive.constraints.reoptimize">(in module equate.interactive.constraints)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="_autosummary/equate.registry.html#equate.registry.Registry.resolve">resolve() (equate.registry.Registry method)</a>
 
         <ul>
           <li><a href="_autosummary/equate.facade.html#equate.facade.resolve">(in module equate.facade)</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="_autosummary/equate.block.html#equate.block.resolve_blocker">resolve_blocker() (in module equate.block)</a>
 </li>
         <li><a href="_autosummary/equate.cluster.html#equate.cluster.resolve_clusterer">resolve_clusterer() (in module equate.cluster)</a>
@@ -1298,10 +1356,22 @@
 </li>
         <li><a href="_autosummary/equate.matching.html#equate.matching.resolve_matcher">resolve_matcher() (in module equate.matching)</a>
 </li>
+        <li><a href="_autosummary/equate.matching.html#equate.matching.resolve_quadratic_matcher">resolve_quadratic_matcher() (in module equate.matching)</a>
+
+        <ul>
+          <li><a href="_autosummary/equate.matching.quadratic.html#equate.matching.quadratic.resolve_quadratic_matcher">(in module equate.matching.quadratic)</a>
+</li>
+        </ul></li>
         <li><a href="_autosummary/equate.interactive.html#equate.interactive.review_queue">review_queue() (in module equate.interactive)</a>
 
         <ul>
           <li><a href="_autosummary/equate.interactive.review.html#equate.interactive.review.review_queue">(in module equate.interactive.review)</a>
+</li>
+        </ul></li>
+        <li><a href="_autosummary/equate.matching.html#equate.matching.rrwm">rrwm() (in module equate.matching)</a>
+
+        <ul>
+          <li><a href="_autosummary/equate.matching.quadratic.html#equate.matching.quadratic.rrwm">(in module equate.matching.quadratic)</a>
 </li>
         </ul></li>
     </ul></td>
@@ -1444,6 +1514,12 @@
           <li><a href="_autosummary/equate.interactive.html#equate.interactive.CandidateStore.top">(equate.interactive.CandidateStore method)</a>
 </li>
         </ul></li>
+        <li><a href="_autosummary/equate.featurize.graph.html#equate.featurize.graph.WLFeaturizer.transform">transform() (equate.featurize.graph.WLFeaturizer method)</a>
+
+        <ul>
+          <li><a href="_autosummary/equate.featurize.html#equate.featurize.WLFeaturizer.transform">(equate.featurize.WLFeaturizer method)</a>
+</li>
+        </ul></li>
     </ul></td>
   </tr></table>
 </section>
@@ -1472,12 +1548,18 @@
           <li><a href="_autosummary/equate.compare.vectorize.html#equate.compare.vectorize.weighted_sum">(in module equate.compare.vectorize)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="_autosummary/equate.block.html#equate.block.whole_value">whole_value() (in module equate.block)</a>
 
         <ul>
           <li><a href="_autosummary/equate.block.keyed.html#equate.block.keyed.whole_value">(in module equate.block.keyed)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="_autosummary/equate.featurize.html#equate.featurize.WLFeaturizer">WLFeaturizer (class in equate.featurize)</a>
+
+        <ul>
+          <li><a href="_autosummary/equate.featurize.graph.html#equate.featurize.graph.WLFeaturizer">(class in equate.featurize.graph)</a>
 </li>
         </ul></li>
     </ul></td>
@@ -1512,7 +1594,7 @@
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=0adb0642"></script>
+</div><script src="_static/documentation_options.js?v=a39b7224"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

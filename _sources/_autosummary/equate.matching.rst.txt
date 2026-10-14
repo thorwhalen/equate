@@ -20,6 +20,10 @@ equate.matching
       stable_matching
       soft_match
       harden
+      resolve_quadratic_matcher
+      align
+      isorank
+      rrwm
    
 .. rubric:: Modules
 
@@ -28,4 +32,5 @@ equate.matching
    :recursive:
 
    assign
+   quadratic
    soft

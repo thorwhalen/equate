@@ -15,13 +15,36 @@ parallel [`soft_match()`](#equate.matching.soft_match) / [`harden()`](#equate.ma
 
 ### Functions
 
-| [`resolve_matcher`](#equate.matching.resolve_matcher)([spec])                    | Resolve `spec` to a runner `(scores_or_scorematrix, *, sense=None) -> pairs`.   |
-|---------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
-| [`optimal_matching`](#equate.matching.optimal_matching)(scores, \*[, sense])      | Globally optimal 1:1 assignment (the linear assignment problem).                |
-| [`greedy_matching`](#equate.matching.greedy_matching)(scores, \*[, sense])       | Greedy 1:1: repeatedly take the best still-available `(i, j)`, removing both.   |
-| [`stable_matching`](#equate.matching.stable_matching)(scores, \*[, sense])       | Gale-Shapley stable matching (optimizes stability, not total score).            |
-| [`soft_match`](#equate.matching.soft_match)(scores, \*[, sense, reg, a, b]) | Entropic optimal-transport (Sinkhorn) plan over the cost derived from `scores`. |
-| [`harden`](#equate.matching.harden)(plan)                               | Recover a hard 1:1 assignment from a transport `plan` (LAP maximizing mass).    |
+| [`resolve_matcher`](#equate.matching.resolve_matcher)([spec])                          | Resolve `spec` to a runner `(scores_or_scorematrix, *, sense=None) -> pairs`.                                                    |
+|---------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| [`optimal_matching`](#equate.matching.optimal_matching)(scores, \*[, sense])            | Globally optimal 1:1 assignment (the linear assignment problem).                                                                 |
+| [`greedy_matching`](#equate.matching.greedy_matching)(scores, \*[, sense])             | Greedy 1:1: repeatedly take the best still-available `(i, j)`, removing both.                                                    |
+| [`stable_matching`](#equate.matching.stable_matching)(scores, \*[, sense])             | Gale-Shapley stable matching (optimizes stability, not total score).                                                             |
+| [`soft_match`](#equate.matching.soft_match)(scores, \*[, sense, reg, a, b])       | Entropic optimal-transport (Sinkhorn) plan over the cost derived from `scores`.                                                  |
+| [`harden`](#equate.matching.harden)(plan)                                     | Recover a hard 1:1 assignment from a transport `plan` (LAP maximizing mass).                                                     |
+| [`resolve_quadratic_matcher`](#equate.matching.resolve_quadratic_matcher)([spec])                | A registered name (built with `**config`) or a callable `(G1, G2, **kw) -> Matching`.                                            |
+| [`align`](#equate.matching.align)(G1, G2, \*[, how, node_affinity, seeds])   | Align the nodes of two graphs -> a [`Matching`](equate.base.html.md#equate.base.Matching) of node pairs. |
+| [`isorank`](#equate.matching.isorank)(G1, G2, \*[, node_affinity, seeds, ...]) | Align two graphs with IsoRank -> a [`Matching`](equate.base.html.md#equate.base.Matching) of node pairs. |
+| [`rrwm`](#equate.matching.rrwm)(G1, G2, \*[, node_affinity, seeds, ...])    | Align two graphs with pygmtools' RRWM — requires `equate[graph-matching]`.                                                       |
+
+### equate.matching.align(G1, G2, , how='isorank', node_affinity=None, seeds=None, \*\*config)
+
+Align the nodes of two graphs -> a [`Matching`](equate.base.html.md#equate.base.Matching) of node pairs.
+
+`how` picks the quadratic matcher (`'isorank'` core, `'rrwm'` via
+`equate[graph-matching]`, or a callable); `node_affinity` is an optional prior
+(an `(n1, n2)` array or a `(u, v) -> float` callable, non-negative) and usually
+what makes topology-only alignment work (see `isorank_scores()`); `seeds` are
+known `(G1 node, G2 node)` anchors. Other keywords configure the matcher (e.g.
+`extract='greedy'`, `alpha=0.9`). Graphs may be networkx graphs, `{node:
+neighbors}` mappings or adjacency matrices.
+
+```pycon
+>>> star = {'hub': ['x', 'y', 'z'], 'x': ['hub'], 'y': ['hub'], 'z': ['hub']}
+>>> other = {0: [3], 1: [3], 2: [3], 3: [0, 1, 2]}
+>>> dict(align(star, other).labeled_pairs())['hub']
+3
+```
 
 ### equate.matching.greedy_matching(scores, , sense=None)
 
@@ -34,6 +57,22 @@ the stored candidate cells are considered — an absent cell is never a match.
 ### equate.matching.harden(plan)
 
 Recover a hard 1:1 assignment from a transport `plan` (LAP maximizing mass).
+
+### equate.matching.isorank(G1, G2, , node_affinity=None, seeds=None, extract='optimal', label=None, \*\*config)
+
+Align two graphs with IsoRank -> a [`Matching`](equate.base.html.md#equate.base.Matching) of node pairs.
+
+`matching.labeled_pairs()` yields `(G1 node, G2 node)`; `.plan` holds the full
+IsoRank score matrix. `extract` is the flat matcher that turns it into a 1:1
+correspondence (any name or callable [`equate.matching.resolve_matcher()`](#equate.matching.resolve_matcher) takes);
+`**config` goes to `isorank_scores()` (`alpha`, `max_iter`, `tol`).
+
+```pycon
+>>> G1 = {'a': ['b'], 'b': ['a', 'c', 'd'], 'c': ['b'], 'd': ['b', 'e'], 'e': ['d']}
+>>> G2 = {1: [2, 4], 2: [1], 3: [4], 4: [1, 3, 5], 5: [4]}  # the same graph, renamed
+>>> dict(isorank(G1, G2).labeled_pairs())['b'], dict(isorank(G1, G2).labeled_pairs())['d']
+(4, 1)
+```
 
 ### equate.matching.matchers *= <equate.registry.Registry object>*
 
@@ -69,6 +108,23 @@ longer an identity passthrough for a callable (`resolve_matcher(f) is f` was tru
 is not any more). The runner carries the wrapped matcher’s `__name__`/`__doc__`, and
 the original is recoverable via `__wrapped__`.
 
+### equate.matching.resolve_quadratic_matcher(spec='isorank', \*\*config)
+
+A registered name (built with `**config`) or a callable `(G1, G2, **kw) -> Matching`.
+
+### equate.matching.rrwm(G1, G2, , node_affinity=None, seeds=None, extract='optimal', label=None, sigma=1.0, \*\*rrwm_params)
+
+Align two graphs with pygmtools’ RRWM — requires `equate[graph-matching]`.
+
+Builds the quadratic affinity `K` from Gaussian edge-weight agreement (bandwidth
+`sigma`) with `node_affinity` on its diagonal, solves it with `pygmtools.rrwm`
+(`**rrwm_params` forwarded), and extracts a 1:1 correspondence with the flat
+`extract` matcher. Seeds *condition* the solve: every assignment contradicting one
+(its node paired elsewhere) is removed from `K` and the seed pair gets the top
+affinity, so the rest is aligned around it; seeds are then kept as given. Graphs with
+no edges and no prior fall back to a uniform node affinity. Uses the numpy backend
+and never changes pygmtools’ global backend.
+
 ### equate.matching.soft_match(scores, , sense=None, reg=0.1, a=None, b=None)
 
 Entropic optimal-transport (Sinkhorn) plan over the cost derived from `scores`.
@@ -89,6 +145,7 @@ See [`equate.util.stable_marriage_matching()`](equate.util.html.md#equate.util.s
 
 ### Modules
 
-| [`assign`](equate.matching.assign.html.md#module-equate.matching.assign)   | Assignment matchers (stage ③): turn a score matrix into matched `(i, j)` pairs.                                                                                                                                                                  |
-|-----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`soft`](equate.matching.soft.html.md#module-equate.matching.soft)       | Soft / optimal-transport matching (stage ③): a fractional transport plan rather than a hard assignment — the home for graded, partial, unequal-mass and cross-modal matching (and, later, soft-DTW / Gromov-Wasserstein — decision register D8). |
+| [`assign`](equate.matching.assign.html.md#module-equate.matching.assign)       | Assignment matchers (stage ③): turn a score matrix into matched `(i, j)` pairs.                                                                                                                                                                  |
+|---------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`quadratic`](equate.matching.quadratic.html.md#module-equate.matching.quadratic) | Quadratic matchers: align the *nodes* of two graphs (network alignment).                                                                                                                                                                         |
+| [`soft`](equate.matching.soft.html.md#module-equate.matching.soft)           | Soft / optimal-transport matching (stage ③): a fractional transport plan rather than a hard assignment — the home for graded, partial, unequal-mass and cross-modal matching (and, later, soft-DTW / Gromov-Wasserstein — decision register D8). |
