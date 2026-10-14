@@ -221,6 +221,7 @@
 <li class="toctree-l3 current has-children current-page"><a class="current reference internal" href="#">equate.compare</a><input aria-label="Toggle navigation of equate.compare" checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.calibrate.html">equate.compare.calibrate</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.compare.sequence.html">equate.compare.sequence</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.string.html">equate.compare.string</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.vector.html">equate.compare.vector</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.vectorize.html">equate.compare.vectorize</a></li>
@@ -335,31 +336,34 @@ comparators (Monge-Elkan, containment) directional until the matcher boundary (D
 <tr class="row-even"><td><p><a class="reference internal" href="#equate.compare.direct" title="equate.compare.direct"><code class="xref py py-obj docutils literal notranslate"><span class="pre">direct</span></code></a>(h, *[, meta])</p></td>
 <td><p>Wrap an opaque pairwise scorer <code class="docutils literal notranslate"><span class="pre">h(a,</span> <span class="pre">b)</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code> into a score-matrix builder <code class="docutils literal notranslate"><span class="pre">build(A,</span> <span class="pre">B)</span> <span class="pre">-&gt;</span> <span class="pre">ndarray</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.compare.featurized" title="equate.compare.featurized"><code class="xref py py-obj docutils literal notranslate"><span class="pre">featurized</span></code></a>([featurizer, metric, meta])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.compare.polarity_sense" title="equate.compare.polarity_sense"><code class="xref py py-obj docutils literal notranslate"><span class="pre">polarity_sense</span></code></a>(comparator, *[, default])</p></td>
+<td><p>The score <code class="docutils literal notranslate"><span class="pre">sense</span></code> a comparator's declared polarity implies.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.compare.featurized" title="equate.compare.featurized"><code class="xref py py-obj docutils literal notranslate"><span class="pre">featurized</span></code></a>([featurizer, metric, meta])</p></td>
 <td><p>Build a score-matrix builder that featurizes both collections then applies a vector <code class="docutils literal notranslate"><span class="pre">metric</span></code> (default cosine over the two matrices).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.compare.comparison_vector" title="equate.compare.comparison_vector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">comparison_vector</span></code></a>(a, b, field_comparators, *)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.compare.comparison_vector" title="equate.compare.comparison_vector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">comparison_vector</span></code></a>(a, b, field_comparators, *)</p></td>
 <td><p>Return <code class="docutils literal notranslate"><span class="pre">{field:</span> <span class="pre">comparator(a[field],</span> <span class="pre">b[field])}</span></code> for each field comparator.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.compare.weighted_sum" title="equate.compare.weighted_sum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">weighted_sum</span></code></a>([weights])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.compare.weighted_sum" title="equate.compare.weighted_sum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">weighted_sum</span></code></a>([weights])</p></td>
 <td><p>Combiner: weighted sum of a comparison vector (default weight 1.0 per field).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.compare.mean" title="equate.compare.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a>(cv)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.compare.mean" title="equate.compare.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a>(cv)</p></td>
 <td><p>Combiner: arithmetic mean of a comparison vector.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.compare.max_combiner" title="equate.compare.max_combiner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">max_combiner</span></code></a>(cv)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.compare.max_combiner" title="equate.compare.max_combiner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">max_combiner</span></code></a>(cv)</p></td>
 <td><p>Combiner: maximum field score in a comparison vector.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.compare.fellegi_sunter" title="equate.compare.fellegi_sunter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fellegi_sunter</span></code></a>(m_probs, u_probs, *[, eps])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.compare.fellegi_sunter" title="equate.compare.fellegi_sunter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fellegi_sunter</span></code></a>(m_probs, u_probs, *[, eps])</p></td>
 <td><p>Fellegi-Sunter combiner (decision register D5): sum of per-field match weights.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.compare.threshold" title="equate.compare.threshold"><code class="xref py py-obj docutils literal notranslate"><span class="pre">threshold</span></code></a>(t, *[, hard])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.compare.threshold" title="equate.compare.threshold"><code class="xref py py-obj docutils literal notranslate"><span class="pre">threshold</span></code></a>(t, *[, hard])</p></td>
 <td><p>Return a calibrator: <code class="docutils literal notranslate"><span class="pre">hard</span></code> -&gt; boolean <code class="docutils literal notranslate"><span class="pre">score</span> <span class="pre">&gt;=</span> <span class="pre">t</span></code>; else pass the score through.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.compare.platt" title="equate.compare.platt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">platt</span></code></a>(scores, labels)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.compare.platt" title="equate.compare.platt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">platt</span></code></a>(scores, labels)</p></td>
 <td><p>Fit Platt scaling (logistic regression on 1-D scores) -&gt; <code class="docutils literal notranslate"><span class="pre">P(match)</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.compare.isotonic" title="equate.compare.isotonic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isotonic</span></code></a>(scores, labels)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.compare.isotonic" title="equate.compare.isotonic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isotonic</span></code></a>(scores, labels)</p></td>
 <td><p>Fit isotonic regression -&gt; a monotone calibrated probability.</p></td>
 </tr>
 </tbody>
@@ -444,6 +448,20 @@ probability.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="equate.compare.polarity_sense">
+<span class="sig-prename descclassname"><span class="pre">equate.compare.</span></span><span class="sig-name descname"><span class="pre">polarity_sense</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comparator</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maximize'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/compare.html#polarity_sense"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.compare.polarity_sense" title="Link to this definition">¶</a></dt>
+<dd><p>The score <code class="docutils literal notranslate"><span class="pre">sense</span></code> a comparator’s declared polarity implies.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">'distance'</span></code> comparator (DTW, edit distance) is minimized, a <code class="docutils literal notranslate"><span class="pre">'similarity'</span></code>
+maximized; a comparator with no declared metadata gets <code class="docutils literal notranslate"><span class="pre">default</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">polarity_sense</span><span class="p">(</span><span class="n">resolve_comparator</span><span class="p">(</span><span class="s1">'dtw'</span><span class="p">))</span>
+<span class="go">'minimize'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">polarity_sense</span><span class="p">(</span><span class="n">resolve_comparator</span><span class="p">(</span><span class="s1">'ratio'</span><span class="p">))</span>
+<span class="go">'maximize'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="equate.compare.resolve_comparator">
 <span class="sig-prename descclassname"><span class="pre">equate.compare.</span></span><span class="sig-name descname"><span class="pre">resolve_comparator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/compare.html#resolve_comparator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.compare.resolve_comparator" title="Link to this definition">¶</a></dt>
 <dd><p>Resolve <code class="docutils literal notranslate"><span class="pre">spec</span></code> to a pairwise comparator.</p>
@@ -473,13 +491,16 @@ probability.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="equate.compare.numeric_geo.html#module-equate.compare.numeric_geo" title="equate.compare.numeric_geo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numeric_geo</span></code></a></p></td>
 <td><p>Numeric, date, and geospatial comparators (stage ②): turn a domain distance into a [0, 1] similarity via a decay function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="equate.compare.string.html#module-equate.compare.string" title="equate.compare.string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">string</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="equate.compare.sequence.html#module-equate.compare.sequence" title="equate.compare.sequence"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sequence</span></code></a></p></td>
+<td><p>Sequence-alignment comparators (stage ②): score two <em>sequences</em> by aligning them.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="equate.compare.string.html#module-equate.compare.string" title="equate.compare.string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">string</span></code></a></p></td>
 <td><p>String comparators (stage ②): pairwise similarity between two strings.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="equate.compare.vector.html#module-equate.compare.vector" title="equate.compare.vector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">vector</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="equate.compare.vector.html#module-equate.compare.vector" title="equate.compare.vector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">vector</span></code></a></p></td>
 <td><p>Vector comparators (stage ②): pairwise similarity/distance between two vectors.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="equate.compare.vectorize.html#module-equate.compare.vectorize" title="equate.compare.vectorize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">vectorize</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="equate.compare.vectorize.html#module-equate.compare.vectorize" title="equate.compare.vectorize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">vectorize</span></code></a></p></td>
 <td><p>Multi-field record comparison (stage ②): build a per-pair <em>comparison vector</em> from per-field comparators, then reduce it to a single score with a combiner.</p></td>
 </tr>
 </tbody>
@@ -548,6 +569,7 @@ probability.</p>
 <li><a class="reference internal" href="#equate.compare.max_combiner"><code class="docutils literal notranslate"><span class="pre">max_combiner()</span></code></a></li>
 <li><a class="reference internal" href="#equate.compare.mean"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></a></li>
 <li><a class="reference internal" href="#equate.compare.platt"><code class="docutils literal notranslate"><span class="pre">platt()</span></code></a></li>
+<li><a class="reference internal" href="#equate.compare.polarity_sense"><code class="docutils literal notranslate"><span class="pre">polarity_sense()</span></code></a></li>
 <li><a class="reference internal" href="#equate.compare.resolve_comparator"><code class="docutils literal notranslate"><span class="pre">resolve_comparator()</span></code></a></li>
 <li><a class="reference internal" href="#equate.compare.threshold"><code class="docutils literal notranslate"><span class="pre">threshold()</span></code></a></li>
 <li><a class="reference internal" href="#equate.compare.weighted_sum"><code class="docutils literal notranslate"><span class="pre">weighted_sum()</span></code></a></li>
@@ -562,7 +584,7 @@ probability.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=2a6a9ca9"></script>
+</div><script src="../_static/documentation_options.js?v=0adb0642"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

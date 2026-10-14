@@ -221,6 +221,7 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="equate.compare.html">equate.compare</a><input aria-label="Toggle navigation of equate.compare" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.calibrate.html">equate.compare.calibrate</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.compare.sequence.html">equate.compare.sequence</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.string.html">equate.compare.string</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.vector.html">equate.compare.vector</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.vectorize.html">equate.compare.vectorize</a></li>
@@ -367,21 +368,47 @@ decisions realized here are documented in <code class="docutils literal notransl
 <tr class="row-odd"><td><p><a class="reference internal" href="#equate.base.ScoreMatrix" title="equate.base.ScoreMatrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ScoreMatrix</span></code></a>(data[, sense, row_labels, ...])</p></td>
 <td><p>Scored candidate structure flowing compare -&gt; match (the SSOT).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.base.Explanation" title="equate.base.Explanation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Explanation</span></code></a>([summary, details])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.base.Alignment" title="equate.base.Alignment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Alignment</span></code></a>(score[, path, sense])</p></td>
+<td><p>A structured comparator's score <strong>plus</strong> the internal correspondence behind it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.base.Explanation" title="equate.base.Explanation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Explanation</span></code></a>([summary, details])</p></td>
 <td><p>Render-agnostic justification for a decision (rules / attributions / diffs).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.base.Candidate" title="equate.base.Candidate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Candidate</span></code></a>(left, right, score[, explanation])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.base.Candidate" title="equate.base.Candidate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Candidate</span></code></a>(left, right, score[, explanation])</p></td>
 <td><p>One scored correspondence between a <code class="docutils literal notranslate"><span class="pre">left</span></code> item and a <code class="docutils literal notranslate"><span class="pre">right</span></code> item.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.base.Matching" title="equate.base.Matching"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Matching</span></code></a>(pairs[, scores, plan, probability, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.base.Matching" title="equate.base.Matching"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Matching</span></code></a>(pairs[, scores, plan, probability, ...])</p></td>
 <td><p>Default (hard) matcher output: matched index pairs, with retained scores.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.base.Partition" title="equate.base.Partition"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Partition</span></code></a>(labels)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.base.Partition" title="equate.base.Partition"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Partition</span></code></a>(labels)</p></td>
 <td><p>Clustering / collective output: a map from item index to entity (cluster) id.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
+<dl class="py class">
+<dt class="sig sig-object py" id="equate.base.Alignment">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.base.</span></span><span class="sig-name descname"><span class="pre">Alignment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">score</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'minimize'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/base.html#Alignment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.base.Alignment" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A structured comparator’s score <strong>plus</strong> the internal correspondence behind it.</p>
+<p>Sequence/structure comparators (DTW, Needleman-Wunsch, Smith-Waterman, …) match
+the <em>sub-parts</em> of two objects before scoring them — matching, one level down. The
+scalar <code class="docutils literal notranslate"><span class="pre">score</span></code> is what the collection-level matcher consumes; <code class="docutils literal notranslate"><span class="pre">path</span></code> keeps the
+element-level correspondence for explanation, visualization and element-level
+matching (doc <code class="docutils literal notranslate"><span class="pre">12</span></code> §2.6, decision register D8):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">path</span></code>: a tuple of <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> element-index pairs, in order. A gap is <code class="docutils literal notranslate"><span class="pre">None</span></code> on
+the side that skips (<code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">None)</span></code> / <code class="docutils literal notranslate"><span class="pre">(None,</span> <span class="pre">j)</span></code>). <code class="docutils literal notranslate"><span class="pre">None</span></code> when the method has no
+single path (soft-DTW averages over all of them) or the backend does not report one.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sense</span></code>: how to read <code class="docutils literal notranslate"><span class="pre">score</span></code> — <code class="docutils literal notranslate"><span class="pre">'minimize'</span></code> for a dissimilarity (DTW),
+<code class="docutils literal notranslate"><span class="pre">'maximize'</span></code> for an alignment score (Needleman-Wunsch / Smith-Waterman).</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">float(alignment)</span></code> is its score, so an <code class="docutils literal notranslate"><span class="pre">Alignment</span></code> drops in where a number is
+expected.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
 <dl class="py data">
 <dt class="sig sig-object py" id="equate.base.Blocker">
 <span class="sig-prename descclassname"><span class="pre">equate.base.</span></span><span class="sig-name descname"><span class="pre">Blocker</span></span><a class="headerlink" href="#equate.base.Blocker" title="Link to this definition">¶</a></dt>
@@ -758,6 +785,7 @@ Empty inputs return an empty array (an empty collection yields an empty matching
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">equate.base</a><ul>
+<li><a class="reference internal" href="#equate.base.Alignment"><code class="docutils literal notranslate"><span class="pre">Alignment</span></code></a></li>
 <li><a class="reference internal" href="#equate.base.Blocker"><code class="docutils literal notranslate"><span class="pre">Blocker</span></code></a></li>
 <li><a class="reference internal" href="#equate.base.Candidate"><code class="docutils literal notranslate"><span class="pre">Candidate</span></code></a></li>
 <li><a class="reference internal" href="#equate.base.Comparator"><code class="docutils literal notranslate"><span class="pre">Comparator</span></code></a></li>
@@ -801,7 +829,7 @@ Empty inputs return an empty array (an empty collection yields an empty matching
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=2a6a9ca9"></script>
+</div><script src="../_static/documentation_options.js?v=0adb0642"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

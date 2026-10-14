@@ -34,7 +34,7 @@ to the comparator’s declared polarity — a *distance* comparator (e.g.
 {0: [0, 1], 1: [2]}
 ```
 
-### equate.facade.match(A, B=None, , featurize=None, compare=None, block=None, how='assign', threshold=None, cluster='connected_components', sense='maximize')
+### equate.facade.match(A, B=None, , featurize=None, compare=None, block=None, how='assign', threshold=None, cluster='connected_components', sense=None)
 
 Match two collections into a [`Matching`](equate.base.html.md#equate.base.Matching) of scored `(i, j)` pairs.
 
@@ -46,6 +46,9 @@ Pipeline (each stage swappable by one keyword):
   pairwise route\* on the raw items.
 - **block** — `None` (default) scores all pairs (dense); a blocker (name/callable)
   scores only the candidate pairs into a sparse matrix, and the matcher stays sparse-aware.
+- **sense** — `None` (default) reads it off the comparator’s declared polarity: a
+  *distance* comparator (`'dtw'`, `'levenshtein_distance'`) is minimized, anything
+  else maximized. Pass `'maximize'` / `'minimize'` to override.
 - **how** — the matcher objective: `'assign'` (optimal 1:1, the default),
   `'greedy'`, `'stable'`, or `'soft'` (an optimal-transport plan; `.plan` is set).
 

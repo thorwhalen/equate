@@ -21,6 +21,7 @@
 - [equate.compare](_autosummary/equate.compare.html.md): The compare stage (②): score how alike two (featurized) items are.
 - [equate.compare.calibrate](_autosummary/equate.compare.calibrate.html.md): Score calibration (stage ②): map raw comparator scores to a decision or a
 - [equate.compare.numeric_geo](_autosummary/equate.compare.numeric_geo.html.md): Numeric, date, and geospatial comparators (stage ②): turn a domain distance into a
+- [equate.compare.sequence](_autosummary/equate.compare.sequence.html.md): Sequence-alignment comparators (stage ②): score two &#42;sequences&#42; by aligning them.
 - [equate.compare.string](_autosummary/equate.compare.string.html.md): String comparators (stage ②): pairwise similarity between two strings.
 - [equate.compare.vector](_autosummary/equate.compare.vector.html.md): Vector comparators (stage ②): pairwise similarity/distance between two vectors.
 - [equate.compare.vectorize](_autosummary/equate.compare.vectorize.html.md): Multi-field record comparison (stage ②): build a per-pair &#42;comparison vector&#42; from
@@ -47,7 +48,7 @@
 - [equate.registry](_autosummary/equate.registry.html.md): A tiny name-keyed strategy registry with lazy factories (open-closed dispatch).
 - [equate.util](_autosummary/equate.util.html.md): Utils for equate.
 - [For AI agents](ai-agents.html.md): &#96;equate&#96; ships artifacts for coding agents alongside its code. This page lists
-- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-10-13 18:26 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
+- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-10-14 07:08 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
 
 ## Optional
 

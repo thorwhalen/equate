@@ -221,6 +221,7 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="_autosummary/equate.compare.html">equate.compare</a><input aria-label="Toggle navigation of equate.compare" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.compare.calibrate.html">equate.compare.calibrate</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.compare.numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.compare.sequence.html">equate.compare.sequence</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.compare.string.html">equate.compare.string</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.compare.vector.html">equate.compare.vector</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.compare.vectorize.html">equate.compare.vectorize</a></li>
@@ -398,13 +399,29 @@ At the time of writing this, we’ve implemented:
 <p>Dependency-light metrics that return precision <strong>and</strong> recall (a <code class="docutils literal notranslate"><span class="pre">Scores</span></code>), never F1 alone, plus a harness that scores a matcher (pairwise) on unseen-entity splits and reports the cost and base rate next to every number. Loaders for the standard benchmark suites are not shipped yet (#15).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">equate.evaluate</span><span class="w"> </span><span class="kn">import</span> <span class="n">pairwise_prf</span><span class="p">,</span> <span class="n">bcubed</span><span class="p">,</span> <span class="n">pairs_to_labels</span><span class="p">,</span> <span class="n">benchmark_matcher</span>
 
-<span class="n">pairwise_prf</span><span class="p">(</span><span class="n">predicted_pairs</span><span class="p">,</span> <span class="n">gold_pairs</span><span class="p">)</span>            <span class="c1"># Scores(precision, recall, f1, support)</span>
-<span class="n">bcubed</span><span class="p">(</span><span class="n">pairs_to_labels</span><span class="p">(</span><span class="n">predicted_pairs</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">),</span>        <span class="c1"># B³, the default cluster metric</span>
-       <span class="n">pairs_to_labels</span><span class="p">(</span><span class="n">gold_pairs</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">benchmark_matcher</span><span class="p">(</span><span class="n">on</span><span class="o">=</span><span class="p">[</span><span class="s2">"toy_names"</span><span class="p">])</span><span class="o">.</span><span class="n">to_markdown</span><span class="p">())</span>  <span class="c1"># equate.match, 3 seeds, entity splits</span>
+<span class="n">pairwise_prf</span><span class="p">(</span><span class="n">predicted_pairs</span><span class="p">,</span> <span class="n">gold_pairs</span><span class="p">)</span>  <span class="c1"># Scores(precision, recall, f1, support)</span>
+<span class="n">bcubed</span><span class="p">(</span>
+    <span class="n">pairs_to_labels</span><span class="p">(</span><span class="n">predicted_pairs</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">),</span>  <span class="c1"># B³, the default cluster metric</span>
+    <span class="n">pairs_to_labels</span><span class="p">(</span><span class="n">gold_pairs</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="n">benchmark_matcher</span><span class="p">(</span><span class="n">on</span><span class="o">=</span><span class="p">[</span><span class="s2">"toy_names"</span><span class="p">])</span><span class="o">.</span><span class="n">to_markdown</span><span class="p">()</span>
+<span class="p">)</span>  <span class="c1"># equate.match, 3 seeds, entity splits</span>
 </pre></div>
 </div>
 <p>Also there: <code class="docutils literal notranslate"><span class="pre">ceaf</span></code>, <code class="docutils literal notranslate"><span class="pre">cluster_metrics</span></code> (ARI and V-measure use scikit-learn when installed, numpy otherwise; <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'equate[eval]'</span></code>), <code class="docutils literal notranslate"><span class="pre">blocking_metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">pr_auc</span></code>, <code class="docutils literal notranslate"><span class="pre">ranking_metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">select_threshold</span></code> (pass validation data), <code class="docutils literal notranslate"><span class="pre">entity_split</span></code> and <code class="docutils literal notranslate"><span class="pre">assert_no_leakage</span></code>. Benchmarks are a registry (<code class="docutils literal notranslate"><span class="pre">equate.evaluate.benchmarks</span></code>), so a new dataset is a registered loader.</p>
+</section>
+<section id="matching-sequences-compare-dtw-and-friends">
+<h2>Matching sequences: <code class="docutils literal notranslate"><span class="pre">compare='dtw'</span></code> and friends<a class="headerlink" href="#matching-sequences-compare-dtw-and-friends" title="Link to this heading">¶</a></h2>
+<p>To match a collection of <em>sequences</em> (time series, token lists, DNA), compare each pair by aligning its elements, then match the collections as usual.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">equate</span><span class="w"> </span><span class="kn">import</span> <span class="n">match</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">]]</span>
+<span class="n">B</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">]]</span>
+<span class="nb">dict</span><span class="p">(</span><span class="n">match</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">compare</span><span class="o">=</span><span class="s1">'dtw'</span><span class="p">))</span>  <span class="c1"># {0: 1, 1: 0}</span>
+</pre></div>
+</div>
+<p>The comparators are <code class="docutils literal notranslate"><span class="pre">'dtw'</span></code> (exact DTW in a Sakoe-Chiba band), <code class="docutils literal notranslate"><span class="pre">'subsequence_dtw'</span></code>, <code class="docutils literal notranslate"><span class="pre">'soft_dtw'</span></code>, <code class="docutils literal notranslate"><span class="pre">'needleman_wunsch'</span></code> and <code class="docutils literal notranslate"><span class="pre">'smith_waterman'</span></code>. A <em>distance</em> comparator such as <code class="docutils literal notranslate"><span class="pre">'dtw'</span></code> is minimized automatically, and <code class="docutils literal notranslate"><span class="pre">sense=</span></code> overrides that. <code class="docutils literal notranslate"><span class="pre">equate.compare.sequence.dtw.align(a,</span> <span class="pre">b)</span></code> returns an <code class="docutils literal notranslate"><span class="pre">Alignment(score,</span> <span class="pre">path)</span></code> with the element-level correspondence. Faster engines are optional: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'equate[timeseries]'</span></code> / <code class="docutils literal notranslate"><span class="pre">'equate[bio]'</span></code>, then pass <code class="docutils literal notranslate"><span class="pre">backend=</span></code>.</p>
 </section>
 </section>
 <section id="an-example-in-search-of-a-import-to-package-name-matcher">
@@ -711,7 +728,7 @@ Let’s try two…</p>
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-13 18:26 UTC from <a href="https://github.com/thorwhalen/equate/commit/8ad1004a0812a6b3bd32481033ad22c0a0c2e349">8ad1004</a> (master) · equate 0.0.15 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-14 07:08 UTC from <a href="https://github.com/thorwhalen/equate/commit/2827dff2441dd8151d64068b4a3cbfa263a07c65">2827dff</a> (master) · equate 0.0.16 · <a href="about-this-build.html">about this build</a></p>
         </article>
       </div>
       <footer>
@@ -747,7 +764,7 @@ Let’s try two…</p>
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=2a6a9ca9"></script>
+</div><script src="_static/documentation_options.js?v=0adb0642"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

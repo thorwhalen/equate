@@ -19,6 +19,7 @@
 - [equate.compare](equate.compare.html.md): The compare stage (②): score how alike two (featurized) items are.
 - [equate.compare.calibrate](equate.compare.calibrate.html.md): Score calibration (stage ②): map raw comparator scores to a decision or a
 - [equate.compare.numeric_geo](equate.compare.numeric_geo.html.md): Numeric, date, and geospatial comparators (stage ②): turn a domain distance into a
+- [equate.compare.sequence](equate.compare.sequence.html.md): Sequence-alignment comparators (stage ②): score two &#42;sequences&#42; by aligning them.
 - [equate.compare.string](equate.compare.string.html.md): String comparators (stage ②): pairwise similarity between two strings.
 - [equate.compare.vector](equate.compare.vector.html.md): Vector comparators (stage ②): pairwise similarity/distance between two vectors.
 - [equate.compare.vectorize](equate.compare.vectorize.html.md): Multi-field record comparison (stage ②): build a per-pair &#42;comparison vector&#42; from

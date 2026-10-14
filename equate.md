@@ -1,4 +1,4 @@
-> built 2026-10-13 18:26 UTC from 8ad1004 (master) · equate 0.0.15. Details: build_info.json
+> built 2026-10-14 07:08 UTC from 2827dff (master) · equate 0.0.16. Details: build_info.json
 
 # index.html.md
 
@@ -116,13 +116,31 @@ Dependency-light metrics that return precision **and** recall (a `Scores`), neve
 ```python
 from equate.evaluate import pairwise_prf, bcubed, pairs_to_labels, benchmark_matcher
 
-pairwise_prf(predicted_pairs, gold_pairs)            # Scores(precision, recall, f1, support)
-bcubed(pairs_to_labels(predicted_pairs, n=n),        # B³, the default cluster metric
-       pairs_to_labels(gold_pairs, n=n))
-print(benchmark_matcher(on=["toy_names"]).to_markdown())  # equate.match, 3 seeds, entity splits
+pairwise_prf(predicted_pairs, gold_pairs)  # Scores(precision, recall, f1, support)
+bcubed(
+    pairs_to_labels(predicted_pairs, n=n),  # B³, the default cluster metric
+    pairs_to_labels(gold_pairs, n=n),
+)
+print(
+    benchmark_matcher(on=["toy_names"]).to_markdown()
+)  # equate.match, 3 seeds, entity splits
 ```
 
 Also there: `ceaf`, `cluster_metrics` (ARI and V-measure use scikit-learn when installed, numpy otherwise; `pip install 'equate[eval]'`), `blocking_metrics`, `pr_auc`, `ranking_metrics`, `select_threshold` (pass validation data), `entity_split` and `assert_no_leakage`. Benchmarks are a registry (`equate.evaluate.benchmarks`), so a new dataset is a registered loader.
+
+## Matching sequences: `compare='dtw'` and friends
+
+To match a collection of *sequences* (time series, token lists, DNA), compare each pair by aligning its elements, then match the collections as usual.
+
+```python
+from equate import match
+
+A = [[0, 1, 2, 3, 2], [5, 5, 6, 7, 7]]
+B = [[5, 6, 6, 7, 7], [0, 1, 1, 2, 3, 2]]
+dict(match(A, B, compare='dtw'))  # {0: 1, 1: 0}
+```
+
+The comparators are `'dtw'` (exact DTW in a Sakoe-Chiba band), `'subsequence_dtw'`, `'soft_dtw'`, `'needleman_wunsch'` and `'smith_waterman'`. A *distance* comparator such as `'dtw'` is minimized automatically, and `sense=` overrides that. `equate.compare.sequence.dtw.align(a, b)` returns an `Alignment(score, path)` with the element-level correspondence. Faster engines are optional: `pip install 'equate[timeseries]'` / `'equate[bio]'`, then pass `backend=`.
 
 # An example: In search of a import-to-package name matcher
 
@@ -499,10 +517,32 @@ decisions realized here are documented in `docs/research/` — start with
 |----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`ComparatorMeta`](_autosummary/equate.base.html.md#equate.base.ComparatorMeta)([polarity, bounded, ...])          | Declared properties of a comparator, so the framework adapts instead of the caller hard-coding conversions (decision register D2/D3/D6).                                                                                                          |
 | [`ScoreMatrix`](_autosummary/equate.base.html.md#equate.base.ScoreMatrix)(data[, sense, row_labels, ...])       | Scored candidate structure flowing compare -> match (the SSOT).                                                                                                                                                                                   |
+| [`Alignment`](_autosummary/equate.base.html.md#equate.base.Alignment)(score[, path, sense])                   | A structured comparator's score **plus** the internal correspondence behind it.                                                                                                                                                                   |
 | [`Explanation`](_autosummary/equate.base.html.md#equate.base.Explanation)([summary, details])                   | Render-agnostic justification for a decision (rules / attributions / diffs).                                                                                                                                                                      |
 | [`Candidate`](_autosummary/equate.base.html.md#equate.base.Candidate)(left, right, score[, explanation])      | One scored correspondence between a `left` item and a `right` item.                                                                                                                                                                               |
 | [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching)(pairs[, scores, plan, probability, ...]) | Default (hard) matcher output: matched index pairs, with retained scores.                                                                                                                                                                         |
 | [`Partition`](_autosummary/equate.base.html.md#equate.base.Partition)(labels)                                 | Clustering / collective output: a map from item index to entity (cluster) id.                                                                                                                                                                     |
+
+### *class* equate.base.Alignment(score, path=None, sense='minimize')
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+A structured comparator’s score **plus** the internal correspondence behind it.
+
+Sequence/structure comparators (DTW, Needleman-Wunsch, Smith-Waterman, …) match
+the *sub-parts* of two objects before scoring them — matching, one level down. The
+scalar `score` is what the collection-level matcher consumes; `path` keeps the
+element-level correspondence for explanation, visualization and element-level
+matching (doc `12` §2.6, decision register D8):
+
+- `path`: a tuple of `(i, j)` element-index pairs, in order. A gap is `None` on
+  the side that skips (`(i, None)` / `(None, j)`). `None` when the method has no
+  single path (soft-DTW averages over all of them) or the backend does not report one.
+- `sense`: how to read `score` — `'minimize'` for a dissimilarity (DTW),
+  `'maximize'` for an alignment score (Needleman-Wunsch / Smith-Waterman).
+
+`float(alignment)` is its score, so an `Alignment` drops in where a number is
+expected.
 
 ### equate.base.Blocker
 
@@ -1307,6 +1347,7 @@ comparators (Monge-Elkan, containment) directional until the matcher boundary (D
 | [`resolve_comparator`](_autosummary/equate.compare.html.md#equate.compare.resolve_comparator)(spec, \*\*config)           | Resolve `spec` to a pairwise comparator.                                                                                             |
 |-------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
 | [`direct`](_autosummary/equate.compare.html.md#equate.compare.direct)(h, \*[, meta])                          | Wrap an opaque pairwise scorer `h(a, b) -> float` into a score-matrix builder `build(A, B) -> ndarray`.                              |
+| [`polarity_sense`](_autosummary/equate.compare.html.md#equate.compare.polarity_sense)(comparator, \*[, default])      | The score `sense` a comparator's declared polarity implies.                                                                          |
 | [`featurized`](_autosummary/equate.compare.html.md#equate.compare.featurized)([featurizer, metric, meta])         | Build a score-matrix builder that featurizes both collections then applies a vector `metric` (default cosine over the two matrices). |
 | [`comparison_vector`](_autosummary/equate.compare.html.md#equate.compare.comparison_vector)(a, b, field_comparators, \*) | Return `{field: comparator(a[field], b[field])}` for each field comparator.                                                          |
 | [`weighted_sum`](_autosummary/equate.compare.html.md#equate.compare.weighted_sum)([weights])                        | Combiner: weighted sum of a comparison vector (default weight 1.0 per field).                                                        |
@@ -1382,6 +1423,20 @@ Fit Platt scaling (logistic regression on 1-D scores) -> `P(match)`.
 Requires `equate[sklearn]`. Returns a calibrator mapping a raw score to a
 probability.
 
+### equate.compare.polarity_sense(comparator, , default='maximize')
+
+The score `sense` a comparator’s declared polarity implies.
+
+A `'distance'` comparator (DTW, edit distance) is minimized, a `'similarity'`
+maximized; a comparator with no declared metadata gets `default`.
+
+```pycon
+>>> polarity_sense(resolve_comparator('dtw'))
+'minimize'
+>>> polarity_sense(resolve_comparator('ratio'))
+'maximize'
+```
+
 ### equate.compare.resolve_comparator(spec, \*\*config)
 
 Resolve `spec` to a pairwise comparator.
@@ -1402,6 +1457,7 @@ Combiner: weighted sum of a comparison vector (default weight 1.0 per field).
 | [`calibrate`](_autosummary/equate.compare.calibrate.html.md#module-equate.compare.calibrate)     | Score calibration (stage ②): map raw comparator scores to a decision or a probability.                                                                      |
 |------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`numeric_geo`](_autosummary/equate.compare.numeric_geo.html.md#module-equate.compare.numeric_geo) | Numeric, date, and geospatial comparators (stage ②): turn a domain distance into a [0, 1] similarity via a decay function.                                  |
+| [`sequence`](_autosummary/equate.compare.sequence.html.md#module-equate.compare.sequence)       | Sequence-alignment comparators (stage ②): score two *sequences* by aligning them.                                                                           |
 | [`string`](_autosummary/equate.compare.string.html.md#module-equate.compare.string)           | String comparators (stage ②): pairwise similarity between two strings.                                                                                      |
 | [`vector`](_autosummary/equate.compare.vector.html.md#module-equate.compare.vector)           | Vector comparators (stage ②): pairwise similarity/distance between two vectors.                                                                             |
 | [`vectorize`](_autosummary/equate.compare.vectorize.html.md#module-equate.compare.vectorize)     | Multi-field record comparison (stage ②): build a per-pair *comparison vector* from per-field comparators, then reduce it to a single score with a combiner. |
@@ -1447,6 +1503,178 @@ Great-circle distance in km between two `(lat, lon)` points (degrees).
 ### equate.compare.numeric_geo.linear_decay(max_distance=1.0, \*, distance=<function \_default_distance>)
 
 Comparator mapping distance `d` to `1 - d / max_distance`, clamped to [0, 1].
+
+
+# _autosummary/equate.compare.sequence.html.md
+
+# equate.compare.sequence
+
+Sequence-alignment comparators (stage ②): score two *sequences* by aligning them.
+
+Matching, one level down: these comparators first find a correspondence between the
+*elements* of two sequences, then score it. They are `direct(h)` comparators — opaque,
+**not ANN-indexable**, usable to score all pairs or re-rank a blocker’s candidates — and
+the collection-level matcher above them is unchanged (doc `12` §2.6, decision D8).
+
+- **DTW** ([`dtw()`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.dtw)) — dynamic time warping for real-valued series (scalars or vectors
+  per step). The default is an **exact DTW inside a Sakoe-Chiba band**, *not* FastDTW
+  (Wu & Keogh: banded exact DTW is faster in realistic settings). A *distance*.
+- **Subsequence DTW** ([`subsequence_dtw()`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.subsequence_dtw)) — the best-matching *sub-span* of a long
+  series for a short query (open begin and end). A directional distance.
+- **Soft-DTW** ([`soft_dtw()`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.soft_dtw)) — Cuturi & Blondel’s differentiable soft-minimum DTW.
+  A smoothed discrepancy, not a distance (it can be negative).
+- **Needleman-Wunsch** ([`needleman_wunsch()`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.needleman_wunsch)) / **Smith-Waterman**
+  ([`smith_waterman()`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.smith_waterman)) — global / local alignment of symbolic sequences (strings,
+  token lists, DNA). Alignment *scores*: higher = better.
+
+Each comparator returns a `float`; its `*_alignment` twin (also reachable as
+`dtw.align` etc.) returns an [`equate.base.Alignment`](_autosummary/equate.base.html.md#equate.base.Alignment) carrying the element-level
+`path`. The core implementations are pure numpy; a faster engine is one keyword away
+(`backend='dtaidistance'` / `'tslearn'` / `'biopython'`, behind the
+`equate[timeseries]` / `equate[bio]` extras, imported only on use).
+
+```pycon
+>>> dtw([0, 1, 2, 3], [0, 0, 1, 2, 3])  # a warped copy is at distance 0
+0.0
+>>> needleman_wunsch('GATTACA', 'GATACA')  # 6 matches, 1 gap
+5.0
+>>> smith_waterman('xxGATTACAyy', 'GATTACA')  # the shared fragment
+7.0
+```
+
+### Module Attributes
+
+| [`DFLT_DTW_WINDOW`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.DFLT_DTW_WINDOW)     | Sakoe-Chiba band half-width (inclusive).               |
+|----------------------------------------------------------------------|--------------------------------------------------------|
+| [`DFLT_SOFT_DTW_GAMMA`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.DFLT_SOFT_DTW_GAMMA) | soft-DTW temperature (`gamma -> 0` recovers hard DTW). |
+| [`DFLT_MATCH_SCORE`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.DFLT_MATCH_SCORE)    | default symbolic-alignment scoring (linear gaps).      |
+
+### Functions
+
+| [`dtw`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.dtw)(a, b, \*[, window, local_cost, backend])       | DTW distance (lower = more alike) — the score of [`dtw_alignment()`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.dtw_alignment).                |
+|-----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| [`dtw_alignment`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.dtw_alignment)(a, b, \*[, window, local_cost, ...]) | Banded exact DTW between `a` and `b` -> [`Alignment`](_autosummary/equate.base.html.md#equate.base.Alignment).         |
+| [`subsequence_dtw`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.subsequence_dtw)(query, series, \*[, local_cost])   | Subsequence-DTW distance of `query` within `series` (directional).                                                                |
+| [`subsequence_dtw_alignment`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.subsequence_dtw_alignment)(query, series, \*)       | Best match of `query` inside any sub-span of `series` -> `Alignment`.                                                             |
+| [`soft_dtw`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.soft_dtw)(a, b, \*[, gamma, backend])               | Soft-DTW discrepancy (Cuturi & Blondel 2017) with temperature `gamma`.                                                            |
+| [`needleman_wunsch`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.needleman_wunsch)(a, b, \*\*kwargs)                 | Global alignment score (higher = more alike) — see [`needleman_wunsch_alignment()`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.needleman_wunsch_alignment). |
+| [`needleman_wunsch_alignment`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.needleman_wunsch_alignment)(a, b, \*[, ...])        | Global (Needleman-Wunsch) alignment of two symbolic sequences -> `Alignment`.                                                     |
+| [`smith_waterman`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.smith_waterman)(a, b, \*\*kwargs)                   | Local alignment score (higher = more alike) — see [`smith_waterman_alignment()`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.smith_waterman_alignment).    |
+| [`smith_waterman_alignment`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.smith_waterman_alignment)(a, b, \*[, ...])          | Local (Smith-Waterman) alignment -> `Alignment` of the best-matching fragments.                                                   |
+
+### equate.compare.sequence.DFLT_DTW_WINDOW *= 0.1*
+
+Sakoe-Chiba band half-width (inclusive). A `float` is a fraction of the longer
+series’ length (at least one cell), an `int` a number of cells (`0` = no warping),
+`None` unconstrained. The band is always widened by the length difference so two
+series of different lengths can still be aligned.
+
+### equate.compare.sequence.DFLT_MATCH_SCORE *= 1.0*
+
+default symbolic-alignment scoring (linear gaps). Swap in a `substitution` callable
+for a domain matrix (BLOSUM, keyboard distance, token similarity, …).
+
+### equate.compare.sequence.DFLT_SOFT_DTW_GAMMA *= 1.0*
+
+soft-DTW temperature (`gamma -> 0` recovers hard DTW).
+
+### equate.compare.sequence.dtw(a, b, , window=0.1, local_cost=None, backend='numpy')
+
+DTW distance (lower = more alike) — the score of [`dtw_alignment()`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.dtw_alignment).
+
+```pycon
+>>> dtw([0, 1, 2], [0, 1, 2])
+0.0
+>>> dtw([0, 0, 0], [1, 1, 1])  # sqrt(1 + 1 + 1)
+1.7320508075688772
+```
+
+### equate.compare.sequence.dtw_alignment(a, b, , window=0.1, local_cost=None, backend='numpy')
+
+Banded exact DTW between `a` and `b` -> [`Alignment`](_autosummary/equate.base.html.md#equate.base.Alignment).
+
+`a`/`b` are sequences of numbers or of equal-length vectors (multivariate series).
+`window` is the Sakoe-Chiba half-width (see [`DFLT_DTW_WINDOW`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.DFLT_DTW_WINDOW); `None` is
+unconstrained DTW). `local_cost(x, y)` replaces the default squared-Euclidean step
+cost (then the total is not square-rooted). `backend='dtaidistance'` (`equate
+[timeseries]`) computes the same quantity in C for the default cost and reports no
+path.
+
+```pycon
+>>> al = dtw_alignment([1, 2, 3], [1, 2, 2, 3], window=None)
+>>> al.score, al.path
+(0.0, ((0, 0), (1, 1), (1, 2), (2, 3)))
+```
+
+### equate.compare.sequence.needleman_wunsch(a, b, \*\*kwargs)
+
+Global alignment score (higher = more alike) — see [`needleman_wunsch_alignment()`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.needleman_wunsch_alignment).
+
+### equate.compare.sequence.needleman_wunsch_alignment(a, b, , substitution=None, match=1.0, mismatch=-1.0, gap=-1.0, backend='numpy')
+
+Global (Needleman-Wunsch) alignment of two symbolic sequences -> `Alignment`.
+
+Aligns the *entireties* of `a` and `b` (strings, token lists, …), maximizing
+the summed `substitution(x, y)` (default `match`/`mismatch`) plus a linear
+`gap` per skipped element. Gaps appear in the path as `None`.
+
+```pycon
+>>> needleman_wunsch_alignment('ACT', 'AT').path
+((0, 0), (1, None), (2, 1))
+```
+
+### equate.compare.sequence.smith_waterman(a, b, \*\*kwargs)
+
+Local alignment score (higher = more alike) — see [`smith_waterman_alignment()`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.smith_waterman_alignment).
+
+### equate.compare.sequence.smith_waterman_alignment(a, b, , substitution=None, match=1.0, mismatch=-1.0, gap=-1.0, backend='numpy')
+
+Local (Smith-Waterman) alignment -> `Alignment` of the best-matching fragments.
+
+Like [`needleman_wunsch_alignment()`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.needleman_wunsch_alignment) but floored at zero, so only the
+highest-scoring aligned *sub-regions* count; the path covers just that fragment pair.
+
+```pycon
+>>> al = smith_waterman_alignment('xxABCyy', 'zABCz')
+>>> al.score, al.path
+(3.0, ((2, 1), (3, 2), (4, 3)))
+```
+
+### equate.compare.sequence.soft_dtw(a, b, , gamma=1.0, backend='numpy')
+
+Soft-DTW discrepancy (Cuturi & Blondel 2017) with temperature `gamma`.
+
+Replaces DTW’s hard `min` by a log-sum-exp soft-minimum over all warping paths (on
+*squared*-Euclidean step costs, no final root), so it is differentiable — but it is
+**not a distance**: it can be negative and `soft_dtw(x, x) != 0`. `gamma -> 0`
+recovers (squared) DTW. `backend='tslearn'` (`equate[timeseries]`) uses
+`tslearn.metrics.soft_dtw`, which computes the same quantity.
+
+```pycon
+>>> round(soft_dtw([0, 1, 2], [0, 1, 2], gamma=1e-3), 6)
+0.0
+>>> soft_dtw([0, 1, 2], [0, 1, 2]) < 0  # smoothing makes it negative
+True
+```
+
+### equate.compare.sequence.subsequence_dtw(query, series, , local_cost=None)
+
+Subsequence-DTW distance of `query` within `series` (directional).
+
+### equate.compare.sequence.subsequence_dtw_alignment(query, series, , local_cost=None)
+
+Best match of `query` inside any sub-span of `series` -> `Alignment`.
+
+Open-begin, open-end DTW: the query must be consumed whole, the series need not be.
+The path’s `j` range is the matched span. Directional — `(query, series)` order
+matters. A custom `local_cost` must be non-negative (a negative step cost would make
+“start later” ill-defined).
+
+```pycon
+>>> al = subsequence_dtw_alignment([5, 6, 7], [0, 0, 5, 6, 7, 0])
+>>> al.score, al.path[0], al.path[-1]
+(0.0, (0, 2), (2, 4))
+```
 
 
 # _autosummary/equate.compare.string.html.md
@@ -2567,7 +2795,7 @@ to the comparator’s declared polarity — a *distance* comparator (e.g.
 {0: [0, 1], 1: [2]}
 ```
 
-### equate.facade.match(A, B=None, , featurize=None, compare=None, block=None, how='assign', threshold=None, cluster='connected_components', sense='maximize')
+### equate.facade.match(A, B=None, , featurize=None, compare=None, block=None, how='assign', threshold=None, cluster='connected_components', sense=None)
 
 Match two collections into a [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching) of scored `(i, j)` pairs.
 
@@ -2579,6 +2807,9 @@ Pipeline (each stage swappable by one keyword):
   pairwise route\* on the raw items.
 - **block** — `None` (default) scores all pairs (dense); a blocker (name/callable)
   scores only the candidate pairs into a sparse matrix, and the matcher stays sparse-aware.
+- **sense** — `None` (default) reads it off the comparator’s declared polarity: a
+  *distance* comparator (`'dtw'`, `'levenshtein_distance'`) is minimized, anything
+  else maximized. Pass `'maximize'` / `'minimize'` to override.
 - **how** — the matcher objective: `'assign'` (optimal 1:1, the default),
   `'greedy'`, `'stable'`, or `'soft'` (an optimal-transport plan; `.plan` is set).
 
@@ -3540,18 +3771,18 @@ See: [https://en.wikipedia.org/wiki/Stable_marriage_problem](https://en.wikipedi
 
 # About this build
 
-This documentation was built on **2026-10-13 18:26 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/8ad1004a0812a6b3bd32481033ad22c0a0c2e349"><code>8ad1004</code></a> on branch <code>master</code>, for **equate 0.0.15** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-14 07:08 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/2827dff2441dd8151d64068b4a3cbfa263a07c65"><code>2827dff</code></a> on branch <code>master</code>, for **equate 0.0.16** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.15) is behind the latest release on PyPI (0.0.16): `pip install equate` gives newer code than these docs describe.
+- The documented version (0.0.16) is behind the latest release on PyPI (0.0.17): `pip install equate` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/equate/commit/8ad1004a0812a6b3bd32481033ad22c0a0c2e349"><code>8ad1004a0812a6b3bd32481033ad22c0a0c2e349</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/equate/commit/2827dff2441dd8151d64068b4a3cbfa263a07c65"><code>2827dff2441dd8151d64068b4a3cbfa263a07c65</code></a> |
 | Branch              | <code>master</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -3562,9 +3793,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/equate</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/38446509561">38446509561</a>    |
+| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/38526263690">38526263690</a>    |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>8ad1004a0812a6b3bd32481033ad22c0a0c2e349</code> (in the history of the built commit) |
+| Event commit | <code>2827dff2441dd8151d64068b4a3cbfa263a07c65</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -3589,13 +3820,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/equate/0.0.16/">0.0.16</a>, newer than the documented version (0.0.15).
+Latest release: <a href="https://pypi.org/project/equate/0.0.17/">0.0.17</a>, newer than the documented version (0.0.16).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/equate && cd equate
-git checkout 8ad1004a0812a6b3bd32481033ad22c0a0c2e349
+git checkout 2827dff2441dd8151d64068b4a3cbfa263a07c65
 pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

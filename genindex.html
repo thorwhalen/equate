@@ -217,6 +217,7 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="_autosummary/equate.compare.html">equate.compare</a><input aria-label="Toggle navigation of equate.compare" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.compare.calibrate.html">equate.compare.calibrate</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.compare.numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.compare.sequence.html">equate.compare.sequence</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.compare.string.html">equate.compare.string</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.compare.vector.html">equate.compare.vector</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.compare.vectorize.html">equate.compare.vectorize</a></li>
@@ -298,6 +299,8 @@
   <h2>A</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="_autosummary/equate.base.html#equate.base.Alignment">Alignment (class in equate.base)</a>
+</li>
         <li><a href="_autosummary/equate.block.html#equate.block.all_pairs">all_pairs() (in module equate.block)</a>
 </li>
         <li><a href="_autosummary/equate.compare.vector.html#equate.compare.vector.angular_distance">angular_distance() (in module equate.compare.vector)</a>
@@ -486,15 +489,25 @@
 </li>
         <li><a href="_autosummary/equate.base.html#equate.base.ScoreMatrix.dense_cost">dense_cost() (equate.base.ScoreMatrix method)</a>
 </li>
+        <li><a href="_autosummary/equate.base.html#equate.base.ScoreMatrix.dense_similarity">dense_similarity() (equate.base.ScoreMatrix method)</a>
+</li>
+        <li><a href="_autosummary/equate.compare.sequence.html#equate.compare.sequence.DFLT_DTW_WINDOW">DFLT_DTW_WINDOW (in module equate.compare.sequence)</a>
+</li>
+        <li><a href="_autosummary/equate.compare.sequence.html#equate.compare.sequence.DFLT_MATCH_SCORE">DFLT_MATCH_SCORE (in module equate.compare.sequence)</a>
+</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="_autosummary/equate.base.html#equate.base.ScoreMatrix.dense_similarity">dense_similarity() (equate.base.ScoreMatrix method)</a>
+        <li><a href="_autosummary/equate.compare.sequence.html#equate.compare.sequence.DFLT_SOFT_DTW_GAMMA">DFLT_SOFT_DTW_GAMMA (in module equate.compare.sequence)</a>
 </li>
         <li><a href="_autosummary/equate.compare.html#equate.compare.direct">direct() (in module equate.compare)</a>
 </li>
         <li><a href="_autosummary/equate.compare.vector.html#equate.compare.vector.dot">dot() (in module equate.compare.vector)</a>
 </li>
         <li><a href="_autosummary/equate.base.html#equate.base.ScoreMatrix.drop_holes">drop_holes() (equate.base.ScoreMatrix method)</a>
+</li>
+        <li><a href="_autosummary/equate.compare.sequence.html#equate.compare.sequence.dtw">dtw() (in module equate.compare.sequence)</a>
+</li>
+        <li><a href="_autosummary/equate.compare.sequence.html#equate.compare.sequence.dtw_alignment">dtw_alignment() (in module equate.compare.sequence)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -609,6 +622,13 @@
 </li>
         </ul></li>
         <li>
+    equate.compare.sequence
+
+        <ul>
+          <li><a href="_autosummary/equate.compare.sequence.html#module-equate.compare.sequence">module</a>
+</li>
+        </ul></li>
+        <li>
     equate.compare.string
 
         <ul>
@@ -643,6 +663,8 @@
           <li><a href="_autosummary/equate.evaluate.html#module-equate.evaluate">module</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     equate.evaluate.benchmark
 
@@ -650,8 +672,6 @@
           <li><a href="_autosummary/equate.evaluate.benchmark.html#module-equate.evaluate.benchmark">module</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     equate.evaluate.labels
 
@@ -1075,6 +1095,8 @@
 </li>
           <li><a href="_autosummary/equate.compare.numeric_geo.html#module-equate.compare.numeric_geo">equate.compare.numeric_geo</a>
 </li>
+          <li><a href="_autosummary/equate.compare.sequence.html#module-equate.compare.sequence">equate.compare.sequence</a>
+</li>
           <li><a href="_autosummary/equate.compare.string.html#module-equate.compare.string">equate.compare.string</a>
 </li>
           <li><a href="_autosummary/equate.compare.vector.html#module-equate.compare.vector">equate.compare.vector</a>
@@ -1141,6 +1163,12 @@
         <li><a href="_autosummary/equate.registry.html#equate.registry.Registry.names">names() (equate.registry.Registry method)</a>
 </li>
     </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="_autosummary/equate.compare.sequence.html#equate.compare.sequence.needleman_wunsch">needleman_wunsch() (in module equate.compare.sequence)</a>
+</li>
+        <li><a href="_autosummary/equate.compare.sequence.html#equate.compare.sequence.needleman_wunsch_alignment">needleman_wunsch_alignment() (in module equate.compare.sequence)</a>
+</li>
+    </ul></td>
   </tr></table>
 </section>
 
@@ -1196,6 +1224,8 @@
           <li><a href="_autosummary/equate.compare.calibrate.html#equate.compare.calibrate.platt">(in module equate.compare.calibrate)</a>
 </li>
         </ul></li>
+        <li><a href="_autosummary/equate.compare.html#equate.compare.polarity_sense">polarity_sense() (in module equate.compare)</a>
+</li>
         <li><a href="_autosummary/equate.evaluate.html#equate.evaluate.pr_auc">pr_auc() (in module equate.evaluate)</a>
 
         <ul>
@@ -1316,6 +1346,12 @@
           <li><a href="_autosummary/equate.util.html#equate.util.similarity_matrix">(in module equate.util)</a>
 </li>
         </ul></li>
+        <li><a href="_autosummary/equate.compare.sequence.html#equate.compare.sequence.smith_waterman">smith_waterman() (in module equate.compare.sequence)</a>
+</li>
+        <li><a href="_autosummary/equate.compare.sequence.html#equate.compare.sequence.smith_waterman_alignment">smith_waterman_alignment() (in module equate.compare.sequence)</a>
+</li>
+        <li><a href="_autosummary/equate.compare.sequence.html#equate.compare.sequence.soft_dtw">soft_dtw() (in module equate.compare.sequence)</a>
+</li>
         <li><a href="_autosummary/equate.matching.html#equate.matching.soft_match">soft_match() (in module equate.matching)</a>
 
         <ul>
@@ -1351,6 +1387,10 @@
 </li>
         </ul></li>
         <li><a href="_autosummary/equate.base.html#equate.base.ScoreMatrix.stored_entries">stored_entries() (equate.base.ScoreMatrix method)</a>
+</li>
+        <li><a href="_autosummary/equate.compare.sequence.html#equate.compare.sequence.subsequence_dtw">subsequence_dtw() (in module equate.compare.sequence)</a>
+</li>
+        <li><a href="_autosummary/equate.compare.sequence.html#equate.compare.sequence.subsequence_dtw_alignment">subsequence_dtw_alignment() (in module equate.compare.sequence)</a>
 </li>
         <li><a href="_autosummary/equate.evaluate.benchmark.html#equate.evaluate.benchmark.BenchmarkReport.summary">summary() (equate.evaluate.benchmark.BenchmarkReport method)</a>
 
@@ -1472,7 +1512,7 @@
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=2a6a9ca9"></script>
+</div><script src="_static/documentation_options.js?v=0adb0642"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

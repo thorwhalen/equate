@@ -28,6 +28,7 @@ equate.base
       FeaturizerMeta
       ComparatorMeta
       ScoreMatrix
+      Alignment
       Explanation
       Candidate
       Matching

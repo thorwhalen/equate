@@ -218,6 +218,7 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../_autosummary/equate.compare.html">equate.compare</a><input aria-label="Toggle navigation of equate.compare" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.calibrate.html">equate.compare.calibrate</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.sequence.html">equate.compare.sequence</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.string.html">equate.compare.string</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.vector.html">equate.compare.vector</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.vectorize.html">equate.compare.vectorize</a></li>
@@ -319,6 +320,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">string</span> <span class="k">as</span> <span class="n">_string</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">numeric_geo</span> <span class="k">as</span> <span class="n">_ng</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">vector</span> <span class="k">as</span> <span class="n">_vec</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">sequence</span> <span class="k">as</span> <span class="n">_seq</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare.vectorize</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">comparison_vector</span><span class="p">,</span>
     <span class="n">weighted_sum</span><span class="p">,</span>
@@ -332,6 +334,7 @@
     <span class="s2">"comparators"</span><span class="p">,</span>
     <span class="s2">"resolve_comparator"</span><span class="p">,</span>
     <span class="s2">"direct"</span><span class="p">,</span>
+    <span class="s2">"polarity_sense"</span><span class="p">,</span>
     <span class="s2">"featurized"</span><span class="p">,</span>
     <span class="s2">"comparison_vector"</span><span class="p">,</span>
     <span class="s2">"weighted_sum"</span><span class="p">,</span>
@@ -364,7 +367,15 @@
 <span class="w">    </span><span class="sd">"""A factory returning ``fn``, partially applied with any keyword config."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">factory</span><span class="p">(</span><span class="o">**</span><span class="n">config</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">partial</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">)</span> <span class="k">if</span> <span class="n">config</span> <span class="k">else</span> <span class="n">fn</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fn</span>
+        <span class="n">configured</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">)</span>
+        <span class="c1"># keep the declared metadata (polarity drives the facade's default ``sense``) and</span>
+        <span class="c1"># an alignment twin, configured the same way</span>
+        <span class="n">configured</span><span class="o">.</span><span class="n">meta</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s2">"meta"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s2">"align"</span><span class="p">):</span>
+            <span class="n">configured</span><span class="o">.</span><span class="n">align</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">fn</span><span class="o">.</span><span class="n">align</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">configured</span>
 
     <span class="k">return</span> <span class="n">factory</span>
 
@@ -390,6 +401,17 @@
     <span class="s2">"phonetic"</span><span class="p">,</span> <span class="n">_configurable</span><span class="p">(</span><span class="n">_string</span><span class="o">.</span><span class="n">phonetic_match</span><span class="p">),</span> <span class="n">meta</span><span class="o">=</span><span class="n">_string</span><span class="o">.</span><span class="n">phonetic_match</span><span class="o">.</span><span class="n">meta</span>
 <span class="p">)</span>
 
+<span class="c1"># Sequence-alignment comparators (doc 12, D8): configurable, numpy core with optional</span>
+<span class="c1"># faster backends (``backend=`` -&gt; equate[timeseries] / equate[bio]).</span>
+<span class="k">for</span> <span class="n">_name</span><span class="p">,</span> <span class="n">_fn</span> <span class="ow">in</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">"dtw"</span><span class="p">,</span> <span class="n">_seq</span><span class="o">.</span><span class="n">dtw</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"subsequence_dtw"</span><span class="p">,</span> <span class="n">_seq</span><span class="o">.</span><span class="n">subsequence_dtw</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"soft_dtw"</span><span class="p">,</span> <span class="n">_seq</span><span class="o">.</span><span class="n">soft_dtw</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"needleman_wunsch"</span><span class="p">,</span> <span class="n">_seq</span><span class="o">.</span><span class="n">needleman_wunsch</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"smith_waterman"</span><span class="p">,</span> <span class="n">_seq</span><span class="o">.</span><span class="n">smith_waterman</span><span class="p">),</span>
+<span class="p">]:</span>
+    <span class="n">comparators</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">_name</span><span class="p">,</span> <span class="n">_configurable</span><span class="p">(</span><span class="n">_fn</span><span class="p">),</span> <span class="n">meta</span><span class="o">=</span><span class="n">_fn</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
+
 <span class="c1"># Comparator factories (build a configured comparator from config).</span>
 <span class="n">comparators</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">"exp_decay"</span><span class="p">,</span> <span class="n">_ng</span><span class="o">.</span><span class="n">exp_decay</span><span class="p">)</span>
 <span class="n">comparators</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">"linear_decay"</span><span class="p">,</span> <span class="n">_ng</span><span class="o">.</span><span class="n">linear_decay</span><span class="p">)</span>
@@ -413,6 +435,34 @@
         <span class="sa">f</span><span class="s2">"comparator spec must be a registered name or a callable, "</span>
         <span class="sa">f</span><span class="s2">"got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span>
     <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="polarity_sense">
+<a class="viewcode-back" href="../../_autosummary/equate.compare.html#equate.compare.polarity_sense">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">polarity_sense</span><span class="p">(</span><span class="n">comparator</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">"maximize"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The score ``sense`` a comparator's declared polarity implies.</span>
+
+<span class="sd">    A ``'distance'`` comparator (DTW, edit distance) is minimized, a ``'similarity'``</span>
+<span class="sd">    maximized; a comparator with no declared metadata gets ``default``.</span>
+
+<span class="sd">    &gt;&gt;&gt; polarity_sense(resolve_comparator('dtw'))</span>
+<span class="sd">    'minimize'</span>
+<span class="sd">    &gt;&gt;&gt; polarity_sense(resolve_comparator('ratio'))</span>
+<span class="sd">    'maximize'</span>
+<span class="sd">    """</span>
+    <span class="n">meta</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">comparator</span><span class="p">,</span> <span class="s2">"meta"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">meta</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
+        <span class="n">comparator</span><span class="p">,</span> <span class="n">partial</span>
+    <span class="p">):</span>  <span class="c1"># a user's partial(dtw, ...)</span>
+        <span class="n">comparator</span> <span class="o">=</span> <span class="n">comparator</span><span class="o">.</span><span class="n">func</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">comparator</span><span class="p">,</span> <span class="s2">"meta"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">polarity</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="s2">"polarity"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">polarity</span> <span class="o">==</span> <span class="s2">"distance"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"minimize"</span>
+    <span class="k">if</span> <span class="n">polarity</span> <span class="o">==</span> <span class="s2">"similarity"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"maximize"</span>
+    <span class="k">return</span> <span class="n">default</span></div>
 
 
 
@@ -485,7 +535,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=2a6a9ca9"></script>
+</div><script src="../../_static/documentation_options.js?v=0adb0642"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

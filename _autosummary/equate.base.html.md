@@ -41,10 +41,32 @@ decisions realized here are documented in `docs/research/` — start with
 |----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`ComparatorMeta`](#equate.base.ComparatorMeta)([polarity, bounded, ...])          | Declared properties of a comparator, so the framework adapts instead of the caller hard-coding conversions (decision register D2/D3/D6).                                                                                                          |
 | [`ScoreMatrix`](#equate.base.ScoreMatrix)(data[, sense, row_labels, ...])       | Scored candidate structure flowing compare -> match (the SSOT).                                                                                                                                                                                   |
+| [`Alignment`](#equate.base.Alignment)(score[, path, sense])                   | A structured comparator's score **plus** the internal correspondence behind it.                                                                                                                                                                   |
 | [`Explanation`](#equate.base.Explanation)([summary, details])                   | Render-agnostic justification for a decision (rules / attributions / diffs).                                                                                                                                                                      |
 | [`Candidate`](#equate.base.Candidate)(left, right, score[, explanation])      | One scored correspondence between a `left` item and a `right` item.                                                                                                                                                                               |
 | [`Matching`](#equate.base.Matching)(pairs[, scores, plan, probability, ...]) | Default (hard) matcher output: matched index pairs, with retained scores.                                                                                                                                                                         |
 | [`Partition`](#equate.base.Partition)(labels)                                 | Clustering / collective output: a map from item index to entity (cluster) id.                                                                                                                                                                     |
+
+### *class* equate.base.Alignment(score, path=None, sense='minimize')
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+A structured comparator’s score **plus** the internal correspondence behind it.
+
+Sequence/structure comparators (DTW, Needleman-Wunsch, Smith-Waterman, …) match
+the *sub-parts* of two objects before scoring them — matching, one level down. The
+scalar `score` is what the collection-level matcher consumes; `path` keeps the
+element-level correspondence for explanation, visualization and element-level
+matching (doc `12` §2.6, decision register D8):
+
+- `path`: a tuple of `(i, j)` element-index pairs, in order. A gap is `None` on
+  the side that skips (`(i, None)` / `(None, j)`). `None` when the method has no
+  single path (soft-DTW averages over all of them) or the backend does not report one.
+- `sense`: how to read `score` — `'minimize'` for a dissimilarity (DTW),
+  `'maximize'` for an alignment score (Needleman-Wunsch / Smith-Waterman).
+
+`float(alignment)` is its score, so an `Alignment` drops in where a number is
+expected.
 
 ### equate.base.Blocker
 

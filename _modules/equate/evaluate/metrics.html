@@ -218,6 +218,7 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../../_autosummary/equate.compare.html">equate.compare</a><input aria-label="Toggle navigation of equate.compare" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.compare.calibrate.html">equate.compare.calibrate</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.compare.numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.compare.sequence.html">equate.compare.sequence</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.compare.string.html">equate.compare.string</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.compare.vector.html">equate.compare.vector</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.compare.vectorize.html">equate.compare.vectorize</a></li>
@@ -451,10 +452,16 @@
     <span class="n">nz</span> <span class="o">=</span> <span class="n">table</span> <span class="o">&gt;</span> <span class="mi">0</span>
     <span class="c1"># conditional entropies H(true | pred) and H(pred | true)</span>
     <span class="n">h_true_given_pred</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span>
-        <span class="n">table</span><span class="p">[</span><span class="n">nz</span><span class="p">]</span> <span class="o">/</span> <span class="n">n</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">nz</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">table</span><span class="o">.</span><span class="n">shape</span><span class="p">)[</span><span class="n">nz</span><span class="p">])</span>
+        <span class="n">table</span><span class="p">[</span><span class="n">nz</span><span class="p">]</span>
+        <span class="o">/</span> <span class="n">n</span>
+        <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">nz</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">table</span><span class="o">.</span><span class="n">shape</span><span class="p">)[</span><span class="n">nz</span><span class="p">])</span>
     <span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
     <span class="n">h_pred_given_true</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span>
-        <span class="n">table</span><span class="p">[</span><span class="n">nz</span><span class="p">]</span> <span class="o">/</span> <span class="n">n</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">nz</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">table</span><span class="o">.</span><span class="n">shape</span><span class="p">)[</span><span class="n">nz</span><span class="p">])</span>
+        <span class="n">table</span><span class="p">[</span><span class="n">nz</span><span class="p">]</span>
+        <span class="o">/</span> <span class="n">n</span>
+        <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+            <span class="n">table</span><span class="p">[</span><span class="n">nz</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">table</span><span class="o">.</span><span class="n">shape</span><span class="p">)[</span><span class="n">nz</span><span class="p">]</span>
+        <span class="p">)</span>
     <span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
     <span class="n">homogeneity</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">h_true</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">h_true_given_pred</span> <span class="o">/</span> <span class="n">h_true</span>
     <span class="n">completeness</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">h_pred</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">h_pred_given_true</span> <span class="o">/</span> <span class="n">h_pred</span>
@@ -480,10 +487,20 @@
 <span class="sd">    """</span>
     <span class="n">pred</span><span class="p">,</span> <span class="n">true</span> <span class="o">=</span> <span class="n">_check_labels</span><span class="p">(</span><span class="n">pred_labels</span><span class="p">,</span> <span class="n">true_labels</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">backend</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"auto"</span><span class="p">,</span> <span class="s2">"numpy"</span><span class="p">,</span> <span class="s2">"sklearn"</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"backend must be 'auto', 'numpy' or 'sklearn', got </span><span class="si">{</span><span class="n">backend</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"backend must be 'auto', 'numpy' or 'sklearn', got </span><span class="si">{</span><span class="n">backend</span><span class="si">!r}</span><span class="s2">"</span>
+        <span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pred</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># nothing to cluster: every metric is vacuously perfect</span>
-        <span class="n">names</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"ari"</span><span class="p">,</span> <span class="s2">"b3_f1"</span><span class="p">,</span> <span class="s2">"b3_precision"</span><span class="p">,</span> <span class="s2">"b3_recall"</span><span class="p">,</span> <span class="s2">"ceaf_e_f1"</span><span class="p">,</span>
-                 <span class="s2">"completeness"</span><span class="p">,</span> <span class="s2">"homogeneity"</span><span class="p">,</span> <span class="s2">"v_measure"</span><span class="p">)</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">"ari"</span><span class="p">,</span>
+            <span class="s2">"b3_f1"</span><span class="p">,</span>
+            <span class="s2">"b3_precision"</span><span class="p">,</span>
+            <span class="s2">"b3_recall"</span><span class="p">,</span>
+            <span class="s2">"ceaf_e_f1"</span><span class="p">,</span>
+            <span class="s2">"completeness"</span><span class="p">,</span>
+            <span class="s2">"homogeneity"</span><span class="p">,</span>
+            <span class="s2">"v_measure"</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
     <span class="n">b3</span> <span class="o">=</span> <span class="n">bcubed</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">true</span><span class="p">)</span>
     <span class="n">out</span> <span class="o">=</span> <span class="p">{</span>
@@ -534,7 +551,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=2a6a9ca9"></script>
+</div><script src="../../../_static/documentation_options.js?v=0adb0642"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>

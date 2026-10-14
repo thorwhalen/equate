@@ -26,6 +26,7 @@ comparators (Monge-Elkan, containment) directional until the matcher boundary (D
 | [`resolve_comparator`](#equate.compare.resolve_comparator)(spec, \*\*config)           | Resolve `spec` to a pairwise comparator.                                                                                             |
 |-------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
 | [`direct`](#equate.compare.direct)(h, \*[, meta])                          | Wrap an opaque pairwise scorer `h(a, b) -> float` into a score-matrix builder `build(A, B) -> ndarray`.                              |
+| [`polarity_sense`](#equate.compare.polarity_sense)(comparator, \*[, default])      | The score `sense` a comparator's declared polarity implies.                                                                          |
 | [`featurized`](#equate.compare.featurized)([featurizer, metric, meta])         | Build a score-matrix builder that featurizes both collections then applies a vector `metric` (default cosine over the two matrices). |
 | [`comparison_vector`](#equate.compare.comparison_vector)(a, b, field_comparators, \*) | Return `{field: comparator(a[field], b[field])}` for each field comparator.                                                          |
 | [`weighted_sum`](#equate.compare.weighted_sum)([weights])                        | Combiner: weighted sum of a comparison vector (default weight 1.0 per field).                                                        |
@@ -101,6 +102,20 @@ Fit Platt scaling (logistic regression on 1-D scores) -> `P(match)`.
 Requires `equate[sklearn]`. Returns a calibrator mapping a raw score to a
 probability.
 
+### equate.compare.polarity_sense(comparator, , default='maximize')
+
+The score `sense` a comparator’s declared polarity implies.
+
+A `'distance'` comparator (DTW, edit distance) is minimized, a `'similarity'`
+maximized; a comparator with no declared metadata gets `default`.
+
+```pycon
+>>> polarity_sense(resolve_comparator('dtw'))
+'minimize'
+>>> polarity_sense(resolve_comparator('ratio'))
+'maximize'
+```
+
 ### equate.compare.resolve_comparator(spec, \*\*config)
 
 Resolve `spec` to a pairwise comparator.
@@ -121,6 +136,7 @@ Combiner: weighted sum of a comparison vector (default weight 1.0 per field).
 | [`calibrate`](equate.compare.calibrate.html.md#module-equate.compare.calibrate)     | Score calibration (stage ②): map raw comparator scores to a decision or a probability.                                                                      |
 |------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`numeric_geo`](equate.compare.numeric_geo.html.md#module-equate.compare.numeric_geo) | Numeric, date, and geospatial comparators (stage ②): turn a domain distance into a [0, 1] similarity via a decay function.                                  |
+| [`sequence`](equate.compare.sequence.html.md#module-equate.compare.sequence)       | Sequence-alignment comparators (stage ②): score two *sequences* by aligning them.                                                                           |
 | [`string`](equate.compare.string.html.md#module-equate.compare.string)           | String comparators (stage ②): pairwise similarity between two strings.                                                                                      |
 | [`vector`](equate.compare.vector.html.md#module-equate.compare.vector)           | Vector comparators (stage ②): pairwise similarity/distance between two vectors.                                                                             |
 | [`vectorize`](equate.compare.vectorize.html.md#module-equate.compare.vectorize)     | Multi-field record comparison (stage ②): build a per-pair *comparison vector* from per-field comparators, then reduce it to a single score with a combiner. |

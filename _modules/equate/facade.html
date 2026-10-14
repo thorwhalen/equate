@@ -218,6 +218,7 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../_autosummary/equate.compare.html">equate.compare</a><input aria-label="Toggle navigation of equate.compare" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.calibrate.html">equate.compare.calibrate</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.sequence.html">equate.compare.sequence</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.string.html">equate.compare.string</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.vector.html">equate.compare.vector</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.vectorize.html">equate.compare.vectorize</a></li>
@@ -301,7 +302,7 @@
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Matching</span><span class="p">,</span> <span class="n">ScoreMatrix</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_comparator</span><span class="p">,</span> <span class="n">direct</span><span class="p">,</span> <span class="n">featurized</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_comparator</span><span class="p">,</span> <span class="n">direct</span><span class="p">,</span> <span class="n">featurized</span><span class="p">,</span> <span class="n">polarity_sense</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.block</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_blocker</span><span class="p">,</span> <span class="n">score_candidates</span><span class="p">,</span> <span class="n">all_pairs</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.matching</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_matcher</span><span class="p">,</span> <span class="n">soft_match</span><span class="p">,</span> <span class="n">harden</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.cluster</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_clusterer</span>
@@ -321,7 +322,7 @@
     <span class="n">how</span><span class="o">=</span><span class="s2">"assign"</span><span class="p">,</span>
     <span class="n">threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">cluster</span><span class="o">=</span><span class="s2">"connected_components"</span><span class="p">,</span>
-    <span class="n">sense</span><span class="o">=</span><span class="s2">"maximize"</span><span class="p">,</span>
+    <span class="n">sense</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Match two collections into a :class:`~equate.base.Matching` of scored ``(i, j)`` pairs.</span>
 
@@ -333,6 +334,9 @@
 <span class="sd">      pairwise route* on the raw items.</span>
 <span class="sd">    - **block** — ``None`` (default) scores all pairs (dense); a blocker (name/callable)</span>
 <span class="sd">      scores only the candidate pairs into a sparse matrix, and the matcher stays sparse-aware.</span>
+<span class="sd">    - **sense** — ``None`` (default) reads it off the comparator's declared polarity: a</span>
+<span class="sd">      *distance* comparator (``'dtw'``, ``'levenshtein_distance'``) is minimized, anything</span>
+<span class="sd">      else maximized. Pass ``'maximize'`` / ``'minimize'`` to override.</span>
 <span class="sd">    - **how** — the matcher objective: ``'assign'`` (optimal 1:1, the default),</span>
 <span class="sd">      ``'greedy'``, ``'stable'``, or ``'soft'`` (an optimal-transport plan; ``.plan`` is set).</span>
 
@@ -357,14 +361,19 @@
         <span class="p">)</span>
     <span class="n">A</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
     <span class="n">B</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+    <span class="n">comparator</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">resolve_comparator</span><span class="p">(</span><span class="n">compare</span> <span class="ow">or</span> <span class="s2">"ratio"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">compare</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">block</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">else</span> <span class="kc">None</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">sense</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sense</span> <span class="o">=</span> <span class="s2">"maximize"</span> <span class="k">if</span> <span class="n">comparator</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">polarity_sense</span><span class="p">(</span><span class="n">comparator</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">block</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">candidates</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">resolve_blocker</span><span class="p">(</span><span class="n">block</span><span class="p">)(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">))</span>
-        <span class="n">scores</span> <span class="o">=</span> <span class="n">score_candidates</span><span class="p">(</span>
-            <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">candidates</span><span class="p">,</span> <span class="n">compare</span> <span class="ow">or</span> <span class="s2">"ratio"</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">score_candidates</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">candidates</span><span class="p">,</span> <span class="n">comparator</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">)</span><span class="o">.</span><span class="n">data</span>
     <span class="k">elif</span> <span class="n">compare</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">scores</span> <span class="o">=</span> <span class="n">direct</span><span class="p">(</span><span class="n">resolve_comparator</span><span class="p">(</span><span class="n">compare</span><span class="p">))(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">direct</span><span class="p">(</span><span class="n">comparator</span><span class="p">)(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">scores</span> <span class="o">=</span> <span class="n">featurized</span><span class="p">(</span><span class="n">featurize</span> <span class="ow">or</span> <span class="s2">"tfidf"</span><span class="p">)(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
 
@@ -434,10 +443,7 @@
     <span class="n">A</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
     <span class="n">comp</span> <span class="o">=</span> <span class="n">resolve_comparator</span><span class="p">(</span><span class="n">compare</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">sense</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">meta</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">comp</span><span class="p">,</span> <span class="s2">"meta"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">sense</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">"minimize"</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="s2">"polarity"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"distance"</span> <span class="k">else</span> <span class="s2">"maximize"</span>
-        <span class="p">)</span>
+        <span class="n">sense</span> <span class="o">=</span> <span class="n">polarity_sense</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span>
     <span class="n">candidates</span> <span class="o">=</span> <span class="p">(</span>
         <span class="nb">list</span><span class="p">(</span><span class="n">resolve_blocker</span><span class="p">(</span><span class="n">block</span><span class="p">)(</span><span class="n">A</span><span class="p">))</span> <span class="k">if</span> <span class="n">block</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_pairs</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>
     <span class="p">)</span>
@@ -484,7 +490,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=2a6a9ca9"></script>
+</div><script src="../../_static/documentation_options.js?v=0adb0642"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

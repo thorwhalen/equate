@@ -112,13 +112,31 @@ Dependency-light metrics that return precision **and** recall (a `Scores`), neve
 ```python
 from equate.evaluate import pairwise_prf, bcubed, pairs_to_labels, benchmark_matcher
 
-pairwise_prf(predicted_pairs, gold_pairs)            # Scores(precision, recall, f1, support)
-bcubed(pairs_to_labels(predicted_pairs, n=n),        # B³, the default cluster metric
-       pairs_to_labels(gold_pairs, n=n))
-print(benchmark_matcher(on=["toy_names"]).to_markdown())  # equate.match, 3 seeds, entity splits
+pairwise_prf(predicted_pairs, gold_pairs)  # Scores(precision, recall, f1, support)
+bcubed(
+    pairs_to_labels(predicted_pairs, n=n),  # B³, the default cluster metric
+    pairs_to_labels(gold_pairs, n=n),
+)
+print(
+    benchmark_matcher(on=["toy_names"]).to_markdown()
+)  # equate.match, 3 seeds, entity splits
 ```
 
 Also there: `ceaf`, `cluster_metrics` (ARI and V-measure use scikit-learn when installed, numpy otherwise; `pip install 'equate[eval]'`), `blocking_metrics`, `pr_auc`, `ranking_metrics`, `select_threshold` (pass validation data), `entity_split` and `assert_no_leakage`. Benchmarks are a registry (`equate.evaluate.benchmarks`), so a new dataset is a registered loader.
+
+## Matching sequences: `compare='dtw'` and friends
+
+To match a collection of *sequences* (time series, token lists, DNA), compare each pair by aligning its elements, then match the collections as usual.
+
+```python
+from equate import match
+
+A = [[0, 1, 2, 3, 2], [5, 5, 6, 7, 7]]
+B = [[5, 6, 6, 7, 7], [0, 1, 1, 2, 3, 2]]
+dict(match(A, B, compare='dtw'))  # {0: 1, 1: 0}
+```
+
+The comparators are `'dtw'` (exact DTW in a Sakoe-Chiba band), `'subsequence_dtw'`, `'soft_dtw'`, `'needleman_wunsch'` and `'smith_waterman'`. A *distance* comparator such as `'dtw'` is minimized automatically, and `sense=` overrides that. `equate.compare.sequence.dtw.align(a, b)` returns an `Alignment(score, path)` with the element-level correspondence. Faster engines are optional: `pip install 'equate[timeseries]'` / `'equate[bio]'`, then pass `backend=`.
 
 # An example: In search of a import-to-package name matcher
 

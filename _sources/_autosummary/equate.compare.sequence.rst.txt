@@ -1,0 +1,28 @@
+equate.compare.sequence
+=======================
+
+.. automodule:: equate.compare.sequence
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DFLT_DTW_WINDOW
+      DFLT_SOFT_DTW_GAMMA
+      DFLT_MATCH_SCORE
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      dtw
+      dtw_alignment
+      subsequence_dtw
+      subsequence_dtw_alignment
+      soft_dtw
+      needleman_wunsch
+      needleman_wunsch_alignment
+      smith_waterman
+      smith_waterman_alignment
+   
