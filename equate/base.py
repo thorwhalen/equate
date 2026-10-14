@@ -37,6 +37,7 @@ __all__ = [
     "scorematrix_matcher",
     "to_cost",
     "ScoreMatrix",
+    "Alignment",
     "Explanation",
     "Candidate",
     "Matching",
@@ -388,6 +389,34 @@ class ScoreMatrix:
             dense[mask], min(dense.shape), worst_is_high=(self.sense == "minimize")
         )
         return dense
+
+
+@dataclass(frozen=True)
+class Alignment:
+    """A structured comparator's score **plus** the internal correspondence behind it.
+
+    Sequence/structure comparators (DTW, Needleman-Wunsch, Smith-Waterman, ...) match
+    the *sub-parts* of two objects before scoring them — matching, one level down. The
+    scalar ``score`` is what the collection-level matcher consumes; ``path`` keeps the
+    element-level correspondence for explanation, visualization and element-level
+    matching (doc ``12`` §2.6, decision register D8):
+
+    - ``path``: a tuple of ``(i, j)`` element-index pairs, in order. A gap is ``None`` on
+      the side that skips (``(i, None)`` / ``(None, j)``). ``None`` when the method has no
+      single path (soft-DTW averages over all of them) or the backend does not report one.
+    - ``sense``: how to read ``score`` — ``'minimize'`` for a dissimilarity (DTW),
+      ``'maximize'`` for an alignment score (Needleman-Wunsch / Smith-Waterman).
+
+    ``float(alignment)`` is its score, so an ``Alignment`` drops in where a number is
+    expected.
+    """
+
+    score: float
+    path: Optional[tuple] = None
+    sense: Sense = "minimize"
+
+    def __float__(self):
+        return float(self.score)
 
 
 @dataclass

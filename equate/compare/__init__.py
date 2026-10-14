@@ -26,6 +26,7 @@ from equate.featurize import resolve_featurizer
 from equate.compare import string as _string
 from equate.compare import numeric_geo as _ng
 from equate.compare import vector as _vec
+from equate.compare import sequence as _seq
 from equate.compare.vectorize import (
     comparison_vector,
     weighted_sum,
@@ -39,6 +40,7 @@ __all__ = [
     "comparators",
     "resolve_comparator",
     "direct",
+    "polarity_sense",
     "featurized",
     "comparison_vector",
     "weighted_sum",
@@ -71,7 +73,12 @@ def _configurable(fn):
     """A factory returning ``fn``, partially applied with any keyword config."""
 
     def factory(**config):
-        return partial(fn, **config) if config else fn
+        if not config:
+            return fn
+        configured = partial(fn, **config)
+        # keep the declared metadata (polarity drives the facade's default ``sense``)
+        configured.meta = getattr(fn, "meta", None)
+        return configured
 
     return factory
 
@@ -97,6 +104,17 @@ comparators.register(
     "phonetic", _configurable(_string.phonetic_match), meta=_string.phonetic_match.meta
 )
 
+# Sequence-alignment comparators (doc 12, D8): configurable, numpy core with optional
+# faster backends (``backend=`` -> equate[timeseries] / equate[bio]).
+for _name, _fn in [
+    ("dtw", _seq.dtw),
+    ("subsequence_dtw", _seq.subsequence_dtw),
+    ("soft_dtw", _seq.soft_dtw),
+    ("needleman_wunsch", _seq.needleman_wunsch),
+    ("smith_waterman", _seq.smith_waterman),
+]:
+    comparators.register(_name, _configurable(_fn), meta=_fn.meta)
+
 # Comparator factories (build a configured comparator from config).
 comparators.register("exp_decay", _ng.exp_decay)
 comparators.register("linear_decay", _ng.linear_decay)
@@ -118,6 +136,26 @@ def resolve_comparator(spec, **config):
         f"comparator spec must be a registered name or a callable, "
         f"got {type(spec).__name__}"
     )
+
+
+def polarity_sense(comparator, *, default="maximize"):
+    """The score ``sense`` a comparator's declared polarity implies.
+
+    A ``'distance'`` comparator (DTW, edit distance) is minimized, a ``'similarity'``
+    maximized; a comparator with no declared metadata gets ``default``.
+
+    >>> polarity_sense(resolve_comparator('dtw'))
+    'minimize'
+    >>> polarity_sense(resolve_comparator('ratio'))
+    'maximize'
+    """
+    meta = getattr(comparator, "meta", None)
+    polarity = getattr(meta, "polarity", None)
+    if polarity == "distance":
+        return "minimize"
+    if polarity == "similarity":
+        return "maximize"
+    return default
 
 
 def direct(h, *, meta=None):

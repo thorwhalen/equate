@@ -9,6 +9,7 @@ foundation contracts live in :mod:`equate.base`.
 from equate.base import (
     to_cost,
     ScoreMatrix,
+    Alignment,
     Candidate,
     Matching,
     Explanation,
