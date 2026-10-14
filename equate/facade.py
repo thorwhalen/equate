@@ -8,7 +8,7 @@ swappable by one keyword (decision register D4): ``featurize=``, ``compare=``, `
 """
 
 from equate.base import Matching, ScoreMatrix
-from equate.compare import resolve_comparator, direct, featurized
+from equate.compare import resolve_comparator, direct, featurized, polarity_sense
 from equate.block import resolve_blocker, score_candidates, all_pairs
 from equate.matching import resolve_matcher, soft_match, harden
 from equate.cluster import resolve_clusterer
@@ -26,7 +26,7 @@ def match(
     how="assign",
     threshold=None,
     cluster="connected_components",
-    sense="maximize",
+    sense=None,
 ):
     """Match two collections into a :class:`~equate.base.Matching` of scored ``(i, j)`` pairs.
 
@@ -38,6 +38,9 @@ def match(
       pairwise route* on the raw items.
     - **block** — ``None`` (default) scores all pairs (dense); a blocker (name/callable)
       scores only the candidate pairs into a sparse matrix, and the matcher stays sparse-aware.
+    - **sense** — ``None`` (default) reads it off the comparator's declared polarity: a
+      *distance* comparator (``'dtw'``, ``'levenshtein_distance'``) is minimized, anything
+      else maximized. Pass ``'maximize'`` / ``'minimize'`` to override.
     - **how** — the matcher objective: ``'assign'`` (optimal 1:1, the default),
       ``'greedy'``, ``'stable'``, or ``'soft'`` (an optimal-transport plan; ``.plan`` is set).
 
@@ -62,14 +65,19 @@ def match(
         )
     A = list(A)
     B = list(B)
+    comparator = (
+        resolve_comparator(compare or "ratio")
+        if (compare is not None or block is not None)
+        else None
+    )
+    if sense is None:
+        sense = "maximize" if comparator is None else polarity_sense(comparator)
 
     if block is not None:
         candidates = list(resolve_blocker(block)(A, B))
-        scores = score_candidates(
-            A, B, candidates, compare or "ratio", sense=sense
-        ).data
+        scores = score_candidates(A, B, candidates, comparator, sense=sense).data
     elif compare is not None:
-        scores = direct(resolve_comparator(compare))(A, B)
+        scores = direct(comparator)(A, B)
     else:
         scores = featurized(featurize or "tfidf")(A, B)
 
@@ -136,10 +144,7 @@ def dedupe(
     A = list(A)
     comp = resolve_comparator(compare)
     if sense is None:
-        meta = getattr(comp, "meta", None)
-        sense = (
-            "minimize" if getattr(meta, "polarity", None) == "distance" else "maximize"
-        )
+        sense = polarity_sense(comp)
     candidates = (
         list(resolve_blocker(block)(A)) if block is not None else list(all_pairs(A))
     )

@@ -123,6 +123,9 @@ into each stage/concern; `docs/research/README.md` is the index.
   as the inner extraction step). Sequence/graph *comparators* (DTW, NW/SW, GED) are
   `direct(h)` scorers emitting `Alignment(score, path)`, routed `sense='minimize'`;
   graph *kernels* are Featurizers (graph→vector, reclaiming the indexable path).
+  **Sense follows polarity:** each alignment comparator declares its polarity (DTW is a
+  *distance*, NW/SW an alignment *score*), and `match(..., sense=None)` reads it via
+  `compare.polarity_sense` — never hard-code `sense='minimize'` per comparator family.
 - **Default text featurizer = char-n-gram TF-IDF (core, zero heavy deps);** a modern
   MIT/Apache embedder (bge-m3 / multilingual-e5-large; nomic small) is the default
   *only when `equate[embeddings]` is installed*. Featurizer metadata carries
@@ -144,6 +147,7 @@ equate/
 │                   #   text.py = [sbert|openai|…] dense embedders behind extras (lazy)
 ├── compare/        # registry; direct() vs featurized(); string(difflib | rapidfuzz|jellyfish [extra]);  ← #5
 │                   #   numeric_geo(decay/haversine); vector(cosine/dot/angular); vectorize(combiners+FS); calibrate
+│                   #   sequence.py = DTW (banded)/subsequence/soft-DTW, NW/SW → Alignment(score,path)  ← #10
 ├── block/          # Blocker (lazy candidate pairs); all_pairs default; keyed/SNM blocking;  ← #6
 │                   #   brute_knn (core) + ann/lsh [extra]; metablock; score_candidates→sparse; PC/RR/PQ
 ├── matching/       # registry; assign(optimal LAP + sparse routing, greedy, stable);  ← #7

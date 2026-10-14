@@ -45,6 +45,9 @@ dependencies = [
 # --- comparison: fast string similarity (compare stage) ---
 fuzzy = ["rapidfuzz"]
 phonetic = ["jellyfish"]
+# --- comparison: sequence alignment engines (numpy core is the default) ---
+timeseries = ["dtaidistance", "tslearn"]
+bio = ["biopython"]
 # --- featurization: embeddings (featurize stage) ---
 embeddings = ["sentence-transformers"]
 api = ["openai", "cohere"]
