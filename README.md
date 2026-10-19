@@ -1,33 +1,176 @@
-# Equate
+# equate
 
-This is a package with tools for matching things. 
+Match things that have no shared identifier: names with typos, product listings from two shops, records from two databases, time series, graphs, the columns of two tables. `equate` decides which items *correspond* and returns those correspondences as scored pairs.
 
-Dirty things like language, files in your file system, socks and whistles.
-
-# Install
-
-```
+```bash
 pip install equate
 ```
 
-Moving on...
+```python
+from equate import match
 
-# Little peep
+m = match(["apple pie", "banana split", "cherry tart"],
+          ["cherry tarte", "aple pie", "banana split"])
+dict(m.labeled_pairs())
+# {'apple pie': 'aple pie', 'banana split': 'banana split', 'cherry tart': 'cherry tarte'}
+m.scores  # [0.76, 1.0, 0.84]
+```
 
-Merging/joining tables is very common instance, yet only a small part of what is
-possible, and often needed. Consider the following use cases:
+`match(A, B)` works with no configuration: it featurizes both sides (character n-gram TF-IDF), scores every pair (cosine), and finds the best one-to-one assignment (scipy's linear assignment). Every step is swappable with one keyword, and nothing heavy is installed unless you ask for it.
 
-- Find the columns to match (join keys) by comparing how well the values of the column
-match.
+## Matching, a stage at a time
 
-- Comparing the values of the columns with something more flexible than hard equality.
-For example, correlation, similarity, etc.
+Matching factors into three stages: **featurize → compare → match**. Each takes a registered name or any callable.
 
-- Find near duplicate columns
+```python
+match(A, B, compare="jaro_winkler")        # score raw pairs with a string comparator instead
+match(A, B, featurize="sbert")             # dense embeddings (pip install 'equate[embeddings]')
+match(A, B, block="sorted_neighborhood")   # score only candidate pairs (sparse), for scale
+match(A, B, how="greedy")                  # or 'assign' (default), 'stable', 'soft'
+match(A, B, compare="levenshtein_distance")  # a distance: minimized automatically
+```
 
-- Find rows to align, based on flexible comparison of fuzzily matched cells
+- **Records work as they are.** A list of dicts is read through its values, so `match(people_a, people_b)` needs no flattening.
+- **Results are structured.** A `Matching` iterates as `(i, j)` pairs (`dict(m)` works), and has `.scores`, `.labeled_pairs()` and, for `how='soft'`, the transport `.plan`.
+- **Strategies are registries** (`equate.featurizers`, `comparators`, `blockers`, `matchers`, `clusterers`), so a strategy of your own is one `register` call, not a subclass.
+- **`equate.score_matrix(A, B, ...)`** gives the scored `ScoreMatrix` without matching, for when you want to match later or several ways.
 
-## Simple case
+## Deduplicate one collection, resolve several
+
+Matching two collections is the common case; grouping is the general one. Transitive closure is a choice you make (`cluster='connected_components'` or `'correlation'`), never a side effect.
+
+```python
+from equate import dedupe, resolve
+
+dedupe(["Jon Smith", "Jon Smyth", "Kate Doe", "Kate  Doe"], threshold=0.8).groups()
+# {0: [0, 1], 1: [2, 3]}
+resolve(["Jon Smith", "Kate Doe"], ["John Smith"], ["Kate Do"], threshold=0.8).groups()
+# {0: [0, 2], 1: [1, 3]}   (indices into the pooled collections)
+```
+
+`equate.cluster.classify` adds a Fellegi-Sunter three-way decision (match / possible / non-match) with unsupervised EM.
+
+## Tables: join keys, near-duplicate columns, completion
+
+Columns are objects too. Each is featurized as its set of values and compared by overlap, so no header names are needed.
+
+```python
+from equate import find_join_keys, complete_table
+
+orders = {"customer": ["C-001", "C-002", "C-001"], "city": [None, "Lyon", None]}
+customers = {"cid": ["C-002", "C-001"], "city": ["Lille", "Paris"]}
+
+find_join_keys(orders, customers)[0]   # ColumnMatch(left='customer', right='cid', score=1.0, ...)
+complete_table(orders, customers).table
+# {'customer': ['C-001', 'C-002', 'C-001'], 'city': ['Paris', 'Lyon', 'Paris']}
+```
+
+`complete_table` discovers the key (directional *containment*: how much of the target column lies in the source's), aligns rows by fuzzy key matching (so `'c001'` meets `'C-001'`), and fills only the missing cells. `find_near_duplicate_columns(table)` finds redundant columns. Tables are column dicts, lists of row dicts, or anything DataFrame-like.
+
+## Matching sequences: `compare='dtw'` and friends
+
+To match a collection of *sequences* (time series, token lists, DNA), compare each pair by aligning its elements, then match the collections as usual.
+
+```python
+from equate import match
+
+A = [[0, 1, 2, 3, 2], [5, 5, 6, 7, 7]]
+B = [[5, 6, 6, 7, 7], [0, 1, 1, 2, 3, 2]]
+dict(match(A, B, compare="dtw"))  # {0: 1, 1: 0}
+```
+
+The comparators are `'dtw'` (exact DTW in a Sakoe-Chiba band), `'subsequence_dtw'`, `'soft_dtw'`, `'needleman_wunsch'` and `'smith_waterman'`. A *distance* comparator such as `'dtw'` is minimized automatically, and `sense=` overrides that. `equate.compare.sequence.dtw.align(a, b)` returns an `Alignment(score, path)` with the element-level correspondence. Faster engines are optional: `pip install 'equate[timeseries]'` / `'equate[bio]'`, then pass `backend=`.
+
+## Matching graphs: `equate.align`
+
+To align the *nodes* of two graphs, use `align`. A node's match depends on how its neighbours match, so this is a quadratic problem, not a flat one.
+
+```python
+from equate import align
+
+G1 = {"a": ["b"], "b": ["a", "c"], "c": ["b"]}
+G2 = {"x": ["y"], "y": ["x", "z"], "z": ["y"]}
+dict(align(G1, G2).labeled_pairs())  # {'a': 'x', 'b': 'y', 'c': 'z'}
+```
+
+The default is IsoRank, built in. `how='rrwm'` uses pygmtools (`equate[graph-matching]`). Graphs can be networkx graphs, `{node: neighbours}` mappings, or adjacency matrices. To match collections *of* graphs, use `featurize='wl'` (Weisfeiler-Lehman).
+
+## Reviewing matches: the HTTP service and the review UI
+
+`equate.service.MatchService` exposes matching as JSON-in/JSON-out operations: a stateless `match`, and review *sessions* that score two collections once, then take confirm / reject / reassign edits and active-learning labels, re-solving the assignment from the cached scores after each one.
+
+```python
+from equate.service import MatchService
+
+svc = MatchService()
+view = svc.open_session(["Jon Smith", "Kate Doe"], ["Kate Do", "John Smith"])
+svc.edit(view.session_id, [{"action": "reject", "item": 0, "candidate": 1}])
+svc.next_query(view.session_id)  # the pair whose label would help most
+```
+
+`pip install 'equate[service]'` adds the HTTP API (built with [qh](https://github.com/i2mint/qh)): `python -m equate.service serve`, then `POST /match`, `POST /sessions`, `GET|POST /sessions/{id}/candidates/{item}`, `POST /sessions/{id}/edits`, `POST /sessions/{id}/label`. `equate.service.mk_app(service)` returns the FastAPI app to mount elsewhere. Sessions live in any `MutableMapping` (`MatchService(sessions=...)`), so a `dol` store persists them. `open_session(..., floor=0.5)` sets a score floor: a pair below it is never proposed, so rejecting an item's only good candidate leaves the item unmatched instead of handing it a poor one.
+
+The review UI (React, [zodal](https://github.com/i2mint/zodal) + shadcn) is in [`ui/`](ui/README.md): a review queue ordered by uncertainty, side-by-side field diffs, confirm / reject / reassign with optimistic updates, and a labelling widget.
+
+## Measuring a matcher: `equate.evaluate`
+
+Dependency-light metrics that return precision **and** recall (a `Scores`), never F1 alone, plus a harness that scores a matcher (pairwise) on unseen-entity splits and reports the cost and base rate next to every number. The standard suites (Abt-Buy, Amazon-Google, DBLP-ACM, WDC Products) are a `load_benchmark` away, below.
+
+```python
+from equate.evaluate import pairwise_prf, bcubed, pairs_to_labels, benchmark_matcher
+
+pairwise_prf(predicted_pairs, gold_pairs)  # Scores(precision, recall, f1, support)
+bcubed(
+    pairs_to_labels(predicted_pairs, n=n),  # B³, the default cluster metric
+    pairs_to_labels(gold_pairs, n=n),
+)
+print(
+    benchmark_matcher(on=["toy_names"]).to_markdown()
+)  # equate.match, 3 seeds, entity splits
+```
+
+Also there: `ceaf`, `cluster_metrics` (ARI and V-measure use scikit-learn when installed, numpy otherwise; `pip install 'equate[eval]'`), `blocking_metrics`, `pr_auc`, `ranking_metrics`, `select_threshold` (pass validation data), `entity_split` and `assert_no_leakage`. Benchmarks are a registry (`equate.evaluate.benchmarks`), so a new dataset is a registered loader.
+
+The standard suites download on first use, into `~/.local/share/equate/benchmarks` (or `$EQUATE_DATA_DIR`), never into the package:
+
+```python
+from equate.evaluate import benchmark_matcher, load_benchmark
+
+ds = load_benchmark("amazon_google")  # Leipzig original: complete gold, CC BY 4.0
+ds.meta["difficulty"]  # literature context + measured linearity
+benchmark_matcher(on=["dblp_acm", "wdc_products"]).to_markdown()
+```
+
+`abt_buy`, `amazon_google` and `dblp_acm` take `source='leipzig'` (default; the complete gold mapping) or `source='deepmatcher'` (DeepMatcher's preprocessed tables, with its canonical labelled pairs in `ds.pairs`). `wdc_products` takes `corner_cases=80|50|20`, `unseen=0|50|100` and `dev_size='small'|'medium'|'large'`, defaulting to the hardest generalization variant, and carries WDC's own train/valid/test split, which `benchmark_matcher` uses (`split='auto'`). Every download is checked against a pinned SHA-256. `meta['difficulty_profile']['linearity']` is the best F1 a single TF-IDF cosine threshold reaches over all pairs: near 1, the benchmark cannot tell matchers apart.
+
+## Optional extras
+
+The core needs only numpy and scipy. Everything heavier is an extra, imported only when used, with an install hint if it is missing:
+
+| Extra | Brings | For |
+|---|---|---|
+| `fuzzy`, `phonetic` | rapidfuzz, jellyfish | fast string comparators |
+| `embeddings`, `api` | sentence-transformers; openai, cohere | dense text featurizers |
+| `ann`, `lsh` | hnswlib, datasketch | blocking at scale |
+| `graph`, `ot` | networkx, POT | max-weight / Kuhn-Munkres matchers; soft (optimal transport) matching |
+| `graph-kernels`, `graph-matching` | grakel, pygmtools | graph featurizers and quadratic matchers |
+| `timeseries`, `bio` | dtaidistance, tslearn; biopython | faster sequence-alignment engines |
+| `eval` | scikit-learn | ARI / V-measure (numpy fallback otherwise) |
+| `active`, `llm` | scikit-activeml; openai | active learning; LLM re-ranking |
+| `service` | qh, fastapi, pydantic, uvicorn | the HTTP service |
+| `benchmarks` | (nothing yet) | the standard benchmark loaders |
+| `grub`, `sklearn` | grub; scikit-learn | the legacy featurizers of the original API |
+| `examples`, `dev` | pandas, py2store, requests; pytest, ruff | the example scripts; development |
+
+## Design
+
+`equate` owns the orchestration and wraps mature libraries at each stage. The reasoning, and a cited survey of the field behind every decision, is in [`docs/research/`](docs/research/README.md). Start with [`00-taxonomy-and-terminology.md`](docs/research/00-taxonomy-and-terminology.md) and the decision register [`11-design-decisions-and-open-questions.md`](docs/research/11-design-decisions-and-open-questions.md).
+
+## The original API
+
+The first versions of `equate` exposed the functions below, and they are all still importable, with the same signatures. One thing changed underneath: the default featurizer is now `equate`'s own character n-gram TF-IDF instead of `grub`'s word TF-IDF (#4), so similarity *scores* differ from older releases, while the matchings in these examples are the same. The redesigned stages are built from the same pieces: `similarity_matrix` is `score_matrix` with the TF-IDF default, and the `equate.util` matchers are now in the `matchers` registry. New code should prefer `match` / `score_matrix`. The old `grub`-based `equate.completion.similarity_matrix` still needs `pip install 'equate[grub]'`.
+
+### Greedy matching with a score function: `match_greedily`
 
 Say you have two sets of strings, and all you do is want to is match each element of
 the "keys" set to an element of the "values" set (never reusing the same value for a 
@@ -35,6 +178,8 @@ different key), and say you know that a matching value string will differ from i
 key only by a few characters. In that case just do this:
 
 ```python
+from equate import match_greedily
+
 keys = ["apple", "banana", "carrot"]
 values = ["car", "app", "carob", "cabana"]
 dict(match_greedily(keys, values))
@@ -47,7 +192,7 @@ This means that at every step, the highest-score value will be taken as the matc
 Some times this is not ideal (typically, your matches validity will decline along with 
 the number of keys matched). 
 
-## More involved methods
+### A similarity matrix and a matcher: `match_keys_to_values`, `similarity_matrix`
 
 Here's a more involved entry point:
 
@@ -91,7 +236,7 @@ keys = ["apple pie", "apple crumble", "banana split"]
 values = ["american pie", "big apple", "american girl", "banana republic"]
 m = similarity_matrix(keys, values)
 m.round(2).tolist()
-# == [[0.54, 0.38, 0.0, 0.0], [0.0, 0.33, 0.0, 0.0], [0.0, 0.0, 0.0, 0.41]]
+# == [[0.32, 0.42, 0.01, 0.0], [0.04, 0.35, 0.01, 0.02], [0.03, 0.04, 0.02, 0.44]]
 ```
 
 The `equate.util` module has a few optimal matching function you can use from 
@@ -106,78 +251,13 @@ At the time of writing this, we've implemented:
 At the time of writing this, the default `matcher` used by `match_keys_to_values` is 
 [hungarian_matching](https://en.wikipedia.org/wiki/Hungarian_algorithm).
 
-
-## Measuring a matcher: `equate.evaluate`
-
-Dependency-light metrics that return precision **and** recall (a `Scores`), never F1 alone, plus a harness that scores a matcher (pairwise) on unseen-entity splits and reports the cost and base rate next to every number. Loaders for the standard benchmark suites are not shipped yet (#15).
-
-```python
-from equate.evaluate import pairwise_prf, bcubed, pairs_to_labels, benchmark_matcher
-
-pairwise_prf(predicted_pairs, gold_pairs)  # Scores(precision, recall, f1, support)
-bcubed(
-    pairs_to_labels(predicted_pairs, n=n),  # B³, the default cluster metric
-    pairs_to_labels(gold_pairs, n=n),
-)
-print(
-    benchmark_matcher(on=["toy_names"]).to_markdown()
-)  # equate.match, 3 seeds, entity splits
-```
-
-Also there: `ceaf`, `cluster_metrics` (ARI and V-measure use scikit-learn when installed, numpy otherwise; `pip install 'equate[eval]'`), `blocking_metrics`, `pr_auc`, `ranking_metrics`, `select_threshold` (pass validation data), `entity_split` and `assert_no_leakage`. Benchmarks are a registry (`equate.evaluate.benchmarks`), so a new dataset is a registered loader.
-
-The standard suites download on first use, into `~/.local/share/equate/benchmarks` (or `$EQUATE_DATA_DIR`), never into the package:
-
-```python
-from equate.evaluate import benchmark_matcher, load_benchmark
-
-ds = load_benchmark("amazon_google")  # Leipzig original: complete gold, CC BY 4.0
-ds.meta["difficulty"]  # literature context + measured linearity
-benchmark_matcher(on=["dblp_acm", "wdc_products"]).to_markdown()
-```
-
-`abt_buy`, `amazon_google` and `dblp_acm` take `source='leipzig'` (default; the complete gold mapping) or `source='deepmatcher'` (DeepMatcher's preprocessed tables, with its canonical labelled pairs in `ds.pairs`). `wdc_products` takes `corner_cases=80|50|20`, `unseen=0|50|100` and `dev_size='small'|'medium'|'large'`, defaulting to the hardest generalization variant, and carries WDC's own train/valid/test split, which `benchmark_matcher` uses (`split='auto'`). Every download is checked against a pinned SHA-256. `meta['difficulty_profile']['linearity']` is the best F1 a single TF-IDF cosine threshold reaches over all pairs: near 1, the benchmark cannot tell matchers apart.
-
-
-## Matching sequences: `compare='dtw'` and friends
-
-To match a collection of *sequences* (time series, token lists, DNA), compare each pair by aligning its elements, then match the collections as usual.
-
-```python
-from equate import match
-
-A = [[0, 1, 2, 3, 2], [5, 5, 6, 7, 7]]
-B = [[5, 6, 6, 7, 7], [0, 1, 1, 2, 3, 2]]
-dict(match(A, B, compare="dtw"))  # {0: 1, 1: 0}
-```
-
-The comparators are `'dtw'` (exact DTW in a Sakoe-Chiba band), `'subsequence_dtw'`, `'soft_dtw'`, `'needleman_wunsch'` and `'smith_waterman'`. A *distance* comparator such as `'dtw'` is minimized automatically, and `sense=` overrides that. `equate.compare.sequence.dtw.align(a, b)` returns an `Alignment(score, path)` with the element-level correspondence. Faster engines are optional: `pip install 'equate[timeseries]'` / `'equate[bio]'`, then pass `backend=`.
-
-
-## Reviewing matches: the HTTP service and the review UI
-
-`equate.service.MatchService` exposes matching as JSON-in/JSON-out operations: a stateless `match`, and review *sessions* that score two collections once, then take confirm / reject / reassign edits and active-learning labels, re-solving the assignment from the cached scores after each one.
-
-```python
-from equate.service import MatchService
-
-svc = MatchService()
-view = svc.open_session(["Jon Smith", "Kate Doe"], ["Kate Do", "John Smith"])
-svc.edit(view.session_id, [{"action": "reject", "item": 0, "candidate": 1}])
-svc.next_query(view.session_id)  # the pair whose label would help most
-```
-
-`pip install 'equate[service]'` adds the HTTP API (built with [qh](https://github.com/i2mint/qh)): `python -m equate.service serve`, then `POST /match`, `POST /sessions`, `GET|POST /sessions/{id}/candidates/{item}`, `POST /sessions/{id}/edits`, `POST /sessions/{id}/label`. `equate.service.mk_app(service)` returns the FastAPI app to mount elsewhere. Sessions live in any `MutableMapping` (`MatchService(sessions=...)`), so a `dol` store persists them. `open_session(..., floor=0.5)` sets a score floor: a pair below it is never proposed, so rejecting an item's only good candidate leaves the item unmatched instead of handing it a poor one.
-
-The review UI (React, [zodal](https://github.com/i2mint/zodal) + shadcn) is in [`ui/`](ui/README.md): a review queue ordered by uncertainty, side-by-side field diffs, confirm / reject / reassign with optimistic updates, and a labelling widget.
-
-# An example: In search of a import-to-package name matcher
+## Worked example: in search of an import-to-package name matcher
 
 Here, we'll go through an actual practical example of when you might want to match 
 things: "Guessing" the pip install name from a pip package name, 
 and other related analyses.
 
-## The problem
+### The problem
 
 Ever got an import error and wondered what the pip install package name was.
 
@@ -205,7 +285,7 @@ Instead of just complaining, I thought I'd throw some code at it.
 
 Here's a solution: Ask the world (of semantic clouds -- otherwise known as "Google") about it...
 
-## A (fun) solution
+### A (fun) solution
 
 
 ```python
@@ -282,7 +362,7 @@ What you'll find next is an attempt to look at the man in the mirror instead. Lo
 
 
 
-## Extract, analyze and compare site-packages info names
+### Extract, analyze and compare site-packages info names
 
 
 ```python

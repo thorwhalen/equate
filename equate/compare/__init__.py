@@ -27,6 +27,7 @@ from equate.compare import string as _string
 from equate.compare import numeric_geo as _ng
 from equate.compare import vector as _vec
 from equate.compare import sequence as _seq
+from equate.compare import sets as _sets
 from equate.compare.vectorize import (
     comparison_vector,
     weighted_sum,
@@ -98,6 +99,14 @@ for _name, _fn in [
     ("haversine", _ng.haversine),
 ]:
     comparators.register(_name, _const(_fn, _name), meta=getattr(_fn, "meta", None))
+
+# Set comparators (doc 07): value-set overlap, for columns, token bags and other sets.
+for _name, _fn in [
+    ("jaccard", _sets.jaccard),
+    ("overlap", _sets.overlap),
+    ("containment", _sets.containment),
+]:
+    comparators.register(_name, _const(_fn, _name), meta=_fn.meta)
 
 # Configurable pairwise comparators (accept keyword config, applied via functools.partial).
 comparators.register(

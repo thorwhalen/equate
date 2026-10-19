@@ -20,16 +20,18 @@ seam. Reimplement almost nothing computational; own the seams, contracts, defaul
 > Guiding principle: `match(A, B)` Just Works with zero config; every stage is
 > replaceable with one keyword arg; **no heavy library is ever a hard dependency.**
 
-## Architecture — current vs target
+## Architecture — shipped
 
-- **Current** = `equate/util.py` (`similarity_matrix` featurize+compare → a family
-  of `matcher(similarity_matrix) → (i,j)` funcs; default `hungarian_matching`) +
-  `match_greedily` (stdlib direct path) + `completion.py` (WIP tabular join-key).
-- **Target** = the injectable-stage architecture in
-  [`docs/research/10-design-implications-for-equate.md`](../docs/research/10-design-implications-for-equate.md)
-  and the module sketch in the **equate-dev-architecture** skill. The redesign
-  builds it incrementally via the roadmap epic, keeping current public names working
-  (back-compat re-exports) — external PyPI users exist (see Release below).
+The injectable-stage architecture of
+[`docs/research/10-design-implications-for-equate.md`](../docs/research/10-design-implications-for-equate.md)
+**is the code** (the redesign epic shipped it, #2–#13): stage registries
+(`featurize/`, `compare/`, `block/`, `matching/`, `cluster/`), the `match` / `dedupe` /
+`resolve` / `align` / `score_matrix` facades, `interactive/`, `evaluate/`, `service.py`,
+and `completion.py` (tabular facades over the same seams). The module map is in the
+**equate-dev-architecture** skill. The pre-redesign names (`util.py`: `similarity_matrix`,
+`match_keys_to_values`, `match_greedily`, the `*_matching` functions; `completion`'s
+legacy helpers) are **kept working** — external PyPI users exist (see Release below);
+never remove one without a deprecation cycle.
 
 **Before touching the core, read the `equate-dev-architecture` skill.** It holds the
 stage protocols and the resolved contracts (score `sense` SSOT, sparse `ScoreMatrix`,

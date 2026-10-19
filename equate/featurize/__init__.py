@@ -18,6 +18,7 @@ from equate.featurize.tfidf import (
 )
 from equate.featurize import text as _text
 from equate.featurize.records import record_text
+from equate.featurize.columns import value_set, normalize_value, is_missing
 from equate.featurize.graph import (
     WLFeaturizer,
     grakel_featurizer,
@@ -29,6 +30,7 @@ __all__ = [
     "featurizers",
     "identity",
     "record_text",
+    "value_set",
     "resolve_featurizer",
     "TfidfFeaturizer",
     "mk_tfidf",
@@ -78,6 +80,13 @@ def _wl_factory(*, iterations=DFLT_WL_ITERATIONS, label=None):
 
 
 featurizers.register("grakel", grakel_featurizer, meta=GRAKEL_META)
+
+
+# Columns as objects (doc 07): a column -> the set of its distinct normalized values.
+@featurizers.register("value_set", meta=value_set.meta)
+def _value_set_factory(*, normalize=normalize_value):
+    """Build a value-set column featurizer (``normalize`` maps a cell to its key)."""
+    return lambda columns: value_set(columns, normalize=normalize)
 
 
 def resolve_featurizer(spec=None, *, corpus=None, **config):

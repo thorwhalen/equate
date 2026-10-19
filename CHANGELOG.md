@@ -6,6 +6,15 @@ releases CI publishes to PyPI.
 
 ## Unreleased
 
+**Tables: `equate.completion` as a facade over the stages** (#13; doc 07 §8, doc 10 §8.7).
+
+- `find_join_keys(left, right)` finds the columns to join on, with no header names needed. Each column becomes its normalized value set (the new `featurize='value_set'`). Columns are compared with the new set comparators `'containment'` (directional), `'jaccard'` and `'overlap'`, and the best are kept with the top-k `CandidateStore`. Results are `ColumnMatch(left, right, score, explanation)`.
+- `find_near_duplicate_columns(table)` finds redundant columns in one table.
+- `complete_table(target, source)` discovers the key (or takes `on=`) and fills only the target's missing cells. Key election breaks ties toward the column sharing more distinct values. Rows are aligned by an **exact join on normalized keys** (case, spacing, `1.0` = `1`; linear time) first. Only the leftover keys are matched fuzzily (`row_compare='ratio'`, kept at `min_row_score=0.9` or better), and a key tied between two source keys fills nothing. `how='best'` (a lookup, many-to-one) is the default; a matcher name aligns rows one-to-one. Duplicate source keys contribute their first non-missing value. It returns a `Completion` with `.table`, `.as_rows()`, `.key`, `.rows`, `.filled` and `.columns`.
+- A table is a column dict, a list of row dicts, or anything DataFrame-like; pandas is not needed. Column names are kept as they are, and pandas `NA`/`NaT` and numpy NaNs count as missing.
+- The three are exported at the top level. The pre-redesign `completion` helpers stay importable, `import *` included.
+- The README is rewritten front to back, simple examples first: matching, the stages, dedupe and resolve, tables, sequences, graphs, the service, evaluation, the extras table, then the original API (still importable; its similarity scores changed when the default featurizer moved off `grub` in #4) and the worked example. CLAUDE.md and the architecture skill now describe the shipped code.
+
 **Session score floor** (#21). `MatchService.open_session(..., floor=)` (also `POST /sessions`) sets the lowest acceptable score; for a `'minimize'` sense it is the highest acceptable distance. Pairs past it are not candidates: they are never proposed or offered for review, and a reject never pushes an item onto one; the item is left unmatched. It uses the same non-candidate mechanism as rejects and blocking, so the opening assignment is lexicographic: as many acceptable pairs as possible, then the best score. A floor can therefore change the assignment, not just trim it, unlike `match(threshold=)`, which solves first and filters afterwards. The floor also counts as a virtual runner-up in an item's margin, so a lone candidate just past the floor is reviewed first, not last. `SessionView.floor` reports it. The review UI's setup form has a "Minimum score" field. Its numeric fields keep what was typed, read numbers the way Python's `float()` does, and show an inline error instead of snapping an emptied field back to its default.
 
 **Benchmark loaders for the standard suites** (#15; doc 14 §6, §8.3, §8.5).
