@@ -1,0 +1,88 @@
+{
+  "Edit": [
+    "action",
+    "item",
+    "candidate"
+  ],
+  "Label": [
+    "item",
+    "candidate",
+    "is_match",
+    "source"
+  ],
+  "FieldDiff": [
+    "field",
+    "left",
+    "right",
+    "similarity"
+  ],
+  "Explanation": [
+    "summary",
+    "details"
+  ],
+  "CandidateView": [
+    "candidate",
+    "right",
+    "score",
+    "explanation"
+  ],
+  "PairView": [
+    "item",
+    "candidate",
+    "left",
+    "right",
+    "score",
+    "status"
+  ],
+  "ReviewItem": [
+    "item",
+    "left",
+    "assigned",
+    "status",
+    "margin",
+    "candidates"
+  ],
+  "Query": [
+    "item",
+    "left",
+    "candidate",
+    "margin"
+  ],
+  "TierCost": [
+    "calls",
+    "seconds",
+    "items"
+  ],
+  "Accounting": [
+    "tiers"
+  ],
+  "MatchResult": [
+    "pairs",
+    "groups",
+    "accounting",
+    "cached"
+  ],
+  "SessionView": [
+    "session_id",
+    "n_left",
+    "n_right",
+    "sense",
+    "k",
+    "assignment",
+    "review",
+    "edits",
+    "labels",
+    "accounting"
+  ],
+  "EditResult": [
+    "session_id",
+    "assignment",
+    "changed",
+    "accounting"
+  ],
+  "LabelResult": [
+    "label",
+    "result",
+    "next"
+  ]
+}

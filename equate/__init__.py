@@ -53,7 +53,7 @@ from equate.interactive import (
     review_queue,
     uncertainty_sampling,
 )
-from equate.facade import match, dedupe, resolve
+from equate.facade import match, score_matrix, dedupe, resolve
 
 from equate.util import (
     match_keys_to_values,
