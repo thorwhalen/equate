@@ -163,7 +163,10 @@ equate/
 │                   #   classify.py = Fellegi-Sunter 3-way decide + unsupervised EM (D5)
 ├── interactive/    # CandidateStore (top-k+scores, serializable); kbest.py = in-house Murty;  ← #9
 │                   #   constraints (ConstraintSet + reoptimize = edit→re-solve); review/active queues
-├── evaluate.py     # pairwise P/R/F1, B-Cubed; blocking PC/RR/PQ
+├── evaluate/       # metrics (pairwise, B³, CEAF), entity_split, benchmark_matcher;  ← #11
+│                   #   suites.py = lazy-download loaders (Leipzig / DeepMatcher / WDC), pinned
+│                   #   SHA-256, store.py = MutableMapping cache outside the package,
+│                   #   difficulty.py = measured linearity next to every score  ← #15
 ├── service.py      # MatchService: JSON-in/JSON-out (stateless match + review sessions:  ← #12
 │                   #   candidates / edits / label), per-tier Accounting; mk_app() = qh HTTP
 │                   #   surface (lazy, equate[service]); ui/ = the zodal + shadcn review UI

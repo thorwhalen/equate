@@ -13,6 +13,7 @@ from scipy.sparse import csr_matrix
 
 from equate.base import FeaturizerMeta
 from equate._vector import l2_normalize
+from equate.featurize.records import record_text
 
 __all__ = ["TfidfFeaturizer", "mk_tfidf", "char_ngrams", "DFLT_NGRAM_RANGE"]
 
@@ -28,12 +29,16 @@ def char_ngrams(text, ngram_range=DFLT_NGRAM_RANGE, *, lowercase=True):
     name/SKU matching) and differs from scikit-learn's per-word ``char_wb`` analyzer. A
     text too short for any ``n`` in the range falls back to the padded string itself, so
     tiny or empty inputs still yield a (single) feature rather than an all-zero vector.
+    A non-string (a record) is read through
+    :func:`~equate.featurize.records.record_text`.
 
     >>> char_ngrams('cat', (2, 3))
     [' c', 'ca', 'at', 't ', ' ca', 'cat', 'at ']
     >>> char_ngrams('', (3, 4))          # too short for any n: falls back to the padding
     ['  ']
     """
+    if not isinstance(text, str):
+        text = record_text(text)  # a record reads as its joined values
     if lowercase:
         text = text.lower()
     padded = f" {text} "

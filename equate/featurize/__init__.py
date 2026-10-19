@@ -17,6 +17,7 @@ from equate.featurize.tfidf import (
     DFLT_NGRAM_RANGE,
 )
 from equate.featurize import text as _text
+from equate.featurize.records import record_text
 from equate.featurize.graph import (
     WLFeaturizer,
     grakel_featurizer,
@@ -27,6 +28,7 @@ from equate.featurize.graph import (
 __all__ = [
     "featurizers",
     "identity",
+    "record_text",
     "resolve_featurizer",
     "TfidfFeaturizer",
     "mk_tfidf",

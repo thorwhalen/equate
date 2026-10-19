@@ -4,7 +4,9 @@ Dependency-light (numpy/scipy only; sklearn is used for ARI / V-measure when pre
 Precision and recall always travel together (:class:`Scores`), the pairwise and cluster
 granularities are explicit (:func:`pairs_to_labels` converts on purpose), B³ is the
 default cluster metric, thresholds are selected on validation data by a separate call,
-and :func:`benchmark_matcher` splits by entity so test entities are unseen.
+and :func:`benchmark_matcher` splits by entity so test entities are unseen. The standard
+suites (``abt_buy``, ``amazon_google``, ``dblp_acm``, ``wdc_products``) download on first
+use into a store outside the package (:mod:`equate.evaluate.store`).
 See ``docs/research/14-evaluation-benchmarks-and-methodology.md``.
 
 >>> from equate.evaluate import pairwise_prf, bcubed
@@ -30,7 +32,12 @@ from equate.evaluate.benchmark import (
     list_benchmarks,
     load_benchmark,
     benchmark_matcher,
+    subset_pairs,
 )
+from equate.evaluate.difficulty import linearity, difficulty_profile
+from equate.evaluate.store import FileStore, Source, data_dir, default_store, fetch
+from equate.evaluate import suites  # registers the standard suites (lazy downloads)
+from equate.evaluate.suites import abt_buy, amazon_google, dblp_acm, wdc_products
 
 __all__ = [
     "Scores",
@@ -55,4 +62,17 @@ __all__ = [
     "list_benchmarks",
     "load_benchmark",
     "benchmark_matcher",
+    "subset_pairs",
+    "linearity",
+    "difficulty_profile",
+    "FileStore",
+    "Source",
+    "data_dir",
+    "default_store",
+    "fetch",
+    "suites",
+    "abt_buy",
+    "amazon_google",
+    "dblp_acm",
+    "wdc_products",
 ]

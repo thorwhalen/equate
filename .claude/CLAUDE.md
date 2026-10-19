@@ -73,6 +73,17 @@ adding a structured strategy, decide which of these three seams it belongs to.
 - **`ui/`** is a Vite + React + zodal app with its own `npm test` / `npm run build`; hosted CI
   runs only the Python side, so run both before landing a UI change.
 
+## Benchmarks (#15)
+
+- **Never commit benchmark data.** Loaders download into a store (`equate.evaluate.store`,
+  default `~/.local/share/equate/benchmarks`); tests use tiny fixtures written in each
+  publisher's format (`tests/test_suites.py`). The real-file check is opt-in:
+  `EQUATE_NETWORK_TESTS=1 python -m pytest tests/test_suites.py -k real`.
+- **A new loader pins the SHA-256 of every file it fetches** and states `license` honestly
+  — "not stated" is an answer; a guessed license is not.
+- Gold must be **complete** for whole-table scoring; a source whose gold is a labelled
+  subset (DeepMatcher) says so in `meta['gold']`.
+
 ## The research corpus (`docs/research/`)
 
 Start at [`00-taxonomy-and-terminology.md`](../docs/research/00-taxonomy-and-terminology.md)

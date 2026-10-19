@@ -14,9 +14,14 @@ well under B³ whatever the matcher did — an empty prediction would read ~0.75
 
 Benchmarks are a registry, so adding one is registering a loader, not editing the core.
 The built-in ``toy_names`` is generated (no download, deterministic): enough to exercise a
-matcher and this harness in CI. Loaders for the standard suites (Abt-Buy, Amazon-Google,
-DBLP-ACM, WDC Products) are not shipped yet; they will register here as lazily-fetched
-optional benchmarks (equate#15).
+matcher and this harness in CI. The standard suites — ``abt_buy``, ``amazon_google``,
+``dblp_acm`` and ``wdc_products`` — are registered by :mod:`equate.evaluate.suites` and
+download on first use into a store (:mod:`equate.evaluate.store`), never the package.
+
+A benchmark that ships its own **canonical split** (WDC Products' unseen-entity test sets)
+carries it in ``Benchmark.splits``, and :func:`benchmark_matcher` uses it by default
+(``split='auto'``): the suite's designers chose those test sets to control difficulty, and
+published numbers are measured on them.
 """
 
 import time
@@ -39,6 +44,13 @@ class Benchmark:
 
     ``gold`` holds ``(i, j)`` pairs: ``a[i]`` corresponds to ``b[j]``. ``meta`` carries
     what a reader needs next to a score — at least ``source`` and ``difficulty``.
+
+    Optional, when the suite defines them:
+
+    - ``splits`` — the suite's canonical record split, ``{'train'|'val'|'test':
+      (a_indices, b_indices)}``;
+    - ``pairs`` — the suite's labelled candidate pairs, ``{'train'|'val'|'test':
+      ((i, j, label), ...)}`` (the DeepMatcher pair-classification task).
     """
 
     name: str
@@ -46,6 +58,8 @@ class Benchmark:
     b: Sequence
     gold: frozenset
     meta: dict = field(default_factory=dict)
+    splits: Optional[dict] = None
+    pairs: Optional[dict] = None
 
     @property
     def base_rate(self) -> float:
@@ -181,11 +195,43 @@ class BenchmarkReport:
         return "\n".join(lines)
 
 
-def _subset_pairs(gold, rows_a, rows_b):
-    """Gold pairs with both ends in the subset, re-indexed into the subset."""
+def subset_pairs(gold, rows_a, rows_b):
+    """Gold pairs with both ends in the subset, re-indexed into the subset.
+
+    >>> sorted(subset_pairs({(0, 1), (2, 0)}, [2, 0], [0, 1]))
+    [(0, 0), (1, 1)]
+    """
     ia = {old: new for new, old in enumerate(rows_a)}
     ib = {old: new for new, old in enumerate(rows_b)}
     return {(ia[i], ib[j]) for i, j in gold if i in ia and j in ib}
+
+
+_SPLIT_MODES = ("auto", "entity", "canonical")
+
+
+def _use_canonical(ds, split):
+    if split not in _SPLIT_MODES:
+        raise ValueError(f"split must be one of {_SPLIT_MODES}, got {split!r}")
+    if split == "canonical" and not ds.splits:
+        raise ValueError(f"{ds.name} has no canonical split; use split='entity'")
+    return split == "canonical" or (split == "auto" and bool(ds.splits))
+
+
+def _parts(ds, entity, side, canonical, n_seeds, ratios):
+    """Yield ``(seed, ((train_a, train_b), (val_a, val_b), (test_a, test_b)))``."""
+    if canonical:
+        yield (
+            0,
+            tuple(
+                tuple(list(x) for x in ds.splits.get(name, ((), ())))
+                for name in ("train", "val", "test")
+            ),
+        )
+        return
+    for seed in range(n_seeds):
+        s = entity_split(entity, ratios=ratios, seed=seed)
+        assert_no_leakage(entity, s.train, s.val, s.test)
+        yield seed, (side(s.train), side(s.val), side(s.test))
 
 
 def benchmark_matcher(
@@ -195,6 +241,7 @@ def benchmark_matcher(
     n_seeds: int = 3,
     ratios: tuple = (0.6, 0.2, 0.2),
     fit: Optional[Callable] = None,
+    split: str = "auto",
 ) -> BenchmarkReport:
     """Score ``matcher`` on unseen-entity test splits of each benchmark in ``on``.
 
@@ -211,6 +258,12 @@ def benchmark_matcher(
     asserted leak-free first), and the matcher it returns is scored on test. Choose a
     threshold on the validation part there (:func:`~equate.evaluate.select_threshold`),
     never on test.
+
+    ``split`` chooses the parts: ``'entity'`` is the seeded entity split above;
+    ``'canonical'`` uses the benchmark's own ``splits`` (one run, ``n_seeds`` and
+    ``ratios`` ignored; no entity-leakage assertion, since a suite's *seen-entity*
+    variants share entities across parts by design); ``'auto'`` (default) is canonical
+    when the benchmark has ``splits``, else entity.
 
     >>> report = benchmark_matcher(n_seeds=2)
     >>> s = report.summary()['toy_names']
@@ -238,11 +291,12 @@ def benchmark_matcher(
                 [i - n_a for i in records if i >= n_a],
             )
 
+        canonical = _use_canonical(ds, split)
+        meta[ds.name]["split"] = "canonical" if canonical else "entity"
         scored = 0
-        for seed in range(n_seeds):
-            split = entity_split(entity, ratios=ratios, seed=seed)
-            test_a, test_b = side(split.test)
-            gold = _subset_pairs(ds.gold, test_a, test_b)
+        for seed, parts in _parts(ds, entity, side, canonical, n_seeds, ratios):
+            (tr_a, tr_b), (va_a, va_b), (test_a, test_b) = parts
+            gold = subset_pairs(ds.gold, test_a, test_b)
             if not gold:
                 warnings.warn(
                     f"{ds.name} seed {seed}: the test part holds no gold pair "
@@ -251,16 +305,13 @@ def benchmark_matcher(
                 continue
             run = matcher
             if fit is not None:
-                assert_no_leakage(entity, split.train, split.val, split.test)
-                tr_a, tr_b = side(split.train)
-                va_a, va_b = side(split.val)
                 run = fit(
                     [ds.a[i] for i in tr_a],
                     [ds.b[j] for j in tr_b],
-                    _subset_pairs(ds.gold, tr_a, tr_b),
+                    subset_pairs(ds.gold, tr_a, tr_b),
                     [ds.a[i] for i in va_a],
                     [ds.b[j] for j in va_b],
-                    _subset_pairs(ds.gold, va_a, va_b),
+                    subset_pairs(ds.gold, va_a, va_b),
                 )
             start = time.perf_counter()
             pred = {
@@ -287,7 +338,9 @@ def benchmark_matcher(
             scored += 1
         if not scored:
             raise ValueError(
-                f"{ds.name}: no seed produced a test part with a gold pair; the "
+                f"{ds.name}: its canonical test part holds no gold pair"
+                if canonical
+                else f"{ds.name}: no seed produced a test part with a gold pair; the "
                 f"benchmark is too small for ratios={ratios!r}"
             )
     return BenchmarkReport(tuple(rows), meta)
