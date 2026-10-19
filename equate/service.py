@@ -977,7 +977,10 @@ class MatchService:
         existed = self.sessions.pop(session_id, None) is not None
         self.sessions.pop(_data_key(session_id), None)
         with self._data_lock:
-            self._data_cache.pop(_data_key(session_id), None)
+            # not .pop(key, None): on Python 3.10 an OrderedDict subclass's pop goes
+            # through the overridden __getitem__ and raises for a missing key
+            if _data_key(session_id) in self._data_cache:
+                del self._data_cache[_data_key(session_id)]
         return existed
 
     # -- internals ----------------------------------------------------------------
