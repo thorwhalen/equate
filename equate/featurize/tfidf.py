@@ -6,6 +6,7 @@ matching; the output vectors are L2-normalized, so cosine similarity is a dot pr
 """
 
 import math
+from collections.abc import Mapping
 from itertools import chain
 
 import numpy as np
@@ -13,6 +14,7 @@ from scipy.sparse import csr_matrix
 
 from equate.base import FeaturizerMeta
 from equate._vector import l2_normalize
+from equate.featurize.records import record_text
 
 __all__ = ["TfidfFeaturizer", "mk_tfidf", "char_ngrams", "DFLT_NGRAM_RANGE"]
 
@@ -28,12 +30,23 @@ def char_ngrams(text, ngram_range=DFLT_NGRAM_RANGE, *, lowercase=True):
     name/SKU matching) and differs from scikit-learn's per-word ``char_wb`` analyzer. A
     text too short for any ``n`` in the range falls back to the padded string itself, so
     tiny or empty inputs still yield a (single) feature rather than an all-zero vector.
+    A record (a mapping) is read through :func:`~equate.featurize.records.record_text`;
+    any other non-string raises ``TypeError``.
 
     >>> char_ngrams('cat', (2, 3))
     [' c', 'ca', 'at', 't ', ' ca', 'cat', 'at ']
     >>> char_ngrams('', (3, 4))          # too short for any n: falls back to the padding
     ['  ']
     """
+    if isinstance(text, Mapping):
+        text = record_text(text)  # a record reads as its joined values
+    elif not isinstance(text, str):
+        # never stringify silently: str(None) would make every missing value match
+        # every other, and a token list would be read as its repr
+        raise TypeError(
+            f"the TF-IDF featurizer reads text or records (mappings), got "
+            f"{type(text).__name__}: {text!r:.60}"
+        )
     if lowercase:
         text = text.lower()
     padded = f" {text} "

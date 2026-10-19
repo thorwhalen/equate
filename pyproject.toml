@@ -53,6 +53,9 @@ embeddings = ["sentence-transformers"]
 api = ["openai", "cohere"]
 # --- evaluation: sklearn backs ARI / V-measure when present (numpy fallback otherwise) ---
 eval = ["scikit-learn"]
+# --- benchmark suites (equate.evaluate.suites): downloads use the stdlib only, so this extra
+# is empty today; it is the stable spelling for when a loader gains an optional dependency ---
+benchmarks = []
 # --- blocking / candidate generation (block stage) ---
 ann = ["hnswlib"]
 lsh = ["datasketch"]

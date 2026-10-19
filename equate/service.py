@@ -50,6 +50,7 @@ from scipy.sparse import coo_matrix
 from equate.base import Explanation, Partition, ScoreMatrix
 from equate.compare import resolve_comparator
 from equate.facade import score_matrix
+from equate.featurize.records import record_text
 from equate.interactive import CandidateStore, ConstraintSet, reoptimize
 from equate.matching import harden, resolve_matcher, soft_match
 
@@ -305,20 +306,6 @@ class Session:
 
 
 # --- Helpers -------------------------------------------------------------------------
-
-
-def record_text(obj):
-    """Text of an object for the default text featurizer: a record's values, joined.
-
-    A mapping (a JSON record) becomes its non-empty values joined by spaces, so records
-    work with the TF-IDF default; anything else becomes ``str(obj)``.
-
-    >>> record_text({'name': 'Jon Smith', 'city': 'Paris', 'zip': None})
-    'Jon Smith Paris'
-    """
-    if isinstance(obj, Mapping):
-        return " ".join(str(v) for v in obj.values() if v not in (None, ""))
-    return obj if isinstance(obj, str) else str(obj)
 
 
 _MISSING = (None, "")  # a field absent, null or empty is "missing", not "dissimilar"
