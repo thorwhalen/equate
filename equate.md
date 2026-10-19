@@ -1,4 +1,4 @@
-> built 2026-10-19 11:34 UTC from 6078be5 (master) · equate 0.0.19. Details: build_info.json
+> built 2026-10-19 11:52 UTC from bf54c03 (master) · equate 0.0.20. Details: build_info.json
 
 # index.html.md
 
@@ -133,8 +133,8 @@ The standard suites download on first use, into `~/.local/share/equate/benchmark
 ```python
 from equate.evaluate import benchmark_matcher, load_benchmark
 
-ds = load_benchmark("amazon_google")      # Leipzig original: complete gold, CC BY 4.0
-ds.meta["difficulty"]                     # literature context + measured linearity
+ds = load_benchmark("amazon_google")  # Leipzig original: complete gold, CC BY 4.0
+ds.meta["difficulty"]  # literature context + measured linearity
 benchmark_matcher(on=["dblp_acm", "wdc_products"]).to_markdown()
 ```
 
@@ -167,7 +167,7 @@ svc.edit(view.session_id, [{"action": "reject", "item": 0, "candidate": 1}])
 svc.next_query(view.session_id)  # the pair whose label would help most
 ```
 
-`pip install 'equate[service]'` adds the HTTP API (built with [qh](https://github.com/i2mint/qh)): `python -m equate.service serve`, then `POST /match`, `POST /sessions`, `GET|POST /sessions/{id}/candidates/{item}`, `POST /sessions/{id}/edits`, `POST /sessions/{id}/label`. `equate.service.mk_app(service)` returns the FastAPI app to mount elsewhere. Sessions live in any `MutableMapping` (`MatchService(sessions=...)`), so a `dol` store persists them.
+`pip install 'equate[service]'` adds the HTTP API (built with [qh](https://github.com/i2mint/qh)): `python -m equate.service serve`, then `POST /match`, `POST /sessions`, `GET|POST /sessions/{id}/candidates/{item}`, `POST /sessions/{id}/edits`, `POST /sessions/{id}/label`. `equate.service.mk_app(service)` returns the FastAPI app to mount elsewhere. Sessions live in any `MutableMapping` (`MatchService(sessions=...)`), so a `dol` store persists them. `open_session(..., floor=0.5)` sets a score floor: a pair below it is never proposed, so rejecting an item’s only good candidate leaves the item unmatched instead of handing it a poor one.
 
 The review UI (React, [zodal](https://github.com/i2mint/zodal) + shadcn) is in [`ui/`](): a review queue ordered by uncertainty, side-by-side field diffs, confirm / reject / reassign with optimistic updates, and a labelling widget.
 
@@ -4702,12 +4702,20 @@ forth. An item with no such candidate left is skipped.
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Query`](_autosummary/equate.service.html.md#equate.service.Query)]
 
-#### open_session(A, B, , k=5, featurize=None, compare=None, block=None, sense=None)
+#### open_session(A, B, , k=5, featurize=None, compare=None, block=None, sense=None, floor=None)
 
 Score `A` against `B` once and open an interactive review session.
 
 The session keeps each item’s top-`k` candidates and the optimal 1:1
 assignment; every later edit re-solves from these cached scores.
+
+`floor` is the lowest acceptable score (the highest acceptable distance for a
+`'minimize'` sense). Pairs past it are not candidates at all: never proposed,
+never offered for review, and a reject never pushes an item onto one — the item is
+left unmatched. Like blocking (D11), the assignment is then *lexicographic*: as
+many acceptable pairs as possible, then the best total score — so a floor can
+change the opening assignment, not just trim it. That is unlike
+[`match()`](_autosummary/equate.service.html.md#equate.service.MatchService.match)’s `threshold`, which solves first and then drops weak pairs.
 
 * **Return type:**
   [`SessionView`](_autosummary/equate.service.html.md#equate.service.SessionView)
@@ -4751,7 +4759,7 @@ One row of the review queue: an item, its current match and its alternatives.
 `margin` is the top-1/top-2 score gap (`None` when there is no rival) — small
 means ambiguous, which is why the queue puts it first.
 
-### *class* equate.service.Session(session_id, A, B, scores, store, k, assignment, edits=list(), labels=list(), accounting=Accounting())
+### *class* equate.service.Session(session_id, A, B, scores, store, k, assignment, edits=list(), labels=list(), accounting=Accounting(), floor=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -4766,7 +4774,7 @@ Bases: [`KeyError`](https://docs.python.org/3/builtins/exceptions.html#KeyError)
 
 No session with that id (an HTTP 404).
 
-### *class* equate.service.SessionView(session_id, n_left, n_right, sense, k, assignment, review, edits, labels, accounting)
+### *class* equate.service.SessionView(session_id, n_left, n_right, sense, k, assignment, review, edits, labels, accounting, floor=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -4991,18 +4999,16 @@ See: [https://en.wikipedia.org/wiki/Stable_marriage_problem](https://en.wikipedi
 
 # About this build
 
-This documentation was built on **2026-10-19 11:34 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/6078be5b18142d884cb259560809934c6ab6275f"><code>6078be5</code></a> on branch <code>master</code>, for **equate 0.0.19** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-19 11:52 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/bf54c03e9a8f7c6fb874c2e3bda80b90b15ead84"><code>bf54c03</code></a> on branch <code>master</code>, for **equate 0.0.20** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.19) is behind the latest release on PyPI (0.0.20): `pip install equate` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/equate/commit/6078be5b18142d884cb259560809934c6ab6275f"><code>6078be5b18142d884cb259560809934c6ab6275f</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/equate/commit/bf54c03e9a8f7c6fb874c2e3bda80b90b15ead84"><code>bf54c03e9a8f7c6fb874c2e3bda80b90b15ead84</code></a> |
 | Branch              | <code>master</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -5013,9 +5019,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/equate</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/39245408038">39245408038</a>    |
+| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/39247592813">39247592813</a>    |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>6078be5b18142d884cb259560809934c6ab6275f</code> (in the history of the built commit) |
+| Event commit | <code>bf54c03e9a8f7c6fb874c2e3bda80b90b15ead84</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -5040,13 +5046,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/equate/0.0.20/">0.0.20</a>, newer than the documented version (0.0.19).
+Latest release: <a href="https://pypi.org/project/equate/0.0.20/">0.0.20</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/equate && cd equate
-git checkout 6078be5b18142d884cb259560809934c6ab6275f
+git checkout bf54c03e9a8f7c6fb874c2e3bda80b90b15ead84
 pip install "epythet==0.2.18"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

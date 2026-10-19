@@ -421,8 +421,8 @@ At the time of writing this, we’ve implemented:
 <p>The standard suites download on first use, into <code class="docutils literal notranslate"><span class="pre">~/.local/share/equate/benchmarks</span></code> (or <code class="docutils literal notranslate"><span class="pre">$EQUATE_DATA_DIR</span></code>), never into the package:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">equate.evaluate</span><span class="w"> </span><span class="kn">import</span> <span class="n">benchmark_matcher</span><span class="p">,</span> <span class="n">load_benchmark</span>
 
-<span class="n">ds</span> <span class="o">=</span> <span class="n">load_benchmark</span><span class="p">(</span><span class="s2">"amazon_google"</span><span class="p">)</span>      <span class="c1"># Leipzig original: complete gold, CC BY 4.0</span>
-<span class="n">ds</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">"difficulty"</span><span class="p">]</span>                     <span class="c1"># literature context + measured linearity</span>
+<span class="n">ds</span> <span class="o">=</span> <span class="n">load_benchmark</span><span class="p">(</span><span class="s2">"amazon_google"</span><span class="p">)</span>  <span class="c1"># Leipzig original: complete gold, CC BY 4.0</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">"difficulty"</span><span class="p">]</span>  <span class="c1"># literature context + measured linearity</span>
 <span class="n">benchmark_matcher</span><span class="p">(</span><span class="n">on</span><span class="o">=</span><span class="p">[</span><span class="s2">"dblp_acm"</span><span class="p">,</span> <span class="s2">"wdc_products"</span><span class="p">])</span><span class="o">.</span><span class="n">to_markdown</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -451,7 +451,7 @@ At the time of writing this, we’ve implemented:
 <span class="n">svc</span><span class="o">.</span><span class="n">next_query</span><span class="p">(</span><span class="n">view</span><span class="o">.</span><span class="n">session_id</span><span class="p">)</span>  <span class="c1"># the pair whose label would help most</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'equate[service]'</span></code> adds the HTTP API (built with <a class="reference external" href="https://github.com/i2mint/qh">qh</a>): <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">equate.service</span> <span class="pre">serve</span></code>, then <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/match</span></code>, <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/sessions</span></code>, <code class="docutils literal notranslate"><span class="pre">GET|POST</span> <span class="pre">/sessions/{id}/candidates/{item}</span></code>, <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/sessions/{id}/edits</span></code>, <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/sessions/{id}/label</span></code>. <code class="docutils literal notranslate"><span class="pre">equate.service.mk_app(service)</span></code> returns the FastAPI app to mount elsewhere. Sessions live in any <code class="docutils literal notranslate"><span class="pre">MutableMapping</span></code> (<code class="docutils literal notranslate"><span class="pre">MatchService(sessions=...)</span></code>), so a <code class="docutils literal notranslate"><span class="pre">dol</span></code> store persists them.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'equate[service]'</span></code> adds the HTTP API (built with <a class="reference external" href="https://github.com/i2mint/qh">qh</a>): <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">equate.service</span> <span class="pre">serve</span></code>, then <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/match</span></code>, <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/sessions</span></code>, <code class="docutils literal notranslate"><span class="pre">GET|POST</span> <span class="pre">/sessions/{id}/candidates/{item}</span></code>, <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/sessions/{id}/edits</span></code>, <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/sessions/{id}/label</span></code>. <code class="docutils literal notranslate"><span class="pre">equate.service.mk_app(service)</span></code> returns the FastAPI app to mount elsewhere. Sessions live in any <code class="docutils literal notranslate"><span class="pre">MutableMapping</span></code> (<code class="docutils literal notranslate"><span class="pre">MatchService(sessions=...)</span></code>), so a <code class="docutils literal notranslate"><span class="pre">dol</span></code> store persists them. <code class="docutils literal notranslate"><span class="pre">open_session(...,</span> <span class="pre">floor=0.5)</span></code> sets a score floor: a pair below it is never proposed, so rejecting an item’s only good candidate leaves the item unmatched instead of handing it a poor one.</p>
 <p>The review UI (React, <a class="reference external" href="https://github.com/i2mint/zodal">zodal</a> + shadcn) is in <a class="reference internal" href="#ui/README.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ui/</span></code></span></a>: a review queue ordered by uncertainty, side-by-side field diffs, confirm / reject / reassign with optimistic updates, and a labelling widget.</p>
 </section>
 </section>
@@ -759,7 +759,7 @@ Let’s try two…</p>
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-19 11:34 UTC from <a href="https://github.com/thorwhalen/equate/commit/6078be5b18142d884cb259560809934c6ab6275f">6078be5</a> (master) · equate 0.0.19 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-19 11:52 UTC from <a href="https://github.com/thorwhalen/equate/commit/bf54c03e9a8f7c6fb874c2e3bda80b90b15ead84">bf54c03</a> (master) · equate 0.0.20 · <a href="about-this-build.html">about this build</a></p>
         </article>
       </div>
       <footer>
@@ -795,7 +795,7 @@ Let’s try two…</p>
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=a8acf705"></script>
+</div><script src="_static/documentation_options.js?v=7c40b9fe"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

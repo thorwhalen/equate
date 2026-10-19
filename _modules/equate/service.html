@@ -334,6 +334,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numbers</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
@@ -609,7 +610,8 @@
     <span class="n">review</span><span class="p">:</span> <span class="nb">list</span>
     <span class="n">edits</span><span class="p">:</span> <span class="nb">list</span>
     <span class="n">labels</span><span class="p">:</span> <span class="nb">list</span>
-    <span class="n">accounting</span><span class="p">:</span> <span class="n">Accounting</span></div>
+    <span class="n">accounting</span><span class="p">:</span> <span class="n">Accounting</span>
+    <span class="n">floor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 
@@ -660,7 +662,8 @@
     <span class="n">assignment</span><span class="p">:</span> <span class="nb">list</span>  <span class="c1"># [(i, j), ...]</span>
     <span class="n">edits</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>  <span class="c1"># [Edit, ...] — the replayable log</span>
     <span class="n">labels</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>  <span class="c1"># [Label, ...]</span>
-    <span class="n">accounting</span><span class="p">:</span> <span class="n">Accounting</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">Accounting</span><span class="p">)</span></div>
+    <span class="n">accounting</span><span class="p">:</span> <span class="n">Accounting</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">Accounting</span><span class="p">)</span>
+    <span class="n">floor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># the score floor applied at open (equate#21)</span></div>
 
 
 
@@ -833,6 +836,34 @@
     <span class="n">mask</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">candidate_mask</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">forbidden</span><span class="p">:</span>
         <span class="n">mask</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">_restricted</span><span class="p">(</span><span class="n">sm</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_past_floor_removed</span><span class="p">(</span><span class="n">sm</span><span class="p">,</span> <span class="n">floor</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``sm`` keeping only the cells that pass ``floor`` (at or above it for a</span>
+<span class="sd">    ``'maximize'`` sense, at or below for ``'minimize'``; NaN never passes): the others</span>
+<span class="sd">    become holes.</span>
+
+<span class="sd">    The same mechanism as a reject, so a session never *forces* a pair past the floor:</span>
+<span class="sd">    the lexicographic re-solve leaves an item unmatched instead (equate#21).</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">floor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sm</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">candidate_mask</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">sm</span><span class="o">.</span><span class="n">is_sparse</span><span class="p">:</span>
+        <span class="n">coo</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">tocoo</span><span class="p">()</span>
+        <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="n">coo</span><span class="o">.</span><span class="n">row</span><span class="p">,</span> <span class="n">coo</span><span class="o">.</span><span class="n">col</span><span class="p">,</span> <span class="n">coo</span><span class="o">.</span><span class="n">data</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">]</span>
+    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
+        <span class="n">fails</span> <span class="o">=</span> <span class="o">~</span><span class="p">(</span><span class="n">values</span> <span class="o">&gt;=</span> <span class="n">floor</span> <span class="k">if</span> <span class="n">sm</span><span class="o">.</span><span class="n">sense</span> <span class="o">==</span> <span class="s2">"maximize"</span> <span class="k">else</span> <span class="n">values</span> <span class="o">&lt;=</span> <span class="n">floor</span><span class="p">)</span>
+    <span class="n">mask</span><span class="p">[</span><span class="n">rows</span><span class="p">[</span><span class="n">fails</span><span class="p">],</span> <span class="n">cols</span><span class="p">[</span><span class="n">fails</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">_restricted</span><span class="p">(</span><span class="n">sm</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_restricted</span><span class="p">(</span><span class="n">sm</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``sm`` as a sparse matrix storing exactly the cells where ``mask`` is True."""</span>
     <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
     <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sm</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">])</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
     <span class="c1"># coo keeps explicitly-stored zeros, so a real 0.0 score stays a candidate</span>
@@ -993,18 +1024,29 @@
         <span class="n">compare</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">block</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">sense</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">floor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SessionView</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Score ``A`` against ``B`` once and open an interactive review session.</span>
 
 <span class="sd">        The session keeps each item's top-``k`` candidates and the optimal 1:1</span>
 <span class="sd">        assignment; every later edit re-solves from these cached scores.</span>
+
+<span class="sd">        ``floor`` is the lowest acceptable score (the highest acceptable distance for a</span>
+<span class="sd">        ``'minimize'`` sense). Pairs past it are not candidates at all: never proposed,</span>
+<span class="sd">        never offered for review, and a reject never pushes an item onto one — the item is</span>
+<span class="sd">        left unmatched. Like blocking (D11), the assignment is then *lexicographic*: as</span>
+<span class="sd">        many acceptable pairs as possible, then the best total score — so a floor can</span>
+<span class="sd">        change the opening assignment, not just trim it. That is unlike</span>
+<span class="sd">        :meth:`match`'s ``threshold``, which solves first and then drops weak pairs.</span>
 <span class="sd">        """</span>
         <span class="n">k</span> <span class="o">=</span> <span class="n">_positive_int</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="s2">"k"</span><span class="p">)</span>
+        <span class="n">floor</span> <span class="o">=</span> <span class="n">_finite_or_error</span><span class="p">(</span><span class="n">floor</span><span class="p">,</span> <span class="s2">"floor"</span><span class="p">)</span>
         <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
         <span class="n">acc</span> <span class="o">=</span> <span class="n">Accounting</span><span class="p">()</span>
         <span class="n">sm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_score</span><span class="p">(</span>
             <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">acc</span><span class="p">,</span> <span class="n">featurize</span><span class="o">=</span><span class="n">featurize</span><span class="p">,</span> <span class="n">compare</span><span class="o">=</span><span class="n">compare</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="n">block</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span>
         <span class="p">)</span>
+        <span class="n">sm</span> <span class="o">=</span> <span class="n">_past_floor_removed</span><span class="p">(</span><span class="n">sm</span><span class="p">,</span> <span class="n">floor</span><span class="p">)</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timed</span><span class="p">(</span><span class="n">acc</span><span class="p">,</span> <span class="s2">"candidates"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)):</span>
             <span class="n">store</span> <span class="o">=</span> <span class="n">CandidateStore</span><span class="o">.</span><span class="n">from_scores</span><span class="p">(</span><span class="n">sm</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sm</span><span class="o">.</span><span class="n">sense</span><span class="p">)</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timed</span><span class="p">(</span><span class="n">acc</span><span class="p">,</span> <span class="s2">"reoptimize"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">B</span><span class="p">)):</span>
@@ -1018,6 +1060,7 @@
             <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span>
             <span class="n">assignment</span><span class="o">=</span><span class="n">assignment</span><span class="p">,</span>
             <span class="n">accounting</span><span class="o">=</span><span class="n">acc</span><span class="p">,</span>
+            <span class="n">floor</span><span class="o">=</span><span class="n">floor</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_save</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">session_id</span><span class="p">)</span></div>
@@ -1039,6 +1082,7 @@
             <span class="n">edits</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">edits</span><span class="p">),</span>
             <span class="n">labels</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">labels</span><span class="p">),</span>
             <span class="n">accounting</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">accounting</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(),</span>
+            <span class="n">floor</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">floor</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -1058,7 +1102,7 @@
         <span class="n">assigned</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">assignment</span><span class="p">)</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">order</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
-            <span class="n">m</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">margin</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">_margin</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">forced</span><span class="p">,</span> <span class="n">m</span> <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">else</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
 
         <span class="n">items</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">A</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
@@ -1079,7 +1123,7 @@
                     <span class="n">left</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                     <span class="n">assigned</span><span class="o">=</span><span class="n">assigned</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
                     <span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="p">,</span>
-                    <span class="n">margin</span><span class="o">=</span><span class="n">_finite_or_none</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">margin</span><span class="p">(</span><span class="n">i</span><span class="p">)),</span>
+                    <span class="n">margin</span><span class="o">=</span><span class="n">_finite_or_none</span><span class="p">(</span><span class="n">_margin</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">)),</span>
                     <span class="n">candidates</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_candidate_views</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span>
                 <span class="p">)</span>
             <span class="p">)</span>
@@ -1285,12 +1329,37 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_margin</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Item ``i``'s confidence margin: top-1 vs top-2 score gap, where a session floor</span>
+<span class="sd">    counts as a virtual runner-up — an item left with one candidate just past the floor</span>
+<span class="sd">    is a borderline call, not a certain one (it would otherwise read as ``inf``)."""</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">margin</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="n">top</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">top</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">floor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">top</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">top</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">top</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">s</span><span class="o">.</span><span class="n">floor</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">m</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_is_stored</span><span class="p">(</span><span class="n">sm</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Whether ``(i, j)`` is a candidate cell of ``sm`` (every cell of a dense matrix)."""</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">sm</span><span class="o">.</span><span class="n">is_sparse</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">True</span>
     <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">indptr</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sm</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">indptr</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">sm</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">indices</span><span class="p">[</span><span class="n">lo</span><span class="p">:</span><span class="n">hi</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_finite_or_error</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">what</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Real</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># a numpy scalar is a Real; a huge int overflows here</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">OverflowError</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> must be a finite number, got </span><span class="si">{</span><span class="n">x</span><span class="si">!r:</span><span class="s2">.80</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> must be a finite number, got </span><span class="si">{</span><span class="n">x</span><span class="si">!r:</span><span class="s2">.80</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_positive_int</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">what</span><span class="p">):</span>
@@ -1439,6 +1508,7 @@
         <span class="n">compare</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">block</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">sense</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">floor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">return</span> <span class="n">J</span><span class="p">(</span>
             <span class="n">svc</span><span class="o">.</span><span class="n">open_session</span><span class="p">(</span>
@@ -1449,6 +1519,7 @@
                 <span class="n">compare</span><span class="o">=</span><span class="n">compare</span><span class="p">,</span>
                 <span class="n">block</span><span class="o">=</span><span class="n">block</span><span class="p">,</span>
                 <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">,</span>
+                <span class="n">floor</span><span class="o">=</span><span class="n">floor</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
 
@@ -1574,7 +1645,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=a8acf705"></script>
+</div><script src="../../_static/documentation_options.js?v=7c40b9fe"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

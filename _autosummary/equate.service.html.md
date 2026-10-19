@@ -224,12 +224,20 @@ forth. An item with no such candidate left is skipped.
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Query`](#equate.service.Query)]
 
-#### open_session(A, B, , k=5, featurize=None, compare=None, block=None, sense=None)
+#### open_session(A, B, , k=5, featurize=None, compare=None, block=None, sense=None, floor=None)
 
 Score `A` against `B` once and open an interactive review session.
 
 The session keeps each item’s top-`k` candidates and the optimal 1:1
 assignment; every later edit re-solves from these cached scores.
+
+`floor` is the lowest acceptable score (the highest acceptable distance for a
+`'minimize'` sense). Pairs past it are not candidates at all: never proposed,
+never offered for review, and a reject never pushes an item onto one — the item is
+left unmatched. Like blocking (D11), the assignment is then *lexicographic*: as
+many acceptable pairs as possible, then the best total score — so a floor can
+change the opening assignment, not just trim it. That is unlike
+[`match()`](#equate.service.MatchService.match)’s `threshold`, which solves first and then drops weak pairs.
 
 * **Return type:**
   [`SessionView`](#equate.service.SessionView)
@@ -273,7 +281,7 @@ One row of the review queue: an item, its current match and its alternatives.
 `margin` is the top-1/top-2 score gap (`None` when there is no rival) — small
 means ambiguous, which is why the queue puts it first.
 
-### *class* equate.service.Session(session_id, A, B, scores, store, k, assignment, edits=list(), labels=list(), accounting=Accounting())
+### *class* equate.service.Session(session_id, A, B, scores, store, k, assignment, edits=list(), labels=list(), accounting=Accounting(), floor=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -288,7 +296,7 @@ Bases: [`KeyError`](https://docs.python.org/3/builtins/exceptions.html#KeyError)
 
 No session with that id (an HTTP 404).
 
-### *class* equate.service.SessionView(session_id, n_left, n_right, sense, k, assignment, review, edits, labels, accounting)
+### *class* equate.service.SessionView(session_id, n_left, n_right, sense, k, assignment, review, edits, labels, accounting, floor=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
