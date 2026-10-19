@@ -10,7 +10,15 @@ accepts both, and users can register their own strategies without subclassing.
 from collections.abc import Callable
 from typing import Any, Optional
 
-__all__ = ["Registry"]
+__all__ = ["Registry", "UnknownStrategyError"]
+
+
+class UnknownStrategyError(KeyError):
+    """No strategy is registered under that name (a ``KeyError``, for back-compat).
+
+    Its own type lets a surface tell a caller's unknown name (an HTTP 422) from a
+    ``KeyError`` raised by a bug.
+    """
 
 
 class Registry:
@@ -55,7 +63,7 @@ class Registry:
         try:
             return self._entries[name][0]
         except KeyError:
-            raise KeyError(
+            raise UnknownStrategyError(
                 f"unknown {self.kind} {name!r}; available: {self.names()}"
             ) from None
 
@@ -66,7 +74,9 @@ class Registry:
         an unknown name is never silently conflated with a known name that has no meta.
         """
         if name not in self._entries:
-            raise KeyError(f"unknown {self.kind} {name!r}; available: {self.names()}")
+            raise UnknownStrategyError(
+                f"unknown {self.kind} {name!r}; available: {self.names()}"
+            )
         return self._entries[name][1]
 
     def create(self, name: str, *args, **kwargs):

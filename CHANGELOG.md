@@ -6,6 +6,15 @@ releases CI publishes to PyPI.
 
 ## Unreleased
 
+**Service hardening** (#23).
+
+- The review queue's margin is computed over each item's *open* candidates: those not rejected for it and not confirmed for another item. The queue and `next_query` now follow the edits instead of asking about one item until every candidate is rejected.
+- `MatchService(precedence=('human', 'llm'))` ranks edit sources. A less authoritative edit never overrides a more authoritative decision: an LLM label cannot release a human's confirm. It stays in the log, unapplied. The default is still "latest wins".
+- A session is stored as two keys: its immutable `SessionData` (both collections and the score matrix, written once) and its small mutable state (saved on every edit). An edit no longer re-writes the n × m scores. Sessions saved by earlier versions still load and migrate on their next save.
+- `Session.version` is checked on save. A save that finds a newer version (another process saved first) raises `SessionConflict`, an HTTP 409, instead of losing that change.
+- HTTP handlers are async and run the service in a worker thread, so one long scoring call no longer blocks other requests.
+- Errors map narrowly: an unknown strategy name (the new `equate.registry.UnknownStrategyError`, still a `KeyError`) or a bad value or type is a 422; any other exception is a genuine 500.
+
 **Confidence intervals and GMD** (#25; doc 14 §7.4).
 
 - `benchmark_matcher(..., ci='auto', n_boot=1000)` adds a bootstrap confidence interval to a single-run score. A canonical split runs once, so it has no seed spread, and a 500-pair test set leaves a few points of F1 within noise: WDC Products 80/100 reads `0.628 [0.588, 0.670]`. The bootstrap resamples test *entities*, not pairs, so one entity's pairs succeed or fail together. It is seeded (`ci_seed`), so a report is reproducible. A resample with no predicted or no gold pair is left out of that metric's interval rather than scored as perfect. Resamples are drawn in chunks, so memory stays bounded, and arguments are checked before the matcher runs. `'auto'` gives 95 % for a single run; a level gives every row an interval; `None` turns it off. Intervals are in `BenchmarkRow.ci` and printed by `to_markdown`. `bootstrap_ci(pred, gold, left_entities)` is public.

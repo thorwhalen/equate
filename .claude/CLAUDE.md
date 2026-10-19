@@ -67,8 +67,11 @@ adding a structured strategy, decide which of these three seams it belongs to.
   blocked-matching semantics, D11), not an `inf` — so rejecting every candidate leaves an
   item unmatched instead of making the LAP infeasible. Edits fold latest-wins
   (`_effective_constraints`).
-- **Concurrency:** edits of one session are serialized by a per-session lock (in-process
-  only); a multi-process session store needs versioning first. An edit or a label is
+- **Concurrency:** edits of one session are serialized by a per-session lock in-process;
+  across processes, `Session.version` is checked on save (`SessionConflict` → 409). A
+  session is two store keys: the mutable state (`sid`, saved on every edit) and the
+  immutable `SessionData` (`sid.data`: A, B, scores — written once). HTTP handlers run in
+  a worker thread (async endpoints), never on the event loop. An edit or a label is
   atomic — a failed one leaves the session (log, labels, accounting) untouched.
 - **HTTP errors are mapped in `mk_app`**, because qh turns any exception into a 500:
   `SessionNotFound` → 404, other `KeyError`/`ValueError`/`TypeError` → 422.
