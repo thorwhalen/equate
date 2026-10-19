@@ -16,6 +16,7 @@ equate.featurize
    
       identity
       record_text
+      value_set
       resolve_featurizer
       mk_tfidf
       char_ngrams
@@ -35,6 +36,7 @@ equate.featurize
    :toctree:
    :recursive:
 
+   columns
    graph
    records
    text

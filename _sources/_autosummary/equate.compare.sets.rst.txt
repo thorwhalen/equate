@@ -1,0 +1,14 @@
+equate.compare.sets
+===================
+
+.. automodule:: equate.compare.sets
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      jaccard
+      overlap
+      containment
+   

@@ -223,6 +223,7 @@
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.calibrate.html">equate.compare.calibrate</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.numeric_geo.html">equate.compare.numeric_geo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.sequence.html">equate.compare.sequence</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.compare.sets.html">equate.compare.sets</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.string.html">equate.compare.string</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.vector.html">equate.compare.vector</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.vectorize.html">equate.compare.vectorize</a></li>
@@ -243,6 +244,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="equate.facade.html">equate.facade</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="equate.featurize.html">equate.featurize</a><input aria-label="Toggle navigation of equate.featurize" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="equate.featurize.columns.html">equate.featurize.columns</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.featurize.graph.html">equate.featurize.graph</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.featurize.records.html">equate.featurize.records</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.featurize.text.html">equate.featurize.text</a></li>
@@ -310,42 +312,275 @@
         <article role="main" id="furo-main-content">
           <section id="module-equate.completion">
 <span id="equate-completion"></span><h1>equate.completion<a class="headerlink" href="#module-equate.completion" title="Link to this heading">¶</a></h1>
-<p>Tools to complete missing data from other sources of the same data.</p>
-<p>Merging/joining tables is very common instance, yet only a small part of what is
-possible, and often needed. Without moving away from tabular data:</p>
+<p>Tabular completion: find join keys, near-duplicate columns, and fill a table from another.</p>
+<p>Merging tables on a known key is a small part of what is needed. Without leaving tables:</p>
 <ul class="simple">
-<li><p>Find the columns to match (join keys) by comparing how well the values of the column
-match.</p></li>
-<li><p>Comparing the values of the columns with something more flexible than hard equality.</p></li>
+<li><p><strong>find the columns to join on</strong> (<a class="reference internal" href="#equate.completion.find_join_keys" title="equate.completion.find_join_keys"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_join_keys()</span></code></a>) by how much one column’s
+values are <em>contained</em> in another’s — no header names needed;</p></li>
+<li><p><strong>find near-duplicate columns</strong> (<a class="reference internal" href="#equate.completion.find_near_duplicate_columns" title="equate.completion.find_near_duplicate_columns"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_near_duplicate_columns()</span></code></a>) in one table;</p></li>
+<li><p><strong>complete a table</strong> (<a class="reference internal" href="#equate.completion.complete_table" title="equate.completion.complete_table"><code class="xref py py-func docutils literal notranslate"><span class="pre">complete_table()</span></code></a>): discover the join key, align rows by
+fuzzy matching of the key values, and fill the target’s missing cells from the source.</p></li>
 </ul>
-<p>For example, correlation, similarity, etc.</p>
-<ul class="simple">
-<li><p>Find near duplicate columns</p></li>
-<li><p>Find rows to align, based on flexible comparison of fuzzily matched cells</p></li>
-</ul>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This module is a stale early duplicate of <code class="docutils literal notranslate"><span class="pre">equate.util</span></code> and is slated to be
-rewritten as a thin facade over the redesigned stages (roadmap #13). Its <code class="docutils literal notranslate"><span class="pre">grub</span></code>
-import is lazy (behind the optional <code class="docutils literal notranslate"><span class="pre">equate[grub]</span></code> extra) so importing the module
-does not fail on a default numpy/scipy-only install.</p>
+<p>These are facades over the same seams as everything else (research doc 07 §8, doc 10
+§8.7) — not a parallel implementation: a column is an object featurized as its value set
+(<code class="docutils literal notranslate"><span class="pre">featurize='value_set'</span></code>), compared with a set comparator (<code class="docutils literal notranslate"><span class="pre">'containment'</span></code>,
+<code class="docutils literal notranslate"><span class="pre">'jaccard'</span></code>, <code class="docutils literal notranslate"><span class="pre">'overlap'</span></code>), and selected with the top-k <code class="xref py py-class docutils literal notranslate">
+<span class="pre">CandidateStore</span></code>; rows are aligned with <code class="xref py py-func docutils literal notranslate"><span class="pre">equate.match()</span></code> / <code class="xref py py-func docutils literal notranslate"><span class="pre">equate.score_matrix()</span></code>.</p>
+<p>A <em>table</em> is any of: a mapping of column name to values (<code class="docutils literal notranslate"><span class="pre">{'name':</span> <span class="pre">[...],</span> <span class="pre">...}</span></code>), a list
+of row mappings, or anything DataFrame-like (<code class="docutils literal notranslate"><span class="pre">.columns</span></code> and <code class="docutils literal notranslate"><span class="pre">table[column]</span></code>). Results
+are structured dataclasses; <a class="reference internal" href="#equate.completion.Completion" title="equate.completion.Completion"><code class="xref py py-class docutils literal notranslate"><span class="pre">Completion</span></code></a> gives back columns (<code class="docutils literal notranslate"><span class="pre">.table</span></code>) or rows
+(<code class="docutils literal notranslate"><span class="pre">.rows()</span></code>).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">left</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'cust'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'c1'</span><span class="p">,</span> <span class="s1">'c2'</span><span class="p">,</span> <span class="s1">'c3'</span><span class="p">],</span> <span class="s1">'city'</span><span class="p">:</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s1">'Lyon'</span><span class="p">,</span> <span class="kc">None</span><span class="p">]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">right</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'id'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'c3'</span><span class="p">,</span> <span class="s1">'c1'</span><span class="p">,</span> <span class="s1">'c2'</span><span class="p">,</span> <span class="s1">'c9'</span><span class="p">],</span> <span class="s1">'city'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'Nice'</span><span class="p">,</span> <span class="s1">'Paris'</span><span class="p">,</span> <span class="s1">'Lyon'</span><span class="p">,</span> <span class="s1">'Lille'</span><span class="p">]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">m</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">score</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">find_join_keys</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">('cust', 'id', 1.0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">complete_table</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="s1">'city'</span><span class="p">]</span>
+<span class="go">['Paris', 'Lyon', 'Nice']</span>
+</pre></div>
 </div>
+<p>The functions further down (<code class="docutils literal notranslate"><span class="pre">similarity_matrix</span></code>, <code class="docutils literal notranslate"><span class="pre">mk_text_to_vect</span></code>, …) are the
+pre-redesign API, kept for back-compat; new code should use <code class="xref py py-func docutils literal notranslate"><span class="pre">equate.score_matrix()</span></code>.</p>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mk_text_to_vect</span></code>(*learn_texts)</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.completion.as_columns" title="equate.completion.as_columns"><code class="xref py py-obj docutils literal notranslate"><span class="pre">as_columns</span></code></a>(table)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{column</span> <span class="pre">name:</span> <span class="pre">list</span> <span class="pre">of</span> <span class="pre">values}</span></code> from a column mapping, a list of row mappings, or a DataFrame-like object (<code class="docutils literal notranslate"><span class="pre">.columns</span></code> + <code class="docutils literal notranslate"><span class="pre">table[column]</span></code>).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.completion.similarity_matrix" title="equate.completion.similarity_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">similarity_matrix</span></code></a>(keys, values, *[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.completion.find_join_keys" title="equate.completion.find_join_keys"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_join_keys</span></code></a>(left, right, *[, compare, k, ...])</p></td>
+<td><p>Columns of <code class="docutils literal notranslate"><span class="pre">right</span></code> that <code class="docutils literal notranslate"><span class="pre">left</span></code>'s columns could be joined on, best first.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.completion.find_near_duplicate_columns" title="equate.completion.find_near_duplicate_columns"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_near_duplicate_columns</span></code></a>(table, *[, ...])</p></td>
+<td><p>Pairs of columns of one table whose value sets are near-identical.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.completion.complete_table" title="equate.completion.complete_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">complete_table</span></code></a>(target, source, *[, on, ...])</p></td>
+<td><p>Fill <code class="docutils literal notranslate"><span class="pre">target</span></code>'s missing cells from <code class="docutils literal notranslate"><span class="pre">source</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.completion.similarity_matrix" title="equate.completion.similarity_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">similarity_matrix</span></code></a>(keys, values, *[, ...])</p></td>
 <td><p>Return a matrix of the similarity of the keys to the values.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mk_text_to_vect</span></code>(*learn_texts)</p></td>
+<td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform_text</span></code>(text, transformer)</p></td>
 <td><p></p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.completion.greedy_matching" title="equate.completion.greedy_matching"><code class="xref py py-obj docutils literal notranslate"><span class="pre">greedy_matching</span></code></a>(similarity_matrix)</p></td>
+<td><p>Greedy Algorithm: Iteratively picks the highest similarity pair and removes the matched items from the pool.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.completion.hungarian_matching" title="equate.completion.hungarian_matching"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hungarian_matching</span></code></a>(similarity_matrix, *[, ...])</p></td>
+<td><p>Hungarian Algorithm (Optimal Matching): Finds the optimal 1:1 assignment, minimizing the total cost (equivalently, maximizing the total similarity).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.completion.maximal_matching" title="equate.completion.maximal_matching"><code class="xref py py-obj docutils literal notranslate"><span class="pre">maximal_matching</span></code></a>(similarity_matrix)</p></td>
+<td><p>Maximal Matching in Bipartite Graph: Finds a maximal matching in a bipartite graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.completion.stable_marriage_matching" title="equate.completion.stable_marriage_matching"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stable_marriage_matching</span></code></a>(similarity_matrix, *)</p></td>
+<td><p>Stable Marriage Problem (Gale-Shapley Algorithm): Solves the stable marriage problem, ensuring a stable matching.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.completion.kuhn_munkres_matching" title="equate.completion.kuhn_munkres_matching"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kuhn_munkres_matching</span></code></a>(similarity_matrix, *)</p></td>
+<td><p>Kuhn-Munkres Algorithm: Another implementation of the Hungarian algorithm using the <code class="code docutils literal notranslate"><span class="pre">networkx</span></code> package (requires the optional <code class="docutils literal notranslate"><span class="pre">equate[graph]</span></code> extra).</p></td>
+</tr>
 </tbody>
 </table>
 </div>
+<p class="rubric">Classes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.completion.ColumnMatch" title="equate.completion.ColumnMatch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ColumnMatch</span></code></a>(left, right, score[, explanation])</p></td>
+<td><p>A scored correspondence between a <code class="docutils literal notranslate"><span class="pre">left</span></code> and a <code class="docutils literal notranslate"><span class="pre">right</span></code> column.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.completion.Completion" title="equate.completion.Completion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Completion</span></code></a>(table, key, rows, filled[, columns])</p></td>
+<td><p>The completed table and how it was completed.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="equate.completion.ColumnMatch">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">ColumnMatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explanation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/completion.html#ColumnMatch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.ColumnMatch" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A scored correspondence between a <code class="docutils literal notranslate"><span class="pre">left</span></code> and a <code class="docutils literal notranslate"><span class="pre">right</span></code> column.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="equate.completion.Completion">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">Completion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filled</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">dict()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/completion.html#Completion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.Completion" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>The completed table and how it was completed.</p>
+<p><code class="docutils literal notranslate"><span class="pre">table</span></code> is the target as columns, with missing cells filled; <code class="docutils literal notranslate"><span class="pre">key</span></code> the join key
+used; <code class="docutils literal notranslate"><span class="pre">rows</span></code> the aligned <code class="docutils literal notranslate"><span class="pre">(target_row,</span> <span class="pre">source_row,</span> <span class="pre">score)</span></code> triples (<code class="docutils literal notranslate"><span class="pre">score</span></code> is
+<code class="docutils literal notranslate"><span class="pre">None</span></code> for an exact key match, the fuzzy score otherwise); <code class="docutils literal notranslate"><span class="pre">filled</span></code> the number of
+cells filled per column; <code class="docutils literal notranslate"><span class="pre">columns</span></code> the <code class="docutils literal notranslate"><span class="pre">{target:</span> <span class="pre">source}</span></code> columns used.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.completion.Completion.as_rows">
+<span class="sig-name descname"><span class="pre">as_rows</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/completion.html#Completion.as_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.Completion.as_rows" title="Link to this definition">¶</a></dt>
+<dd><p>The completed table as a list of row dicts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.completion.as_columns">
+<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">as_columns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/completion.html#as_columns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.as_columns" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">{column</span> <span class="pre">name:</span> <span class="pre">list</span> <span class="pre">of</span> <span class="pre">values}</span></code> from a column mapping, a list of row mappings,
+or a DataFrame-like object (<code class="docutils literal notranslate"><span class="pre">.columns</span></code> + <code class="docutils literal notranslate"><span class="pre">table[column]</span></code>).</p>
+<p>Column names are kept as they are (an <code class="docutils literal notranslate"><span class="pre">int</span></code> stays an <code class="docutils literal notranslate"><span class="pre">int</span></code>). Rows missing a
+column get <code class="docutils literal notranslate"><span class="pre">None</span></code> there; column order is first-seen order. A column must be a
+sequence of cells, not a string.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">as_columns</span><span class="p">([{</span><span class="s1">'a'</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="p">{</span><span class="s1">'a'</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">:</span> <span class="s1">'x'</span><span class="p">}])</span>
+<span class="go">{'a': [1, 2], 'b': [None, 'x']}</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.completion.complete_table">
+<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">complete_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_compare</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'containment'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_key_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">row_compare</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ratio'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">how</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'best'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_row_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/completion.html#complete_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.complete_table" title="Link to this definition">¶</a></dt>
+<dd><p>Fill <code class="docutils literal notranslate"><span class="pre">target</span></code>’s missing cells from <code class="docutils literal notranslate"><span class="pre">source</span></code>.</p>
+<ol class="arabic simple">
+<li><p><strong>Key</strong> — <code class="docutils literal notranslate"><span class="pre">on=(target_column,</span> <span class="pre">source_column)</span></code>, or discovered with
+<a class="reference internal" href="#equate.completion.find_join_keys" title="equate.completion.find_join_keys"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_join_keys()</span></code></a> (<code class="docutils literal notranslate"><span class="pre">key_compare</span></code>, <code class="docutils literal notranslate"><span class="pre">min_key_score</span></code>).</p></li>
+<li><p><strong>Rows</strong> — key values are normalized (case, spacing, <code class="docutils literal notranslate"><span class="pre">1.0</span></code> = <code class="docutils literal notranslate"><span class="pre">1</span></code>) and joined
+<strong>exactly</strong> first. Only target keys with no exact partner are matched
+<strong>fuzzily</strong> with <code class="docutils literal notranslate"><span class="pre">row_compare</span></code> (default the <code class="docutils literal notranslate"><span class="pre">'ratio'</span></code> edit similarity, so a
+stray character still meets its key; <code class="docutils literal notranslate"><span class="pre">None</span></code> turns fuzzy matching off) and kept only
+when they score at least <code class="docutils literal notranslate"><span class="pre">min_row_score</span></code> (default <code class="docutils literal notranslate"><span class="pre">0.9</span></code>; for a <em>distance</em>
+comparator it is a maximum) and are not tied between two source keys.
+<code class="docutils literal notranslate"><span class="pre">how='best'</span></code> (default) is a lookup: each target row takes its source key, so
+many target rows may share one. A matcher name (<code class="docutils literal notranslate"><span class="pre">'optimal'</span></code>, <code class="docutils literal notranslate"><span class="pre">'greedy'</span></code>,
+<code class="docutils literal notranslate"><span class="pre">'stable'</span></code>) aligns rows one-to-one instead.</p></li>
+<li><p><strong>Fill</strong> — for each <code class="docutils literal notranslate"><span class="pre">{target_column:</span> <span class="pre">source_column}</span></code> in <code class="docutils literal notranslate"><span class="pre">columns</span></code> (default:
+the columns both tables share, except the key), a missing target cell (<code class="docutils literal notranslate"><span class="pre">None</span></code>,
+blank, NaN, pandas <code class="docutils literal notranslate"><span class="pre">NA</span></code>) takes the value of the first aligned source row that
+has one. A target column that does not exist yet is created. Present values are
+never overwritten.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#equate.completion.Completion" title="equate.completion.Completion"><code class="xref py py-class docutils literal notranslate"><span class="pre">Completion</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.completion.find_join_keys">
+<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">find_join_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">compare</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'containment'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/completion.html#find_join_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.find_join_keys" title="Link to this definition">¶</a></dt>
+<dd><p>Columns of <code class="docutils literal notranslate"><span class="pre">right</span></code> that <code class="docutils literal notranslate"><span class="pre">left</span></code>’s columns could be joined on, best first.</p>
+<p>Each column is featurized as its value set and compared with <code class="docutils literal notranslate"><span class="pre">compare</span></code> (default
+<code class="docutils literal notranslate"><span class="pre">'containment'</span></code>: the share of the left column’s distinct values found in the right
+one — a foreign key scores 1.0 against its primary key whatever else that holds).
+Each left column keeps its top-<code class="docutils literal notranslate"><span class="pre">k</span></code> right columns scoring at least <code class="docutils literal notranslate"><span class="pre">min_score</span></code>.
+Returns <a class="reference internal" href="#equate.completion.ColumnMatch" title="equate.completion.ColumnMatch"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnMatch</span></code></a> es sorted by score; ties go to the pair sharing more
+distinct values (a real key over a low-cardinality column), then to column order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.completion.find_near_duplicate_columns">
+<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">find_near_duplicate_columns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">compare</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'jaccard'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/completion.html#find_near_duplicate_columns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.find_near_duplicate_columns" title="Link to this definition">¶</a></dt>
+<dd><p>Pairs of columns of one table whose value sets are near-identical.</p>
+<p>Each column is featurized as its value set and every pair compared with <code class="docutils literal notranslate"><span class="pre">compare</span></code>
+(default <code class="docutils literal notranslate"><span class="pre">'jaccard'</span></code>); pairs scoring at least <code class="docutils literal notranslate"><span class="pre">threshold</span></code> are returned as
+<a class="reference internal" href="#equate.completion.ColumnMatch" title="equate.completion.ColumnMatch"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnMatch</span></code></a> es, best first — earlier column on the left for a symmetric
+comparator, both directions for a directional one (<code class="docutils literal notranslate"><span class="pre">'containment'</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.completion.greedy_matching">
+<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">greedy_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/util.html#greedy_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.greedy_matching" title="Link to this definition">¶</a></dt>
+<dd><p>Greedy Algorithm: Iteratively picks the highest similarity pair and removes the
+matched items from the pool.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>similarity_matrix</strong> – A sparse matrix of similarities.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of tuples (row_index, col_index) for matched pairs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.completion.hungarian_matching">
+<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">hungarian_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maximize'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/util.html#hungarian_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.hungarian_matching" title="Link to this definition">¶</a></dt>
+<dd><p>Hungarian Algorithm (Optimal Matching): Finds the optimal 1:1 assignment,
+minimizing the total cost (equivalently, maximizing the total similarity).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>similarity_matrix</strong> – A matrix of scores. <code class="docutils literal notranslate"><span class="pre">sense='maximize'</span></code> treats them as
+similarities (higher = better, the default); <code class="docutils literal notranslate"><span class="pre">sense='minimize'</span></code> treats them
+as costs/distances. The conversion goes through the <code class="docutils literal notranslate"><span class="pre">to_cost</span></code> SSOT.</p></li>
+<li><p><strong>cost_matrix</strong> – An explicit cost matrix to use instead (overrides <code class="docutils literal notranslate"><span class="pre">sense</span></code>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An iterator of (row_index, col_index) tuples for matched pairs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.completion.kuhn_munkres_matching">
+<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">kuhn_munkres_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maximize'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/util.html#kuhn_munkres_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.kuhn_munkres_matching" title="Link to this definition">¶</a></dt>
+<dd><p>Kuhn-Munkres Algorithm: Another implementation of the Hungarian algorithm using
+the <code class="code docutils literal notranslate"><span class="pre">networkx</span></code> package (requires the optional <code class="docutils literal notranslate"><span class="pre">equate[graph]</span></code> extra).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>similarity_matrix</strong> – A matrix of scores (see <code class="docutils literal notranslate"><span class="pre">sense</span></code>); converted to edge
+costs via the <code class="docutils literal notranslate"><span class="pre">to_cost</span></code> SSOT.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of tuples (row_index, col_index) for matched pairs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.completion.maximal_matching">
+<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">maximal_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/util.html#maximal_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.maximal_matching" title="Link to this definition">¶</a></dt>
+<dd><p>Maximal Matching in Bipartite Graph: Finds a maximal matching in a bipartite graph.
+See <a class="reference external" href="https://www.geeksforgeeks.org/maximum-bipartite-matching/">https://www.geeksforgeeks.org/maximum-bipartite-matching/</a>.</p>
+<p>Accepts a dense array, a <strong>sparse (blocked)</strong> matrix, or a
+<a class="reference internal" href="equate.base.html#equate.base.ScoreMatrix" title="equate.base.ScoreMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreMatrix</span></code></a>. Only <em>candidate</em> cells become graph edges, so a
+structurally-absent cell is not an edge at all: it can be neither preferred nor
+assigned, and max-cardinality is maximized over real candidates (D11). Reading the
+matrix cell-by-cell instead would turn every hole into a real weight-<code class="docutils literal notranslate"><span class="pre">0.0</span></code> edge —
+which silently beats any negative similarity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>similarity_matrix</strong> – A dense/sparse matrix of similarities, or a <code class="docutils literal notranslate"><span class="pre">ScoreMatrix</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Iterator of tuples (row_index, col_index) for matched pairs.</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="equate.completion.similarity_matrix">
 <span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">similarity_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_to_vect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">cosine_similarity&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/completion.html#similarity_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.similarity_matrix" title="Link to this definition">¶</a></dt>
@@ -362,6 +597,26 @@ embeddings.</p>
 <span class="go">[[0.54, 0.38, 0.0, 0.0], [0.0, 0.33, 0.0, 0.0], [0.0, 0.0, 0.0, 0.41]]</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.completion.stable_marriage_matching">
+<span class="sig-prename descclassname"><span class="pre">equate.completion.</span></span><span class="sig-name descname"><span class="pre">stable_marriage_matching</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">similarity_matrix</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maximize'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/util.html#stable_marriage_matching"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.completion.stable_marriage_matching" title="Link to this definition">¶</a></dt>
+<dd><p>Stable Marriage Problem (Gale-Shapley Algorithm):
+Solves the stable marriage problem, ensuring a stable matching. Note this
+optimizes <em>stability</em> (no blocking pair), not total score, and is
+proposer-optimal / receiver-pessimal — so it can differ from the optimal
+assignment found by <code class="docutils literal notranslate"><span class="pre">hungarian_matching</span></code>.
+See: <a class="reference external" href="https://en.wikipedia.org/wiki/Stable_marriage_problem">https://en.wikipedia.org/wiki/Stable_marriage_problem</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>similarity_matrix</strong> – A matrix of scores (see <code class="docutils literal notranslate"><span class="pre">sense</span></code>); preferences are
+ranked by the <code class="docutils literal notranslate"><span class="pre">to_cost</span></code> distance, so higher similarity is more preferred.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of tuples (row_index, col_index) for matched pairs.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -418,7 +673,21 @@ embeddings.</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">equate.completion</a><ul>
+<li><a class="reference internal" href="#equate.completion.ColumnMatch"><code class="docutils literal notranslate"><span class="pre">ColumnMatch</span></code></a></li>
+<li><a class="reference internal" href="#equate.completion.Completion"><code class="docutils literal notranslate"><span class="pre">Completion</span></code></a><ul>
+<li><a class="reference internal" href="#equate.completion.Completion.as_rows"><code class="docutils literal notranslate"><span class="pre">Completion.as_rows()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#equate.completion.as_columns"><code class="docutils literal notranslate"><span class="pre">as_columns()</span></code></a></li>
+<li><a class="reference internal" href="#equate.completion.complete_table"><code class="docutils literal notranslate"><span class="pre">complete_table()</span></code></a></li>
+<li><a class="reference internal" href="#equate.completion.find_join_keys"><code class="docutils literal notranslate"><span class="pre">find_join_keys()</span></code></a></li>
+<li><a class="reference internal" href="#equate.completion.find_near_duplicate_columns"><code class="docutils literal notranslate"><span class="pre">find_near_duplicate_columns()</span></code></a></li>
+<li><a class="reference internal" href="#equate.completion.greedy_matching"><code class="docutils literal notranslate"><span class="pre">greedy_matching()</span></code></a></li>
+<li><a class="reference internal" href="#equate.completion.hungarian_matching"><code class="docutils literal notranslate"><span class="pre">hungarian_matching()</span></code></a></li>
+<li><a class="reference internal" href="#equate.completion.kuhn_munkres_matching"><code class="docutils literal notranslate"><span class="pre">kuhn_munkres_matching()</span></code></a></li>
+<li><a class="reference internal" href="#equate.completion.maximal_matching"><code class="docutils literal notranslate"><span class="pre">maximal_matching()</span></code></a></li>
 <li><a class="reference internal" href="#equate.completion.similarity_matrix"><code class="docutils literal notranslate"><span class="pre">similarity_matrix()</span></code></a></li>
+<li><a class="reference internal" href="#equate.completion.stable_marriage_matching"><code class="docutils literal notranslate"><span class="pre">stable_marriage_matching()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -430,7 +699,7 @@ embeddings.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=7c40b9fe"></script>
+</div><script src="../_static/documentation_options.js?v=d500cd98"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

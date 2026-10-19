@@ -220,6 +220,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.calibrate.html">equate.compare.calibrate</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.numeric_geo.html">equate.compare.numeric_geo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.sequence.html">equate.compare.sequence</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.sets.html">equate.compare.sets</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.string.html">equate.compare.string</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.vector.html">equate.compare.vector</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.vectorize.html">equate.compare.vectorize</a></li>
@@ -240,6 +241,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/equate.facade.html">equate.facade</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../_autosummary/equate.featurize.html">equate.featurize</a><input aria-label="Toggle navigation of equate.featurize" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.columns.html">equate.featurize.columns</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.graph.html">equate.featurize.graph</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.records.html">equate.featurize.records</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.text.html">equate.featurize.text</a></li>
@@ -300,30 +302,442 @@
         </div>
         <article role="main" id="furo-main-content">
           <h1>Source code for equate.completion</h1><div class="highlight"><pre>
-<span></span><span class="sd">"""Tools to complete missing data from other sources of the same data.</span>
+<span></span><span class="sd">"""Tabular completion: find join keys, near-duplicate columns, and fill a table from another.</span>
 
-<span class="sd">Merging/joining tables is very common instance, yet only a small part of what is</span>
-<span class="sd">possible, and often needed. Without moving away from tabular data:</span>
+<span class="sd">Merging tables on a known key is a small part of what is needed. Without leaving tables:</span>
 
-<span class="sd">- Find the columns to match (join keys) by comparing how well the values of the column</span>
-<span class="sd">match.</span>
-<span class="sd">- Comparing the values of the columns with something more flexible than hard equality.</span>
-<span class="sd">For example, correlation, similarity, etc.</span>
-<span class="sd">- Find near duplicate columns</span>
-<span class="sd">- Find rows to align, based on flexible comparison of fuzzily matched cells</span>
+<span class="sd">- **find the columns to join on** (:func:`find_join_keys`) by how much one column's</span>
+<span class="sd">  values are *contained* in another's — no header names needed;</span>
+<span class="sd">- **find near-duplicate columns** (:func:`find_near_duplicate_columns`) in one table;</span>
+<span class="sd">- **complete a table** (:func:`complete_table`): discover the join key, align rows by</span>
+<span class="sd">  fuzzy matching of the key values, and fill the target's missing cells from the source.</span>
 
-<span class="sd">.. note::</span>
-<span class="sd">   This module is a stale early duplicate of ``equate.util`` and is slated to be</span>
-<span class="sd">   rewritten as a thin facade over the redesigned stages (roadmap #13). Its ``grub``</span>
-<span class="sd">   import is lazy (behind the optional ``equate[grub]`` extra) so importing the module</span>
-<span class="sd">   does not fail on a default numpy/scipy-only install.</span>
+<span class="sd">These are facades over the same seams as everything else (research doc 07 §8, doc 10</span>
+<span class="sd">§8.7) — not a parallel implementation: a column is an object featurized as its value set</span>
+<span class="sd">(``featurize='value_set'``), compared with a set comparator (``'containment'``,</span>
+<span class="sd">``'jaccard'``, ``'overlap'``), and selected with the top-k :class:`~equate.interactive.</span>
+<span class="sd">CandidateStore`; rows are aligned with :func:`equate.match` / :func:`equate.score_matrix`.</span>
+
+<span class="sd">A *table* is any of: a mapping of column name to values (``{'name': [...], ...}``), a list</span>
+<span class="sd">of row mappings, or anything DataFrame-like (``.columns`` and ``table[column]``). Results</span>
+<span class="sd">are structured dataclasses; :class:`Completion` gives back columns (``.table``) or rows</span>
+<span class="sd">(``.rows()``).</span>
+
+<span class="sd">&gt;&gt;&gt; left = {'cust': ['c1', 'c2', 'c3'], 'city': [None, 'Lyon', None]}</span>
+<span class="sd">&gt;&gt;&gt; right = {'id': ['c3', 'c1', 'c2', 'c9'], 'city': ['Nice', 'Paris', 'Lyon', 'Lille']}</span>
+<span class="sd">&gt;&gt;&gt; [(m.left, m.right, m.score) for m in find_join_keys(left, right)][0]</span>
+<span class="sd">('cust', 'id', 1.0)</span>
+<span class="sd">&gt;&gt;&gt; complete_table(left, right).table['city']</span>
+<span class="sd">['Paris', 'Lyon', 'Nice']</span>
+
+<span class="sd">The functions further down (``similarity_matrix``, ``mk_text_to_vect``, ...) are the</span>
+<span class="sd">pre-redesign API, kept for back-compat; new code should use :func:`equate.score_matrix`.</span>
 <span class="sd">"""</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate._dependencies</span><span class="w"> </span><span class="kn">import</span> <span class="n">require</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate._vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">cosine_similarity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Explanation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_comparator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.facade</span><span class="w"> </span><span class="kn">import</span> <span class="n">score_matrix</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.featurize</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_featurizer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.featurize.columns</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_missing</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.interactive</span><span class="w"> </span><span class="kn">import</span> <span class="n">CandidateStore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.matching</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_matcher</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"ColumnMatch"</span><span class="p">,</span>
+    <span class="s2">"Completion"</span><span class="p">,</span>
+    <span class="s2">"as_columns"</span><span class="p">,</span>
+    <span class="s2">"find_join_keys"</span><span class="p">,</span>
+    <span class="s2">"find_near_duplicate_columns"</span><span class="p">,</span>
+    <span class="s2">"complete_table"</span><span class="p">,</span>
+    <span class="c1"># the pre-redesign API, kept importable (also by `import *`)</span>
+    <span class="s2">"similarity_matrix"</span><span class="p">,</span>
+    <span class="s2">"mk_text_to_vect"</span><span class="p">,</span>
+    <span class="s2">"transform_text"</span><span class="p">,</span>
+    <span class="s2">"greedy_matching"</span><span class="p">,</span>
+    <span class="s2">"hungarian_matching"</span><span class="p">,</span>
+    <span class="s2">"maximal_matching"</span><span class="p">,</span>
+    <span class="s2">"stable_marriage_matching"</span><span class="p">,</span>
+    <span class="s2">"kuhn_munkres_matching"</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">DFLT_KEY_COMPARE</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"containment"</span>  <span class="c1"># joinability: how much of the target key is in the source</span>
+<span class="p">)</span>
+<span class="n">DFLT_MIN_KEY_SCORE</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="n">DFLT_DUPLICATE_COMPARE</span> <span class="o">=</span> <span class="s2">"jaccard"</span>
+<span class="n">DFLT_DUPLICATE_THRESHOLD</span> <span class="o">=</span> <span class="mf">0.9</span>
+<span class="n">DFLT_MIN_ROW_SCORE</span> <span class="o">=</span> <span class="mf">0.9</span>  <span class="c1"># fuzzy key matches only; exact matches always align</span>
+
+
+<span class="c1"># --- tables ---------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="as_columns">
+<a class="viewcode-back" href="../../_autosummary/equate.completion.html#equate.completion.as_columns">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">as_columns</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``{column name: list of values}`` from a column mapping, a list of row mappings,</span>
+<span class="sd">    or a DataFrame-like object (``.columns`` + ``table[column]``).</span>
+
+<span class="sd">    Column names are kept as they are (an ``int`` stays an ``int``). Rows missing a</span>
+<span class="sd">    column get ``None`` there; column order is first-seen order. A column must be a</span>
+<span class="sd">    sequence of cells, not a string.</span>
+
+<span class="sd">    &gt;&gt;&gt; as_columns([{'a': 1}, {'a': 2, 'b': 'x'}])</span>
+<span class="sd">    {'a': [1, 2], 'b': [None, 'x']}</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+    <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="s2">"columns"</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="p">:</span> <span class="n">table</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">columns</span><span class="p">}</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">table</span><span class="p">):</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">c</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">table</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">row</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">c</span><span class="p">:</span> <span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">table</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">names</span><span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">"a table is a mapping of column -&gt; values, a list of row mappings, or a "</span>
+            <span class="sa">f</span><span class="s2">"DataFrame-like object; got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">table</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">columns</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">))</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="s2">"__iter__"</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"column </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> must be a sequence of cells, got "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> (a string would be read character by character)"</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">c</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">columns</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_n_rows</span><span class="p">(</span><span class="n">columns</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="n">lengths</span> <span class="o">=</span> <span class="p">{</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">()}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lengths</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"columns have different lengths: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">lengths</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">lengths</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span> <span class="k">if</span> <span class="n">lengths</span> <span class="k">else</span> <span class="mi">0</span>
+
+
+<span class="c1"># --- results --------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="ColumnMatch">
+<a class="viewcode-back" href="../../_autosummary/equate.completion.html#equate.completion.ColumnMatch">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ColumnMatch</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A scored correspondence between a ``left`` and a ``right`` column."""</span>
+
+    <span class="n">left</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="n">right</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="n">score</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">explanation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Explanation</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="Completion">
+<a class="viewcode-back" href="../../_autosummary/equate.completion.html#equate.completion.Completion">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Completion</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The completed table and how it was completed.</span>
+
+<span class="sd">    ``table`` is the target as columns, with missing cells filled; ``key`` the join key</span>
+<span class="sd">    used; ``rows`` the aligned ``(target_row, source_row, score)`` triples (``score`` is</span>
+<span class="sd">    ``None`` for an exact key match, the fuzzy score otherwise); ``filled`` the number of</span>
+<span class="sd">    cells filled per column; ``columns`` the ``{target: source}`` columns used.</span>
+<span class="sd">    """</span>
+
+    <span class="n">table</span><span class="p">:</span> <span class="nb">dict</span>
+    <span class="n">key</span><span class="p">:</span> <span class="n">ColumnMatch</span>
+    <span class="n">rows</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">filled</span><span class="p">:</span> <span class="nb">dict</span>
+    <span class="n">columns</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Completion.as_rows">
+<a class="viewcode-back" href="../../_autosummary/equate.completion.html#equate.completion.Completion.as_rows">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The completed table as a list of row dicts."""</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">_n_rows</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[{</span><span class="n">c</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">names</span><span class="p">}</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span></div>
+</div>
+
+
+
+<span class="c1"># --- column matching ------------------------------------------------------------------</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_column_scores</span><span class="p">(</span><span class="n">left</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">compare</span><span class="p">):</span>
+    <span class="n">feat</span> <span class="o">=</span> <span class="n">resolve_featurizer</span><span class="p">(</span><span class="s2">"value_set"</span><span class="p">)</span>
+    <span class="n">sets_l</span><span class="p">,</span> <span class="n">sets_r</span> <span class="o">=</span> <span class="n">feat</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">feat</span><span class="p">(</span><span class="n">right</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">comparator</span> <span class="o">=</span> <span class="n">resolve_comparator</span><span class="p">(</span><span class="n">compare</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sets_l</span><span class="p">,</span> <span class="n">sets_r</span><span class="p">,</span> <span class="n">score_matrix</span><span class="p">(</span><span class="n">sets_l</span><span class="p">,</span> <span class="n">sets_r</span><span class="p">,</span> <span class="n">compare</span><span class="o">=</span><span class="n">comparator</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_explain</span><span class="p">(</span><span class="n">sl</span><span class="p">,</span> <span class="n">sr</span><span class="p">,</span> <span class="n">score</span><span class="p">):</span>
+    <span class="n">shared</span> <span class="o">=</span> <span class="n">sl</span> <span class="o">&amp;</span> <span class="n">sr</span>
+    <span class="k">return</span> <span class="n">Explanation</span><span class="p">(</span>
+        <span class="n">summary</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">shared</span><span class="p">)</span><span class="si">}</span><span class="s2"> shared values (</span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
+        <span class="n">details</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"shared"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">shared</span><span class="p">),</span>
+            <span class="s2">"left_distinct"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">sl</span><span class="p">),</span>
+            <span class="s2">"right_distinct"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">sr</span><span class="p">),</span>
+            <span class="s2">"examples"</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">shared</span><span class="p">))[:</span><span class="mi">5</span><span class="p">],</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="find_join_keys">
+<a class="viewcode-back" href="../../_autosummary/equate.completion.html#equate.completion.find_join_keys">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_join_keys</span><span class="p">(</span>
+    <span class="n">left</span><span class="p">,</span>
+    <span class="n">right</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">compare</span><span class="o">=</span><span class="n">DFLT_KEY_COMPARE</span><span class="p">,</span>
+    <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">min_score</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_MIN_KEY_SCORE</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Columns of ``right`` that ``left``'s columns could be joined on, best first.</span>
+
+<span class="sd">    Each column is featurized as its value set and compared with ``compare`` (default</span>
+<span class="sd">    ``'containment'``: the share of the left column's distinct values found in the right</span>
+<span class="sd">    one — a foreign key scores 1.0 against its primary key whatever else that holds).</span>
+<span class="sd">    Each left column keeps its top-``k`` right columns scoring at least ``min_score``.</span>
+<span class="sd">    Returns :class:`ColumnMatch` es sorted by score; ties go to the pair sharing more</span>
+<span class="sd">    distinct values (a real key over a low-cardinality column), then to column order.</span>
+<span class="sd">    """</span>
+    <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="n">as_columns</span><span class="p">(</span><span class="n">left</span><span class="p">),</span> <span class="n">as_columns</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+    <span class="n">sets_l</span><span class="p">,</span> <span class="n">sets_r</span><span class="p">,</span> <span class="n">sm</span> <span class="o">=</span> <span class="n">_column_scores</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">compare</span><span class="p">)</span>
+    <span class="n">store</span> <span class="o">=</span> <span class="n">CandidateStore</span><span class="o">.</span><span class="n">from_scores</span><span class="p">(</span><span class="n">sm</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sm</span><span class="o">.</span><span class="n">sense</span><span class="p">)</span>
+    <span class="n">names_l</span><span class="p">,</span> <span class="n">names_r</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">left</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">ColumnMatch</span><span class="p">(</span><span class="n">names_l</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">names_r</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">s</span><span class="p">,</span> <span class="n">_explain</span><span class="p">(</span><span class="n">sets_l</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sets_r</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">s</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cands</span> <span class="ow">in</span> <span class="n">store</span><span class="o">.</span><span class="n">candidates</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">cands</span>
+        <span class="k">if</span> <span class="n">s</span> <span class="o">&gt;=</span> <span class="n">min_score</span>
+    <span class="p">]</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span> <span class="n">n</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">names_l</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">names_r</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="c1"># ties on the score are broken by evidence: more shared distinct values first, so a</span>
+    <span class="c1"># many-valued key beats a 2-value column that happens to be fully contained too</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="n">found</span><span class="p">,</span>
+        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="p">(</span>
+            <span class="o">-</span><span class="n">m</span><span class="o">.</span><span class="n">score</span><span class="p">,</span>
+            <span class="o">-</span><span class="n">m</span><span class="o">.</span><span class="n">explanation</span><span class="o">.</span><span class="n">details</span><span class="p">[</span><span class="s2">"shared"</span><span class="p">],</span>
+            <span class="n">order</span><span class="p">[(</span><span class="n">m</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">right</span><span class="p">)],</span>
+        <span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="find_near_duplicate_columns">
+<a class="viewcode-back" href="../../_autosummary/equate.completion.html#equate.completion.find_near_duplicate_columns">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_near_duplicate_columns</span><span class="p">(</span>
+    <span class="n">table</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">compare</span><span class="o">=</span><span class="n">DFLT_DUPLICATE_COMPARE</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_DUPLICATE_THRESHOLD</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Pairs of columns of one table whose value sets are near-identical.</span>
+
+<span class="sd">    Each column is featurized as its value set and every pair compared with ``compare``</span>
+<span class="sd">    (default ``'jaccard'``); pairs scoring at least ``threshold`` are returned as</span>
+<span class="sd">    :class:`ColumnMatch` es, best first — earlier column on the left for a symmetric</span>
+<span class="sd">    comparator, both directions for a directional one (``'containment'``).</span>
+<span class="sd">    """</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="n">as_columns</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+    <span class="n">sets</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">sm</span> <span class="o">=</span> <span class="n">_column_scores</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">compare</span><span class="p">)</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span>
+    <span class="n">meta</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">resolve_comparator</span><span class="p">(</span><span class="n">compare</span><span class="p">),</span> <span class="s2">"meta"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">symmetric</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="s2">"is_symmetric"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">ColumnMatch</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">names</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">s</span><span class="p">,</span> <span class="n">_explain</span><span class="p">(</span><span class="n">sets</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sets</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">s</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sm</span><span class="o">.</span><span class="n">stored_entries</span><span class="p">()</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span> <span class="k">if</span> <span class="n">symmetric</span> <span class="k">else</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">j</span><span class="p">)</span> <span class="ow">and</span> <span class="n">s</span> <span class="o">&gt;=</span> <span class="n">threshold</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="n">found</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="n">m</span><span class="o">.</span><span class="n">score</span><span class="p">,</span> <span class="n">names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">left</span><span class="p">),</span> <span class="n">names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">right</span><span class="p">))</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># --- table completion -----------------------------------------------------------------</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_key</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">on</span><span class="p">,</span> <span class="n">compare</span><span class="p">,</span> <span class="n">min_key_score</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">on</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">t</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">on</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">cols</span> <span class="ow">in</span> <span class="p">((</span><span class="n">t</span><span class="p">,</span> <span class="n">target</span><span class="p">),</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">source</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no column </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">; columns are </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ColumnMatch</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"nan"</span><span class="p">),</span> <span class="n">Explanation</span><span class="p">(</span><span class="n">summary</span><span class="o">=</span><span class="s2">"given"</span><span class="p">))</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="n">find_join_keys</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">compare</span><span class="o">=</span><span class="n">compare</span><span class="p">,</span> <span class="n">min_score</span><span class="o">=</span><span class="n">min_key_score</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">keys</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"no column of the source contains at least </span><span class="si">{</span><span class="n">min_key_score</span><span class="si">:</span><span class="s2">.0%</span><span class="si">}</span><span class="s2"> of a target "</span>
+            <span class="s2">"column's values; pass on=(target_column, source_column) or lower "</span>
+            <span class="s2">"min_key_score"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_align_rows</span><span class="p">(</span><span class="n">keys_t</span><span class="p">,</span> <span class="n">keys_s</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">row_compare</span><span class="p">,</span> <span class="n">how</span><span class="p">,</span> <span class="n">min_row_score</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``(target_row, source_rows, score)`` for each aligned target row.</span>
+
+<span class="sd">    Keys are normalized (:func:`~equate.featurize.columns.normalize_value`) the same way</span>
+<span class="sd">    join-key discovery normalizes them. Equal normalized keys align **exactly** (a hash</span>
+<span class="sd">    join: linear time, score ``None``); only the target keys left over are matched</span>
+<span class="sd">    **fuzzily** (``row_compare``) against the distinct source keys, and an ambiguous best</span>
+<span class="sd">    (a tie between two source keys) aligns nothing. ``source_rows`` lists every source row</span>
+<span class="sd">    carrying the aligned key, in order. With a one-to-one ``how``, each source row is</span>
+<span class="sd">    used at most once.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">equate.featurize.columns</span><span class="w"> </span><span class="kn">import</span> <span class="n">normalize_value</span>
+
+    <span class="n">by_key</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">keys_s</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_missing</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+            <span class="n">by_key</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">normalize_value</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+    <span class="n">one_to_one</span> <span class="o">=</span> <span class="n">how</span> <span class="o">!=</span> <span class="s2">"best"</span>
+    <span class="n">used</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">rows</span><span class="p">,</span> <span class="n">leftover</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">keys_t</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">is_missing</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">by_key</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">normalize_value</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="p">())</span> <span class="k">if</span> <span class="n">j</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">used</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">sources</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">one_to_one</span><span class="p">:</span>
+                <span class="n">sources</span> <span class="o">=</span> <span class="n">sources</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">used</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">sources</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">leftover</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">leftover</span> <span class="ow">and</span> <span class="n">row_compare</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="n">_fuzzy_rows</span><span class="p">(</span>
+                <span class="n">keys_t</span><span class="p">,</span>
+                <span class="n">leftover</span><span class="p">,</span>
+                <span class="n">by_key</span><span class="p">,</span>
+                <span class="n">used</span><span class="p">,</span>
+                <span class="n">row_compare</span><span class="o">=</span><span class="n">row_compare</span><span class="p">,</span>
+                <span class="n">how</span><span class="o">=</span><span class="n">how</span><span class="p">,</span>
+                <span class="n">min_row_score</span><span class="o">=</span><span class="n">min_row_score</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_fuzzy_rows</span><span class="p">(</span><span class="n">keys_t</span><span class="p">,</span> <span class="n">leftover</span><span class="p">,</span> <span class="n">by_key</span><span class="p">,</span> <span class="n">used</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">row_compare</span><span class="p">,</span> <span class="n">how</span><span class="p">,</span> <span class="n">min_row_score</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">equate.featurize.columns</span><span class="w"> </span><span class="kn">import</span> <span class="n">normalize_value</span>
+
+    <span class="n">free</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">js</span> <span class="k">if</span> <span class="n">j</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">used</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">js</span> <span class="ow">in</span> <span class="n">by_key</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="n">free_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">js</span> <span class="ow">in</span> <span class="n">free</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">js</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">free_keys</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">texts</span> <span class="o">=</span> <span class="p">[</span><span class="n">normalize_value</span><span class="p">(</span><span class="n">keys_t</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">leftover</span><span class="p">]</span>
+    <span class="n">sm</span> <span class="o">=</span> <span class="n">score_matrix</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">free_keys</span><span class="p">,</span> <span class="n">compare</span><span class="o">=</span><span class="n">row_compare</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">how</span> <span class="o">==</span> <span class="s2">"best"</span><span class="p">:</span>
+        <span class="n">store</span> <span class="o">=</span> <span class="n">CandidateStore</span><span class="o">.</span><span class="n">from_scores</span><span class="p">(</span><span class="n">sm</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sm</span><span class="o">.</span><span class="n">sense</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">cands</span> <span class="ow">in</span> <span class="n">store</span><span class="o">.</span><span class="n">candidates</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">cands</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cands</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">cands</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">cands</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="k">continue</span>  <span class="c1"># nothing, or a tie: an ambiguous key fills nothing</span>
+            <span class="n">c</span><span class="p">,</span> <span class="n">score</span> <span class="o">=</span> <span class="n">cands</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">leftover</span><span class="p">[</span><span class="n">r</span><span class="p">],</span> <span class="n">free</span><span class="p">[</span><span class="n">free_keys</span><span class="p">[</span><span class="n">c</span><span class="p">]],</span> <span class="nb">float</span><span class="p">(</span><span class="n">score</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">resolve_matcher</span><span class="p">(</span><span class="n">how</span><span class="p">)(</span><span class="n">sm</span><span class="p">):</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">leftover</span><span class="p">[</span><span class="n">r</span><span class="p">],</span> <span class="n">free</span><span class="p">[</span><span class="n">free_keys</span><span class="p">[</span><span class="n">c</span><span class="p">]][:</span><span class="mi">1</span><span class="p">],</span> <span class="nb">float</span><span class="p">(</span><span class="n">sm</span><span class="o">.</span><span class="n">score_at</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">))))</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">row</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">out</span>
+        <span class="k">if</span> <span class="n">min_row_score</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">_passes</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">min_row_score</span><span class="p">,</span> <span class="n">sm</span><span class="o">.</span><span class="n">sense</span><span class="p">)</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_passes</span><span class="p">(</span><span class="n">score</span><span class="p">,</span> <span class="n">bound</span><span class="p">,</span> <span class="n">sense</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">score</span> <span class="o">&gt;=</span> <span class="n">bound</span> <span class="k">if</span> <span class="n">sense</span> <span class="o">==</span> <span class="s2">"maximize"</span> <span class="k">else</span> <span class="n">score</span> <span class="o">&lt;=</span> <span class="n">bound</span>
+
+
+<div class="viewcode-block" id="complete_table">
+<a class="viewcode-back" href="../../_autosummary/equate.completion.html#equate.completion.complete_table">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">complete_table</span><span class="p">(</span>
+    <span class="n">target</span><span class="p">,</span>
+    <span class="n">source</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">on</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">columns</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">key_compare</span><span class="o">=</span><span class="n">DFLT_KEY_COMPARE</span><span class="p">,</span>
+    <span class="n">min_key_score</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_MIN_KEY_SCORE</span><span class="p">,</span>
+    <span class="n">row_compare</span><span class="o">=</span><span class="s2">"ratio"</span><span class="p">,</span>
+    <span class="n">how</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"best"</span><span class="p">,</span>
+    <span class="n">min_row_score</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">DFLT_MIN_ROW_SCORE</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Completion</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Fill ``target``'s missing cells from ``source``.</span>
+
+<span class="sd">    1. **Key** — ``on=(target_column, source_column)``, or discovered with</span>
+<span class="sd">       :func:`find_join_keys` (``key_compare``, ``min_key_score``).</span>
+<span class="sd">    2. **Rows** — key values are normalized (case, spacing, ``1.0`` = ``1``) and joined</span>
+<span class="sd">       **exactly** first. Only target keys with no exact partner are matched</span>
+<span class="sd">       **fuzzily** with ``row_compare`` (default the ``'ratio'`` edit similarity, so a</span>
+<span class="sd">       stray character still meets its key; ``None`` turns fuzzy matching off) and kept only</span>
+<span class="sd">       when they score at least ``min_row_score`` (default ``0.9``; for a *distance*</span>
+<span class="sd">       comparator it is a maximum) and are not tied between two source keys.</span>
+<span class="sd">       ``how='best'`` (default) is a lookup: each target row takes its source key, so</span>
+<span class="sd">       many target rows may share one. A matcher name (``'optimal'``, ``'greedy'``,</span>
+<span class="sd">       ``'stable'``) aligns rows one-to-one instead.</span>
+<span class="sd">    3. **Fill** — for each ``{target_column: source_column}`` in ``columns`` (default:</span>
+<span class="sd">       the columns both tables share, except the key), a missing target cell (``None``,</span>
+<span class="sd">       blank, NaN, pandas ``NA``) takes the value of the first aligned source row that</span>
+<span class="sd">       has one. A target column that does not exist yet is created. Present values are</span>
+<span class="sd">       never overwritten.</span>
+<span class="sd">    """</span>
+    <span class="n">t_cols</span><span class="p">,</span> <span class="n">s_cols</span> <span class="o">=</span> <span class="n">as_columns</span><span class="p">(</span><span class="n">target</span><span class="p">),</span> <span class="n">as_columns</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">_n_rows</span><span class="p">(</span><span class="n">t_cols</span><span class="p">)</span>
+    <span class="n">_n_rows</span><span class="p">(</span><span class="n">s_cols</span><span class="p">)</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="n">_resolve_key</span><span class="p">(</span><span class="n">t_cols</span><span class="p">,</span> <span class="n">s_cols</span><span class="p">,</span> <span class="n">on</span><span class="p">,</span> <span class="n">key_compare</span><span class="p">,</span> <span class="n">min_key_score</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">c</span><span class="p">:</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">t_cols</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">s_cols</span> <span class="ow">and</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="n">missing_src</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">s_cols</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">missing_src</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no source column(s) </span><span class="si">{</span><span class="n">missing_src</span><span class="si">}</span><span class="s2">; columns are </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">s_cols</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">aligned</span> <span class="o">=</span> <span class="n">_align_rows</span><span class="p">(</span>
+        <span class="n">t_cols</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">left</span><span class="p">],</span>
+        <span class="n">s_cols</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">right</span><span class="p">],</span>
+        <span class="n">row_compare</span><span class="o">=</span><span class="n">row_compare</span><span class="p">,</span>
+        <span class="n">how</span><span class="o">=</span><span class="n">how</span><span class="p">,</span>
+        <span class="n">min_row_score</span><span class="o">=</span><span class="n">min_row_score</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">t_cols</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="n">filled</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">t_col</span><span class="p">,</span> <span class="n">s_col</span> <span class="ow">in</span> <span class="n">columns</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">t_col</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">aligned</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_missing</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                <span class="k">continue</span>
+            <span class="n">new</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">s_cols</span><span class="p">[</span><span class="n">s_col</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">sources</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_missing</span><span class="p">(</span><span class="n">s_cols</span><span class="p">[</span><span class="n">s_col</span><span class="p">][</span><span class="n">j</span><span class="p">])),</span>
+                <span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">new</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">new</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">filled</span><span class="p">[</span><span class="n">t_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">count</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">sources</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">score</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">score</span> <span class="ow">in</span> <span class="n">aligned</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">Completion</span><span class="p">(</span>
+        <span class="n">table</span><span class="o">=</span><span class="n">table</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">rows</span><span class="o">=</span><span class="n">rows</span><span class="p">,</span> <span class="n">filled</span><span class="o">=</span><span class="n">filled</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># --- legacy API (pre-redesign; kept for back-compat) ---------------------------------</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">transform_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">transformer</span><span class="p">):</span>
@@ -405,7 +819,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=7c40b9fe"></script>
+</div><script src="../../_static/documentation_options.js?v=d500cd98"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

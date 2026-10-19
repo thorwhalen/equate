@@ -220,6 +220,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.calibrate.html">equate.compare.calibrate</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.numeric_geo.html">equate.compare.numeric_geo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.sequence.html">equate.compare.sequence</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.sets.html">equate.compare.sets</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.string.html">equate.compare.string</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.vector.html">equate.compare.vector</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.vectorize.html">equate.compare.vectorize</a></li>
@@ -240,6 +241,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/equate.facade.html">equate.facade</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../_autosummary/equate.featurize.html">equate.featurize</a><input aria-label="Toggle navigation of equate.featurize" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.columns.html">equate.featurize.columns</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.graph.html">equate.featurize.graph</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.records.html">equate.featurize.records</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.text.html">equate.featurize.text</a></li>
@@ -320,6 +322,7 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.featurize</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span> <span class="k">as</span> <span class="n">_text</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.featurize.records</span><span class="w"> </span><span class="kn">import</span> <span class="n">record_text</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.featurize.columns</span><span class="w"> </span><span class="kn">import</span> <span class="n">value_set</span><span class="p">,</span> <span class="n">normalize_value</span><span class="p">,</span> <span class="n">is_missing</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.featurize.graph</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">WLFeaturizer</span><span class="p">,</span>
     <span class="n">grakel_featurizer</span><span class="p">,</span>
@@ -331,6 +334,7 @@
     <span class="s2">"featurizers"</span><span class="p">,</span>
     <span class="s2">"identity"</span><span class="p">,</span>
     <span class="s2">"record_text"</span><span class="p">,</span>
+    <span class="s2">"value_set"</span><span class="p">,</span>
     <span class="s2">"resolve_featurizer"</span><span class="p">,</span>
     <span class="s2">"TfidfFeaturizer"</span><span class="p">,</span>
     <span class="s2">"mk_tfidf"</span><span class="p">,</span>
@@ -383,6 +387,13 @@
 
 
 <span class="n">featurizers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">"grakel"</span><span class="p">,</span> <span class="n">grakel_featurizer</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">GRAKEL_META</span><span class="p">)</span>
+
+
+<span class="c1"># Columns as objects (doc 07): a column -&gt; the set of its distinct normalized values.</span>
+<span class="nd">@featurizers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">"value_set"</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">value_set</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_value_set_factory</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="n">normalize_value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Build a value-set column featurizer (``normalize`` maps a cell to its key)."""</span>
+    <span class="k">return</span> <span class="k">lambda</span> <span class="n">columns</span><span class="p">:</span> <span class="n">value_set</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="resolve_featurizer">
@@ -458,7 +469,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=7c40b9fe"></script>
+</div><script src="../../_static/documentation_options.js?v=d500cd98"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

@@ -36,6 +36,7 @@ equate.compare
    calibrate
    numeric_geo
    sequence
+   sets
    string
    vector
    vectorize

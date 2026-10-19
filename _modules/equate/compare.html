@@ -220,6 +220,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.calibrate.html">equate.compare.calibrate</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.numeric_geo.html">equate.compare.numeric_geo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.sequence.html">equate.compare.sequence</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.sets.html">equate.compare.sets</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.string.html">equate.compare.string</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.vector.html">equate.compare.vector</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.compare.vectorize.html">equate.compare.vectorize</a></li>
@@ -240,6 +241,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/equate.facade.html">equate.facade</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../_autosummary/equate.featurize.html">equate.featurize</a><input aria-label="Toggle navigation of equate.featurize" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.columns.html">equate.featurize.columns</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.graph.html">equate.featurize.graph</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.records.html">equate.featurize.records</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.text.html">equate.featurize.text</a></li>
@@ -329,6 +331,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">numeric_geo</span> <span class="k">as</span> <span class="n">_ng</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">vector</span> <span class="k">as</span> <span class="n">_vec</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">sequence</span> <span class="k">as</span> <span class="n">_seq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">sets</span> <span class="k">as</span> <span class="n">_sets</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare.vectorize</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">comparison_vector</span><span class="p">,</span>
     <span class="n">weighted_sum</span><span class="p">,</span>
@@ -400,6 +403,14 @@
     <span class="p">(</span><span class="s2">"haversine"</span><span class="p">,</span> <span class="n">_ng</span><span class="o">.</span><span class="n">haversine</span><span class="p">),</span>
 <span class="p">]:</span>
     <span class="n">comparators</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">_name</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">_fn</span><span class="p">,</span> <span class="n">_name</span><span class="p">),</span> <span class="n">meta</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">_fn</span><span class="p">,</span> <span class="s2">"meta"</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+
+<span class="c1"># Set comparators (doc 07): value-set overlap, for columns, token bags and other sets.</span>
+<span class="k">for</span> <span class="n">_name</span><span class="p">,</span> <span class="n">_fn</span> <span class="ow">in</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">"jaccard"</span><span class="p">,</span> <span class="n">_sets</span><span class="o">.</span><span class="n">jaccard</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"overlap"</span><span class="p">,</span> <span class="n">_sets</span><span class="o">.</span><span class="n">overlap</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"containment"</span><span class="p">,</span> <span class="n">_sets</span><span class="o">.</span><span class="n">containment</span><span class="p">),</span>
+<span class="p">]:</span>
+    <span class="n">comparators</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">_name</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">_fn</span><span class="p">,</span> <span class="n">_name</span><span class="p">),</span> <span class="n">meta</span><span class="o">=</span><span class="n">_fn</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
 
 <span class="c1"># Configurable pairwise comparators (accept keyword config, applied via functools.partial).</span>
 <span class="n">comparators</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
@@ -543,7 +554,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=7c40b9fe"></script>
+</div><script src="../../_static/documentation_options.js?v=d500cd98"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

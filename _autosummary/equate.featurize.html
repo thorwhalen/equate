@@ -7,7 +7,7 @@
 <link rel="alternate" type="text/markdown" href="equate.featurize.html.md">
 <link rel="describedby" href="../llms.txt" type="text/markdown">
 <link rel="alternate" type="text/markdown" href="equate.featurize.html.md">
-<link rel="describedby" href="llms.txt"><link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="equate.featurize.graph" href="equate.featurize.graph.html"><link rel="prev" title="equate.facade" href="equate.facade.html">
+<link rel="describedby" href="llms.txt"><link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="equate.featurize.columns" href="equate.featurize.columns.html"><link rel="prev" title="equate.facade" href="equate.facade.html">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
         <title>equate.featurize - equate</title>
@@ -223,6 +223,7 @@
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.calibrate.html">equate.compare.calibrate</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.numeric_geo.html">equate.compare.numeric_geo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.sequence.html">equate.compare.sequence</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.compare.sets.html">equate.compare.sets</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.string.html">equate.compare.string</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.vector.html">equate.compare.vector</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.compare.vectorize.html">equate.compare.vectorize</a></li>
@@ -243,6 +244,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="equate.facade.html">equate.facade</a></li>
 <li class="toctree-l3 current has-children current-page"><a class="current reference internal" href="#">equate.featurize</a><input aria-label="Toggle navigation of equate.featurize" checked="" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="equate.featurize.columns.html">equate.featurize.columns</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.featurize.graph.html">equate.featurize.graph</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.featurize.records.html">equate.featurize.records</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.featurize.text.html">equate.featurize.text</a></li>
@@ -337,16 +339,19 @@ fitting on a corpus, which <a class="reference internal" href="#equate.featurize
 <tr class="row-even"><td><p><a class="reference internal" href="#equate.featurize.record_text" title="equate.featurize.record_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_text</span></code></a>(obj)</p></td>
 <td><p>Text of <code class="docutils literal notranslate"><span class="pre">obj</span></code>: a mapping's non-empty values joined by spaces, else <code class="docutils literal notranslate"><span class="pre">str(obj)</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.featurize.resolve_featurizer" title="equate.featurize.resolve_featurizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve_featurizer</span></code></a>([spec, corpus])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.featurize.value_set" title="equate.featurize.value_set"><code class="xref py py-obj docutils literal notranslate"><span class="pre">value_set</span></code></a>(columns, *[, normalize])</p></td>
+<td><p>Each column as the <code class="docutils literal notranslate"><span class="pre">frozenset</span></code> of its normalized, non-missing values (batched).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.featurize.resolve_featurizer" title="equate.featurize.resolve_featurizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve_featurizer</span></code></a>([spec, corpus])</p></td>
 <td><p>Resolve <code class="docutils literal notranslate"><span class="pre">spec</span></code> to a ready-to-use batch featurizer.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.featurize.mk_tfidf" title="equate.featurize.mk_tfidf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mk_tfidf</span></code></a>(*learn_texts[, ngram_range, lowercase])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.featurize.mk_tfidf" title="equate.featurize.mk_tfidf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mk_tfidf</span></code></a>(*learn_texts[, ngram_range, lowercase])</p></td>
 <td><p>Fit a char-n-gram TF-IDF on the given collection(s) and return the fitted, callable batch featurizer — the pure numpy/scipy replacement for the legacy grub-backed <code class="docutils literal notranslate"><span class="pre">equate.util.mk_text_to_vect</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.featurize.char_ngrams" title="equate.featurize.char_ngrams"><code class="xref py py-obj docutils literal notranslate"><span class="pre">char_ngrams</span></code></a>(text[, ngram_range, lowercase])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.featurize.char_ngrams" title="equate.featurize.char_ngrams"><code class="xref py py-obj docutils literal notranslate"><span class="pre">char_ngrams</span></code></a>(text[, ngram_range, lowercase])</p></td>
 <td><p>Character n-grams of <code class="docutils literal notranslate"><span class="pre">text</span></code> over the inclusive <code class="docutils literal notranslate"><span class="pre">ngram_range</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.featurize.grakel_featurizer" title="equate.featurize.grakel_featurizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">grakel_featurizer</span></code></a>(*[, kernel, label])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.featurize.grakel_featurizer" title="equate.featurize.grakel_featurizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">grakel_featurizer</span></code></a>(*[, kernel, label])</p></td>
 <td><p>A GraKeL graph kernel as a fittable featurizer — requires <code class="docutils literal notranslate"><span class="pre">equate[graph-kernels]</span></code>.</p></td>
 </tr>
 </tbody>
@@ -526,20 +531,38 @@ raises immediately (a clear error at the call site) instead of returning a
 half-built object that only fails later inside <code class="docutils literal notranslate"><span class="pre">transform</span></code>.</p>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.featurize.value_set">
+<span class="sig-prename descclassname"><span class="pre">equate.featurize.</span></span><span class="sig-name descname"><span class="pre">value_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">columns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">normalize_value&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/featurize/columns.html#value_set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.featurize.value_set" title="Link to this definition">¶</a></dt>
+<dd><p>Each column as the <code class="docutils literal notranslate"><span class="pre">frozenset</span></code> of its normalized, non-missing values (batched).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">sorted</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">value_set</span><span class="p">([[</span><span class="s1">'Paris'</span><span class="p">,</span> <span class="s1">'paris '</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]])]</span>
+<span class="go">[['paris'], ['1', '2']]</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
 <p class="rubric">Modules</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="equate.featurize.graph.html#module-equate.featurize.graph" title="equate.featurize.graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graph</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="equate.featurize.columns.html#module-equate.featurize.columns" title="equate.featurize.columns"><code class="xref py py-obj docutils literal notranslate"><span class="pre">columns</span></code></a></p></td>
+<td><p>Column featurizers: a column (a sequence of cell values) as a comparable object.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="equate.featurize.graph.html#module-equate.featurize.graph" title="equate.featurize.graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graph</span></code></a></p></td>
 <td><p>Graph featurizers (stage ①): turn whole graphs into vectors (graph kernels).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="equate.featurize.records.html#module-equate.featurize.records" title="equate.featurize.records"><code class="xref py py-obj docutils literal notranslate"><span class="pre">records</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="equate.featurize.records.html#module-equate.featurize.records" title="equate.featurize.records"><code class="xref py py-obj docutils literal notranslate"><span class="pre">records</span></code></a></p></td>
 <td><p>The text of an object, for text featurizers: a record (mapping) is its joined values.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="equate.featurize.text.html#module-equate.featurize.text" title="equate.featurize.text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">text</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="equate.featurize.text.html#module-equate.featurize.text" title="equate.featurize.text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">text</span></code></a></p></td>
 <td><p>Dense text-embedding featurizers, behind optional extras.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="equate.featurize.tfidf.html#module-equate.featurize.tfidf" title="equate.featurize.tfidf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tfidf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="equate.featurize.tfidf.html#module-equate.featurize.tfidf" title="equate.featurize.tfidf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tfidf</span></code></a></p></td>
 <td><p>Pure-numpy/scipy character-n-gram TF-IDF — equate's zero-heavy-dependency default text featurizer (decision register D9).</p></td>
 </tr>
 </tbody>
@@ -552,12 +575,12 @@ half-built object that only fails later inside <code class="docutils literal not
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="equate.featurize.graph.html">
+          <a class="next-page" href="equate.featurize.columns.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">equate.featurize.graph</div>
+                <div class="title">equate.featurize.columns</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -616,6 +639,7 @@ half-built object that only fails later inside <code class="docutils literal not
 <li><a class="reference internal" href="#equate.featurize.mk_tfidf"><code class="docutils literal notranslate"><span class="pre">mk_tfidf()</span></code></a></li>
 <li><a class="reference internal" href="#equate.featurize.record_text"><code class="docutils literal notranslate"><span class="pre">record_text()</span></code></a></li>
 <li><a class="reference internal" href="#equate.featurize.resolve_featurizer"><code class="docutils literal notranslate"><span class="pre">resolve_featurizer()</span></code></a></li>
+<li><a class="reference internal" href="#equate.featurize.value_set"><code class="docutils literal notranslate"><span class="pre">value_set()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -627,7 +651,7 @@ half-built object that only fails later inside <code class="docutils literal not
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=7c40b9fe"></script>
+</div><script src="../_static/documentation_options.js?v=d500cd98"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

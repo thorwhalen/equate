@@ -8,7 +8,23 @@ equate.completion
 
    .. autosummary::
    
-      mk_text_to_vect
+      as_columns
+      find_join_keys
+      find_near_duplicate_columns
+      complete_table
       similarity_matrix
+      mk_text_to_vect
       transform_text
+      greedy_matching
+      hungarian_matching
+      maximal_matching
+      stable_marriage_matching
+      kuhn_munkres_matching
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ColumnMatch
+      Completion
    

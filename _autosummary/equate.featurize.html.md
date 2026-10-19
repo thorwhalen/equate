@@ -19,6 +19,7 @@ fitting on a corpus, which [`resolve_featurizer()`](#equate.featurize.resolve_fe
 | [`identity`](#equate.featurize.identity)(objects)                                 | The identity featurizer: use the objects themselves as their representation.                                                                                                                      |
 |----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`record_text`](#equate.featurize.record_text)(obj)                                  | Text of `obj`: a mapping's non-empty values joined by spaces, else `str(obj)`.                                                                                                                    |
+| [`value_set`](#equate.featurize.value_set)(columns, \*[, normalize])               | Each column as the `frozenset` of its normalized, non-missing values (batched).                                                                                                                   |
 | [`resolve_featurizer`](#equate.featurize.resolve_featurizer)([spec, corpus])                | Resolve `spec` to a ready-to-use batch featurizer.                                                                                                                                                |
 | [`mk_tfidf`](#equate.featurize.mk_tfidf)(\*learn_texts[, ngram_range, lowercase]) | Fit a char-n-gram TF-IDF on the given collection(s) and return the fitted, callable batch featurizer — the pure numpy/scipy replacement for the legacy grub-backed `equate.util.mk_text_to_vect`. |
 | [`char_ngrams`](#equate.featurize.char_ngrams)(text[, ngram_range, lowercase])       | Character n-grams of `text` over the inclusive `ngram_range`.                                                                                                                                     |
@@ -170,10 +171,23 @@ here — and a corpus is then required: resolving a fittable featurizer without 
 raises immediately (a clear error at the call site) instead of returning a
 half-built object that only fails later inside `transform`.
 
+### equate.featurize.value_set(columns, \*, normalize=<function normalize_value>)
+
+Each column as the `frozenset` of its normalized, non-missing values (batched).
+
+```pycon
+>>> [sorted(s) for s in value_set([['Paris', 'paris ', None], [1, 2.0]])]
+[['paris'], ['1', '2']]
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
 ### Modules
 
-| [`graph`](equate.featurize.graph.html.md#module-equate.featurize.graph)     | Graph featurizers (stage ①): turn whole graphs into vectors (graph kernels).                                              |
-|------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
-| [`records`](equate.featurize.records.html.md#module-equate.featurize.records) | The text of an object, for text featurizers: a record (mapping) is its joined values.                                     |
-| [`text`](equate.featurize.text.html.md#module-equate.featurize.text)       | Dense text-embedding featurizers, behind optional extras.                                                                 |
-| [`tfidf`](equate.featurize.tfidf.html.md#module-equate.featurize.tfidf)     | Pure-numpy/scipy character-n-gram TF-IDF — equate's zero-heavy-dependency default text featurizer (decision register D9). |
+| [`columns`](equate.featurize.columns.html.md#module-equate.featurize.columns)   | Column featurizers: a column (a sequence of cell values) as a comparable object.                                          |
+|--------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| [`graph`](equate.featurize.graph.html.md#module-equate.featurize.graph)       | Graph featurizers (stage ①): turn whole graphs into vectors (graph kernels).                                              |
+| [`records`](equate.featurize.records.html.md#module-equate.featurize.records)   | The text of an object, for text featurizers: a record (mapping) is its joined values.                                     |
+| [`text`](equate.featurize.text.html.md#module-equate.featurize.text)         | Dense text-embedding featurizers, behind optional extras.                                                                 |
+| [`tfidf`](equate.featurize.tfidf.html.md#module-equate.featurize.tfidf)       | Pure-numpy/scipy character-n-gram TF-IDF — equate's zero-heavy-dependency default text featurizer (decision register D9). |

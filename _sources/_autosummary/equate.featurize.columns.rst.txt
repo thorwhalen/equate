@@ -1,0 +1,14 @@
+equate.featurize.columns
+========================
+
+.. automodule:: equate.featurize.columns
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      value_set
+      normalize_value
+      is_missing
+   

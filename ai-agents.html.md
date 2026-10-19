@@ -22,7 +22,7 @@ Source: [`skills/equate-dev-add-strategy`](https://github.com/thorwhalen/equate/
 
 ### `equate-dev-architecture`
 
-Read before designing, reviewing, or modifying equate’s core matching architecture. Covers the featurize→compare→match/resolve pipeline, the module layout, the stage protocols, the resolved score-sense / ScoreMatrix / structured-return contracts, and the “own the orchestration, wrap the libraries” rule. Triggers when working on equate’s public API, adding or adjusting a pipeline stage, choosing where a concern lives, or making any design decision about the matching core. This is the north-star for the redesign — the target architecture, not (yet) the current code.
+Read before designing, reviewing, or modifying equate’s core matching architecture. Covers the featurize→compare→match/resolve pipeline, the module layout, the stage protocols, the resolved score-sense / ScoreMatrix / structured-return contracts, and the “own the orchestration, wrap the libraries” rule. Triggers when working on equate’s public API, adding or adjusting a pipeline stage, choosing where a concern lives, or making any design decision about the matching core. The module map describes the shipped code; open issues hold what is still to build.
 
 ```bash
 gh skill install thorwhalen/equate equate-dev-architecture --agent claude-code
