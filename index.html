@@ -319,8 +319,10 @@
 </div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">equate</span><span class="w"> </span><span class="kn">import</span> <span class="n">match</span>
 
-<span class="n">m</span> <span class="o">=</span> <span class="n">match</span><span class="p">([</span><span class="s2">"apple pie"</span><span class="p">,</span> <span class="s2">"banana split"</span><span class="p">,</span> <span class="s2">"cherry tart"</span><span class="p">],</span>
-          <span class="p">[</span><span class="s2">"cherry tarte"</span><span class="p">,</span> <span class="s2">"aple pie"</span><span class="p">,</span> <span class="s2">"banana split"</span><span class="p">])</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">match</span><span class="p">(</span>
+    <span class="p">[</span><span class="s2">"apple pie"</span><span class="p">,</span> <span class="s2">"banana split"</span><span class="p">,</span> <span class="s2">"cherry tart"</span><span class="p">],</span>
+    <span class="p">[</span><span class="s2">"cherry tarte"</span><span class="p">,</span> <span class="s2">"aple pie"</span><span class="p">,</span> <span class="s2">"banana split"</span><span class="p">],</span>
+<span class="p">)</span>
 <span class="nb">dict</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">labeled_pairs</span><span class="p">())</span>
 <span class="c1"># {'apple pie': 'aple pie', 'banana split': 'banana split', 'cherry tart': 'cherry tarte'}</span>
 <span class="n">m</span><span class="o">.</span><span class="n">scores</span>  <span class="c1"># [0.76, 1.0, 0.84]</span>
@@ -330,10 +332,12 @@
 <section id="matching-a-stage-at-a-time">
 <h2>Matching, a stage at a time<a class="headerlink" href="#matching-a-stage-at-a-time" title="Link to this heading">¶</a></h2>
 <p>Matching factors into three stages: <strong>featurize → compare → match</strong>. Each takes a registered name or any callable.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">match</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">compare</span><span class="o">=</span><span class="s2">"jaro_winkler"</span><span class="p">)</span>        <span class="c1"># score raw pairs with a string comparator instead</span>
-<span class="k">match</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">featurize</span><span class="o">=</span><span class="s2">"sbert"</span><span class="p">)</span>             <span class="c1"># dense embeddings (pip install 'equate[embeddings]')</span>
-<span class="k">match</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="s2">"sorted_neighborhood"</span><span class="p">)</span>   <span class="c1"># score only candidate pairs (sparse), for scale</span>
-<span class="k">match</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">"greedy"</span><span class="p">)</span>                  <span class="c1"># or 'assign' (default), 'stable', 'soft'</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">match</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">compare</span><span class="o">=</span><span class="s2">"jaro_winkler"</span><span class="p">)</span>  <span class="c1"># score raw pairs with a string comparator instead</span>
+<span class="k">match</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">featurize</span><span class="o">=</span><span class="s2">"sbert"</span><span class="p">)</span>  <span class="c1"># dense embeddings (pip install 'equate[embeddings]')</span>
+<span class="k">match</span><span class="p">(</span>
+    <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="s2">"sorted_neighborhood"</span>
+<span class="p">)</span>  <span class="c1"># score only candidate pairs (sparse), for scale</span>
+<span class="k">match</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">"greedy"</span><span class="p">)</span>  <span class="c1"># or 'assign' (default), 'stable', 'soft'</span>
 <span class="k">match</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">compare</span><span class="o">=</span><span class="s2">"levenshtein_distance"</span><span class="p">)</span>  <span class="c1"># a distance: minimized automatically</span>
 </pre></div>
 </div>
@@ -365,7 +369,9 @@
 <span class="n">orders</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"customer"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"C-001"</span><span class="p">,</span> <span class="s2">"C-002"</span><span class="p">,</span> <span class="s2">"C-001"</span><span class="p">],</span> <span class="s2">"city"</span><span class="p">:</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"Lyon"</span><span class="p">,</span> <span class="kc">None</span><span class="p">]}</span>
 <span class="n">customers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"cid"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"C-002"</span><span class="p">,</span> <span class="s2">"C-001"</span><span class="p">],</span> <span class="s2">"city"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"Lille"</span><span class="p">,</span> <span class="s2">"Paris"</span><span class="p">]}</span>
 
-<span class="n">find_join_keys</span><span class="p">(</span><span class="n">orders</span><span class="p">,</span> <span class="n">customers</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>   <span class="c1"># ColumnMatch(left='customer', right='cid', score=1.0, ...)</span>
+<span class="n">find_join_keys</span><span class="p">(</span><span class="n">orders</span><span class="p">,</span> <span class="n">customers</span><span class="p">)[</span>
+    <span class="mi">0</span>
+<span class="p">]</span>  <span class="c1"># ColumnMatch(left='customer', right='cid', score=1.0, ...)</span>
 <span class="n">complete_table</span><span class="p">(</span><span class="n">orders</span><span class="p">,</span> <span class="n">customers</span><span class="p">)</span><span class="o">.</span><span class="n">table</span>
 <span class="c1"># {'customer': ['C-001', 'C-002', 'C-001'], 'city': ['Paris', 'Lyon', 'Paris']}</span>
 </pre></div>
@@ -407,7 +413,7 @@
 <span class="n">svc</span><span class="o">.</span><span class="n">next_query</span><span class="p">(</span><span class="n">view</span><span class="o">.</span><span class="n">session_id</span><span class="p">)</span>  <span class="c1"># the pair whose label would help most</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'equate[service]'</span></code> adds the HTTP API (built with <a class="reference external" href="https://github.com/i2mint/qh">qh</a>): <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">equate.service</span> <span class="pre">serve</span></code>, then <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/match</span></code>, <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/sessions</span></code>, <code class="docutils literal notranslate"><span class="pre">GET|POST</span> <span class="pre">/sessions/{id}/candidates/{item}</span></code>, <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/sessions/{id}/edits</span></code>, <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/sessions/{id}/label</span></code>. <code class="docutils literal notranslate"><span class="pre">equate.service.mk_app(service)</span></code> returns the FastAPI app to mount elsewhere. Sessions live in any <code class="docutils literal notranslate"><span class="pre">MutableMapping</span></code> (<code class="docutils literal notranslate"><span class="pre">MatchService(sessions=...)</span></code>), so a <code class="docutils literal notranslate"><span class="pre">dol</span></code> store persists them. <code class="docutils literal notranslate"><span class="pre">open_session(...,</span> <span class="pre">floor=0.5)</span></code> sets a score floor: a pair below it is never proposed, so rejecting an item’s only good candidate leaves the item unmatched instead of handing it a poor one.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'equate[service]'</span></code> adds the HTTP API (built with <a class="reference external" href="https://github.com/i2mint/qh">qh</a>): <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">equate.service</span> <span class="pre">serve</span></code>, then <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/match</span></code>, <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/sessions</span></code>, <code class="docutils literal notranslate"><span class="pre">GET|POST</span> <span class="pre">/sessions/{id}/candidates/{item}</span></code>, <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/sessions/{id}/edits</span></code>, <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/sessions/{id}/label</span></code>. <code class="docutils literal notranslate"><span class="pre">equate.service.mk_app(service)</span></code> returns the FastAPI app to mount elsewhere. <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">equate.service</span> <span class="pre">serve</span> <span class="pre">ui=ui/dist</span></code> also serves the built review UI from the same process. Sessions live in any <code class="docutils literal notranslate"><span class="pre">MutableMapping</span></code> (<code class="docutils literal notranslate"><span class="pre">MatchService(sessions=...)</span></code>), so a <code class="docutils literal notranslate"><span class="pre">dol</span></code> store persists them. <code class="docutils literal notranslate"><span class="pre">open_session(...,</span> <span class="pre">floor=0.5)</span></code> sets a score floor: a pair below it is never proposed, so rejecting an item’s only good candidate leaves the item unmatched instead of handing it a poor one.</p>
 <p>The review UI (React, <a class="reference external" href="https://github.com/i2mint/zodal">zodal</a> + shadcn) is in <a class="reference internal" href="#ui/README.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ui/</span></code></span></a>: a review queue ordered by uncertainty, side-by-side field diffs, confirm / reject / reassign with optimistic updates, and a labelling widget.</p>
 </section>
 <section id="measuring-a-matcher-equate-evaluate">
@@ -884,7 +890,7 @@ Let’s try two…</p>
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-19 12:09 UTC from <a href="https://github.com/thorwhalen/equate/commit/b75a44cf2d462cc1a5d577aab16d1b8f5bce18a6">b75a44c</a> (master) · equate 0.0.21 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-19 12:21 UTC from <a href="https://github.com/thorwhalen/equate/commit/176918ac52f17ac49f4c39a4d5601e8f255ebd1f">176918a</a> (master) · equate 0.0.22 · <a href="about-this-build.html">about this build</a></p>
         </article>
       </div>
       <footer>
@@ -958,7 +964,7 @@ Let’s try two…</p>
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=d500cd98"></script>
+</div><script src="_static/documentation_options.js?v=f5b15773"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

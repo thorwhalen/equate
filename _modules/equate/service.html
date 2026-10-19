@@ -388,6 +388,7 @@
 <span class="n">DFLT_FIELD_COMPARE</span> <span class="o">=</span> <span class="s2">"ratio"</span>  <span class="c1"># per-field similarity shown in a field diff</span>
 <span class="n">DFLT_MATCH_CACHE_SIZE</span> <span class="o">=</span> <span class="mi">128</span>  <span class="c1"># stateless /match results kept (LRU)</span>
 <span class="n">DFLT_CORS_ORIGINS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"http://localhost:5173"</span><span class="p">,</span> <span class="s2">"http://127.0.0.1:5173"</span><span class="p">)</span>  <span class="c1"># vite dev</span>
+<span class="n">DFLT_API_PREFIX</span> <span class="o">=</span> <span class="s2">"/api"</span>  <span class="c1"># where the API lives when the app also serves the UI</span>
 
 <span class="n">EditAction</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"confirm"</span><span class="p">,</span> <span class="s2">"reject"</span><span class="p">,</span> <span class="s2">"reassign"</span><span class="p">,</span> <span class="s2">"clear"</span><span class="p">]</span>
 
@@ -1435,7 +1436,13 @@
 
 <div class="viewcode-block" id="mk_app">
 <a class="viewcode-back" href="../../_autosummary/equate.service.html#equate.service.mk_app">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">mk_app</span><span class="p">(</span><span class="n">service</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MatchService</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">cors_origins</span><span class="o">=</span><span class="n">DFLT_CORS_ORIGINS</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">mk_app</span><span class="p">(</span>
+    <span class="n">service</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MatchService</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">cors_origins</span><span class="o">=</span><span class="n">DFLT_CORS_ORIGINS</span><span class="p">,</span>
+    <span class="n">ui_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">api_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_API_PREFIX</span><span class="p">,</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Mount a :class:`MatchService` as an HTTP API (FastAPI, built with ``qh``).</span>
 
 <span class="sd">    Routes (JSON in, JSON out)::</span>
@@ -1453,8 +1460,22 @@
 <span class="sd">    An unknown session is a 404; an invalid or infeasible edit a 422. ``cors_origins``</span>
 <span class="sd">    lets the review UI's dev server (vite, port 5173) call it; pass ``()`` to disable.</span>
 <span class="sd">    Requires ``pip install 'equate[service]'``.</span>
+
+<span class="sd">    ``ui_dir`` serves the review UI from the same app: a built bundle (``cd ui &amp;&amp; npm run</span>
+<span class="sd">    build`` → ``ui/dist``) is mounted at ``/`` and the routes above move under</span>
+<span class="sd">    ``api_prefix`` (default ``/api``, the path the UI calls — as its dev proxy does), so</span>
+<span class="sd">    one process and one origin serve both; the API's docs are at ``{api_prefix}/docs``.</span>
+<span class="sd">    The bundle has its API path baked in at build time, so a different ``api_prefix``</span>
+<span class="sd">    needs a UI built with the same ``VITE_EQUATE_API``.</span>
 <span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">equate._dependencies</span><span class="w"> </span><span class="kn">import</span> <span class="n">require</span>
+
+    <span class="k">if</span> <span class="n">ui_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_with_ui</span><span class="p">(</span>
+            <span class="n">mk_app</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">cors_origins</span><span class="o">=</span><span class="n">cors_origins</span><span class="p">),</span>
+            <span class="n">ui_dir</span><span class="o">=</span><span class="n">ui_dir</span><span class="p">,</span>
+            <span class="n">api_prefix</span><span class="o">=</span><span class="n">api_prefix</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="n">qh</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="s2">"qh"</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"service"</span><span class="p">,</span> <span class="n">purpose</span><span class="o">=</span><span class="s2">"the HTTP service"</span><span class="p">)</span>
     <span class="n">HTTPException</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="s2">"fastapi"</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"service"</span><span class="p">)</span><span class="o">.</span><span class="n">HTTPException</span>
@@ -1588,6 +1609,54 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_with_ui</span><span class="p">(</span><span class="n">api</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">ui_dir</span><span class="p">,</span> <span class="n">api_prefix</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A root app: the static review UI at ``/``, ``api`` under ``api_prefix``."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">equate._dependencies</span><span class="w"> </span><span class="kn">import</span> <span class="n">require</span>
+
+    <span class="n">ui_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">ui_dir</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ui_dir</span> <span class="o">/</span> <span class="s2">"index.html"</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ui_dir</span><span class="si">}</span><span class="s2"> holds no built review UI (no index.html); build it with "</span>
+            <span class="sa">f</span><span class="s2">"`cd ui &amp;&amp; npm install &amp;&amp; npm run build`, then pass ui_dir='ui/dist'"</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">api_prefix</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">api_prefix</span> <span class="o">==</span> <span class="s2">"/"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"api_prefix must be a sub-path like '/api', got </span><span class="si">{</span><span class="n">api_prefix</span><span class="si">!r}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="n">fastapi</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="s2">"fastapi"</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"service"</span><span class="p">,</span> <span class="n">purpose</span><span class="o">=</span><span class="s2">"serving the review UI"</span><span class="p">)</span>
+    <span class="n">static</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span>
+        <span class="s2">"fastapi.staticfiles"</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"service"</span><span class="p">,</span> <span class="n">purpose</span><span class="o">=</span><span class="s2">"serving the review UI"</span>
+    <span class="p">)</span>
+    <span class="c1"># no docs on the root: its spec would be empty and shadow nothing useful; the API's</span>
+    <span class="c1"># own docs live at {api_prefix}/docs</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">fastapi</span><span class="o">.</span><span class="n">FastAPI</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"equate review"</span><span class="p">,</span> <span class="n">docs_url</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">redoc_url</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">openapi_url</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">)</span>
+    <span class="n">prefix</span> <span class="o">=</span> <span class="n">api_prefix</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+    <span class="n">_serve_openapi_under</span><span class="p">(</span><span class="n">api</span><span class="p">,</span> <span class="n">prefix</span><span class="p">)</span>
+    <span class="n">root</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">api</span><span class="p">)</span>
+    <span class="c1"># html=True serves index.html at "/" (the UI keeps its state in ?session=...)</span>
+    <span class="n">root</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="n">static</span><span class="o">.</span><span class="n">StaticFiles</span><span class="p">(</span><span class="n">directory</span><span class="o">=</span><span class="n">ui_dir</span><span class="p">,</span> <span class="n">html</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"ui"</span><span class="p">)</span>
+    <span class="n">root</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">match_service</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">match_service</span>
+    <span class="k">return</span> <span class="n">root</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_serve_openapi_under</span><span class="p">(</span><span class="n">api</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Make ``api``'s OpenAPI spec name ``prefix`` as its server, so "Try it out" in</span>
+<span class="sd">    ``{prefix}/docs`` calls ``{prefix}/sessions``, not ``/sessions`` (qh's spec builder</span>
+<span class="sd">    drops ``app.servers``; i2mint/qh#24)."""</span>
+    <span class="n">build</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">openapi</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">openapi</span><span class="p">():</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">build</span><span class="p">()</span>
+        <span class="n">spec</span><span class="p">[</span><span class="s2">"servers"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">"url"</span><span class="p">:</span> <span class="n">prefix</span><span class="p">}]</span>
+        <span class="k">return</span> <span class="n">spec</span>
+
+    <span class="n">api</span><span class="o">.</span><span class="n">openapi</span> <span class="o">=</span> <span class="n">openapi</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_int</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">what</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -1597,12 +1666,22 @@
 
 <div class="viewcode-block" id="serve">
 <a class="viewcode-back" href="../../_autosummary/equate.service.html#equate.service.serve">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">serve</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s2">"127.0.0.1"</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">8000</span><span class="p">,</span> <span class="n">service</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MatchService</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Run the HTTP service with uvicorn (``python -m equate.service serve``)."""</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">serve</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">host</span><span class="o">=</span><span class="s2">"127.0.0.1"</span><span class="p">,</span>
+    <span class="n">port</span><span class="o">=</span><span class="mi">8000</span><span class="p">,</span>
+    <span class="n">service</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MatchService</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ui_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Run the HTTP service with uvicorn (``python -m equate.service serve``).</span>
+
+<span class="sd">    With ``ui_dir`` (``python -m equate.service serve ui=ui/dist``) it also serves the</span>
+<span class="sd">    built review UI, at ``http://host:port/``.</span>
+<span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">equate._dependencies</span><span class="w"> </span><span class="kn">import</span> <span class="n">require</span>
 
     <span class="n">uvicorn</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="s2">"uvicorn"</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"service"</span><span class="p">,</span> <span class="n">purpose</span><span class="o">=</span><span class="s2">"serving the HTTP API"</span><span class="p">)</span>
-    <span class="n">uvicorn</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">mk_app</span><span class="p">(</span><span class="n">service</span><span class="p">),</span> <span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">)</span></div>
+    <span class="n">uvicorn</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">mk_app</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">ui_dir</span><span class="o">=</span><span class="n">ui_dir</span><span class="p">),</span> <span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">)</span></div>
 
 
 
@@ -1611,8 +1690,12 @@
 
     <span class="n">cmd</span><span class="p">,</span> <span class="o">*</span><span class="n">rest</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="ow">or</span> <span class="p">[</span><span class="s2">"serve"</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s2">"serve"</span><span class="p">:</span>
-        <span class="n">kw</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"="</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">rest</span><span class="p">)</span>  <span class="c1"># host=0.0.0.0 port=8001</span>
-        <span class="n">serve</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"host"</span><span class="p">,</span> <span class="s2">"127.0.0.1"</span><span class="p">),</span> <span class="n">port</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"port"</span><span class="p">,</span> <span class="mi">8000</span><span class="p">)))</span>
+        <span class="n">kw</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"="</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">rest</span><span class="p">)</span>  <span class="c1"># host=0.0.0.0 port=8001 ui=ui/dist</span>
+        <span class="n">serve</span><span class="p">(</span>
+            <span class="n">host</span><span class="o">=</span><span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"host"</span><span class="p">,</span> <span class="s2">"127.0.0.1"</span><span class="p">),</span>
+            <span class="n">port</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"port"</span><span class="p">,</span> <span class="mi">8000</span><span class="p">)),</span>
+            <span class="n">ui_dir</span><span class="o">=</span><span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ui"</span><span class="p">),</span>
+        <span class="p">)</span>
     <span class="k">elif</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s2">"fields"</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">boundary_fields</span><span class="p">(),</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
     <span class="k">elif</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s2">"schema"</span><span class="p">:</span>
@@ -1647,7 +1730,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=d500cd98"></script>
+</div><script src="../../_static/documentation_options.js?v=f5b15773"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

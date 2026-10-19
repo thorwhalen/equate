@@ -1,4 +1,4 @@
-> built 2026-10-19 12:09 UTC from b75a44c (master) · equate 0.0.21. Details: build_info.json
+> built 2026-10-19 12:21 UTC from 176918a (master) · equate 0.0.22. Details: build_info.json
 
 # index.html.md
 
@@ -15,8 +15,10 @@ pip install equate
 ```python
 from equate import match
 
-m = match(["apple pie", "banana split", "cherry tart"],
-          ["cherry tarte", "aple pie", "banana split"])
+m = match(
+    ["apple pie", "banana split", "cherry tart"],
+    ["cherry tarte", "aple pie", "banana split"],
+)
 dict(m.labeled_pairs())
 # {'apple pie': 'aple pie', 'banana split': 'banana split', 'cherry tart': 'cherry tarte'}
 m.scores  # [0.76, 1.0, 0.84]
@@ -29,10 +31,12 @@ m.scores  # [0.76, 1.0, 0.84]
 Matching factors into three stages: **featurize → compare → match**. Each takes a registered name or any callable.
 
 ```python
-match(A, B, compare="jaro_winkler")        # score raw pairs with a string comparator instead
-match(A, B, featurize="sbert")             # dense embeddings (pip install 'equate[embeddings]')
-match(A, B, block="sorted_neighborhood")   # score only candidate pairs (sparse), for scale
-match(A, B, how="greedy")                  # or 'assign' (default), 'stable', 'soft'
+match(A, B, compare="jaro_winkler")  # score raw pairs with a string comparator instead
+match(A, B, featurize="sbert")  # dense embeddings (pip install 'equate[embeddings]')
+match(
+    A, B, block="sorted_neighborhood"
+)  # score only candidate pairs (sparse), for scale
+match(A, B, how="greedy")  # or 'assign' (default), 'stable', 'soft'
 match(A, B, compare="levenshtein_distance")  # a distance: minimized automatically
 ```
 
@@ -66,7 +70,9 @@ from equate import find_join_keys, complete_table
 orders = {"customer": ["C-001", "C-002", "C-001"], "city": [None, "Lyon", None]}
 customers = {"cid": ["C-002", "C-001"], "city": ["Lille", "Paris"]}
 
-find_join_keys(orders, customers)[0]   # ColumnMatch(left='customer', right='cid', score=1.0, ...)
+find_join_keys(orders, customers)[
+    0
+]  # ColumnMatch(left='customer', right='cid', score=1.0, ...)
 complete_table(orders, customers).table
 # {'customer': ['C-001', 'C-002', 'C-001'], 'city': ['Paris', 'Lyon', 'Paris']}
 ```
@@ -114,7 +120,7 @@ svc.edit(view.session_id, [{"action": "reject", "item": 0, "candidate": 1}])
 svc.next_query(view.session_id)  # the pair whose label would help most
 ```
 
-`pip install 'equate[service]'` adds the HTTP API (built with [qh](https://github.com/i2mint/qh)): `python -m equate.service serve`, then `POST /match`, `POST /sessions`, `GET|POST /sessions/{id}/candidates/{item}`, `POST /sessions/{id}/edits`, `POST /sessions/{id}/label`. `equate.service.mk_app(service)` returns the FastAPI app to mount elsewhere. Sessions live in any `MutableMapping` (`MatchService(sessions=...)`), so a `dol` store persists them. `open_session(..., floor=0.5)` sets a score floor: a pair below it is never proposed, so rejecting an item’s only good candidate leaves the item unmatched instead of handing it a poor one.
+`pip install 'equate[service]'` adds the HTTP API (built with [qh](https://github.com/i2mint/qh)): `python -m equate.service serve`, then `POST /match`, `POST /sessions`, `GET|POST /sessions/{id}/candidates/{item}`, `POST /sessions/{id}/edits`, `POST /sessions/{id}/label`. `equate.service.mk_app(service)` returns the FastAPI app to mount elsewhere. `python -m equate.service serve ui=ui/dist` also serves the built review UI from the same process. Sessions live in any `MutableMapping` (`MatchService(sessions=...)`), so a `dol` store persists them. `open_session(..., floor=0.5)` sets a score floor: a pair below it is never proposed, so rejecting an item’s only good candidate leaves the item unmatched instead of handing it a poor one.
 
 The review UI (React, [zodal](https://github.com/i2mint/zodal) + shadcn) is in [`ui/`](): a review queue ordered by uncertainty, side-by-side field diffs, confirm / reject / reassign with optimistic updates, and a labelling widget.
 
@@ -4921,8 +4927,8 @@ persistent `dol` store replaces the in-memory dict without touching this code.
 | [`record_text`](_autosummary/equate.service.html.md#equate.service.record_text)(obj)                              | Text of `obj`: a mapping's non-empty values joined by spaces, else `str(obj)`.                                                   |
 | [`to_jsonable`](_autosummary/equate.service.html.md#equate.service.to_jsonable)(obj)                              | Convert a boundary dataclass (or nested containers of them) to plain JSON data.                                                  |
 | [`json_schemas`](_autosummary/equate.service.html.md#equate.service.json_schemas)()                                | JSON Schemas of the boundary types, keyed by type name.                                                                          |
-| [`mk_app`](_autosummary/equate.service.html.md#equate.service.mk_app)([service, cors_origins])               | Mount a [`MatchService`](_autosummary/equate.service.html.md#equate.service.MatchService) as an HTTP API (FastAPI, built with `qh`).                 |
-| [`serve`](_autosummary/equate.service.html.md#equate.service.serve)(\*[, host, port, service])              | Run the HTTP service with uvicorn (`python -m equate.service serve`).                                                            |
+| [`mk_app`](_autosummary/equate.service.html.md#equate.service.mk_app)([service, cors_origins, ui_dir, ...])  | Mount a [`MatchService`](_autosummary/equate.service.html.md#equate.service.MatchService) as an HTTP API (FastAPI, built with `qh`).                 |
+| [`serve`](_autosummary/equate.service.html.md#equate.service.serve)(\*[, host, port, service, ui_dir])      | Run the HTTP service with uvicorn (`python -m equate.service serve`).                                                            |
 
 ### Classes
 
@@ -5213,7 +5219,7 @@ Generated from the dataclasses with `pydantic` (part of `equate[service]`). The 
 keeps a snapshot of the *field names* (`ui/src/schema/fields.json`) and a test on
 each side fails when the Python types and the Zod schemas drift apart.
 
-### equate.service.mk_app(service=None, , cors_origins=('http://localhost:5173', 'http://127.0.0.1:5173'))
+### equate.service.mk_app(service=None, , cors_origins=('http://localhost:5173', 'http://127.0.0.1:5173'), ui_dir=None, api_prefix='/api')
 
 Mount a [`MatchService`](_autosummary/equate.service.html.md#equate.service.MatchService) as an HTTP API (FastAPI, built with `qh`).
 
@@ -5235,6 +5241,13 @@ An unknown session is a 404; an invalid or infeasible edit a 422. `cors_origins`
 lets the review UI’s dev server (vite, port 5173) call it; pass `()` to disable.
 Requires `pip install 'equate[service]'`.
 
+`ui_dir` serves the review UI from the same app: a built bundle (`cd ui && npm run
+build` → `ui/dist`) is mounted at `/` and the routes above move under
+`api_prefix` (default `/api`, the path the UI calls — as its dev proxy does), so
+one process and one origin serve both; the API’s docs are at `{api_prefix}/docs`.
+The bundle has its API path baked in at build time, so a different `api_prefix`
+needs a UI built with the same `VITE_EQUATE_API`.
+
 ### equate.service.record_text(obj)
 
 Text of `obj`: a mapping’s non-empty values joined by spaces, else `str(obj)`.
@@ -5249,9 +5262,12 @@ Text of `obj`: a mapping’s non-empty values joined by spaces, else `str(obj)`.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### equate.service.serve(, host='127.0.0.1', port=8000, service=None)
+### equate.service.serve(, host='127.0.0.1', port=8000, service=None, ui_dir=None)
 
 Run the HTTP service with uvicorn (`python -m equate.service serve`).
+
+With `ui_dir` (`python -m equate.service serve ui=ui/dist`) it also serves the
+built review UI, at `http://host:port/`.
 
 ### equate.service.to_jsonable(obj)
 
@@ -5403,18 +5419,16 @@ See: [https://en.wikipedia.org/wiki/Stable_marriage_problem](https://en.wikipedi
 
 # About this build
 
-This documentation was built on **2026-10-19 12:09 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/b75a44cf2d462cc1a5d577aab16d1b8f5bce18a6"><code>b75a44c</code></a> on branch <code>master</code>, for **equate 0.0.21** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-19 12:21 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/176918ac52f17ac49f4c39a4d5601e8f255ebd1f"><code>176918a</code></a> on branch <code>master</code>, for **equate 0.0.22** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.21) is behind the latest release on PyPI (0.0.22): `pip install equate` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/equate/commit/b75a44cf2d462cc1a5d577aab16d1b8f5bce18a6"><code>b75a44cf2d462cc1a5d577aab16d1b8f5bce18a6</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/equate/commit/176918ac52f17ac49f4c39a4d5601e8f255ebd1f"><code>176918ac52f17ac49f4c39a4d5601e8f255ebd1f</code></a> |
 | Branch              | <code>master</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -5425,9 +5439,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/equate</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/39249677168">39249677168</a>    |
+| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/39251200639">39251200639</a>    |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>b75a44cf2d462cc1a5d577aab16d1b8f5bce18a6</code> (in the history of the built commit) |
+| Event commit | <code>176918ac52f17ac49f4c39a4d5601e8f255ebd1f</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -5452,13 +5466,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/equate/0.0.22/">0.0.22</a>, newer than the documented version (0.0.21).
+Latest release: <a href="https://pypi.org/project/equate/0.0.22/">0.0.22</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/equate && cd equate
-git checkout b75a44cf2d462cc1a5d577aab16d1b8f5bce18a6
+git checkout 176918ac52f17ac49f4c39a4d5601e8f255ebd1f
 pip install "epythet==0.2.18"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

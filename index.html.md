@@ -11,8 +11,10 @@ pip install equate
 ```python
 from equate import match
 
-m = match(["apple pie", "banana split", "cherry tart"],
-          ["cherry tarte", "aple pie", "banana split"])
+m = match(
+    ["apple pie", "banana split", "cherry tart"],
+    ["cherry tarte", "aple pie", "banana split"],
+)
 dict(m.labeled_pairs())
 # {'apple pie': 'aple pie', 'banana split': 'banana split', 'cherry tart': 'cherry tarte'}
 m.scores  # [0.76, 1.0, 0.84]
@@ -25,10 +27,12 @@ m.scores  # [0.76, 1.0, 0.84]
 Matching factors into three stages: **featurize → compare → match**. Each takes a registered name or any callable.
 
 ```python
-match(A, B, compare="jaro_winkler")        # score raw pairs with a string comparator instead
-match(A, B, featurize="sbert")             # dense embeddings (pip install 'equate[embeddings]')
-match(A, B, block="sorted_neighborhood")   # score only candidate pairs (sparse), for scale
-match(A, B, how="greedy")                  # or 'assign' (default), 'stable', 'soft'
+match(A, B, compare="jaro_winkler")  # score raw pairs with a string comparator instead
+match(A, B, featurize="sbert")  # dense embeddings (pip install 'equate[embeddings]')
+match(
+    A, B, block="sorted_neighborhood"
+)  # score only candidate pairs (sparse), for scale
+match(A, B, how="greedy")  # or 'assign' (default), 'stable', 'soft'
 match(A, B, compare="levenshtein_distance")  # a distance: minimized automatically
 ```
 
@@ -62,7 +66,9 @@ from equate import find_join_keys, complete_table
 orders = {"customer": ["C-001", "C-002", "C-001"], "city": [None, "Lyon", None]}
 customers = {"cid": ["C-002", "C-001"], "city": ["Lille", "Paris"]}
 
-find_join_keys(orders, customers)[0]   # ColumnMatch(left='customer', right='cid', score=1.0, ...)
+find_join_keys(orders, customers)[
+    0
+]  # ColumnMatch(left='customer', right='cid', score=1.0, ...)
 complete_table(orders, customers).table
 # {'customer': ['C-001', 'C-002', 'C-001'], 'city': ['Paris', 'Lyon', 'Paris']}
 ```
@@ -110,7 +116,7 @@ svc.edit(view.session_id, [{"action": "reject", "item": 0, "candidate": 1}])
 svc.next_query(view.session_id)  # the pair whose label would help most
 ```
 
-`pip install 'equate[service]'` adds the HTTP API (built with [qh](https://github.com/i2mint/qh)): `python -m equate.service serve`, then `POST /match`, `POST /sessions`, `GET|POST /sessions/{id}/candidates/{item}`, `POST /sessions/{id}/edits`, `POST /sessions/{id}/label`. `equate.service.mk_app(service)` returns the FastAPI app to mount elsewhere. Sessions live in any `MutableMapping` (`MatchService(sessions=...)`), so a `dol` store persists them. `open_session(..., floor=0.5)` sets a score floor: a pair below it is never proposed, so rejecting an item’s only good candidate leaves the item unmatched instead of handing it a poor one.
+`pip install 'equate[service]'` adds the HTTP API (built with [qh](https://github.com/i2mint/qh)): `python -m equate.service serve`, then `POST /match`, `POST /sessions`, `GET|POST /sessions/{id}/candidates/{item}`, `POST /sessions/{id}/edits`, `POST /sessions/{id}/label`. `equate.service.mk_app(service)` returns the FastAPI app to mount elsewhere. `python -m equate.service serve ui=ui/dist` also serves the built review UI from the same process. Sessions live in any `MutableMapping` (`MatchService(sessions=...)`), so a `dol` store persists them. `open_session(..., floor=0.5)` sets a score floor: a pair below it is never proposed, so rejecting an item’s only good candidate leaves the item unmatched instead of handing it a poor one.
 
 The review UI (React, [zodal](https://github.com/i2mint/zodal) + shadcn) is in [`ui/`](): a review queue ordered by uncertainty, side-by-side field diffs, confirm / reject / reassign with optimistic updates, and a labelling widget.
 

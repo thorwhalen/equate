@@ -5,19 +5,17 @@ orphan: true
 
 # About this build
 
-This documentation was built on **2026-10-19 12:09 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/b75a44cf2d462cc1a5d577aab16d1b8f5bce18a6"><code>b75a44c</code></a> on branch <code>master</code>, for **equate 0.0.21** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-19 12:21 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/176918ac52f17ac49f4c39a4d5601e8f255ebd1f"><code>176918a</code></a> on branch <code>master</code>, for **equate 0.0.22** (from <code>pyproject.toml</code>).
 
-:::{warning}
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.21) is behind the latest release on PyPI (0.0.22): `pip install equate` gives newer code than these docs describe.
+:::{note}
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 :::
 
 ## Source
 
 | | |
 |---|---|
-| Commit | <a href="https://github.com/thorwhalen/equate/commit/b75a44cf2d462cc1a5d577aab16d1b8f5bce18a6"><code>b75a44cf2d462cc1a5d577aab16d1b8f5bce18a6</code></a> |
+| Commit | <a href="https://github.com/thorwhalen/equate/commit/176918ac52f17ac49f4c39a4d5601e8f255ebd1f"><code>176918ac52f17ac49f4c39a4d5601e8f255ebd1f</code></a> |
 | Branch | <code>master</code> |
 | Tags at this commit | none |
 | Working tree | clean |
@@ -28,9 +26,9 @@ The documentation and the package may be misaligned:
 | | |
 |---|---|
 | Repository | <code>thorwhalen/equate</code> |
-| Run | <a href="https://github.com/thorwhalen/equate/actions/runs/39249677168">39249677168</a> |
+| Run | <a href="https://github.com/thorwhalen/equate/actions/runs/39251200639">39251200639</a> |
 | Ref | <code>refs/heads/master</code> |
-| Event commit | <code>b75a44cf2d462cc1a5d577aab16d1b8f5bce18a6</code> (in the history of the built commit) |
+| Event commit | <code>176918ac52f17ac49f4c39a4d5601e8f255ebd1f</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -55,13 +53,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/equate/0.0.22/">0.0.22</a>, newer than the documented version (0.0.21).
+Latest release: <a href="https://pypi.org/project/equate/0.0.22/">0.0.22</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/equate && cd equate
-git checkout b75a44cf2d462cc1a5d577aab16d1b8f5bce18a6
+git checkout 176918ac52f17ac49f4c39a4d5601e8f255ebd1f
 pip install "epythet==0.2.18"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

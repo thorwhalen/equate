@@ -39,8 +39,8 @@ persistent `dol` store replaces the in-memory dict without touching this code.
 | [`record_text`](#equate.service.record_text)(obj)                              | Text of `obj`: a mapping's non-empty values joined by spaces, else `str(obj)`.                                                   |
 | [`to_jsonable`](#equate.service.to_jsonable)(obj)                              | Convert a boundary dataclass (or nested containers of them) to plain JSON data.                                                  |
 | [`json_schemas`](#equate.service.json_schemas)()                                | JSON Schemas of the boundary types, keyed by type name.                                                                          |
-| [`mk_app`](#equate.service.mk_app)([service, cors_origins])               | Mount a [`MatchService`](#equate.service.MatchService) as an HTTP API (FastAPI, built with `qh`).                 |
-| [`serve`](#equate.service.serve)(\*[, host, port, service])              | Run the HTTP service with uvicorn (`python -m equate.service serve`).                                                            |
+| [`mk_app`](#equate.service.mk_app)([service, cors_origins, ui_dir, ...])  | Mount a [`MatchService`](#equate.service.MatchService) as an HTTP API (FastAPI, built with `qh`).                 |
+| [`serve`](#equate.service.serve)(\*[, host, port, service, ui_dir])      | Run the HTTP service with uvicorn (`python -m equate.service serve`).                                                            |
 
 ### Classes
 
@@ -331,7 +331,7 @@ Generated from the dataclasses with `pydantic` (part of `equate[service]`). The 
 keeps a snapshot of the *field names* (`ui/src/schema/fields.json`) and a test on
 each side fails when the Python types and the Zod schemas drift apart.
 
-### equate.service.mk_app(service=None, , cors_origins=('http://localhost:5173', 'http://127.0.0.1:5173'))
+### equate.service.mk_app(service=None, , cors_origins=('http://localhost:5173', 'http://127.0.0.1:5173'), ui_dir=None, api_prefix='/api')
 
 Mount a [`MatchService`](#equate.service.MatchService) as an HTTP API (FastAPI, built with `qh`).
 
@@ -353,6 +353,13 @@ An unknown session is a 404; an invalid or infeasible edit a 422. `cors_origins`
 lets the review UI’s dev server (vite, port 5173) call it; pass `()` to disable.
 Requires `pip install 'equate[service]'`.
 
+`ui_dir` serves the review UI from the same app: a built bundle (`cd ui && npm run
+build` → `ui/dist`) is mounted at `/` and the routes above move under
+`api_prefix` (default `/api`, the path the UI calls — as its dev proxy does), so
+one process and one origin serve both; the API’s docs are at `{api_prefix}/docs`.
+The bundle has its API path baked in at build time, so a different `api_prefix`
+needs a UI built with the same `VITE_EQUATE_API`.
+
 ### equate.service.record_text(obj)
 
 Text of `obj`: a mapping’s non-empty values joined by spaces, else `str(obj)`.
@@ -367,9 +374,12 @@ Text of `obj`: a mapping’s non-empty values joined by spaces, else `str(obj)`.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### equate.service.serve(, host='127.0.0.1', port=8000, service=None)
+### equate.service.serve(, host='127.0.0.1', port=8000, service=None, ui_dir=None)
 
 Run the HTTP service with uvicorn (`python -m equate.service serve`).
+
+With `ui_dir` (`python -m equate.service serve ui=ui/dist`) it also serves the
+built review UI, at `http://host:port/`.
 
 ### equate.service.to_jsonable(obj)
 
