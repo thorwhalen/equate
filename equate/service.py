@@ -84,6 +84,7 @@ DFLT_K = 5  # candidates retained per item (the CandidateStore top-k)
 DFLT_FIELD_COMPARE = "ratio"  # per-field similarity shown in a field diff
 DFLT_MATCH_CACHE_SIZE = 128  # stateless /match results kept (LRU)
 DFLT_CORS_ORIGINS = ("http://localhost:5173", "http://127.0.0.1:5173")  # vite dev
+DFLT_API_PREFIX = "/api"  # where the API lives when the app also serves the UI
 
 EditAction = Literal["confirm", "reject", "reassign", "clear"]
 
@@ -1033,7 +1034,13 @@ def boundary_fields():
 # --- The HTTP surface (qh) -----------------------------------------------------------
 
 
-def mk_app(service: Optional[MatchService] = None, *, cors_origins=DFLT_CORS_ORIGINS):
+def mk_app(
+    service: Optional[MatchService] = None,
+    *,
+    cors_origins=DFLT_CORS_ORIGINS,
+    ui_dir=None,
+    api_prefix: str = DFLT_API_PREFIX,
+):
     """Mount a :class:`MatchService` as an HTTP API (FastAPI, built with ``qh``).
 
     Routes (JSON in, JSON out)::
@@ -1051,8 +1058,22 @@ def mk_app(service: Optional[MatchService] = None, *, cors_origins=DFLT_CORS_ORI
     An unknown session is a 404; an invalid or infeasible edit a 422. ``cors_origins``
     lets the review UI's dev server (vite, port 5173) call it; pass ``()`` to disable.
     Requires ``pip install 'equate[service]'``.
+
+    ``ui_dir`` serves the review UI from the same app: a built bundle (``cd ui && npm run
+    build`` → ``ui/dist``) is mounted at ``/`` and the routes above move under
+    ``api_prefix`` (default ``/api``, the path the UI calls — as its dev proxy does), so
+    one process and one origin serve both; the API's docs are at ``{api_prefix}/docs``.
+    The bundle has its API path baked in at build time, so a different ``api_prefix``
+    needs a UI built with the same ``VITE_EQUATE_API``.
     """
     from equate._dependencies import require
+
+    if ui_dir is not None:
+        return _with_ui(
+            mk_app(service, cors_origins=cors_origins),
+            ui_dir=ui_dir,
+            api_prefix=api_prefix,
+        )
 
     qh = require("qh", extra="service", purpose="the HTTP service")
     HTTPException = require("fastapi", extra="service").HTTPException
@@ -1185,6 +1206,54 @@ def mk_app(service: Optional[MatchService] = None, *, cors_origins=DFLT_CORS_ORI
     return app
 
 
+def _with_ui(api, *, ui_dir, api_prefix):
+    """A root app: the static review UI at ``/``, ``api`` under ``api_prefix``."""
+    from pathlib import Path
+
+    from equate._dependencies import require
+
+    ui_dir = Path(ui_dir).expanduser()
+    if not (ui_dir / "index.html").is_file():
+        raise FileNotFoundError(
+            f"{ui_dir} holds no built review UI (no index.html); build it with "
+            f"`cd ui && npm install && npm run build`, then pass ui_dir='ui/dist'"
+        )
+    if not api_prefix.startswith("/") or api_prefix == "/":
+        raise ValueError(
+            f"api_prefix must be a sub-path like '/api', got {api_prefix!r}"
+        )
+    fastapi = require("fastapi", extra="service", purpose="serving the review UI")
+    static = require(
+        "fastapi.staticfiles", extra="service", purpose="serving the review UI"
+    )
+    # no docs on the root: its spec would be empty and shadow nothing useful; the API's
+    # own docs live at {api_prefix}/docs
+    root = fastapi.FastAPI(
+        title="equate review", docs_url=None, redoc_url=None, openapi_url=None
+    )
+    prefix = api_prefix.rstrip("/")
+    _serve_openapi_under(api, prefix)
+    root.mount(prefix, api)
+    # html=True serves index.html at "/" (the UI keeps its state in ?session=...)
+    root.mount("/", static.StaticFiles(directory=ui_dir, html=True), name="ui")
+    root.state.match_service = api.state.match_service
+    return root
+
+
+def _serve_openapi_under(api, prefix):
+    """Make ``api``'s OpenAPI spec name ``prefix`` as its server, so "Try it out" in
+    ``{prefix}/docs`` calls ``{prefix}/sessions``, not ``/sessions`` (qh's spec builder
+    drops ``app.servers``; i2mint/qh#24)."""
+    build = api.openapi
+
+    def openapi():
+        spec = build()
+        spec["servers"] = [{"url": prefix}]
+        return spec
+
+    api.openapi = openapi
+
+
 def _int(x, what):
     try:
         return int(x)
@@ -1192,12 +1261,22 @@ def _int(x, what):
         raise ValueError(f"{what} must be an integer index, got {x!r}") from None
 
 
-def serve(*, host="127.0.0.1", port=8000, service: Optional[MatchService] = None):
-    """Run the HTTP service with uvicorn (``python -m equate.service serve``)."""
+def serve(
+    *,
+    host="127.0.0.1",
+    port=8000,
+    service: Optional[MatchService] = None,
+    ui_dir=None,
+):
+    """Run the HTTP service with uvicorn (``python -m equate.service serve``).
+
+    With ``ui_dir`` (``python -m equate.service serve ui=ui/dist``) it also serves the
+    built review UI, at ``http://host:port/``.
+    """
     from equate._dependencies import require
 
     uvicorn = require("uvicorn", extra="service", purpose="serving the HTTP API")
-    uvicorn.run(mk_app(service), host=host, port=port)
+    uvicorn.run(mk_app(service, ui_dir=ui_dir), host=host, port=port)
 
 
 if __name__ == "__main__":
@@ -1205,8 +1284,12 @@ if __name__ == "__main__":
 
     cmd, *rest = sys.argv[1:] or ["serve"]
     if cmd == "serve":
-        kw = dict(a.split("=", 1) for a in rest)  # host=0.0.0.0 port=8001
-        serve(host=kw.get("host", "127.0.0.1"), port=int(kw.get("port", 8000)))
+        kw = dict(a.split("=", 1) for a in rest)  # host=0.0.0.0 port=8001 ui=ui/dist
+        serve(
+            host=kw.get("host", "127.0.0.1"),
+            port=int(kw.get("port", 8000)),
+            ui_dir=kw.get("ui"),
+        )
     elif cmd == "fields":
         print(json.dumps(boundary_fields(), indent=2))
     elif cmd == "schema":

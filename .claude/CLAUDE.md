@@ -72,8 +72,12 @@ adding a structured strategy, decide which of these three seams it belongs to.
   atomic — a failed one leaves the session (log, labels, accounting) untouched.
 - **HTTP errors are mapped in `mk_app`**, because qh turns any exception into a 500:
   `SessionNotFound` → 404, other `KeyError`/`ValueError`/`TypeError` → 422.
-- **`ui/`** is a Vite + React + zodal app with its own `npm test` / `npm run build`; hosted CI
-  runs only the Python side, so run both before landing a UI change.
+- **`ui/`** is a Vite + React + zodal app with its own `npm test` / `npm run build`
+  (`npm run ci-local` = both). Hosted CI runs them on any `ui/**` change
+  (`.github/workflows/ui-ci.yml` → the wads npm workflow, config under `wads` in
+  `ui/package.json`). `mk_app(ui_dir=…)` serves a built bundle at `/` with the API under
+  `/api` — the same path the vite dev proxy uses, so the client's `/api` base is right in
+  both.
 
 ## Benchmarks (#15)
 
