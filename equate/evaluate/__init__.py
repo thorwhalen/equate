@@ -29,6 +29,7 @@ from equate.evaluate.metrics import (
     gmd,
     unit_cost,
     pair_cost,
+    linear_cost,
 )
 from equate.evaluate.ranking import pr_auc, select_threshold, ranking_metrics
 from equate.evaluate.split import Split, entity_split, assert_no_leakage
@@ -57,6 +58,7 @@ __all__ = [
     "gmd",
     "unit_cost",
     "pair_cost",
+    "linear_cost",
     "bootstrap_ci",
     "blocking_metrics",
     "pr_auc",

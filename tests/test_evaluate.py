@@ -289,3 +289,60 @@ def test_harness_ci_auto_only_for_single_runs():
     assert benchmark_matcher(on=[ds], n_seeds=1, ci=None).rows[0].ci is None
     with pytest.raises(ValueError, match="ci must be"):
         benchmark_matcher(on=[ds], ci=95)
+
+
+# --- regressions from the adversarial review of #25 --------------------------------
+
+
+def test_degenerate_resamples_do_not_inflate_the_interval():
+    # 20 entities, 1 gold pair, 1 wrong prediction: every score is 0
+    gold, pred = {(0, 0)}, {(5, 5)}
+    ci = bootstrap_ci(pred, gold, [f"e{i}" for i in range(20)], n_boot=500)
+    assert ci["f1"] == (0.0, 0.0)  # was (0.0, 1.0): empty resamples counted as perfect
+
+
+def test_auto_ci_follows_the_rows_actually_scored():
+    import warnings
+
+    # 3 seeds requested, 2 skipped (no gold pair in their test part): one run is left
+    ds = load_benchmark("toy_names", n_entities=2, n_distractors=2)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        report = benchmark_matcher(on=[ds], n_seeds=3, ratios=(0.5, 0.25, 0.25))
+    assert len(report.rows) == 1 and report.rows[0].ci is not None
+
+
+def test_bad_ci_arguments_fail_before_the_matcher_runs():
+    calls = []
+
+    def matcher(a, b):
+        calls.append(1)
+        return []
+
+    for kw in ({"ci": 1.5}, {"ci": "always"}, {"n_boot": 0}, {"n_boot": True}):
+        with pytest.raises(ValueError):
+            benchmark_matcher(matcher, on=["toy_names"], n_seeds=1, **kw)
+    assert calls == []
+
+
+def test_rows_with_an_interval_stay_hashable():
+    row = benchmark_matcher(on=["toy_names"], n_seeds=1).rows[0]
+    assert row.ci and isinstance(hash(row), int)
+
+
+def test_bootstrap_memory_is_chunked():
+    ents = [f"e{i}" for i in range(20_000)]
+    gold = {(i, i) for i in range(20_000)}
+    ci = bootstrap_ci(gold, gold, ents, n_boot=200)  # 200 × 20k at once would be 32 MB+
+    assert ci["f1"] == (1.0, 1.0)
+
+
+def test_linear_cost_is_the_order_independent_family():
+    from equate.evaluate import linear_cost
+
+    assert gmd([0, 0, 1, 1], [0, 0, 0, 1], merge_cost=linear_cost(0, 1), split_cost=linear_cost(0, 1)) == 3.0
+    # label names do not matter for this family
+    p = [0] * 6
+    assert gmd(p, [0, 1, 1, 2, 2, 2], split_cost=linear_cost(1, 2)) == gmd(
+        p, [2, 1, 1, 0, 0, 0], split_cost=linear_cost(1, 2)
+    )

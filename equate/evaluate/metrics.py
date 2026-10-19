@@ -94,6 +94,19 @@ def pair_cost(x: int, y: int) -> float:
     return float(x * y)
 
 
+def linear_cost(k1: float = 0.0, k2: float = 1.0) -> Callable:
+    """A cost ``k1 + k2 * x * y`` — the order-independent family GMD is defined for.
+
+    >>> linear_cost(1, 0)(3, 4), linear_cost(0, 1)(3, 4)
+    (1.0, 12.0)
+    """
+
+    def cost(x: int, y: int) -> float:
+        return float(k1 + k2 * x * y)
+
+    return cost
+
+
 def gmd(
     pred_labels: Sequence,
     true_labels: Sequence,
@@ -107,9 +120,15 @@ def gmd(
     ``split_cost(x, y)`` prices splitting a cluster of ``x + y`` records into ``x`` and
     ``y``; ``merge_cost(x, y)`` merging an ``x``- and a ``y``-record cluster. The defaults
     (:func:`unit_cost`) count operations; :func:`pair_cost` for both gives the pairwise
-    error count. Unlike F-measures it is a distance (``0`` = identical), and its costs
-    let an application say whether a wrong merge hurts more than a missed one.
-    Linear time.
+    error count; :func:`linear_cost` ``(k1, k2)`` is ``k1 + k2·x·y``. Unlike F-measures it
+    is a distance (``0`` = identical), and its costs let an application say whether a
+    wrong merge hurts more than a missed one. Linear time.
+
+    As in the paper, this is the cost of the *legal* path — split each predicted cluster
+    along the true clusters, then merge the pieces of each true cluster — and the costs
+    must be **operation-order independent** (constant, ``k·x·y``, or ``k1 + k2·x·y``):
+    for other costs the result can depend on the labels' names. With unit costs a path
+    that merges first can occasionally be cheaper; GMD is defined as the legal path.
 
     >>> gmd([0, 0, 1, 1], [0, 0, 0, 1])   # split {2, 3}, merge {2} into {0, 1}
     2.0
