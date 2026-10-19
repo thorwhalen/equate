@@ -254,6 +254,8 @@ def test_ui_field_snapshot_is_current():
     from pathlib import Path
 
     snapshot = Path(__file__).parent.parent / "ui" / "src" / "schema" / "fields.json"
+    if not snapshot.exists():
+        pytest.skip("the ui/ tree is not present (e.g. testing from an sdist)")
     assert json.loads(snapshot.read_text()) == boundary_fields()
 
 

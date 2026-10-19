@@ -6,6 +6,15 @@ releases CI publishes to PyPI.
 
 ## Unreleased
 
+**Surfaces: an HTTP service and a review UI** (#12; doc 10 §5, decision D10).
+
+- `equate.service.MatchService` exposes the matching core as JSON-in/JSON-out operations. `match` is stateless and cached by content. A review session (`open_session`) scores the two collections once and keeps each item's top-k candidates. Then `candidates` reads or refreshes an item's top-k, `edit` applies `confirm` / `reject` / `reassign` / `clear` edits and returns the re-optimized assignment plus the items it changed, and `label` records an oracle's verdict and returns the next most uncertain pair (`next_query`). Edits re-solve from the cached scores; they never re-score. A rejected pair becomes a non-candidate, so rejecting every candidate of an item leaves it unmatched rather than making the problem infeasible.
+- Every response carries an `Accounting` of calls, seconds and items per tier (`score`, `match`, `candidates`, `reoptimize`); `MatchService(on_cost=...)` is the hook for an external budget. Candidates come with an `Explanation` whose `details['fields']` is a per-field diff (`explain_pair`). Records (dicts) work on every named featurizer and comparator through their joined values (`record_text`).
+- Sessions live in any `MutableMapping` (`sessions=`); a session pickles, so a `dol` store persists it.
+- `equate.service.mk_app()` mounts the service as an HTTP API with qh. It is the new extra `equate[service]` (qh, uvicorn) and is imported only when used. Run it with `python -m equate.service serve`. A missing session is a 404, and bad input or an unknown strategy is a 422.
+- `equate.score_matrix(A, B, ...)` is the scoring half of `match`, now public. `match` itself is unchanged.
+- `ui/` is a review UI built with React, zodal and shadcn: a review queue ordered by uncertainty, side-by-side field diffs, optimistic confirm/reject/reassign, and a labelling widget. Its Zod schemas are checked against the Python dataclasses on both sides.
+
 **Graph families** (part of #10; doc 12 §3-4, decision D8): matching for *graphs*, at both arities.
 
 - `equate.align(G1, G2, *, how='isorank', node_affinity=None, seeds=None)` adds the second matcher arity, a **quadratic matcher**. It aligns the *nodes* of two graphs and returns a `Matching` whose `.labeled_pairs()` gives `(G1 node, G2 node)` and whose `.plan` holds the node-pair scores. `'isorank'` is IsoRank in-house: numpy, an optional non-negative prior, and seeds that are kept and propagate. `'rrwm'` is pygmtools' reweighted random walk on the full quadratic affinity (new extra `equate[graph-matching]`; it uses the numpy backend and leaves the global backend alone). Both extract the final 1:1 correspondence with a **flat** matcher (`extract='optimal'` by default, any `resolve_matcher` spec). They live in a new `quadratic_matchers` registry, and the protocol is `equate.base.QuadraticMatcher`.

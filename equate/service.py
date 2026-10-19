@@ -307,6 +307,9 @@ def record_text(obj):
     return obj if isinstance(obj, str) else str(obj)
 
 
+_MISSING = (None, "")  # a field absent, null or empty is "missing", not "dissimilar"
+
+
 def _fields_of(obj):
     return dict(obj) if isinstance(obj, Mapping) else {"value": obj}
 
@@ -315,7 +318,8 @@ def explain_pair(left, right, score, *, field_compare=DFLT_FIELD_COMPARE):
     """A structured :class:`~equate.base.Explanation` of a pair: a per-field diff.
 
     Records (mappings) are compared field by field over the union of their keys; any other
-    object is one field named ``value``. ``details['fields']`` is a list of
+    object is one field named ``value``. A side that is absent, ``None`` or ``''`` has no
+    similarity (``None``): missing is not the same as different. ``details['fields']`` is a list of
     :class:`FieldDiff` dicts — the payload a UI renders as a side-by-side diff.
 
     >>> e = explain_pair({'name': 'Jon'}, {'name': 'Jon', 'city': 'Paris'}, 0.8)
@@ -328,7 +332,7 @@ def explain_pair(left, right, score, *, field_compare=DFLT_FIELD_COMPARE):
     for name in list(lf) + [k for k in rf if k not in lf]:
         lv, rv = lf.get(name), rf.get(name)
         sim = None
-        if lv is not None and rv is not None:
+        if lv not in _MISSING and rv not in _MISSING:
             sim = round(float(compare(str(lv), str(rv))), 6)
         diffs.append(asdict(FieldDiff(str(name), lv, rv, sim)))
     return Explanation(summary=f"score {score:.3f}", details={"fields": diffs})
@@ -499,10 +503,11 @@ class MatchService:
     # -- scoring ------------------------------------------------------------------
 
     def _score(self, A, B, acc, *, featurize, compare, block, sense):
-        # records (mappings) have no text of their own: unless a comparator is given (it
-        # sees the raw records), featurize / compare their joined values
+        # records (mappings) have no text of their own: the registered featurizers and
+        # comparators score text, so they get the records' joined values; only a callable
+        # comparator (a record-aware Python function) sees the raw records
         has_records = any(isinstance(x, Mapping) for x in A + B)
-        if has_records and compare is None:
+        if has_records and not callable(compare):
             A_, B_ = [record_text(a) for a in A], [record_text(b) for b in B]
         else:
             A_, B_ = A, B
