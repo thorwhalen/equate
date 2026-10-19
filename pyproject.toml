@@ -68,6 +68,8 @@ llm = ["openai"]
 # --- legacy / interop featurizers (default TF-IDF is now pure numpy/scipy) ---
 grub = ["grub"]
 sklearn = ["scikit-learn"]
+# --- surfaces: the HTTP service (equate.service.mk_app; qh brings fastapi + pydantic) ---
+service = ["qh", "fastapi", "pydantic", "uvicorn"]
 # --- examples & dev ---
 examples = ["pandas", "py2store", "requests"]
 dev = ["pytest>=7.0", "pytest-cov>=4.0", "ruff>=0.1.0"]
@@ -79,6 +81,12 @@ Changelog = "https://github.com/thorwhalen/equate/blob/master/CHANGELOG.md"
 [tool.hatch.build.targets.wheel]
 packages = [
     "equate",
+]
+
+[tool.hatch.build.targets.sdist]
+# the review UI is a separate npm project; it ships from the repo, not in the Python sdist
+exclude = [
+    "ui/",
 ]
 
 [tool.ruff]

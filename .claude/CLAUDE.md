@@ -50,6 +50,29 @@ a flat matcher (`extract=`). Sequence/graph *comparators* (DTW, NW/SW) are ordin
 `direct` comparators that declare their polarity; graph *kernels* are featurizers. Before
 adding a structured strategy, decide which of these three seams it belongs to.
 
+## Surfaces (#12): the service and the review UI
+
+- **`equate/service.py` is the surface-free core** — `MatchService` methods take JSON-able
+  args and return JSON-able dataclasses (`PairView`, `ReviewItem`, `SessionView`,
+  `EditResult`, ...). **No surface library is imported at module level**: `mk_app()` pulls
+  `qh` lazily (`equate[service]`), so `import equate.service` stays numpy/scipy-only.
+- **The JSON-dataclass boundary rule (D10):** a new field on a boundary type is a
+  cross-language change. Regenerate `ui/src/schema/fields.json`
+  (`python -m equate.service fields > ui/src/schema/fields.json`) and update the Zod schema
+  in `ui/src/schema/equate.ts`; `tests/test_service.py` and `ui/src/schema/equate.test.ts`
+  each fail until both sides agree. Non-finite floats go out as `null` (`to_jsonable`).
+- **Sessions re-solve from cached scores; they never re-score.** A reject is a *hole* (the
+  blocked-matching semantics, D11), not an `inf` — so rejecting every candidate leaves an
+  item unmatched instead of making the LAP infeasible. Edits fold latest-wins
+  (`_effective_constraints`).
+- **Concurrency:** edits of one session are serialized by a per-session lock (in-process
+  only); a multi-process session store needs versioning first. An edit or a label is
+  atomic — a failed one leaves the session (log, labels, accounting) untouched.
+- **HTTP errors are mapped in `mk_app`**, because qh turns any exception into a 500:
+  `SessionNotFound` → 404, other `KeyError`/`ValueError`/`TypeError` → 422.
+- **`ui/`** is a Vite + React + zodal app with its own `npm test` / `npm run build`; hosted CI
+  runs only the Python side, so run both before landing a UI change.
+
 ## The research corpus (`docs/research/`)
 
 Start at [`00-taxonomy-and-terminology.md`](../docs/research/00-taxonomy-and-terminology.md)

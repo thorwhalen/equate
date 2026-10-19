@@ -98,6 +98,9 @@ into each stage/concern; `docs/research/README.md` is the index.
 6. **Every public boundary returns structured dataclasses, not strings/printouts**
    (`Candidate`, `Matching`, `Explanation`). This is what makes the same core
    dispatchable to a CLI, an HTTP service (`qh`), and a declarative UI (`zodal`+shadcn).
+   Shipped in #12: `equate.service` holds the boundary dataclasses, and the UI's Zod
+   schemas are tested against their field list (`ui/src/schema/fields.json`) — change one
+   side and both test suites tell you to change the other.
 7. **Transitivity is a choice, never hard-wired.** Grading the comparison breaks
    transitivity (`a≈b`, `b≈c` ⇏ `a≈c`). Recovering groups (connected-components /
    correlation clustering) is a separate, swappable resolve stage with a documented
@@ -161,7 +164,9 @@ equate/
 ├── interactive/    # CandidateStore (top-k+scores, serializable); kbest.py = in-house Murty;  ← #9
 │                   #   constraints (ConstraintSet + reoptimize = edit→re-solve); review/active queues
 ├── evaluate.py     # pairwise P/R/F1, B-Cubed; blocking PC/RR/PQ
-├── service.py      # qh-friendly JSON-in/JSON-out facade
+├── service.py      # MatchService: JSON-in/JSON-out (stateless match + review sessions:  ← #12
+│                   #   candidates / edits / label), per-tier Accounting; mk_app() = qh HTTP
+│                   #   surface (lazy, equate[service]); ui/ = the zodal + shadcn review UI
 └── util.py         # existing helpers + back-compat re-exports
 ```
 

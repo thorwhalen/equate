@@ -13,7 +13,46 @@ from equate.block import resolve_blocker, score_candidates, all_pairs
 from equate.matching import resolve_matcher, soft_match, harden
 from equate.cluster import resolve_clusterer
 
-__all__ = ["match", "dedupe", "resolve"]
+__all__ = ["match", "score_matrix", "dedupe", "resolve"]
+
+
+def score_matrix(A, B, *, featurize=None, compare=None, block=None, sense=None):
+    """Score ``A`` against ``B`` into a :class:`~equate.base.ScoreMatrix` — stages ① and ②.
+
+    The scoring half of :func:`match`, exposed on its own for callers that keep the scores
+    and match later or repeatedly (the interactive loop re-solves from them on every edit;
+    see :mod:`equate.service`). The keywords mean exactly what they mean in :func:`match`:
+    the default is the TF-IDF + cosine vector route; ``compare=`` takes the direct pairwise
+    route; ``block=`` scores only the blocker's candidates into a sparse matrix; ``sense``
+    defaults to the comparator's declared polarity.
+
+    >>> sm = score_matrix(['apple', 'kiwi'], ['kiwis', 'apples'], compare='ratio')
+    >>> sm.shape, sm.sense
+    ((2, 2), 'maximize')
+    """
+    if compare is not None and featurize is not None:
+        raise ValueError(
+            "featurize (the vector route) and compare (the direct pairwise route) are "
+            "mutually exclusive — pass one, not both."
+        )
+    A = list(A)
+    B = list(B)
+    comparator = (
+        resolve_comparator(compare or "ratio")
+        if (compare is not None or block is not None)
+        else None
+    )
+    if sense is None:
+        sense = "maximize" if comparator is None else polarity_sense(comparator)
+
+    if block is not None:
+        candidates = list(resolve_blocker(block)(A, B))
+        scores = score_candidates(A, B, candidates, comparator, sense=sense).data
+    elif compare is not None:
+        scores = direct(comparator)(A, B)
+    else:
+        scores = featurized(featurize or "tfidf")(A, B)
+    return ScoreMatrix(scores, sense=sense, row_labels=A, col_labels=B)
 
 
 def match(
@@ -58,32 +97,13 @@ def match(
             "match() matches two collections; to deduplicate a single collection use "
             "equate.dedupe(A)."
         )
-    if compare is not None and featurize is not None:
-        raise ValueError(
-            "featurize (the vector route) and compare (the direct pairwise route) are "
-            "mutually exclusive — pass one, not both."
-        )
     A = list(A)
     B = list(B)
-    comparator = (
-        resolve_comparator(compare or "ratio")
-        if (compare is not None or block is not None)
-        else None
-    )
-    if sense is None:
-        sense = "maximize" if comparator is None else polarity_sense(comparator)
-
-    if block is not None:
-        candidates = list(resolve_blocker(block)(A, B))
-        scores = score_candidates(A, B, candidates, comparator, sense=sense).data
-    elif compare is not None:
-        scores = direct(comparator)(A, B)
-    else:
-        scores = featurized(featurize or "tfidf")(A, B)
-
     # the ScoreMatrix SSOT carries sense + labels and owns every densify (holes
     # worst-cased); a matched pair's retained score is read via sm.score_at(i, j)
-    sm = ScoreMatrix(scores, sense=sense, row_labels=A, col_labels=B)
+    sm = score_matrix(
+        A, B, featurize=featurize, compare=compare, block=block, sense=sense
+    )
 
     if how == "cluster":
         # cluster the pooled A+B index space (B offset by len(A)) using the A-B match
@@ -92,7 +112,7 @@ def match(
         n_a = len(A)
         edges = [(int(i), n_a + int(j), v) for i, j, v in sm.stored_entries()]
         return resolve_clusterer(cluster)(
-            edges, n_a + len(B), threshold=thr, sense=sense
+            edges, n_a + len(B), threshold=thr, sense=sm.sense
         )
 
     if how == "soft":
