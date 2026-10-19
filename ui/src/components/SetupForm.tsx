@@ -35,7 +35,7 @@ export function SetupForm() {
   const [right, setRight] = useState('');
   // numeric fields hold what was typed; parseSetup decides what it means
   const [k, setK] = useState(String(DEFAULT_K));
-  const [threshold, setThreshold] = useState('');
+  const [floor, setFloor] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [compare, setCompare] = useState('');
   const [restoredAt, setRestoredAt] = useState<number | null>(null);
@@ -48,7 +48,7 @@ export function SetupForm() {
         setLeft(d.left);
         setRight(d.right);
         setK(String(d.k));
-        setThreshold(d.threshold ?? '');
+        setFloor(d.floor ?? '');
         setCompare(d.compare);
         setRestoredAt(d.savedAt);
       }
@@ -59,15 +59,15 @@ export function SetupForm() {
   useEffect(() => {
     if (!loaded.current) return;
     const t = setTimeout(
-      () => drafts.save({ left, right, k, threshold, compare }),
+      () => drafts.save({ left, right, k, floor, compare }),
       SAVE_DELAY_MS,
     );
     return () => clearTimeout(t);
-  }, [left, right, k, threshold, compare]);
+  }, [left, right, k, floor, compare]);
 
   // leaving a field resolves its draft: an invalid one keeps its text and says why
   const checkFields = () => {
-    const r = parseSetup({ k, threshold });
+    const r = parseSetup({ k, floor });
     setFieldErrors(r.ok ? {} : r.errors);
     return r;
   };
@@ -93,7 +93,7 @@ export function SetupForm() {
       A,
       B,
       k: params.value.k,
-      threshold: params.value.threshold,
+      floor: params.value.floor,
       compare: compare || null,
     });
     if (id) {
@@ -180,16 +180,16 @@ export function SetupForm() {
               type="text"
               inputMode="decimal"
               placeholder="none"
-              aria-invalid={!!fieldErrors.threshold}
-              aria-describedby="threshold-help"
+              aria-invalid={!!fieldErrors.floor}
+              aria-describedby="floor-help"
               className="h-9 w-28 rounded-md border border-border bg-background px-2 text-sm aria-invalid:border-destructive"
-              value={threshold}
-              onChange={(e) => setThreshold(e.target.value)}
+              value={floor}
+              onChange={(e) => setFloor(e.target.value)}
               onBlur={checkFields}
             />
-            <span id="threshold-help" className="max-w-56 text-xs font-normal text-muted-foreground">
-              {fieldErrors.threshold ??
-                'Pairs scoring below it are never proposed; a rejected item is left unmatched.'}
+            <span id="floor-help" className="max-w-56 text-xs font-normal text-muted-foreground">
+              {fieldErrors.floor ??
+                'Pairs scoring below it are never proposed, so rejecting an item\'s last good candidate leaves it unmatched.'}
             </span>
           </label>
           <div className="ml-auto flex gap-2">

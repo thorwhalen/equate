@@ -6,7 +6,7 @@ releases CI publishes to PyPI.
 
 ## Unreleased
 
-**Session score floor** (#21). `MatchService.open_session(..., threshold=)` (also `POST /sessions`) sets a score floor, which is a ceiling for a `'minimize'` sense. Pairs that fail it are not candidates: they are never proposed or offered for review, and a reject never pushes an item onto one; the item is left unmatched. It uses the same non-candidate mechanism as rejects and blocking. `SessionView.threshold` reports it. The review UI's setup form has a "Minimum score" field. Its numeric fields now keep what was typed and show an inline error, instead of snapping an emptied field back to its default.
+**Session score floor** (#21). `MatchService.open_session(..., floor=)` (also `POST /sessions`) sets the lowest acceptable score; for a `'minimize'` sense it is the highest acceptable distance. Pairs past it are not candidates: they are never proposed or offered for review, and a reject never pushes an item onto one; the item is left unmatched. It uses the same non-candidate mechanism as rejects and blocking, so the opening assignment is lexicographic: as many acceptable pairs as possible, then the best score. A floor can therefore change the assignment, not just trim it, unlike `match(threshold=)`, which solves first and filters afterwards. The floor also counts as a virtual runner-up in an item's margin, so a lone candidate just past the floor is reviewed first, not last. `SessionView.floor` reports it. The review UI's setup form has a "Minimum score" field. Its numeric fields keep what was typed, read numbers the way Python's `float()` does, and show an inline error instead of snapping an emptied field back to its default.
 
 **Benchmark loaders for the standard suites** (#15; doc 14 §6, §8.3, §8.5).
 

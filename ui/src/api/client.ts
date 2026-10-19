@@ -32,7 +32,7 @@ export interface OpenSessionParams {
   k?: number;
   compare?: string | null;
   featurize?: string | null;
-  threshold?: number | null;
+  floor?: number | null;
 }
 
 export function createClient(base: string = DEFAULT_API_BASE, fetchFn: typeof fetch = fetch) {

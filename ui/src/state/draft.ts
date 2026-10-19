@@ -11,7 +11,7 @@ export interface Draft {
   left: string;
   right: string;
   k: string; // as typed: the draft is not the value (validated on submit)
-  threshold?: string; // absent in drafts saved before equate#21
+  floor?: string; // absent in drafts saved before equate#21
   compare: string;
   savedAt: number;
 }

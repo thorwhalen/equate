@@ -437,7 +437,7 @@ def test_concurrent_edits_on_one_session_are_all_kept():
 # --- session score floor (equate#21) -----------------------------------------------
 
 
-def test_threshold_keeps_a_reject_from_forcing_a_bad_pair():
+def test_floor_keeps_a_reject_from_forcing_a_bad_pair():
     names_a = ["Ann Lee", "Bob Martin"]
     names_b = ["Anne Li", "Bob Martin", "Zoe Bernard"]
     svc = MatchService()
@@ -445,36 +445,65 @@ def test_threshold_keeps_a_reject_from_forcing_a_bad_pair():
     r = svc.edit(loose.session_id, [Edit("reject", 0, 0)])
     assert _pairs(r.assignment)[0] == 2  # without a floor: pushed onto "Zoe Bernard"
 
-    v = svc.open_session(names_a, names_b, compare="ratio", threshold=0.5)
-    assert v.threshold == 0.5
+    v = svc.open_session(names_a, names_b, compare="ratio", floor=0.5)
+    assert v.floor == 0.5
     assert {c.candidate for c in svc.candidates(v.session_id, 0)} == {0}  # only Anne Li
     r = svc.edit(v.session_id, [Edit("reject", 0, 0)])
     assert 0 not in _pairs(r.assignment)  # left unmatched instead
     assert {row.item: row.status for row in svc.review(v.session_id)}[0] == "unmatched"
 
 
-def test_threshold_is_a_ceiling_for_a_distance():
+def test_floor_is_a_ceiling_for_a_distance():
     svc = MatchService()
-    v = svc.open_session(["abc", "xyz"], ["abd", "qqqq"], compare="levenshtein_distance", threshold=1)
+    v = svc.open_session(["abc", "xyz"], ["abd", "qqqq"], compare="levenshtein_distance", floor=1)
     assert v.sense == "minimize"
     assert _pairs(v.assignment) == {0: 0}  # xyz->qqqq (distance 4) is past the ceiling
 
 
-def test_threshold_with_blocking_and_unbounded_scores():
+def test_floor_with_blocking_and_unbounded_scores():
     blocker = lambda A, B: [(0, 0), (0, 1), (1, 1)]  # noqa: E731
     big = lambda a, b: 100.0 * len(set(a) & set(b))  # noqa: E731
     svc = MatchService()
-    v = svc.open_session(["ab", "cd"], ["ab", "cx"], compare=big, block=blocker, threshold=150)
+    v = svc.open_session(["ab", "cd"], ["ab", "cx"], compare=big, block=blocker, floor=150)
     assert _pairs(v.assignment) == {0: 0}  # (1, 1) scores 100: below the floor
     assert svc.candidates(v.session_id, 1) == []
 
 
-def test_threshold_is_validated():
-    for bad in ("high", float("nan"), True):
+def test_floor_is_validated():
+    for bad in ("high", float("nan"), True, 10**400, [1]):
         with pytest.raises(ValueError):
-            MatchService().open_session(A, B, threshold=bad)
+            MatchService().open_session(A, B, floor=bad)
 
 
-def test_http_session_threshold(client):
-    v = client.post("/sessions", json={"A": A, "B": B, "threshold": 0.99}).json()
-    assert v["threshold"] == 0.99 and v["assignment"] == []
+def test_http_session_floor(client):
+    v = client.post("/sessions", json={"A": A, "B": B, "floor": 0.99}).json()
+    assert v["floor"] == 0.99 and v["assignment"] == []
+
+
+def test_floor_accepts_numpy_scalars():
+    np = pytest.importorskip("numpy")
+    assert MatchService().open_session(A, B, floor=np.float32(0.25)).floor == 0.25
+
+
+def test_floor_makes_a_borderline_item_uncertain_not_certain():
+    # a -> x 0.51, a -> y 0.49; b -> y 0.95, b -> x 0.60 (exact scores, via a callable)
+    S = {("a", "x"): 0.51, ("a", "y"): 0.49, ("b", "y"): 0.95, ("b", "x"): 0.60}
+    svc = MatchService()
+    v = svc.open_session(["a", "b"], ["x", "y"], compare=lambda p, q: S[(p, q)], floor=0.5)
+    first = v.review[0]
+    assert first.item == 0 and first.margin == pytest.approx(0.01)  # 0.51 vs the floor
+    assert svc.next_query(v.session_id).item == 0
+
+
+def test_floor_assignment_is_lexicographic_unlike_match_threshold():
+    """Pinned (equate#21): a floor makes the cells past it non-candidates *before*
+    solving, so the solve maximizes the number of acceptable pairs first; match's
+    threshold solves first and then drops weak pairs."""
+    # best total: a-y + b-x = 1.25 > a-x + b-y = 1.06; a-y is below the floor
+    S = {("a", "x"): 0.51, ("a", "y"): 0.30, ("b", "x"): 0.95, ("b", "y"): 0.55}
+    cmp = lambda p, q: S[(p, q)]  # noqa: E731
+    svc = MatchService(cache=None)
+    filtered = svc.match(["a", "b"], ["x", "y"], compare=cmp, threshold=0.5)
+    assert _pairs(filtered.pairs) == {1: 0}  # best total first (a-y, b-x), then a-y dropped
+    v = svc.open_session(["a", "b"], ["x", "y"], compare=cmp, floor=0.5)
+    assert _pairs(v.assignment) == {0: 0, 1: 1}  # both acceptable pairs kept
