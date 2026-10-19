@@ -11,5 +11,9 @@ equate.evaluate.metrics
       bcubed
       ceaf
       cluster_metrics
+      gmd
+      linear_cost
+      pair_cost
       pairwise_prf
+      unit_cost
    

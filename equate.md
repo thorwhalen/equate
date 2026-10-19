@@ -1,4 +1,4 @@
-> built 2026-10-19 12:21 UTC from 176918a (master) · equate 0.0.22. Details: build_info.json
+> built 2026-10-19 12:41 UTC from 581611b (master) · equate 0.0.23. Details: build_info.json
 
 # index.html.md
 
@@ -141,7 +141,7 @@ print(
 )  # equate.match, 3 seeds, entity splits
 ```
 
-Also there: `ceaf`, `cluster_metrics` (ARI and V-measure use scikit-learn when installed, numpy otherwise; `pip install 'equate[eval]'`), `blocking_metrics`, `pr_auc`, `ranking_metrics`, `select_threshold` (pass validation data), `entity_split` and `assert_no_leakage`. Benchmarks are a registry (`equate.evaluate.benchmarks`), so a new dataset is a registered loader.
+A single run (a benchmark’s canonical split) reports a bootstrap confidence interval instead of a seed spread: `F1 0.628 [0.588, 0.670]` on WDC Products, from resampling the test *entities* (`ci='auto'`; pass a level to get it on every row). Also there: `gmd` (generalized merge distance: the cost of the splits and merges between two clusterings, with pluggable costs), `ceaf`, `cluster_metrics` (ARI and V-measure use scikit-learn when installed, numpy otherwise; `pip install 'equate[eval]'`), `blocking_metrics`, `pr_auc`, `ranking_metrics`, `select_threshold` (pass validation data), `entity_split` and `assert_no_leakage`. Benchmarks are a registry (`equate.evaluate.benchmarks`), so a new dataset is a registered loader.
 
 The standard suites download on first use, into `~/.local/share/equate/benchmarks` (or `$EQUATE_DATA_DIR`), never into the package:
 
@@ -2291,11 +2291,12 @@ published numbers are measured on them.
 
 ### Functions
 
-| [`benchmark_matcher`](_autosummary/equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.benchmark_matcher)([matcher, on, n_seeds, ...])   | Score `matcher` on unseen-entity test splits of each benchmark in `on`.   |
-|---------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
-| [`list_benchmarks`](_autosummary/equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.list_benchmarks)()                                | Names of the registered benchmarks.                                       |
-| [`load_benchmark`](_autosummary/equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.load_benchmark)(name, \*\*config)                 | Build a registered benchmark (`config` goes to its loader).               |
-| [`subset_pairs`](_autosummary/equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.subset_pairs)(gold, rows_a, rows_b)               | Gold pairs with both ends in the subset, re-indexed into the subset.      |
+| [`benchmark_matcher`](_autosummary/equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.benchmark_matcher)([matcher, on, n_seeds, ...])     | Score `matcher` on unseen-entity test splits of each benchmark in `on`.   |
+|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
+| [`bootstrap_ci`](_autosummary/equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.bootstrap_ci)(pred, gold, left_entities, \*[, ...]) | Percentile bootstrap interval of pairwise precision, recall and F1.       |
+| [`list_benchmarks`](_autosummary/equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.list_benchmarks)()                                  | Names of the registered benchmarks.                                       |
+| [`load_benchmark`](_autosummary/equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.load_benchmark)(name, \*\*config)                   | Build a registered benchmark (`config` goes to its loader).               |
+| [`subset_pairs`](_autosummary/equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.subset_pairs)(gold, rows_a, rows_b)                 | Gold pairs with both ends in the subset, re-indexed into the subset.      |
 
 ### Classes
 
@@ -2346,13 +2347,13 @@ One row per benchmark: precision, recall, F1, seconds, base rate, difficulty.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### *class* equate.evaluate.benchmark.BenchmarkRow(benchmark, seed, precision, recall, f1, seconds, n_a, n_b, n_gold, base_rate)
+### *class* equate.evaluate.benchmark.BenchmarkRow(benchmark, seed, precision, recall, f1, seconds, n_a, n_b, n_gold, base_rate, ci=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 One (benchmark, seed) run: the scores, their context, and what they cost.
 
-### equate.evaluate.benchmark.benchmark_matcher(matcher=None, , on=('toy_names',), n_seeds=3, ratios=(0.6, 0.2, 0.2), fit=None, split='auto')
+### equate.evaluate.benchmark.benchmark_matcher(matcher=None, , on=('toy_names',), n_seeds=3, ratios=(0.6, 0.2, 0.2), fit=None, split='auto', ci='auto', n_boot=1000, ci_seed=0)
 
 Score `matcher` on unseen-entity test splits of each benchmark in `on`.
 
@@ -2376,6 +2377,16 @@ never on test.
 variants share entities across parts by design); `'auto'` (default) is canonical
 when the benchmark has `splits`, else entity.
 
+`ci` adds a **bootstrap confidence interval** to each row (doc 14 §7.4): the test
+*entities* are resampled `n_boot` times (a cluster bootstrap: an entity’s pairs move
+together) and the percentile interval of precision, recall and F1 is kept in
+`BenchmarkRow.ci`. `'auto'` (default) computes a 95 % interval only for a
+single-run benchmark — a canonical split has no seed spread, and a 500-pair test set
+leaves a few points of F1 within noise; a level (`0.9`) computes it for every row;
+`None` never. The resampling is seeded (`ci_seed`), so a report is reproducible.
+A percentile interval cannot show uncertainty at a 0/1 boundary: a perfect run reads
+`1.000 [1.000, 1.000]` — that is “no resample found an error”, not certainty.
+
 ```pycon
 >>> report = benchmark_matcher(n_seeds=2)
 >>> s = report.summary()['toy_names']
@@ -2389,6 +2400,31 @@ when the benchmark has `splits`, else entity.
 ### equate.evaluate.benchmark.benchmarks *= <equate.registry.Registry object>*
 
 name -> factory(\*\*config) returning a [`Benchmark`](_autosummary/equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.Benchmark)
+
+### equate.evaluate.benchmark.bootstrap_ci(pred, gold, left_entities, , level=0.95, n_boot=1000, seed=0)
+
+Percentile bootstrap interval of pairwise precision, recall and F1.
+
+`pred` / `gold` are `(i, j)` pairs; `left_entities[i]` is the entity of left
+record `i`. Entities (not pairs) are resampled with replacement and each pair is
+weighted by how often its **left** record’s entity was drawn, so the pairs of one
+entity succeed or fail together (a false positive counts against the entity of its
+left record; entities with no left record in the test part are not resampled).
+
+A resample with no predicted pair has no precision, and one with no gold pair no
+recall: those resamples are left out of that metric’s interval (scoring them 1.0, as
+[`Scores`](_autosummary/equate.evaluate.html.md#equate.evaluate.Scores) does for a whole empty run, would inflate it). An
+interval with no valid resample is `(nan, nan)`. Returns `{'precision': (lo,
+hi), 'recall': ..., 'f1': ...}`. Memory is bounded: resamples are drawn in chunks.
+
+```pycon
+>>> ci = bootstrap_ci({(0, 0), (1, 1)}, {(0, 0), (1, 2)}, ['e0', 'e1'], n_boot=200)
+>>> ci['precision'][0] <= 0.5 <= ci['precision'][1]
+True
+```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### equate.evaluate.benchmark.list_benchmarks()
 
@@ -2494,33 +2530,38 @@ See `docs/research/14-evaluation-benchmarks-and-methodology.md`.
 
 ### Functions
 
-| [`pairwise_prf`](_autosummary/equate.evaluate.html.md#equate.evaluate.pairwise_prf)(pred_pairs, true_pairs, \*[, ...])    | Pairwise precision / recall / F1 of predicted pairs against gold pairs.                                                                                     |
-|-----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`bcubed`](_autosummary/equate.evaluate.html.md#equate.evaluate.bcubed)(pred_labels, true_labels)                   | B³ precision / recall / F1 — the default cluster metric.                                                                                                    |
-| [`ceaf`](_autosummary/equate.evaluate.html.md#equate.evaluate.ceaf)(pred_labels, true_labels, \*[, variant, ...]) | CEAF: score the best one-to-one alignment of predicted to true clusters.                                                                                    |
-| [`cluster_metrics`](_autosummary/equate.evaluate.html.md#equate.evaluate.cluster_metrics)(pred_labels, true_labels, \*)      | B³ (the headline), CEAF-e, ARI, V-measure, homogeneity and completeness.                                                                                    |
-| [`blocking_metrics`](_autosummary/equate.evaluate.html.md#equate.evaluate.blocking_metrics)(candidate_pairs, ...[, n_b])      | Return `{pair_completeness, reduction_ratio, pairs_quality, n_candidates}`.                                                                                 |
-| [`pr_auc`](_autosummary/equate.evaluate.html.md#equate.evaluate.pr_auc)(scores, y_true)                             | Average precision: the area under the precision-recall step curve.                                                                                          |
-| [`select_threshold`](_autosummary/equate.evaluate.html.md#equate.evaluate.select_threshold)(scores, y_true, \*[, optimize])   | The score threshold (`score >= t` predicts a match) that maximises `optimize`.                                                                              |
-| [`ranking_metrics`](_autosummary/equate.evaluate.html.md#equate.evaluate.ranking_metrics)(ranked, gold, \*[, ks])            | Recall@k, MRR and MAP for ranked candidate lists.                                                                                                           |
-| [`pairs_to_labels`](_autosummary/equate.evaluate.html.md#equate.evaluate.pairs_to_labels)(pairs, \*, n)                      | Cluster label per record `0..n-1` from the transitive closure of `pairs`.                                                                                   |
-| [`labels_to_pairs`](_autosummary/equate.evaluate.html.md#equate.evaluate.labels_to_pairs)(labels)                            | Every within-cluster pair `(i, j)` with `i < j`.                                                                                                            |
-| [`cross_pairs_to_labels`](_autosummary/equate.evaluate.html.md#equate.evaluate.cross_pairs_to_labels)(pairs, \*, n_a, n_b)         | Labels over `A + B` (B's records offset by `n_a`) from two-table `(i, j)` pairs.                                                                            |
-| [`entity_split`](_autosummary/equate.evaluate.html.md#equate.evaluate.entity_split)(entity_ids, \*[, ratios, seed])       | Split records into train / val / test by entity, never by record or pair.                                                                                   |
-| [`assert_no_leakage`](_autosummary/equate.evaluate.html.md#equate.evaluate.assert_no_leakage)(entity_ids, \*parts)             | Raise `AssertionError` if any entity has records in more than one of `parts`.                                                                               |
-| [`list_benchmarks`](_autosummary/equate.evaluate.html.md#equate.evaluate.list_benchmarks)()                                  | Names of the registered benchmarks.                                                                                                                         |
-| [`load_benchmark`](_autosummary/equate.evaluate.html.md#equate.evaluate.load_benchmark)(name, \*\*config)                   | Build a registered benchmark (`config` goes to its loader).                                                                                                 |
-| [`benchmark_matcher`](_autosummary/equate.evaluate.html.md#equate.evaluate.benchmark_matcher)([matcher, on, n_seeds, ...])     | Score `matcher` on unseen-entity test splits of each benchmark in `on`.                                                                                     |
-| [`subset_pairs`](_autosummary/equate.evaluate.html.md#equate.evaluate.subset_pairs)(gold, rows_a, rows_b)                 | Gold pairs with both ends in the subset, re-indexed into the subset.                                                                                        |
-| [`linearity`](_autosummary/equate.evaluate.html.md#equate.evaluate.linearity)(a, b, gold, \*[, max_pairs])             | Best pairwise F1 of a single threshold on TF-IDF cosine similarity over `a × b`.                                                                            |
-| [`difficulty_profile`](_autosummary/equate.evaluate.html.md#equate.evaluate.difficulty_profile)(a, b, gold)                     | `{'linearity', 'level', 'base_rate', 'n_a', 'n_b', 'n_gold'}` for a matching task.                                                                          |
-| [`data_dir`](_autosummary/equate.evaluate.html.md#equate.evaluate.data_dir)()                                         | The default root of the benchmark cache (not created until something is written).                                                                           |
-| [`default_store`](_autosummary/equate.evaluate.html.md#equate.evaluate.default_store)()                                    | The default benchmark cache: a [`FileStore`](_autosummary/equate.evaluate.html.md#equate.evaluate.FileStore) over [`data_dir()`](_autosummary/equate.evaluate.html.md#equate.evaluate.data_dir). |
-| [`fetch`](_autosummary/equate.evaluate.html.md#equate.evaluate.fetch)(key, source, \*[, store, download, get])     | The bytes of `source`, from `store` if cached, else downloaded and cached.                                                                                  |
-| [`abt_buy`](_autosummary/equate.evaluate.html.md#equate.evaluate.abt_buy)(\*\*config)                                | Abt-Buy: 1081 × 1092 product offers, 1097 matches (Leipzig; textual, hard).                                                                                 |
-| [`amazon_google`](_autosummary/equate.evaluate.html.md#equate.evaluate.amazon_google)(\*\*config)                          | Amazon-Google: 1363 × 3226 software products, 1300 matches (Leipzig; hard).                                                                                 |
-| [`dblp_acm`](_autosummary/equate.evaluate.html.md#equate.evaluate.dblp_acm)(\*\*config)                               | DBLP-ACM: 2616 × 2294 publications, 2224 matches (Leipzig; easy).                                                                                           |
-| [`wdc_products`](_autosummary/equate.evaluate.html.md#equate.evaluate.wdc_products)(\*[, corner_cases, unseen, ...])      | WDC Products as a two-table benchmark with its canonical train/valid/test split.                                                                            |
+| [`pairwise_prf`](_autosummary/equate.evaluate.html.md#equate.evaluate.pairwise_prf)(pred_pairs, true_pairs, \*[, ...])    | Pairwise precision / recall / F1 of predicted pairs against gold pairs.                                                                                            |
+|-----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`bcubed`](_autosummary/equate.evaluate.html.md#equate.evaluate.bcubed)(pred_labels, true_labels)                   | B³ precision / recall / F1 — the default cluster metric.                                                                                                           |
+| [`ceaf`](_autosummary/equate.evaluate.html.md#equate.evaluate.ceaf)(pred_labels, true_labels, \*[, variant, ...]) | CEAF: score the best one-to-one alignment of predicted to true clusters.                                                                                           |
+| [`cluster_metrics`](_autosummary/equate.evaluate.html.md#equate.evaluate.cluster_metrics)(pred_labels, true_labels, \*)      | B³ (the headline), CEAF-e, ARI, V-measure, homogeneity and completeness.                                                                                           |
+| [`gmd`](_autosummary/equate.evaluate.html.md#equate.evaluate.gmd)(pred_labels, true_labels, \*[, ...])           | Generalized merge distance: the cost of the splits and merges that turn the predicted clustering into the true one (Menestrina, Whang & Garcia-Molina, VLDB 2010). |
+| [`unit_cost`](_autosummary/equate.evaluate.html.md#equate.evaluate.unit_cost)(x, y)                                    | Cost 1 per split or merge, whatever the sizes (GMD counts operations).                                                                                             |
+| [`pair_cost`](_autosummary/equate.evaluate.html.md#equate.evaluate.pair_cost)(x, y)                                    | Cost `x * y`: the record pairs a split separates or a merge joins — with it, GMD equals the number of pairwise errors (false positives + false negatives).         |
+| [`linear_cost`](_autosummary/equate.evaluate.html.md#equate.evaluate.linear_cost)([k1, k2])                              | A cost `k1 + k2 * x * y` — the order-independent family GMD is defined for.                                                                                        |
+| [`bootstrap_ci`](_autosummary/equate.evaluate.html.md#equate.evaluate.bootstrap_ci)(pred, gold, left_entities, \*[, ...]) | Percentile bootstrap interval of pairwise precision, recall and F1.                                                                                                |
+| [`blocking_metrics`](_autosummary/equate.evaluate.html.md#equate.evaluate.blocking_metrics)(candidate_pairs, ...[, n_b])      | Return `{pair_completeness, reduction_ratio, pairs_quality, n_candidates}`.                                                                                        |
+| [`pr_auc`](_autosummary/equate.evaluate.html.md#equate.evaluate.pr_auc)(scores, y_true)                             | Average precision: the area under the precision-recall step curve.                                                                                                 |
+| [`select_threshold`](_autosummary/equate.evaluate.html.md#equate.evaluate.select_threshold)(scores, y_true, \*[, optimize])   | The score threshold (`score >= t` predicts a match) that maximises `optimize`.                                                                                     |
+| [`ranking_metrics`](_autosummary/equate.evaluate.html.md#equate.evaluate.ranking_metrics)(ranked, gold, \*[, ks])            | Recall@k, MRR and MAP for ranked candidate lists.                                                                                                                  |
+| [`pairs_to_labels`](_autosummary/equate.evaluate.html.md#equate.evaluate.pairs_to_labels)(pairs, \*, n)                      | Cluster label per record `0..n-1` from the transitive closure of `pairs`.                                                                                          |
+| [`labels_to_pairs`](_autosummary/equate.evaluate.html.md#equate.evaluate.labels_to_pairs)(labels)                            | Every within-cluster pair `(i, j)` with `i < j`.                                                                                                                   |
+| [`cross_pairs_to_labels`](_autosummary/equate.evaluate.html.md#equate.evaluate.cross_pairs_to_labels)(pairs, \*, n_a, n_b)         | Labels over `A + B` (B's records offset by `n_a`) from two-table `(i, j)` pairs.                                                                                   |
+| [`entity_split`](_autosummary/equate.evaluate.html.md#equate.evaluate.entity_split)(entity_ids, \*[, ratios, seed])       | Split records into train / val / test by entity, never by record or pair.                                                                                          |
+| [`assert_no_leakage`](_autosummary/equate.evaluate.html.md#equate.evaluate.assert_no_leakage)(entity_ids, \*parts)             | Raise `AssertionError` if any entity has records in more than one of `parts`.                                                                                      |
+| [`list_benchmarks`](_autosummary/equate.evaluate.html.md#equate.evaluate.list_benchmarks)()                                  | Names of the registered benchmarks.                                                                                                                                |
+| [`load_benchmark`](_autosummary/equate.evaluate.html.md#equate.evaluate.load_benchmark)(name, \*\*config)                   | Build a registered benchmark (`config` goes to its loader).                                                                                                        |
+| [`benchmark_matcher`](_autosummary/equate.evaluate.html.md#equate.evaluate.benchmark_matcher)([matcher, on, n_seeds, ...])     | Score `matcher` on unseen-entity test splits of each benchmark in `on`.                                                                                            |
+| [`subset_pairs`](_autosummary/equate.evaluate.html.md#equate.evaluate.subset_pairs)(gold, rows_a, rows_b)                 | Gold pairs with both ends in the subset, re-indexed into the subset.                                                                                               |
+| [`linearity`](_autosummary/equate.evaluate.html.md#equate.evaluate.linearity)(a, b, gold, \*[, max_pairs])             | Best pairwise F1 of a single threshold on TF-IDF cosine similarity over `a × b`.                                                                                   |
+| [`difficulty_profile`](_autosummary/equate.evaluate.html.md#equate.evaluate.difficulty_profile)(a, b, gold)                     | `{'linearity', 'level', 'base_rate', 'n_a', 'n_b', 'n_gold'}` for a matching task.                                                                                 |
+| [`data_dir`](_autosummary/equate.evaluate.html.md#equate.evaluate.data_dir)()                                         | The default root of the benchmark cache (not created until something is written).                                                                                  |
+| [`default_store`](_autosummary/equate.evaluate.html.md#equate.evaluate.default_store)()                                    | The default benchmark cache: a [`FileStore`](_autosummary/equate.evaluate.html.md#equate.evaluate.FileStore) over [`data_dir()`](_autosummary/equate.evaluate.html.md#equate.evaluate.data_dir).        |
+| [`fetch`](_autosummary/equate.evaluate.html.md#equate.evaluate.fetch)(key, source, \*[, store, download, get])     | The bytes of `source`, from `store` if cached, else downloaded and cached.                                                                                         |
+| [`abt_buy`](_autosummary/equate.evaluate.html.md#equate.evaluate.abt_buy)(\*\*config)                                | Abt-Buy: 1081 × 1092 product offers, 1097 matches (Leipzig; textual, hard).                                                                                        |
+| [`amazon_google`](_autosummary/equate.evaluate.html.md#equate.evaluate.amazon_google)(\*\*config)                          | Amazon-Google: 1363 × 3226 software products, 1300 matches (Leipzig; hard).                                                                                        |
+| [`dblp_acm`](_autosummary/equate.evaluate.html.md#equate.evaluate.dblp_acm)(\*\*config)                               | DBLP-ACM: 2616 × 2294 publications, 2224 matches (Leipzig; easy).                                                                                                  |
+| [`wdc_products`](_autosummary/equate.evaluate.html.md#equate.evaluate.wdc_products)(\*[, corner_cases, unseen, ...])      | WDC Products as a two-table benchmark with its canonical train/valid/test split.                                                                                   |
 
 ### Classes
 
@@ -2575,7 +2616,7 @@ One row per benchmark: precision, recall, F1, seconds, base rate, difficulty.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### *class* equate.evaluate.BenchmarkRow(benchmark, seed, precision, recall, f1, seconds, n_a, n_b, n_gold, base_rate)
+### *class* equate.evaluate.BenchmarkRow(benchmark, seed, precision, recall, f1, seconds, n_a, n_b, n_gold, base_rate, ci=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -2702,7 +2743,7 @@ averaged over records.
 * **Return type:**
   [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
 
-### equate.evaluate.benchmark_matcher(matcher=None, , on=('toy_names',), n_seeds=3, ratios=(0.6, 0.2, 0.2), fit=None, split='auto')
+### equate.evaluate.benchmark_matcher(matcher=None, , on=('toy_names',), n_seeds=3, ratios=(0.6, 0.2, 0.2), fit=None, split='auto', ci='auto', n_boot=1000, ci_seed=0)
 
 Score `matcher` on unseen-entity test splits of each benchmark in `on`.
 
@@ -2725,6 +2766,16 @@ never on test.
 `ratios` ignored; no entity-leakage assertion, since a suite’s *seen-entity*
 variants share entities across parts by design); `'auto'` (default) is canonical
 when the benchmark has `splits`, else entity.
+
+`ci` adds a **bootstrap confidence interval** to each row (doc 14 §7.4): the test
+*entities* are resampled `n_boot` times (a cluster bootstrap: an entity’s pairs move
+together) and the percentile interval of precision, recall and F1 is kept in
+`BenchmarkRow.ci`. `'auto'` (default) computes a 95 % interval only for a
+single-run benchmark — a canonical split has no seed spread, and a 500-pair test set
+leaves a few points of F1 within noise; a level (`0.9`) computes it for every row;
+`None` never. The resampling is seeded (`ci_seed`), so a report is reproducible.
+A percentile interval cannot show uncertainty at a 0/1 boundary: a perfect run reads
+`1.000 [1.000, 1.000]` — that is “no resample found an error”, not certainty.
 
 ```pycon
 >>> report = benchmark_matcher(n_seeds=2)
@@ -2756,6 +2807,31 @@ pairs are canonicalized to unordered `(min, max)` so orientation doesn’t matte
 >>> round(m['pair_completeness'], 2), round(m['pairs_quality'], 2)
 (0.67, 1.0)
 ```
+
+### equate.evaluate.bootstrap_ci(pred, gold, left_entities, , level=0.95, n_boot=1000, seed=0)
+
+Percentile bootstrap interval of pairwise precision, recall and F1.
+
+`pred` / `gold` are `(i, j)` pairs; `left_entities[i]` is the entity of left
+record `i`. Entities (not pairs) are resampled with replacement and each pair is
+weighted by how often its **left** record’s entity was drawn, so the pairs of one
+entity succeed or fail together (a false positive counts against the entity of its
+left record; entities with no left record in the test part are not resampled).
+
+A resample with no predicted pair has no precision, and one with no gold pair no
+recall: those resamples are left out of that metric’s interval (scoring them 1.0, as
+[`Scores`](_autosummary/equate.evaluate.html.md#equate.evaluate.Scores) does for a whole empty run, would inflate it). An
+interval with no valid resample is `(nan, nan)`. Returns `{'precision': (lo,
+hi), 'recall': ..., 'f1': ...}`. Memory is bounded: resamples are drawn in chunks.
+
+```pycon
+>>> ci = bootstrap_ci({(0, 0), (1, 1)}, {(0, 0), (1, 2)}, ['e0', 'e1'], n_boot=200)
+>>> ci['precision'][0] <= 0.5 <= ci['precision'][1]
+True
+```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### equate.evaluate.ceaf(pred_labels, true_labels, , variant='entity', matcher='optimal')
 
@@ -2871,6 +2947,34 @@ bytes` is the downloader (default `http_get()`).
 * **Return type:**
   [`bytes`](https://docs.python.org/3/builtins/stdtypes.html#bytes)
 
+### equate.evaluate.gmd(pred_labels, true_labels, \*, merge_cost=<function unit_cost>, split_cost=<function unit_cost>)
+
+Generalized merge distance: the cost of the splits and merges that turn the
+predicted clustering into the true one (Menestrina, Whang & Garcia-Molina, VLDB 2010).
+
+`split_cost(x, y)` prices splitting a cluster of `x + y` records into `x` and
+`y`; `merge_cost(x, y)` merging an `x`- and a `y`-record cluster. The defaults
+([`unit_cost()`](_autosummary/equate.evaluate.html.md#equate.evaluate.unit_cost)) count operations; [`pair_cost()`](_autosummary/equate.evaluate.html.md#equate.evaluate.pair_cost) for both gives the pairwise
+error count; [`linear_cost()`](_autosummary/equate.evaluate.html.md#equate.evaluate.linear_cost) `(k1, k2)` is `k1 + k2·x·y`. Unlike F-measures it
+is a distance (`0` = identical), and its costs let an application say whether a
+wrong merge hurts more than a missed one. Linear time.
+
+As in the paper, this is the cost of the *legal* path — split each predicted cluster
+along the true clusters, then merge the pieces of each true cluster — and the costs
+must be **operation-order independent** (constant, `k·x·y`, or `k1 + k2·x·y`):
+for other costs the result can depend on the labels’ names. With unit costs a path
+that merges first can occasionally be cheaper; GMD is defined as the legal path.
+
+```pycon
+>>> gmd([0, 0, 1, 1], [0, 0, 0, 1])   # split {2, 3}, merge {2} into {0, 1}
+2.0
+>>> gmd([0, 0, 1, 1], [0, 0, 0, 1], merge_cost=pair_cost, split_cost=pair_cost)
+3.0
+```
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
+
 ### equate.evaluate.labels_to_pairs(labels)
 
 Every within-cluster pair `(i, j)` with `i < j`.
@@ -2882,6 +2986,18 @@ Every within-cluster pair `(i, j)` with `i < j`.
 
 * **Return type:**
   [`set`](https://docs.python.org/3/builtins/stdtypes.html#set)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int)]]
+
+### equate.evaluate.linear_cost(k1=0.0, k2=1.0)
+
+A cost `k1 + k2 * x * y` — the order-independent family GMD is defined for.
+
+```pycon
+>>> linear_cost(1, 0)(3, 4), linear_cost(0, 1)(3, 4)
+(1.0, 12.0)
+```
+
+* **Return type:**
+  [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)
 
 ### equate.evaluate.linearity(a, b, gold, , max_pairs=10000000)
 
@@ -2913,6 +3029,14 @@ Build a registered benchmark (`config` goes to its loader).
 
 * **Return type:**
   [`Benchmark`](_autosummary/equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.Benchmark)
+
+### equate.evaluate.pair_cost(x, y)
+
+Cost `x * y`: the record pairs a split separates or a merge joins — with it,
+GMD equals the number of pairwise errors (false positives + false negatives).
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 ### equate.evaluate.pairs_to_labels(pairs, , n)
 
@@ -3005,6 +3129,13 @@ Gold pairs with both ends in the subset, re-indexed into the subset.
 >>> sorted(subset_pairs({(0, 1), (2, 0)}, [2, 0], [0, 1]))
 [(0, 0), (1, 1)]
 ```
+
+### equate.evaluate.unit_cost(x, y)
+
+Cost 1 per split or merge, whatever the sizes (GMD counts operations).
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 ### equate.evaluate.wdc_products(, corner_cases=80, unseen=100, dev_size='large', seed=0, store=None, download=True, get=None, verify=True, profile=True)
 
@@ -3114,11 +3245,15 @@ matcher seam rather than a second Hungarian.
 
 ### Functions
 
-| [`bcubed`](_autosummary/equate.evaluate.metrics.html.md#equate.evaluate.metrics.bcubed)(pred_labels, true_labels)                   | B³ precision / recall / F1 — the default cluster metric.                 |
-|-----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
-| [`ceaf`](_autosummary/equate.evaluate.metrics.html.md#equate.evaluate.metrics.ceaf)(pred_labels, true_labels, \*[, variant, ...]) | CEAF: score the best one-to-one alignment of predicted to true clusters. |
-| [`cluster_metrics`](_autosummary/equate.evaluate.metrics.html.md#equate.evaluate.metrics.cluster_metrics)(pred_labels, true_labels, \*)      | B³ (the headline), CEAF-e, ARI, V-measure, homogeneity and completeness. |
-| [`pairwise_prf`](_autosummary/equate.evaluate.metrics.html.md#equate.evaluate.metrics.pairwise_prf)(pred_pairs, true_pairs, \*[, ...])    | Pairwise precision / recall / F1 of predicted pairs against gold pairs.  |
+| [`bcubed`](_autosummary/equate.evaluate.metrics.html.md#equate.evaluate.metrics.bcubed)(pred_labels, true_labels)                   | B³ precision / recall / F1 — the default cluster metric.                                                                                                           |
+|-----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`ceaf`](_autosummary/equate.evaluate.metrics.html.md#equate.evaluate.metrics.ceaf)(pred_labels, true_labels, \*[, variant, ...]) | CEAF: score the best one-to-one alignment of predicted to true clusters.                                                                                           |
+| [`cluster_metrics`](_autosummary/equate.evaluate.metrics.html.md#equate.evaluate.metrics.cluster_metrics)(pred_labels, true_labels, \*)      | B³ (the headline), CEAF-e, ARI, V-measure, homogeneity and completeness.                                                                                           |
+| [`gmd`](_autosummary/equate.evaluate.metrics.html.md#equate.evaluate.metrics.gmd)(pred_labels, true_labels, \*[, ...])           | Generalized merge distance: the cost of the splits and merges that turn the predicted clustering into the true one (Menestrina, Whang & Garcia-Molina, VLDB 2010). |
+| [`linear_cost`](_autosummary/equate.evaluate.metrics.html.md#equate.evaluate.metrics.linear_cost)([k1, k2])                              | A cost `k1 + k2 * x * y` — the order-independent family GMD is defined for.                                                                                        |
+| [`pair_cost`](_autosummary/equate.evaluate.metrics.html.md#equate.evaluate.metrics.pair_cost)(x, y)                                    | Cost `x * y`: the record pairs a split separates or a merge joins — with it, GMD equals the number of pairwise errors (false positives + false negatives).         |
+| [`pairwise_prf`](_autosummary/equate.evaluate.metrics.html.md#equate.evaluate.metrics.pairwise_prf)(pred_pairs, true_pairs, \*[, ...])    | Pairwise precision / recall / F1 of predicted pairs against gold pairs.                                                                                            |
+| [`unit_cost`](_autosummary/equate.evaluate.metrics.html.md#equate.evaluate.metrics.unit_cost)(x, y)                                    | Cost 1 per split or merge, whatever the sizes (GMD counts operations).                                                                                             |
 
 ### equate.evaluate.metrics.bcubed(pred_labels, true_labels)
 
@@ -3175,6 +3310,54 @@ core install needs neither.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
+### equate.evaluate.metrics.gmd(pred_labels, true_labels, \*, merge_cost=<function unit_cost>, split_cost=<function unit_cost>)
+
+Generalized merge distance: the cost of the splits and merges that turn the
+predicted clustering into the true one (Menestrina, Whang & Garcia-Molina, VLDB 2010).
+
+`split_cost(x, y)` prices splitting a cluster of `x + y` records into `x` and
+`y`; `merge_cost(x, y)` merging an `x`- and a `y`-record cluster. The defaults
+([`unit_cost()`](_autosummary/equate.evaluate.metrics.html.md#equate.evaluate.metrics.unit_cost)) count operations; [`pair_cost()`](_autosummary/equate.evaluate.metrics.html.md#equate.evaluate.metrics.pair_cost) for both gives the pairwise
+error count; [`linear_cost()`](_autosummary/equate.evaluate.metrics.html.md#equate.evaluate.metrics.linear_cost) `(k1, k2)` is `k1 + k2·x·y`. Unlike F-measures it
+is a distance (`0` = identical), and its costs let an application say whether a
+wrong merge hurts more than a missed one. Linear time.
+
+As in the paper, this is the cost of the *legal* path — split each predicted cluster
+along the true clusters, then merge the pieces of each true cluster — and the costs
+must be **operation-order independent** (constant, `k·x·y`, or `k1 + k2·x·y`):
+for other costs the result can depend on the labels’ names. With unit costs a path
+that merges first can occasionally be cheaper; GMD is defined as the legal path.
+
+```pycon
+>>> gmd([0, 0, 1, 1], [0, 0, 0, 1])   # split {2, 3}, merge {2} into {0, 1}
+2.0
+>>> gmd([0, 0, 1, 1], [0, 0, 0, 1], merge_cost=pair_cost, split_cost=pair_cost)
+3.0
+```
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
+
+### equate.evaluate.metrics.linear_cost(k1=0.0, k2=1.0)
+
+A cost `k1 + k2 * x * y` — the order-independent family GMD is defined for.
+
+```pycon
+>>> linear_cost(1, 0)(3, 4), linear_cost(0, 1)(3, 4)
+(1.0, 12.0)
+```
+
+* **Return type:**
+  [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)
+
+### equate.evaluate.metrics.pair_cost(x, y)
+
+Cost `x * y`: the record pairs a split separates or a merge joins — with it,
+GMD equals the number of pairwise errors (false positives + false negatives).
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
+
 ### equate.evaluate.metrics.pairwise_prf(pred_pairs, true_pairs, , self_join=False)
 
 Pairwise precision / recall / F1 of predicted pairs against gold pairs.
@@ -3191,6 +3374,13 @@ of B)` and orientation matters.
 
 * **Return type:**
   [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
+
+### equate.evaluate.metrics.unit_cost(x, y)
+
+Cost 1 per split or merge, whatever the sizes (GMD counts operations).
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 
 # _autosummary/equate.evaluate.ranking.html.md
@@ -5419,16 +5609,18 @@ See: [https://en.wikipedia.org/wiki/Stable_marriage_problem](https://en.wikipedi
 
 # About this build
 
-This documentation was built on **2026-10-19 12:21 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/176918ac52f17ac49f4c39a4d5601e8f255ebd1f"><code>176918a</code></a> on branch <code>master</code>, for **equate 0.0.22** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-19 12:41 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/581611b1af75c5b15918e9eef9e93e3b7ba2b4cf"><code>581611b</code></a> on branch <code>master</code>, for **equate 0.0.23** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.23) is behind the latest release on PyPI (0.0.24): `pip install equate` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/equate/commit/176918ac52f17ac49f4c39a4d5601e8f255ebd1f"><code>176918ac52f17ac49f4c39a4d5601e8f255ebd1f</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/equate/commit/581611b1af75c5b15918e9eef9e93e3b7ba2b4cf"><code>581611b1af75c5b15918e9eef9e93e3b7ba2b4cf</code></a> |
 | Branch              | <code>master</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -5439,9 +5631,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/equate</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/39251200639">39251200639</a>    |
+| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/39253749154">39253749154</a>    |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>176918ac52f17ac49f4c39a4d5601e8f255ebd1f</code> (in the history of the built commit) |
+| Event commit | <code>581611b1af75c5b15918e9eef9e93e3b7ba2b4cf</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -5466,13 +5658,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/equate/0.0.22/">0.0.22</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/equate/0.0.24/">0.0.24</a>, newer than the documented version (0.0.23).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/equate && cd equate
-git checkout 176918ac52f17ac49f4c39a4d5601e8f255ebd1f
+git checkout 581611b1af75c5b15918e9eef9e93e3b7ba2b4cf
 pip install "epythet==0.2.18"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

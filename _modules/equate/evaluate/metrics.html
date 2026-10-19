@@ -313,7 +313,7 @@
 <span class="sd">matcher seam rather than a second Hungarian.</span>
 <span class="sd">"""</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">comb</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -390,6 +390,94 @@
     <span class="n">precision</span> <span class="o">=</span> <span class="p">(</span><span class="n">table</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">pred_sizes</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">n</span>
     <span class="n">recall</span> <span class="o">=</span> <span class="p">(</span><span class="n">table</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">true_sizes</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">n</span>
     <span class="k">return</span> <span class="n">Scores</span><span class="o">.</span><span class="n">from_pr</span><span class="p">(</span><span class="n">precision</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="n">support</span><span class="o">=</span><span class="n">n</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="unit_cost">
+<a class="viewcode-back" href="../../../_autosummary/equate.evaluate.metrics.html#equate.evaluate.unit_cost">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">unit_cost</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Cost 1 per split or merge, whatever the sizes (GMD counts operations)."""</span>
+    <span class="k">return</span> <span class="mf">1.0</span></div>
+
+
+
+<div class="viewcode-block" id="pair_cost">
+<a class="viewcode-back" href="../../../_autosummary/equate.evaluate.metrics.html#equate.evaluate.pair_cost">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pair_cost</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Cost ``x * y``: the record pairs a split separates or a merge joins — with it,</span>
+<span class="sd">    GMD equals the number of pairwise errors (false positives + false negatives)."""</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="linear_cost">
+<a class="viewcode-back" href="../../../_autosummary/equate.evaluate.metrics.html#equate.evaluate.linear_cost">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">linear_cost</span><span class="p">(</span><span class="n">k1</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">k2</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A cost ``k1 + k2 * x * y`` — the order-independent family GMD is defined for.</span>
+
+<span class="sd">    &gt;&gt;&gt; linear_cost(1, 0)(3, 4), linear_cost(0, 1)(3, 4)</span>
+<span class="sd">    (1.0, 12.0)</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cost</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">k1</span> <span class="o">+</span> <span class="n">k2</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cost</span></div>
+
+
+
+<div class="viewcode-block" id="gmd">
+<a class="viewcode-back" href="../../../_autosummary/equate.evaluate.metrics.html#equate.evaluate.gmd">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">gmd</span><span class="p">(</span>
+    <span class="n">pred_labels</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">,</span>
+    <span class="n">true_labels</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">merge_cost</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">unit_cost</span><span class="p">,</span>
+    <span class="n">split_cost</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">unit_cost</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Generalized merge distance: the cost of the splits and merges that turn the</span>
+<span class="sd">    predicted clustering into the true one (Menestrina, Whang &amp; Garcia-Molina, VLDB 2010).</span>
+
+<span class="sd">    ``split_cost(x, y)`` prices splitting a cluster of ``x + y`` records into ``x`` and</span>
+<span class="sd">    ``y``; ``merge_cost(x, y)`` merging an ``x``- and a ``y``-record cluster. The defaults</span>
+<span class="sd">    (:func:`unit_cost`) count operations; :func:`pair_cost` for both gives the pairwise</span>
+<span class="sd">    error count; :func:`linear_cost` ``(k1, k2)`` is ``k1 + k2·x·y``. Unlike F-measures it</span>
+<span class="sd">    is a distance (``0`` = identical), and its costs let an application say whether a</span>
+<span class="sd">    wrong merge hurts more than a missed one. Linear time.</span>
+
+<span class="sd">    As in the paper, this is the cost of the *legal* path — split each predicted cluster</span>
+<span class="sd">    along the true clusters, then merge the pieces of each true cluster — and the costs</span>
+<span class="sd">    must be **operation-order independent** (constant, ``k·x·y``, or ``k1 + k2·x·y``):</span>
+<span class="sd">    for other costs the result can depend on the labels' names. With unit costs a path</span>
+<span class="sd">    that merges first can occasionally be cheaper; GMD is defined as the legal path.</span>
+
+<span class="sd">    &gt;&gt;&gt; gmd([0, 0, 1, 1], [0, 0, 0, 1])   # split {2, 3}, merge {2} into {0, 1}</span>
+<span class="sd">    2.0</span>
+<span class="sd">    &gt;&gt;&gt; gmd([0, 0, 1, 1], [0, 0, 0, 1], merge_cost=pair_cost, split_cost=pair_cost)</span>
+<span class="sd">    3.0</span>
+<span class="sd">    """</span>
+    <span class="n">pred</span><span class="p">,</span> <span class="n">true</span> <span class="o">=</span> <span class="n">_check_labels</span><span class="p">(</span><span class="n">pred_labels</span><span class="p">,</span> <span class="n">true_labels</span><span class="p">)</span>
+    <span class="n">members</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pred</span><span class="o">.</span><span class="n">tolist</span><span class="p">()):</span>
+        <span class="n">members</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">true</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+    <span class="n">merged_so_far</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># true cluster -&gt; records of it already placed</span>
+    <span class="n">cost</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">members</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">str</span><span class="p">):</span>
+        <span class="n">pieces</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">members</span><span class="p">[</span><span class="n">p</span><span class="p">]:</span>
+            <span class="n">pieces</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">pieces</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">placed</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">pieces</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">str</span><span class="p">):</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="n">pieces</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">placed</span><span class="p">:</span>  <span class="c1"># this piece is split off the rest of the predicted cluster</span>
+                <span class="n">cost</span> <span class="o">+=</span> <span class="n">split_cost</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="n">placed</span><span class="p">)</span>
+            <span class="n">placed</span> <span class="o">+=</span> <span class="n">count</span>
+            <span class="k">if</span> <span class="n">merged_so_far</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="n">t</span>
+            <span class="p">):</span>  <span class="c1"># ...and merged into the true cluster's other pieces</span>
+                <span class="n">cost</span> <span class="o">+=</span> <span class="n">merge_cost</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="n">merged_so_far</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+            <span class="n">merged_so_far</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">merged_so_far</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">count</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">cost</span><span class="p">)</span></div>
 
 
 
@@ -561,7 +649,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=f5b15773"></script>
+</div><script src="../../../_static/documentation_options.js?v=5cf12315"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>

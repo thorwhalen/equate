@@ -12,6 +12,11 @@ equate.evaluate
       bcubed
       ceaf
       cluster_metrics
+      gmd
+      unit_cost
+      pair_cost
+      linear_cost
+      bootstrap_ci
       blocking_metrics
       pr_auc
       select_threshold

@@ -15,6 +15,7 @@ equate.evaluate.benchmark
    .. autosummary::
    
       benchmark_matcher
+      bootstrap_ci
       list_benchmarks
       load_benchmark
       subset_pairs

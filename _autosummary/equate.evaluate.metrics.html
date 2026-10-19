@@ -333,8 +333,20 @@ matcher seam rather than a second Hungarian.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.metrics.cluster_metrics" title="equate.evaluate.metrics.cluster_metrics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cluster_metrics</span></code></a>(pred_labels, true_labels, *)</p></td>
 <td><p>B³ (the headline), CEAF-e, ARI, V-measure, homogeneity and completeness.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.metrics.pairwise_prf" title="equate.evaluate.metrics.pairwise_prf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pairwise_prf</span></code></a>(pred_pairs, true_pairs, *[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.metrics.gmd" title="equate.evaluate.metrics.gmd"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gmd</span></code></a>(pred_labels, true_labels, *[, ...])</p></td>
+<td><p>Generalized merge distance: the cost of the splits and merges that turn the predicted clustering into the true one (Menestrina, Whang &amp; Garcia-Molina, VLDB 2010).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.metrics.linear_cost" title="equate.evaluate.metrics.linear_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">linear_cost</span></code></a>([k1, k2])</p></td>
+<td><p>A cost <code class="docutils literal notranslate"><span class="pre">k1</span> <span class="pre">+</span> <span class="pre">k2</span> <span class="pre">*</span> <span class="pre">x</span> <span class="pre">*</span> <span class="pre">y</span></code> — the order-independent family GMD is defined for.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.metrics.pair_cost" title="equate.evaluate.metrics.pair_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pair_cost</span></code></a>(x, y)</p></td>
+<td><p>Cost <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">y</span></code>: the record pairs a split separates or a merge joins — with it, GMD equals the number of pairwise errors (false positives + false negatives).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.metrics.pairwise_prf" title="equate.evaluate.metrics.pairwise_prf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pairwise_prf</span></code></a>(pred_pairs, true_pairs, *[, ...])</p></td>
 <td><p>Pairwise precision / recall / F1 of predicted pairs against gold pairs.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.metrics.unit_cost" title="equate.evaluate.metrics.unit_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unit_cost</span></code></a>(x, y)</p></td>
+<td><p>Cost 1 per split or merge, whatever the sizes (GMD counts operations).</p></td>
 </tr>
 </tbody>
 </table>
@@ -401,6 +413,62 @@ core install needs neither.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="equate.evaluate.metrics.gmd">
+<span class="sig-prename descclassname"><span class="pre">equate.evaluate.metrics.</span></span><span class="sig-name descname"><span class="pre">gmd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pred_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">true_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge_cost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">unit_cost&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_cost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">unit_cost&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/metrics.html#gmd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.metrics.gmd" title="Link to this definition">¶</a></dt>
+<dd><p>Generalized merge distance: the cost of the splits and merges that turn the
+predicted clustering into the true one (Menestrina, Whang &amp; Garcia-Molina, VLDB 2010).</p>
+<p><code class="docutils literal notranslate"><span class="pre">split_cost(x,</span> <span class="pre">y)</span></code> prices splitting a cluster of <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">+</span> <span class="pre">y</span></code> records into <code class="docutils literal notranslate"><span class="pre">x</span></code> and
+<code class="docutils literal notranslate"><span class="pre">y</span></code>; <code class="docutils literal notranslate"><span class="pre">merge_cost(x,</span> <span class="pre">y)</span></code> merging an <code class="docutils literal notranslate"><span class="pre">x</span></code>- and a <code class="docutils literal notranslate"><span class="pre">y</span></code>-record cluster. The defaults
+(<a class="reference internal" href="#equate.evaluate.metrics.unit_cost" title="equate.evaluate.metrics.unit_cost"><code class="xref py py-func docutils literal notranslate"><span class="pre">unit_cost()</span></code></a>) count operations; <a class="reference internal" href="#equate.evaluate.metrics.pair_cost" title="equate.evaluate.metrics.pair_cost"><code class="xref py py-func docutils literal notranslate"><span class="pre">pair_cost()</span></code></a> for both gives the pairwise
+error count; <a class="reference internal" href="#equate.evaluate.metrics.linear_cost" title="equate.evaluate.metrics.linear_cost"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_cost()</span></code></a> <code class="docutils literal notranslate"><span class="pre">(k1,</span> <span class="pre">k2)</span></code> is <code class="docutils literal notranslate"><span class="pre">k1</span> <span class="pre">+</span> <span class="pre">k2·x·y</span></code>. Unlike F-measures it
+is a distance (<code class="docutils literal notranslate"><span class="pre">0</span></code> = identical), and its costs let an application say whether a
+wrong merge hurts more than a missed one. Linear time.</p>
+<p>As in the paper, this is the cost of the <em>legal</em> path — split each predicted cluster
+along the true clusters, then merge the pieces of each true cluster — and the costs
+must be <strong>operation-order independent</strong> (constant, <code class="docutils literal notranslate"><span class="pre">k·x·y</span></code>, or <code class="docutils literal notranslate"><span class="pre">k1</span> <span class="pre">+</span> <span class="pre">k2·x·y</span></code>):
+for other costs the result can depend on the labels’ names. With unit costs a path
+that merges first can occasionally be cheaper; GMD is defined as the legal path.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gmd</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>   <span class="c1"># split {2, 3}, merge {2} into {0, 1}</span>
+<span class="go">2.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gmd</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">merge_cost</span><span class="o">=</span><span class="n">pair_cost</span><span class="p">,</span> <span class="n">split_cost</span><span class="o">=</span><span class="n">pair_cost</span><span class="p">)</span>
+<span class="go">3.0</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.evaluate.metrics.linear_cost">
+<span class="sig-prename descclassname"><span class="pre">equate.evaluate.metrics.</span></span><span class="sig-name descname"><span class="pre">linear_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/metrics.html#linear_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.metrics.linear_cost" title="Link to this definition">¶</a></dt>
+<dd><p>A cost <code class="docutils literal notranslate"><span class="pre">k1</span> <span class="pre">+</span> <span class="pre">k2</span> <span class="pre">*</span> <span class="pre">x</span> <span class="pre">*</span> <span class="pre">y</span></code> — the order-independent family GMD is defined for.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">linear_cost</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">linear_cost</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">(1.0, 12.0)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.evaluate.metrics.pair_cost">
+<span class="sig-prename descclassname"><span class="pre">equate.evaluate.metrics.</span></span><span class="sig-name descname"><span class="pre">pair_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/metrics.html#pair_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.metrics.pair_cost" title="Link to this definition">¶</a></dt>
+<dd><p>Cost <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">y</span></code>: the record pairs a split separates or a merge joins — with it,
+GMD equals the number of pairwise errors (false positives + false negatives).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="equate.evaluate.metrics.pairwise_prf">
 <span class="sig-prename descclassname"><span class="pre">equate.evaluate.metrics.</span></span><span class="sig-name descname"><span class="pre">pairwise_prf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pred_pairs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">true_pairs</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">self_join</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/metrics.html#pairwise_prf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.metrics.pairwise_prf" title="Link to this definition">¶</a></dt>
 <dd><p>Pairwise precision / recall / F1 of predicted pairs against gold pairs.</p>
@@ -415,6 +483,17 @@ core install needs neither.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="equate.evaluate.scores.html#equate.evaluate.scores.Scores" title="equate.evaluate.scores.Scores"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scores</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.evaluate.metrics.unit_cost">
+<span class="sig-prename descclassname"><span class="pre">equate.evaluate.metrics.</span></span><span class="sig-name descname"><span class="pre">unit_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/metrics.html#unit_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.metrics.unit_cost" title="Link to this definition">¶</a></dt>
+<dd><p>Cost 1 per split or merge, whatever the sizes (GMD counts operations).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -476,7 +555,11 @@ core install needs neither.</p>
 <li><a class="reference internal" href="#equate.evaluate.metrics.bcubed"><code class="docutils literal notranslate"><span class="pre">bcubed()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.metrics.ceaf"><code class="docutils literal notranslate"><span class="pre">ceaf()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.metrics.cluster_metrics"><code class="docutils literal notranslate"><span class="pre">cluster_metrics()</span></code></a></li>
+<li><a class="reference internal" href="#equate.evaluate.metrics.gmd"><code class="docutils literal notranslate"><span class="pre">gmd()</span></code></a></li>
+<li><a class="reference internal" href="#equate.evaluate.metrics.linear_cost"><code class="docutils literal notranslate"><span class="pre">linear_cost()</span></code></a></li>
+<li><a class="reference internal" href="#equate.evaluate.metrics.pair_cost"><code class="docutils literal notranslate"><span class="pre">pair_cost()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.metrics.pairwise_prf"><code class="docutils literal notranslate"><span class="pre">pairwise_prf()</span></code></a></li>
+<li><a class="reference internal" href="#equate.evaluate.metrics.unit_cost"><code class="docutils literal notranslate"><span class="pre">unit_cost()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -488,7 +571,7 @@ core install needs neither.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=f5b15773"></script>
+</div><script src="../_static/documentation_options.js?v=5cf12315"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

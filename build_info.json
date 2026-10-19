@@ -1,32 +1,32 @@
 {
   "schema_version": 1,
-  "built_at": "2026-10-19T12:21:32Z",
+  "built_at": "2026-10-19T12:41:07Z",
   "package": {
     "name": "equate",
-    "version": "0.0.22",
+    "version": "0.0.23",
     "display_name": "equate",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "176918ac52f17ac49f4c39a4d5601e8f255ebd1f",
-    "short_commit": "176918a",
+    "commit": "581611b1af75c5b15918e9eef9e93e3b7ba2b4cf",
+    "short_commit": "581611b",
     "branch": "master",
     "tags": [],
     "dirty": false,
     "remote_url": "https://github.com/thorwhalen/equate",
-    "commit_url": "https://github.com/thorwhalen/equate/commit/176918ac52f17ac49f4c39a4d5601e8f255ebd1f",
+    "commit_url": "https://github.com/thorwhalen/equate/commit/581611b1af75c5b15918e9eef9e93e3b7ba2b4cf",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "thorwhalen/equate",
-    "sha": "176918ac52f17ac49f4c39a4d5601e8f255ebd1f",
+    "sha": "581611b1af75c5b15918e9eef9e93e3b7ba2b4cf",
     "sha_in_history": true,
     "ref": "refs/heads/master",
     "ref_name": "master",
-    "run_id": "39251200639",
-    "run_url": "https://github.com/thorwhalen/equate/actions/runs/39251200639",
+    "run_id": "39253749154",
+    "run_url": "https://github.com/thorwhalen/equate/actions/runs/39253749154",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -56,18 +56,20 @@
   },
   "site": {
     "modules_documented": 49,
-    "objects_documented": 340
+    "objects_documented": 350
   },
   "pypi": {
     "checked": true,
-    "latest": "0.0.22",
-    "relation": "same",
+    "latest": "0.0.24",
+    "relation": "behind",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/equate && cd equate\ngit checkout 176918ac52f17ac49f4c39a4d5601e8f255ebd1f\npip install \"epythet==0.2.18\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/thorwhalen/equate && cd equate\ngit checkout 581611b1af75c5b15918e9eef9e93e3b7ba2b4cf\npip install \"epythet==0.2.18\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
-    "aligned": true,
-    "notes": []
+    "aligned": false,
+    "notes": [
+      "The documented version (0.0.23) is behind the latest release on PyPI (0.0.24): `pip install equate` gives newer code than these docs describe."
+    ]
   }
 }

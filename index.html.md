@@ -137,7 +137,7 @@ print(
 )  # equate.match, 3 seeds, entity splits
 ```
 
-Also there: `ceaf`, `cluster_metrics` (ARI and V-measure use scikit-learn when installed, numpy otherwise; `pip install 'equate[eval]'`), `blocking_metrics`, `pr_auc`, `ranking_metrics`, `select_threshold` (pass validation data), `entity_split` and `assert_no_leakage`. Benchmarks are a registry (`equate.evaluate.benchmarks`), so a new dataset is a registered loader.
+A single run (a benchmark’s canonical split) reports a bootstrap confidence interval instead of a seed spread: `F1 0.628 [0.588, 0.670]` on WDC Products, from resampling the test *entities* (`ci='auto'`; pass a level to get it on every row). Also there: `gmd` (generalized merge distance: the cost of the splits and merges between two clusterings, with pluggable costs), `ceaf`, `cluster_metrics` (ARI and V-measure use scikit-learn when installed, numpy otherwise; `pip install 'equate[eval]'`), `blocking_metrics`, `pr_auc`, `ranking_metrics`, `select_threshold` (pass validation data), `entity_split` and `assert_no_leakage`. Benchmarks are a registry (`equate.evaluate.benchmarks`), so a new dataset is a registered loader.
 
 The standard suites download on first use, into `~/.local/share/equate/benchmarks` (or `$EQUATE_DATA_DIR`), never into the package:
 

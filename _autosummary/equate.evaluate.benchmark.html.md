@@ -32,11 +32,12 @@ published numbers are measured on them.
 
 ### Functions
 
-| [`benchmark_matcher`](#equate.evaluate.benchmark.benchmark_matcher)([matcher, on, n_seeds, ...])   | Score `matcher` on unseen-entity test splits of each benchmark in `on`.   |
-|---------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
-| [`list_benchmarks`](#equate.evaluate.benchmark.list_benchmarks)()                                | Names of the registered benchmarks.                                       |
-| [`load_benchmark`](#equate.evaluate.benchmark.load_benchmark)(name, \*\*config)                 | Build a registered benchmark (`config` goes to its loader).               |
-| [`subset_pairs`](#equate.evaluate.benchmark.subset_pairs)(gold, rows_a, rows_b)               | Gold pairs with both ends in the subset, re-indexed into the subset.      |
+| [`benchmark_matcher`](#equate.evaluate.benchmark.benchmark_matcher)([matcher, on, n_seeds, ...])     | Score `matcher` on unseen-entity test splits of each benchmark in `on`.   |
+|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
+| [`bootstrap_ci`](#equate.evaluate.benchmark.bootstrap_ci)(pred, gold, left_entities, \*[, ...]) | Percentile bootstrap interval of pairwise precision, recall and F1.       |
+| [`list_benchmarks`](#equate.evaluate.benchmark.list_benchmarks)()                                  | Names of the registered benchmarks.                                       |
+| [`load_benchmark`](#equate.evaluate.benchmark.load_benchmark)(name, \*\*config)                   | Build a registered benchmark (`config` goes to its loader).               |
+| [`subset_pairs`](#equate.evaluate.benchmark.subset_pairs)(gold, rows_a, rows_b)                 | Gold pairs with both ends in the subset, re-indexed into the subset.      |
 
 ### Classes
 
@@ -87,13 +88,13 @@ One row per benchmark: precision, recall, F1, seconds, base rate, difficulty.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### *class* equate.evaluate.benchmark.BenchmarkRow(benchmark, seed, precision, recall, f1, seconds, n_a, n_b, n_gold, base_rate)
+### *class* equate.evaluate.benchmark.BenchmarkRow(benchmark, seed, precision, recall, f1, seconds, n_a, n_b, n_gold, base_rate, ci=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 One (benchmark, seed) run: the scores, their context, and what they cost.
 
-### equate.evaluate.benchmark.benchmark_matcher(matcher=None, , on=('toy_names',), n_seeds=3, ratios=(0.6, 0.2, 0.2), fit=None, split='auto')
+### equate.evaluate.benchmark.benchmark_matcher(matcher=None, , on=('toy_names',), n_seeds=3, ratios=(0.6, 0.2, 0.2), fit=None, split='auto', ci='auto', n_boot=1000, ci_seed=0)
 
 Score `matcher` on unseen-entity test splits of each benchmark in `on`.
 
@@ -117,6 +118,16 @@ never on test.
 variants share entities across parts by design); `'auto'` (default) is canonical
 when the benchmark has `splits`, else entity.
 
+`ci` adds a **bootstrap confidence interval** to each row (doc 14 §7.4): the test
+*entities* are resampled `n_boot` times (a cluster bootstrap: an entity’s pairs move
+together) and the percentile interval of precision, recall and F1 is kept in
+`BenchmarkRow.ci`. `'auto'` (default) computes a 95 % interval only for a
+single-run benchmark — a canonical split has no seed spread, and a 500-pair test set
+leaves a few points of F1 within noise; a level (`0.9`) computes it for every row;
+`None` never. The resampling is seeded (`ci_seed`), so a report is reproducible.
+A percentile interval cannot show uncertainty at a 0/1 boundary: a perfect run reads
+`1.000 [1.000, 1.000]` — that is “no resample found an error”, not certainty.
+
 ```pycon
 >>> report = benchmark_matcher(n_seeds=2)
 >>> s = report.summary()['toy_names']
@@ -130,6 +141,31 @@ when the benchmark has `splits`, else entity.
 ### equate.evaluate.benchmark.benchmarks *= <equate.registry.Registry object>*
 
 name -> factory(\*\*config) returning a [`Benchmark`](#equate.evaluate.benchmark.Benchmark)
+
+### equate.evaluate.benchmark.bootstrap_ci(pred, gold, left_entities, , level=0.95, n_boot=1000, seed=0)
+
+Percentile bootstrap interval of pairwise precision, recall and F1.
+
+`pred` / `gold` are `(i, j)` pairs; `left_entities[i]` is the entity of left
+record `i`. Entities (not pairs) are resampled with replacement and each pair is
+weighted by how often its **left** record’s entity was drawn, so the pairs of one
+entity succeed or fail together (a false positive counts against the entity of its
+left record; entities with no left record in the test part are not resampled).
+
+A resample with no predicted pair has no precision, and one with no gold pair no
+recall: those resamples are left out of that metric’s interval (scoring them 1.0, as
+[`Scores`](equate.evaluate.html.md#equate.evaluate.Scores) does for a whole empty run, would inflate it). An
+interval with no valid resample is `(nan, nan)`. Returns `{'precision': (lo,
+hi), 'recall': ..., 'f1': ...}`. Memory is bounded: resamples are drawn in chunks.
+
+```pycon
+>>> ci = bootstrap_ci({(0, 0), (1, 1)}, {(0, 0), (1, 2)}, ['e0', 'e1'], n_boot=200)
+>>> ci['precision'][0] <= 0.5 <= ci['precision'][1]
+True
+```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### equate.evaluate.benchmark.list_benchmarks()
 

@@ -431,7 +431,7 @@
 <span class="p">)</span>  <span class="c1"># equate.match, 3 seeds, entity splits</span>
 </pre></div>
 </div>
-<p>Also there: <code class="docutils literal notranslate"><span class="pre">ceaf</span></code>, <code class="docutils literal notranslate"><span class="pre">cluster_metrics</span></code> (ARI and V-measure use scikit-learn when installed, numpy otherwise; <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'equate[eval]'</span></code>), <code class="docutils literal notranslate"><span class="pre">blocking_metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">pr_auc</span></code>, <code class="docutils literal notranslate"><span class="pre">ranking_metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">select_threshold</span></code> (pass validation data), <code class="docutils literal notranslate"><span class="pre">entity_split</span></code> and <code class="docutils literal notranslate"><span class="pre">assert_no_leakage</span></code>. Benchmarks are a registry (<code class="docutils literal notranslate"><span class="pre">equate.evaluate.benchmarks</span></code>), so a new dataset is a registered loader.</p>
+<p>A single run (a benchmark’s canonical split) reports a bootstrap confidence interval instead of a seed spread: <code class="docutils literal notranslate"><span class="pre">F1</span> <span class="pre">0.628</span> <span class="pre">[0.588,</span> <span class="pre">0.670]</span></code> on WDC Products, from resampling the test <em>entities</em> (<code class="docutils literal notranslate"><span class="pre">ci='auto'</span></code>; pass a level to get it on every row). Also there: <code class="docutils literal notranslate"><span class="pre">gmd</span></code> (generalized merge distance: the cost of the splits and merges between two clusterings, with pluggable costs), <code class="docutils literal notranslate"><span class="pre">ceaf</span></code>, <code class="docutils literal notranslate"><span class="pre">cluster_metrics</span></code> (ARI and V-measure use scikit-learn when installed, numpy otherwise; <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'equate[eval]'</span></code>), <code class="docutils literal notranslate"><span class="pre">blocking_metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">pr_auc</span></code>, <code class="docutils literal notranslate"><span class="pre">ranking_metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">select_threshold</span></code> (pass validation data), <code class="docutils literal notranslate"><span class="pre">entity_split</span></code> and <code class="docutils literal notranslate"><span class="pre">assert_no_leakage</span></code>. Benchmarks are a registry (<code class="docutils literal notranslate"><span class="pre">equate.evaluate.benchmarks</span></code>), so a new dataset is a registered loader.</p>
 <p>The standard suites download on first use, into <code class="docutils literal notranslate"><span class="pre">~/.local/share/equate/benchmarks</span></code> (or <code class="docutils literal notranslate"><span class="pre">$EQUATE_DATA_DIR</span></code>), never into the package:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">equate.evaluate</span><span class="w"> </span><span class="kn">import</span> <span class="n">benchmark_matcher</span><span class="p">,</span> <span class="n">load_benchmark</span>
 
@@ -890,7 +890,7 @@ Let’s try two…</p>
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-19 12:21 UTC from <a href="https://github.com/thorwhalen/equate/commit/176918ac52f17ac49f4c39a4d5601e8f255ebd1f">176918a</a> (master) · equate 0.0.22 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-19 12:41 UTC from <a href="https://github.com/thorwhalen/equate/commit/581611b1af75c5b15918e9eef9e93e3b7ba2b4cf">581611b</a> (master) · equate 0.0.23 · <a href="about-this-build.html">about this build</a></p>
         </article>
       </div>
       <footer>
@@ -964,7 +964,7 @@ Let’s try two…</p>
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=f5b15773"></script>
+</div><script src="_static/documentation_options.js?v=5cf12315"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

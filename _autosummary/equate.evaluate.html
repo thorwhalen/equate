@@ -342,70 +342,85 @@ See <code class="docutils literal notranslate"><span class="pre">docs/research/1
 <tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.cluster_metrics" title="equate.evaluate.cluster_metrics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cluster_metrics</span></code></a>(pred_labels, true_labels, *)</p></td>
 <td><p>B³ (the headline), CEAF-e, ARI, V-measure, homogeneity and completeness.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.blocking_metrics" title="equate.evaluate.blocking_metrics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">blocking_metrics</span></code></a>(candidate_pairs, ...[, n_b])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.gmd" title="equate.evaluate.gmd"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gmd</span></code></a>(pred_labels, true_labels, *[, ...])</p></td>
+<td><p>Generalized merge distance: the cost of the splits and merges that turn the predicted clustering into the true one (Menestrina, Whang &amp; Garcia-Molina, VLDB 2010).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.unit_cost" title="equate.evaluate.unit_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unit_cost</span></code></a>(x, y)</p></td>
+<td><p>Cost 1 per split or merge, whatever the sizes (GMD counts operations).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.pair_cost" title="equate.evaluate.pair_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pair_cost</span></code></a>(x, y)</p></td>
+<td><p>Cost <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">y</span></code>: the record pairs a split separates or a merge joins — with it, GMD equals the number of pairwise errors (false positives + false negatives).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.linear_cost" title="equate.evaluate.linear_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">linear_cost</span></code></a>([k1, k2])</p></td>
+<td><p>A cost <code class="docutils literal notranslate"><span class="pre">k1</span> <span class="pre">+</span> <span class="pre">k2</span> <span class="pre">*</span> <span class="pre">x</span> <span class="pre">*</span> <span class="pre">y</span></code> — the order-independent family GMD is defined for.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.bootstrap_ci" title="equate.evaluate.bootstrap_ci"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bootstrap_ci</span></code></a>(pred, gold, left_entities, *[, ...])</p></td>
+<td><p>Percentile bootstrap interval of pairwise precision, recall and F1.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.blocking_metrics" title="equate.evaluate.blocking_metrics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">blocking_metrics</span></code></a>(candidate_pairs, ...[, n_b])</p></td>
 <td><p>Return <code class="docutils literal notranslate"><span class="pre">{pair_completeness,</span> <span class="pre">reduction_ratio,</span> <span class="pre">pairs_quality,</span> <span class="pre">n_candidates}</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.pr_auc" title="equate.evaluate.pr_auc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pr_auc</span></code></a>(scores, y_true)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.pr_auc" title="equate.evaluate.pr_auc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pr_auc</span></code></a>(scores, y_true)</p></td>
 <td><p>Average precision: the area under the precision-recall step curve.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.select_threshold" title="equate.evaluate.select_threshold"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_threshold</span></code></a>(scores, y_true, *[, optimize])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.select_threshold" title="equate.evaluate.select_threshold"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_threshold</span></code></a>(scores, y_true, *[, optimize])</p></td>
 <td><p>The score threshold (<code class="docutils literal notranslate"><span class="pre">score</span> <span class="pre">&gt;=</span> <span class="pre">t</span></code> predicts a match) that maximises <code class="docutils literal notranslate"><span class="pre">optimize</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.ranking_metrics" title="equate.evaluate.ranking_metrics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ranking_metrics</span></code></a>(ranked, gold, *[, ks])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.ranking_metrics" title="equate.evaluate.ranking_metrics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ranking_metrics</span></code></a>(ranked, gold, *[, ks])</p></td>
 <td><p>Recall&#64;k, MRR and MAP for ranked candidate lists.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.pairs_to_labels" title="equate.evaluate.pairs_to_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pairs_to_labels</span></code></a>(pairs, *, n)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.pairs_to_labels" title="equate.evaluate.pairs_to_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pairs_to_labels</span></code></a>(pairs, *, n)</p></td>
 <td><p>Cluster label per record <code class="docutils literal notranslate"><span class="pre">0..n-1</span></code> from the transitive closure of <code class="docutils literal notranslate"><span class="pre">pairs</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.labels_to_pairs" title="equate.evaluate.labels_to_pairs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">labels_to_pairs</span></code></a>(labels)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.labels_to_pairs" title="equate.evaluate.labels_to_pairs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">labels_to_pairs</span></code></a>(labels)</p></td>
 <td><p>Every within-cluster pair <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> with <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">&lt;</span> <span class="pre">j</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.cross_pairs_to_labels" title="equate.evaluate.cross_pairs_to_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cross_pairs_to_labels</span></code></a>(pairs, *, n_a, n_b)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.cross_pairs_to_labels" title="equate.evaluate.cross_pairs_to_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cross_pairs_to_labels</span></code></a>(pairs, *, n_a, n_b)</p></td>
 <td><p>Labels over <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">+</span> <span class="pre">B</span></code> (B's records offset by <code class="docutils literal notranslate"><span class="pre">n_a</span></code>) from two-table <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> pairs.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.entity_split" title="equate.evaluate.entity_split"><code class="xref py py-obj docutils literal notranslate"><span class="pre">entity_split</span></code></a>(entity_ids, *[, ratios, seed])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.entity_split" title="equate.evaluate.entity_split"><code class="xref py py-obj docutils literal notranslate"><span class="pre">entity_split</span></code></a>(entity_ids, *[, ratios, seed])</p></td>
 <td><p>Split records into train / val / test by entity, never by record or pair.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.assert_no_leakage" title="equate.evaluate.assert_no_leakage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">assert_no_leakage</span></code></a>(entity_ids, *parts)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.assert_no_leakage" title="equate.evaluate.assert_no_leakage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">assert_no_leakage</span></code></a>(entity_ids, *parts)</p></td>
 <td><p>Raise <code class="docutils literal notranslate"><span class="pre">AssertionError</span></code> if any entity has records in more than one of <code class="docutils literal notranslate"><span class="pre">parts</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.list_benchmarks" title="equate.evaluate.list_benchmarks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list_benchmarks</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.list_benchmarks" title="equate.evaluate.list_benchmarks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list_benchmarks</span></code></a>()</p></td>
 <td><p>Names of the registered benchmarks.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.load_benchmark" title="equate.evaluate.load_benchmark"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_benchmark</span></code></a>(name, **config)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.load_benchmark" title="equate.evaluate.load_benchmark"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_benchmark</span></code></a>(name, **config)</p></td>
 <td><p>Build a registered benchmark (<code class="docutils literal notranslate"><span class="pre">config</span></code> goes to its loader).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.benchmark_matcher" title="equate.evaluate.benchmark_matcher"><code class="xref py py-obj docutils literal notranslate"><span class="pre">benchmark_matcher</span></code></a>([matcher, on, n_seeds, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.benchmark_matcher" title="equate.evaluate.benchmark_matcher"><code class="xref py py-obj docutils literal notranslate"><span class="pre">benchmark_matcher</span></code></a>([matcher, on, n_seeds, ...])</p></td>
 <td><p>Score <code class="docutils literal notranslate"><span class="pre">matcher</span></code> on unseen-entity test splits of each benchmark in <code class="docutils literal notranslate"><span class="pre">on</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.subset_pairs" title="equate.evaluate.subset_pairs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subset_pairs</span></code></a>(gold, rows_a, rows_b)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.subset_pairs" title="equate.evaluate.subset_pairs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subset_pairs</span></code></a>(gold, rows_a, rows_b)</p></td>
 <td><p>Gold pairs with both ends in the subset, re-indexed into the subset.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.linearity" title="equate.evaluate.linearity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">linearity</span></code></a>(a, b, gold, *[, max_pairs])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.linearity" title="equate.evaluate.linearity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">linearity</span></code></a>(a, b, gold, *[, max_pairs])</p></td>
 <td><p>Best pairwise F1 of a single threshold on TF-IDF cosine similarity over <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">×</span> <span class="pre">b</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.difficulty_profile" title="equate.evaluate.difficulty_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">difficulty_profile</span></code></a>(a, b, gold)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.difficulty_profile" title="equate.evaluate.difficulty_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">difficulty_profile</span></code></a>(a, b, gold)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">{'linearity',</span> <span class="pre">'level',</span> <span class="pre">'base_rate',</span> <span class="pre">'n_a',</span> <span class="pre">'n_b',</span> <span class="pre">'n_gold'}</span></code> for a matching task.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.data_dir" title="equate.evaluate.data_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data_dir</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.data_dir" title="equate.evaluate.data_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data_dir</span></code></a>()</p></td>
 <td><p>The default root of the benchmark cache (not created until something is written).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.default_store" title="equate.evaluate.default_store"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_store</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.default_store" title="equate.evaluate.default_store"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_store</span></code></a>()</p></td>
 <td><p>The default benchmark cache: a <a class="reference internal" href="#equate.evaluate.FileStore" title="equate.evaluate.FileStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileStore</span></code></a> over <a class="reference internal" href="#equate.evaluate.data_dir" title="equate.evaluate.data_dir"><code class="xref py py-func docutils literal notranslate"><span class="pre">data_dir()</span></code></a>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.fetch" title="equate.evaluate.fetch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch</span></code></a>(key, source, *[, store, download, get])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.fetch" title="equate.evaluate.fetch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch</span></code></a>(key, source, *[, store, download, get])</p></td>
 <td><p>The bytes of <code class="docutils literal notranslate"><span class="pre">source</span></code>, from <code class="docutils literal notranslate"><span class="pre">store</span></code> if cached, else downloaded and cached.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.abt_buy" title="equate.evaluate.abt_buy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">abt_buy</span></code></a>(**config)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.abt_buy" title="equate.evaluate.abt_buy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">abt_buy</span></code></a>(**config)</p></td>
 <td><p>Abt-Buy: 1081 × 1092 product offers, 1097 matches (Leipzig; textual, hard).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.amazon_google" title="equate.evaluate.amazon_google"><code class="xref py py-obj docutils literal notranslate"><span class="pre">amazon_google</span></code></a>(**config)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.amazon_google" title="equate.evaluate.amazon_google"><code class="xref py py-obj docutils literal notranslate"><span class="pre">amazon_google</span></code></a>(**config)</p></td>
 <td><p>Amazon-Google: 1363 × 3226 software products, 1300 matches (Leipzig; hard).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.dblp_acm" title="equate.evaluate.dblp_acm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dblp_acm</span></code></a>(**config)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.dblp_acm" title="equate.evaluate.dblp_acm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dblp_acm</span></code></a>(**config)</p></td>
 <td><p>DBLP-ACM: 2616 × 2294 publications, 2224 matches (Leipzig; easy).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.wdc_products" title="equate.evaluate.wdc_products"><code class="xref py py-obj docutils literal notranslate"><span class="pre">wdc_products</span></code></a>(*[, corner_cases, unseen, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.wdc_products" title="equate.evaluate.wdc_products"><code class="xref py py-obj docutils literal notranslate"><span class="pre">wdc_products</span></code></a>(*[, corner_cases, unseen, ...])</p></td>
 <td><p>WDC Products as a two-table benchmark with its canonical train/valid/test split.</p></td>
 </tr>
 </tbody>
@@ -498,7 +513,7 @@ what a reader needs next to a score — at least <code class="docutils literal n
 
 <dl class="py class">
 <dt class="sig sig-object py" id="equate.evaluate.BenchmarkRow">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.evaluate.</span></span><span class="sig-name descname"><span class="pre">BenchmarkRow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">benchmark</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recall</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seconds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_gold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_rate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/benchmark.html#BenchmarkRow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.BenchmarkRow" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.evaluate.</span></span><span class="sig-name descname"><span class="pre">BenchmarkRow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">benchmark</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recall</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seconds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_gold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ci</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/benchmark.html#BenchmarkRow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.BenchmarkRow" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>One (benchmark, seed) run: the scores, their context, and what they cost.</p>
 <dl class="field-list simple">
@@ -660,7 +675,7 @@ averaged over records.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="equate.evaluate.benchmark_matcher">
-<span class="sig-prename descclassname"><span class="pre">equate.evaluate.</span></span><span class="sig-name descname"><span class="pre">benchmark_matcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matcher</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('toy_names',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ratios</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.6,</span> <span class="pre">0.2,</span> <span class="pre">0.2)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/benchmark.html#benchmark_matcher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.benchmark_matcher" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">equate.evaluate.</span></span><span class="sig-name descname"><span class="pre">benchmark_matcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matcher</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('toy_names',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ratios</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.6,</span> <span class="pre">0.2,</span> <span class="pre">0.2)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ci</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_boot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ci_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/benchmark.html#benchmark_matcher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.benchmark_matcher" title="Link to this definition">¶</a></dt>
 <dd><p>Score <code class="docutils literal notranslate"><span class="pre">matcher</span></code> on unseen-entity test splits of each benchmark in <code class="docutils literal notranslate"><span class="pre">on</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">matcher(a,</span> <span class="pre">b)</span></code> returns <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> pairs (a <a class="reference internal" href="equate.base.html#equate.base.Matching" title="equate.base.Matching"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matching</span></code></a>
 qualifies); the default is <code class="xref py py-func docutils literal notranslate"><span class="pre">equate.match()</span></code>. <code class="docutils literal notranslate"><span class="pre">on</span></code> is a benchmark name, a
@@ -679,6 +694,15 @@ never on test.</p>
 <code class="docutils literal notranslate"><span class="pre">ratios</span></code> ignored; no entity-leakage assertion, since a suite’s <em>seen-entity</em>
 variants share entities across parts by design); <code class="docutils literal notranslate"><span class="pre">'auto'</span></code> (default) is canonical
 when the benchmark has <code class="docutils literal notranslate"><span class="pre">splits</span></code>, else entity.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ci</span></code> adds a <strong>bootstrap confidence interval</strong> to each row (doc 14 §7.4): the test
+<em>entities</em> are resampled <code class="docutils literal notranslate"><span class="pre">n_boot</span></code> times (a cluster bootstrap: an entity’s pairs move
+together) and the percentile interval of precision, recall and F1 is kept in
+<code class="docutils literal notranslate"><span class="pre">BenchmarkRow.ci</span></code>. <code class="docutils literal notranslate"><span class="pre">'auto'</span></code> (default) computes a 95 % interval only for a
+single-run benchmark — a canonical split has no seed spread, and a 500-pair test set
+leaves a few points of F1 within noise; a level (<code class="docutils literal notranslate"><span class="pre">0.9</span></code>) computes it for every row;
+<code class="docutils literal notranslate"><span class="pre">None</span></code> never. The resampling is seeded (<code class="docutils literal notranslate"><span class="pre">ci_seed</span></code>), so a report is reproducible.
+A percentile interval cannot show uncertainty at a 0/1 boundary: a perfect run reads
+<code class="docutils literal notranslate"><span class="pre">1.000</span> <span class="pre">[1.000,</span> <span class="pre">1.000]</span></code> — that is “no resample found an error”, not certainty.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">report</span> <span class="o">=</span> <span class="n">benchmark_matcher</span><span class="p">(</span><span class="n">n_seeds</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">summary</span><span class="p">()[</span><span class="s1">'toy_names'</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="p">[</span><span class="s1">'f1'</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="s1">'n_seeds'</span><span class="p">]</span>
@@ -712,6 +736,32 @@ pairs are canonicalized to unordered <code class="docutils literal notranslate">
 <span class="go">(0.67, 1.0)</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.evaluate.bootstrap_ci">
+<span class="sig-prename descclassname"><span class="pre">equate.evaluate.</span></span><span class="sig-name descname"><span class="pre">bootstrap_ci</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left_entities</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_boot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/benchmark.html#bootstrap_ci"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.bootstrap_ci" title="Link to this definition">¶</a></dt>
+<dd><p>Percentile bootstrap interval of pairwise precision, recall and F1.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pred</span></code> / <code class="docutils literal notranslate"><span class="pre">gold</span></code> are <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> pairs; <code class="docutils literal notranslate"><span class="pre">left_entities[i]</span></code> is the entity of left
+record <code class="docutils literal notranslate"><span class="pre">i</span></code>. Entities (not pairs) are resampled with replacement and each pair is
+weighted by how often its <strong>left</strong> record’s entity was drawn, so the pairs of one
+entity succeed or fail together (a false positive counts against the entity of its
+left record; entities with no left record in the test part are not resampled).</p>
+<p>A resample with no predicted pair has no precision, and one with no gold pair no
+recall: those resamples are left out of that metric’s interval (scoring them 1.0, as
+<a class="reference internal" href="#equate.evaluate.Scores" title="equate.evaluate.Scores"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scores</span></code></a> does for a whole empty run, would inflate it). An
+interval with no valid resample is <code class="docutils literal notranslate"><span class="pre">(nan,</span> <span class="pre">nan)</span></code>. Returns <code class="docutils literal notranslate"><span class="pre">{'precision':</span> <span class="pre">(lo,</span>
+<span class="pre">hi),</span> <span class="pre">'recall':</span> <span class="pre">...,</span> <span class="pre">'f1':</span> <span class="pre">...}</span></code>. Memory is bounded: resamples are drawn in chunks.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ci</span> <span class="o">=</span> <span class="n">bootstrap_ci</span><span class="p">({(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)},</span> <span class="p">{(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)},</span> <span class="p">[</span><span class="s1">'e0'</span><span class="p">,</span> <span class="s1">'e1'</span><span class="p">],</span> <span class="n">n_boot</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ci</span><span class="p">[</span><span class="s1">'precision'</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mf">0.5</span> <span class="o">&lt;=</span> <span class="n">ci</span><span class="p">[</span><span class="s1">'precision'</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -856,6 +906,35 @@ key raises <code class="docutils literal notranslate"><span class="pre">FileNotF
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="equate.evaluate.gmd">
+<span class="sig-prename descclassname"><span class="pre">equate.evaluate.</span></span><span class="sig-name descname"><span class="pre">gmd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pred_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">true_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge_cost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">unit_cost&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_cost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">unit_cost&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/metrics.html#gmd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.gmd" title="Link to this definition">¶</a></dt>
+<dd><p>Generalized merge distance: the cost of the splits and merges that turn the
+predicted clustering into the true one (Menestrina, Whang &amp; Garcia-Molina, VLDB 2010).</p>
+<p><code class="docutils literal notranslate"><span class="pre">split_cost(x,</span> <span class="pre">y)</span></code> prices splitting a cluster of <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">+</span> <span class="pre">y</span></code> records into <code class="docutils literal notranslate"><span class="pre">x</span></code> and
+<code class="docutils literal notranslate"><span class="pre">y</span></code>; <code class="docutils literal notranslate"><span class="pre">merge_cost(x,</span> <span class="pre">y)</span></code> merging an <code class="docutils literal notranslate"><span class="pre">x</span></code>- and a <code class="docutils literal notranslate"><span class="pre">y</span></code>-record cluster. The defaults
+(<a class="reference internal" href="#equate.evaluate.unit_cost" title="equate.evaluate.unit_cost"><code class="xref py py-func docutils literal notranslate"><span class="pre">unit_cost()</span></code></a>) count operations; <a class="reference internal" href="#equate.evaluate.pair_cost" title="equate.evaluate.pair_cost"><code class="xref py py-func docutils literal notranslate"><span class="pre">pair_cost()</span></code></a> for both gives the pairwise
+error count; <a class="reference internal" href="#equate.evaluate.linear_cost" title="equate.evaluate.linear_cost"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_cost()</span></code></a> <code class="docutils literal notranslate"><span class="pre">(k1,</span> <span class="pre">k2)</span></code> is <code class="docutils literal notranslate"><span class="pre">k1</span> <span class="pre">+</span> <span class="pre">k2·x·y</span></code>. Unlike F-measures it
+is a distance (<code class="docutils literal notranslate"><span class="pre">0</span></code> = identical), and its costs let an application say whether a
+wrong merge hurts more than a missed one. Linear time.</p>
+<p>As in the paper, this is the cost of the <em>legal</em> path — split each predicted cluster
+along the true clusters, then merge the pieces of each true cluster — and the costs
+must be <strong>operation-order independent</strong> (constant, <code class="docutils literal notranslate"><span class="pre">k·x·y</span></code>, or <code class="docutils literal notranslate"><span class="pre">k1</span> <span class="pre">+</span> <span class="pre">k2·x·y</span></code>):
+for other costs the result can depend on the labels’ names. With unit costs a path
+that merges first can occasionally be cheaper; GMD is defined as the legal path.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gmd</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>   <span class="c1"># split {2, 3}, merge {2} into {0, 1}</span>
+<span class="go">2.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gmd</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">merge_cost</span><span class="o">=</span><span class="n">pair_cost</span><span class="p">,</span> <span class="n">split_cost</span><span class="o">=</span><span class="n">pair_cost</span><span class="p">)</span>
+<span class="go">3.0</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="equate.evaluate.labels_to_pairs">
 <span class="sig-prename descclassname"><span class="pre">equate.evaluate.</span></span><span class="sig-name descname"><span class="pre">labels_to_pairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/labels.html#labels_to_pairs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.labels_to_pairs" title="Link to this definition">¶</a></dt>
 <dd><p>Every within-cluster pair <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> with <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">&lt;</span> <span class="pre">j</span></code>.</p>
@@ -866,6 +945,21 @@ key raises <code class="docutils literal notranslate"><span class="pre">FileNotF
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#set" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.evaluate.linear_cost">
+<span class="sig-prename descclassname"><span class="pre">equate.evaluate.</span></span><span class="sig-name descname"><span class="pre">linear_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/metrics.html#linear_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.linear_cost" title="Link to this definition">¶</a></dt>
+<dd><p>A cost <code class="docutils literal notranslate"><span class="pre">k1</span> <span class="pre">+</span> <span class="pre">k2</span> <span class="pre">*</span> <span class="pre">x</span> <span class="pre">*</span> <span class="pre">y</span></code> — the order-independent family GMD is defined for.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">linear_cost</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">linear_cost</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">(1.0, 12.0)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -907,6 +1001,18 @@ pairs raise <code class="docutils literal notranslate"><span class="pre">ValueEr
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="equate.evaluate.benchmark.html#equate.evaluate.benchmark.Benchmark" title="equate.evaluate.benchmark.Benchmark"><code class="xref py py-class docutils literal notranslate"><span class="pre">Benchmark</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.evaluate.pair_cost">
+<span class="sig-prename descclassname"><span class="pre">equate.evaluate.</span></span><span class="sig-name descname"><span class="pre">pair_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/metrics.html#pair_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.pair_cost" title="Link to this definition">¶</a></dt>
+<dd><p>Cost <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">y</span></code>: the record pairs a split separates or a merge joins — with it,
+GMD equals the number of pairwise errors (false positives + false negatives).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1012,6 +1118,17 @@ are therefore optimistic, and are not a test result.</p>
 <span class="go">[(0, 0), (1, 1)]</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.evaluate.unit_cost">
+<span class="sig-prename descclassname"><span class="pre">equate.evaluate.</span></span><span class="sig-name descname"><span class="pre">unit_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/metrics.html#unit_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.unit_cost" title="Link to this definition">¶</a></dt>
+<dd><p>Cost 1 per split or merge, whatever the sizes (GMD counts operations).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -1146,6 +1263,7 @@ hundreds in the 50 %-unseen variants, a few in valid for 0 %. A warning says so.
 <li><a class="reference internal" href="#equate.evaluate.bcubed"><code class="docutils literal notranslate"><span class="pre">bcubed()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.benchmark_matcher"><code class="docutils literal notranslate"><span class="pre">benchmark_matcher()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.blocking_metrics"><code class="docutils literal notranslate"><span class="pre">blocking_metrics()</span></code></a></li>
+<li><a class="reference internal" href="#equate.evaluate.bootstrap_ci"><code class="docutils literal notranslate"><span class="pre">bootstrap_ci()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.ceaf"><code class="docutils literal notranslate"><span class="pre">ceaf()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.cluster_metrics"><code class="docutils literal notranslate"><span class="pre">cluster_metrics()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.cross_pairs_to_labels"><code class="docutils literal notranslate"><span class="pre">cross_pairs_to_labels()</span></code></a></li>
@@ -1155,16 +1273,20 @@ hundreds in the 50 %-unseen variants, a few in valid for 0 %. A warning says so.
 <li><a class="reference internal" href="#equate.evaluate.difficulty_profile"><code class="docutils literal notranslate"><span class="pre">difficulty_profile()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.entity_split"><code class="docutils literal notranslate"><span class="pre">entity_split()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.fetch"><code class="docutils literal notranslate"><span class="pre">fetch()</span></code></a></li>
+<li><a class="reference internal" href="#equate.evaluate.gmd"><code class="docutils literal notranslate"><span class="pre">gmd()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.labels_to_pairs"><code class="docutils literal notranslate"><span class="pre">labels_to_pairs()</span></code></a></li>
+<li><a class="reference internal" href="#equate.evaluate.linear_cost"><code class="docutils literal notranslate"><span class="pre">linear_cost()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.linearity"><code class="docutils literal notranslate"><span class="pre">linearity()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.list_benchmarks"><code class="docutils literal notranslate"><span class="pre">list_benchmarks()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.load_benchmark"><code class="docutils literal notranslate"><span class="pre">load_benchmark()</span></code></a></li>
+<li><a class="reference internal" href="#equate.evaluate.pair_cost"><code class="docutils literal notranslate"><span class="pre">pair_cost()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.pairs_to_labels"><code class="docutils literal notranslate"><span class="pre">pairs_to_labels()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.pairwise_prf"><code class="docutils literal notranslate"><span class="pre">pairwise_prf()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.pr_auc"><code class="docutils literal notranslate"><span class="pre">pr_auc()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.ranking_metrics"><code class="docutils literal notranslate"><span class="pre">ranking_metrics()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.select_threshold"><code class="docutils literal notranslate"><span class="pre">select_threshold()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.subset_pairs"><code class="docutils literal notranslate"><span class="pre">subset_pairs()</span></code></a></li>
+<li><a class="reference internal" href="#equate.evaluate.unit_cost"><code class="docutils literal notranslate"><span class="pre">unit_cost()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.wdc_products"><code class="docutils literal notranslate"><span class="pre">wdc_products()</span></code></a></li>
 </ul>
 </li>
@@ -1177,7 +1299,7 @@ hundreds in the 50 %-unseen variants, a few in valid for 0 %. A warning says so.
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=f5b15773"></script>
+</div><script src="../_static/documentation_options.js?v=5cf12315"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
