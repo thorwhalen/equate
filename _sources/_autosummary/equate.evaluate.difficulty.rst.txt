@@ -1,0 +1,14 @@
+equate.evaluate.difficulty
+==========================
+
+.. automodule:: equate.evaluate.difficulty
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      linearity
+      difficulty_profile
+      difficulty_label
+   

@@ -17,6 +17,7 @@ equate.evaluate.benchmark
       benchmark_matcher
       list_benchmarks
       load_benchmark
+      subset_pairs
    
    .. rubric:: Classes
 

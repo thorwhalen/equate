@@ -230,17 +230,21 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="equate.completion.html">equate.completion</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="equate.evaluate.html">equate.evaluate</a><input aria-label="Toggle navigation of equate.evaluate" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="equate.evaluate.suites.html">equate.evaluate.suites</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.evaluate.benchmark.html">equate.evaluate.benchmark</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.evaluate.difficulty.html">equate.evaluate.difficulty</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.evaluate.labels.html">equate.evaluate.labels</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.evaluate.metrics.html">equate.evaluate.metrics</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.evaluate.ranking.html">equate.evaluate.ranking</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.evaluate.scores.html">equate.evaluate.scores</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.evaluate.split.html">equate.evaluate.split</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.evaluate.store.html">equate.evaluate.store</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="equate.facade.html">equate.facade</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="equate.featurize.html">equate.featurize</a><input aria-label="Toggle navigation of equate.featurize" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="equate.featurize.graph.html">equate.featurize.graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.featurize.records.html">equate.featurize.records</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.featurize.text.html">equate.featurize.text</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.featurize.tfidf.html">equate.featurize.tfidf</a></li>
 </ul>
@@ -342,7 +346,7 @@ persistent <code class="docutils literal notranslate"><span class="pre">dol</spa
 <td><p>A structured <a class="reference internal" href="equate.base.html#equate.base.Explanation" title="equate.base.Explanation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Explanation</span></code></a> of a pair: a per-field diff.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#equate.service.record_text" title="equate.service.record_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_text</span></code></a>(obj)</p></td>
-<td><p>Text of an object for the default text featurizer: a record's values, joined.</p></td>
+<td><p>Text of <code class="docutils literal notranslate"><span class="pre">obj</span></code>: a mapping's non-empty values joined by spaces, else <code class="docutils literal notranslate"><span class="pre">str(obj)</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#equate.service.to_jsonable" title="equate.service.to_jsonable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_jsonable</span></code></a>(obj)</p></td>
 <td><p>Convert a boundary dataclass (or nested containers of them) to plain JSON data.</p></td>
@@ -783,14 +787,19 @@ Requires <code class="docutils literal notranslate"><span class="pre">pip</span>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="equate.service.record_text">
-<span class="sig-prename descclassname"><span class="pre">equate.service.</span></span><span class="sig-name descname"><span class="pre">record_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/service.html#record_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.service.record_text" title="Link to this definition">¶</a></dt>
-<dd><p>Text of an object for the default text featurizer: a record’s values, joined.</p>
-<p>A mapping (a JSON record) becomes its non-empty values joined by spaces, so records
-work with the TF-IDF default; anything else becomes <code class="docutils literal notranslate"><span class="pre">str(obj)</span></code>.</p>
+<span class="sig-prename descclassname"><span class="pre">equate.service.</span></span><span class="sig-name descname"><span class="pre">record_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/featurize/records.html#record_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.service.record_text" title="Link to this definition">¶</a></dt>
+<dd><p>Text of <code class="docutils literal notranslate"><span class="pre">obj</span></code>: a mapping’s non-empty values joined by spaces, else <code class="docutils literal notranslate"><span class="pre">str(obj)</span></code>.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">record_text</span><span class="p">({</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'Jon Smith'</span><span class="p">,</span> <span class="s1">'city'</span><span class="p">:</span> <span class="s1">'Paris'</span><span class="p">,</span> <span class="s1">'zip'</span><span class="p">:</span> <span class="kc">None</span><span class="p">})</span>
 <span class="go">'Jon Smith Paris'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">record_text</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="go">'42'</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -913,7 +922,7 @@ numpy scalars become Python numbers.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=01ec8363"></script>
+</div><script src="../_static/documentation_options.js?v=a8acf705"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

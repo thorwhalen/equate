@@ -24,6 +24,16 @@ equate.evaluate
       list_benchmarks
       load_benchmark
       benchmark_matcher
+      subset_pairs
+      linearity
+      difficulty_profile
+      data_dir
+      default_store
+      fetch
+      abt_buy
+      amazon_google
+      dblp_acm
+      wdc_products
    
    .. rubric:: Classes
 
@@ -34,6 +44,8 @@ equate.evaluate
       Benchmark
       BenchmarkReport
       BenchmarkRow
+      FileStore
+      Source
    
 .. rubric:: Modules
 
@@ -41,9 +53,12 @@ equate.evaluate
    :toctree:
    :recursive:
 
+   suites
    benchmark
+   difficulty
    labels
    metrics
    ranking
    scores
    split
+   store

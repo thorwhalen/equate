@@ -27,15 +27,19 @@
 - [equate.compare.vectorize](_autosummary/equate.compare.vectorize.html.md): Multi-field record comparison (stage ②): build a per-pair &#42;comparison vector&#42; from
 - [equate.completion](_autosummary/equate.completion.html.md): Tools to complete missing data from other sources of the same data.
 - [equate.evaluate](_autosummary/equate.evaluate.html.md): Evaluate matchers honestly: metrics, leakage-aware splits, and a benchmark harness.
+- [equate.evaluate.suites](_autosummary/equate.evaluate.suites.html.md): Loaders for the standard matching benchmarks, fetched on first use into a store.
 - [equate.evaluate.benchmark](_autosummary/equate.evaluate.benchmark.html.md): Self-benchmarking: a benchmark registry and an honest-by-default harness.
+- [equate.evaluate.difficulty](_autosummary/equate.evaluate.difficulty.html.md): How hard is a benchmark? A measured difficulty profile to print next to a score.
 - [equate.evaluate.labels](_autosummary/equate.evaluate.labels.html.md): Convert between the two granularities: pairs and cluster labels.
 - [equate.evaluate.metrics](_autosummary/equate.evaluate.metrics.html.md): Pairwise and cluster-level match metrics, dependency-light.
 - [equate.evaluate.ranking](_autosummary/equate.evaluate.ranking.html.md): Threshold-free and ranking metrics, and threshold selection as its own step.
 - [equate.evaluate.scores](_autosummary/equate.evaluate.scores.html.md): The one score type every metric returns: precision and recall, never F1 alone.
 - [equate.evaluate.split](_autosummary/equate.evaluate.split.html.md): Leakage-aware splitting: split over entities, so test entities are unseen.
+- [equate.evaluate.store](_autosummary/equate.evaluate.store.html.md): Where downloaded benchmark data lives: a store (a &#96;MutableMapping&#96;), never the package.
 - [equate.facade](_autosummary/equate.facade.html.md): The equate facade: the one-line &#96;match(A, B)&#96; entry point.
 - [equate.featurize](_autosummary/equate.featurize.html.md): The featurize stage (①): map objects to comparable representations.
 - [equate.featurize.graph](_autosummary/equate.featurize.graph.html.md): Graph featurizers (stage ①): turn whole graphs into vectors (graph kernels).
+- [equate.featurize.records](_autosummary/equate.featurize.records.html.md): The text of an object, for text featurizers: a record (mapping) is its joined values.
 - [equate.featurize.text](_autosummary/equate.featurize.text.html.md): Dense text-embedding featurizers, behind optional extras.
 - [equate.featurize.tfidf](_autosummary/equate.featurize.tfidf.html.md): Pure-numpy/scipy character-n-gram TF-IDF — equate’s zero-heavy-dependency default
 - [equate.interactive](_autosummary/equate.interactive.html.md): The interactive stage: human-in-the-loop review and re-optimization.
@@ -51,7 +55,7 @@
 - [equate.service](_autosummary/equate.service.html.md): The service layer: equate’s matching core as JSON-in/JSON-out operations.
 - [equate.util](_autosummary/equate.util.html.md): Utils for equate.
 - [For AI agents](ai-agents.html.md): &#96;equate&#96; ships artifacts for coding agents alongside its code. This page lists
-- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-10-19 10:59 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
+- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-10-19 11:34 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
 
 ## Optional
 

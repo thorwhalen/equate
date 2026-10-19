@@ -16,9 +16,14 @@ well under B³ whatever the matcher did — an empty prediction would read ~0.75
 
 Benchmarks are a registry, so adding one is registering a loader, not editing the core.
 The built-in `toy_names` is generated (no download, deterministic): enough to exercise a
-matcher and this harness in CI. Loaders for the standard suites (Abt-Buy, Amazon-Google,
-DBLP-ACM, WDC Products) are not shipped yet; they will register here as lazily-fetched
-optional benchmarks (equate#15).
+matcher and this harness in CI. The standard suites — `abt_buy`, `amazon_google`,
+`dblp_acm` and `wdc_products` — are registered by [`equate.evaluate.suites`](equate.evaluate.suites.html.md#module-equate.evaluate.suites) and
+download on first use into a store ([`equate.evaluate.store`](equate.evaluate.store.html.md#module-equate.evaluate.store)), never the package.
+
+A benchmark that ships its own **canonical split** (WDC Products’ unseen-entity test sets)
+carries it in `Benchmark.splits`, and [`benchmark_matcher()`](#equate.evaluate.benchmark.benchmark_matcher) uses it by default
+(`split='auto'`): the suite’s designers chose those test sets to control difficulty, and
+published numbers are measured on them.
 
 ### Module Attributes
 
@@ -31,15 +36,16 @@ optional benchmarks (equate#15).
 |---------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
 | [`list_benchmarks`](#equate.evaluate.benchmark.list_benchmarks)()                                | Names of the registered benchmarks.                                       |
 | [`load_benchmark`](#equate.evaluate.benchmark.load_benchmark)(name, \*\*config)                 | Build a registered benchmark (`config` goes to its loader).               |
+| [`subset_pairs`](#equate.evaluate.benchmark.subset_pairs)(gold, rows_a, rows_b)               | Gold pairs with both ends in the subset, re-indexed into the subset.      |
 
 ### Classes
 
-| [`Benchmark`](#equate.evaluate.benchmark.Benchmark)(name, a, b, gold[, meta])           | Two collections and the gold correspondence between them.                 |
-|------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
-| [`BenchmarkReport`](#equate.evaluate.benchmark.BenchmarkReport)(rows[, meta])                 | All runs, plus a per-benchmark summary of mean ± std over seeds.          |
-| [`BenchmarkRow`](#equate.evaluate.benchmark.BenchmarkRow)(benchmark, seed, precision, ...) | One (benchmark, seed) run: the scores, their context, and what they cost. |
+| [`Benchmark`](#equate.evaluate.benchmark.Benchmark)(name, a, b, gold[, meta, splits, ...])   | Two collections and the gold correspondence between them.                 |
+|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
+| [`BenchmarkReport`](#equate.evaluate.benchmark.BenchmarkReport)(rows[, meta])                      | All runs, plus a per-benchmark summary of mean ± std over seeds.          |
+| [`BenchmarkRow`](#equate.evaluate.benchmark.BenchmarkRow)(benchmark, seed, precision, ...)      | One (benchmark, seed) run: the scores, their context, and what they cost. |
 
-### *class* equate.evaluate.benchmark.Benchmark(name, a, b, gold, meta=dict())
+### *class* equate.evaluate.benchmark.Benchmark(name, a, b, gold, meta=dict(), splits=None, pairs=None, ids=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -47,6 +53,15 @@ Two collections and the gold correspondence between them.
 
 `gold` holds `(i, j)` pairs: `a[i]` corresponds to `b[j]`. `meta` carries
 what a reader needs next to a score — at least `source` and `difficulty`.
+
+Optional, when the suite defines them:
+
+- `splits` — the suite’s canonical record split, `{'train'|'val'|'test':
+  (a_indices, b_indices)}`;
+- `pairs` — the suite’s labelled candidate pairs, `{'train'|'val'|'test':
+  ((i, j, label), ...)}` (the DeepMatcher pair-classification task);
+- `ids` — the publisher’s record ids, `{'a': [...], 'b': [...]}` (kept out of
+  `meta`, which every report copies).
 
 #### *property* base_rate *: [float](https://docs.python.org/3/builtins/functions.html#float)*
 
@@ -78,7 +93,7 @@ Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 One (benchmark, seed) run: the scores, their context, and what they cost.
 
-### equate.evaluate.benchmark.benchmark_matcher(matcher=None, , on=('toy_names',), n_seeds=3, ratios=(0.6, 0.2, 0.2), fit=None)
+### equate.evaluate.benchmark.benchmark_matcher(matcher=None, , on=('toy_names',), n_seeds=3, ratios=(0.6, 0.2, 0.2), fit=None, split='auto')
 
 Score `matcher` on unseen-entity test splits of each benchmark in `on`.
 
@@ -95,6 +110,12 @@ harness train per seed: it gets the train and validation parts only (the split i
 asserted leak-free first), and the matcher it returns is scored on test. Choose a
 threshold on the validation part there ([`select_threshold()`](equate.evaluate.html.md#equate.evaluate.select_threshold)),
 never on test.
+
+`split` chooses the parts: `'entity'` is the seeded entity split above;
+`'canonical'` uses the benchmark’s own `splits` (one run, `n_seeds` and
+`ratios` ignored; no entity-leakage assertion, since a suite’s *seen-entity*
+variants share entities across parts by design); `'auto'` (default) is canonical
+when the benchmark has `splits`, else entity.
 
 ```pycon
 >>> report = benchmark_matcher(n_seeds=2)
@@ -123,3 +144,12 @@ Build a registered benchmark (`config` goes to its loader).
 
 * **Return type:**
   [`Benchmark`](#equate.evaluate.benchmark.Benchmark)
+
+### equate.evaluate.benchmark.subset_pairs(gold, rows_a, rows_b)
+
+Gold pairs with both ends in the subset, re-indexed into the subset.
+
+```pycon
+>>> sorted(subset_pairs({(0, 1), (2, 0)}, [2, 0], [0, 1]))
+[(0, 0), (1, 1)]
+```

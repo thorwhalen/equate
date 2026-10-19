@@ -25,15 +25,19 @@
 - [equate.compare.vectorize](equate.compare.vectorize.html.md): Multi-field record comparison (stage ②): build a per-pair &#42;comparison vector&#42; from
 - [equate.completion](equate.completion.html.md): Tools to complete missing data from other sources of the same data.
 - [equate.evaluate](equate.evaluate.html.md): Evaluate matchers honestly: metrics, leakage-aware splits, and a benchmark harness.
+- [equate.evaluate.suites](equate.evaluate.suites.html.md): Loaders for the standard matching benchmarks, fetched on first use into a store.
 - [equate.evaluate.benchmark](equate.evaluate.benchmark.html.md): Self-benchmarking: a benchmark registry and an honest-by-default harness.
+- [equate.evaluate.difficulty](equate.evaluate.difficulty.html.md): How hard is a benchmark? A measured difficulty profile to print next to a score.
 - [equate.evaluate.labels](equate.evaluate.labels.html.md): Convert between the two granularities: pairs and cluster labels.
 - [equate.evaluate.metrics](equate.evaluate.metrics.html.md): Pairwise and cluster-level match metrics, dependency-light.
 - [equate.evaluate.ranking](equate.evaluate.ranking.html.md): Threshold-free and ranking metrics, and threshold selection as its own step.
 - [equate.evaluate.scores](equate.evaluate.scores.html.md): The one score type every metric returns: precision and recall, never F1 alone.
 - [equate.evaluate.split](equate.evaluate.split.html.md): Leakage-aware splitting: split over entities, so test entities are unseen.
+- [equate.evaluate.store](equate.evaluate.store.html.md): Where downloaded benchmark data lives: a store (a &#96;MutableMapping&#96;), never the package.
 - [equate.facade](equate.facade.html.md): The equate facade: the one-line &#96;match(A, B)&#96; entry point.
 - [equate.featurize](equate.featurize.html.md): The featurize stage (①): map objects to comparable representations.
 - [equate.featurize.graph](equate.featurize.graph.html.md): Graph featurizers (stage ①): turn whole graphs into vectors (graph kernels).
+- [equate.featurize.records](equate.featurize.records.html.md): The text of an object, for text featurizers: a record (mapping) is its joined values.
 - [equate.featurize.text](equate.featurize.text.html.md): Dense text-embedding featurizers, behind optional extras.
 - [equate.featurize.tfidf](equate.featurize.tfidf.html.md): Pure-numpy/scipy character-n-gram TF-IDF — equate’s zero-heavy-dependency default
 - [equate.interactive](equate.interactive.html.md): The interactive stage: human-in-the-loop review and re-optimization.

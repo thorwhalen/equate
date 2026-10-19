@@ -15,6 +15,7 @@ equate.featurize
    .. autosummary::
    
       identity
+      record_text
       resolve_featurizer
       mk_tfidf
       char_ngrams
@@ -35,5 +36,6 @@ equate.featurize
    :recursive:
 
    graph
+   records
    text
    tfidf

@@ -1,0 +1,22 @@
+equate.evaluate.store
+=====================
+
+.. automodule:: equate.evaluate.store
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      data_dir
+      default_store
+      fetch
+      http_get
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Source
+      FileStore
+   

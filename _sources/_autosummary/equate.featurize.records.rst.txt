@@ -1,0 +1,12 @@
+equate.featurize.records
+========================
+
+.. automodule:: equate.featurize.records
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      record_text
+   

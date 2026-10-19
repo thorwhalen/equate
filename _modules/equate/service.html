@@ -227,17 +227,21 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/equate.completion.html">equate.completion</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../_autosummary/equate.evaluate.html">equate.evaluate</a><input aria-label="Toggle navigation of equate.evaluate" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.evaluate.suites.html">equate.evaluate.suites</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.evaluate.benchmark.html">equate.evaluate.benchmark</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.evaluate.difficulty.html">equate.evaluate.difficulty</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.evaluate.labels.html">equate.evaluate.labels</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.evaluate.metrics.html">equate.evaluate.metrics</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.evaluate.ranking.html">equate.evaluate.ranking</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.evaluate.scores.html">equate.evaluate.scores</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.evaluate.split.html">equate.evaluate.split</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.evaluate.store.html">equate.evaluate.store</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/equate.facade.html">equate.facade</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../_autosummary/equate.featurize.html">equate.featurize</a><input aria-label="Toggle navigation of equate.featurize" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.graph.html">equate.featurize.graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.records.html">equate.featurize.records</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.text.html">equate.featurize.text</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/equate.featurize.tfidf.html">equate.featurize.tfidf</a></li>
 </ul>
@@ -348,6 +352,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Explanation</span><span class="p">,</span> <span class="n">Partition</span><span class="p">,</span> <span class="n">ScoreMatrix</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_comparator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.facade</span><span class="w"> </span><span class="kn">import</span> <span class="n">score_matrix</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.featurize.records</span><span class="w"> </span><span class="kn">import</span> <span class="n">record_text</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.interactive</span><span class="w"> </span><span class="kn">import</span> <span class="n">CandidateStore</span><span class="p">,</span> <span class="n">ConstraintSet</span><span class="p">,</span> <span class="n">reoptimize</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.matching</span><span class="w"> </span><span class="kn">import</span> <span class="n">harden</span><span class="p">,</span> <span class="n">resolve_matcher</span><span class="p">,</span> <span class="n">soft_match</span>
 
@@ -660,23 +665,6 @@
 
 
 <span class="c1"># --- Helpers -------------------------------------------------------------------------</span>
-
-
-<div class="viewcode-block" id="record_text">
-<a class="viewcode-back" href="../../_autosummary/equate.service.html#equate.service.record_text">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">record_text</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Text of an object for the default text featurizer: a record's values, joined.</span>
-
-<span class="sd">    A mapping (a JSON record) becomes its non-empty values joined by spaces, so records</span>
-<span class="sd">    work with the TF-IDF default; anything else becomes ``str(obj)``.</span>
-
-<span class="sd">    &gt;&gt;&gt; record_text({'name': 'Jon Smith', 'city': 'Paris', 'zip': None})</span>
-<span class="sd">    'Jon Smith Paris'</span>
-<span class="sd">    """</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">obj</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span></div>
-
 
 
 <span class="n">_MISSING</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>  <span class="c1"># a field absent, null or empty is "missing", not "dissimilar"</span>
@@ -1586,7 +1574,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=01ec8363"></script>
+</div><script src="../../_static/documentation_options.js?v=a8acf705"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

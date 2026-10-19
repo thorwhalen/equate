@@ -41,6 +41,8 @@ therefore span the spaces between words\*. This is deliberate (it helps fuzzy
 name/SKU matching) and differs from scikit-learn’s per-word `char_wb` analyzer. A
 text too short for any `n` in the range falls back to the padded string itself, so
 tiny or empty inputs still yield a (single) feature rather than an all-zero vector.
+A record (a mapping) is read through [`record_text()`](equate.featurize.records.html.md#equate.featurize.records.record_text);
+any other non-string raises `TypeError`.
 
 ```pycon
 >>> char_ngrams('cat', (2, 3))

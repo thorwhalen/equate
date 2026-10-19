@@ -6,7 +6,9 @@ Dependency-light (numpy/scipy only; sklearn is used for ARI / V-measure when pre
 Precision and recall always travel together ([`Scores`](#equate.evaluate.Scores)), the pairwise and cluster
 granularities are explicit ([`pairs_to_labels()`](#equate.evaluate.pairs_to_labels) converts on purpose), B³ is the
 default cluster metric, thresholds are selected on validation data by a separate call,
-and [`benchmark_matcher()`](#equate.evaluate.benchmark_matcher) splits by entity so test entities are unseen.
+and [`benchmark_matcher()`](#equate.evaluate.benchmark_matcher) splits by entity so test entities are unseen. The standard
+suites (`abt_buy`, `amazon_google`, `dblp_acm`, `wdc_products`) download on first
+use into a store outside the package ([`equate.evaluate.store`](equate.evaluate.store.html.md#module-equate.evaluate.store)).
 See `docs/research/14-evaluation-benchmarks-and-methodology.md`.
 
 ```pycon
@@ -17,34 +19,46 @@ See `docs/research/14-evaluation-benchmarks-and-methodology.md`.
 
 ### Functions
 
-| [`pairwise_prf`](#equate.evaluate.pairwise_prf)(pred_pairs, true_pairs, \*[, ...])    | Pairwise precision / recall / F1 of predicted pairs against gold pairs.          |
-|-----------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| [`bcubed`](#equate.evaluate.bcubed)(pred_labels, true_labels)                   | B³ precision / recall / F1 — the default cluster metric.                         |
-| [`ceaf`](#equate.evaluate.ceaf)(pred_labels, true_labels, \*[, variant, ...]) | CEAF: score the best one-to-one alignment of predicted to true clusters.         |
-| [`cluster_metrics`](#equate.evaluate.cluster_metrics)(pred_labels, true_labels, \*)      | B³ (the headline), CEAF-e, ARI, V-measure, homogeneity and completeness.         |
-| [`blocking_metrics`](#equate.evaluate.blocking_metrics)(candidate_pairs, ...[, n_b])      | Return `{pair_completeness, reduction_ratio, pairs_quality, n_candidates}`.      |
-| [`pr_auc`](#equate.evaluate.pr_auc)(scores, y_true)                             | Average precision: the area under the precision-recall step curve.               |
-| [`select_threshold`](#equate.evaluate.select_threshold)(scores, y_true, \*[, optimize])   | The score threshold (`score >= t` predicts a match) that maximises `optimize`.   |
-| [`ranking_metrics`](#equate.evaluate.ranking_metrics)(ranked, gold, \*[, ks])            | Recall@k, MRR and MAP for ranked candidate lists.                                |
-| [`pairs_to_labels`](#equate.evaluate.pairs_to_labels)(pairs, \*, n)                      | Cluster label per record `0..n-1` from the transitive closure of `pairs`.        |
-| [`labels_to_pairs`](#equate.evaluate.labels_to_pairs)(labels)                            | Every within-cluster pair `(i, j)` with `i < j`.                                 |
-| [`cross_pairs_to_labels`](#equate.evaluate.cross_pairs_to_labels)(pairs, \*, n_a, n_b)         | Labels over `A + B` (B's records offset by `n_a`) from two-table `(i, j)` pairs. |
-| [`entity_split`](#equate.evaluate.entity_split)(entity_ids, \*[, ratios, seed])       | Split records into train / val / test by entity, never by record or pair.        |
-| [`assert_no_leakage`](#equate.evaluate.assert_no_leakage)(entity_ids, \*parts)             | Raise `AssertionError` if any entity has records in more than one of `parts`.    |
-| [`list_benchmarks`](#equate.evaluate.list_benchmarks)()                                  | Names of the registered benchmarks.                                              |
-| [`load_benchmark`](#equate.evaluate.load_benchmark)(name, \*\*config)                   | Build a registered benchmark (`config` goes to its loader).                      |
-| [`benchmark_matcher`](#equate.evaluate.benchmark_matcher)([matcher, on, n_seeds, ...])     | Score `matcher` on unseen-entity test splits of each benchmark in `on`.          |
+| [`pairwise_prf`](#equate.evaluate.pairwise_prf)(pred_pairs, true_pairs, \*[, ...])    | Pairwise precision / recall / F1 of predicted pairs against gold pairs.                                                                                     |
+|-----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`bcubed`](#equate.evaluate.bcubed)(pred_labels, true_labels)                   | B³ precision / recall / F1 — the default cluster metric.                                                                                                    |
+| [`ceaf`](#equate.evaluate.ceaf)(pred_labels, true_labels, \*[, variant, ...]) | CEAF: score the best one-to-one alignment of predicted to true clusters.                                                                                    |
+| [`cluster_metrics`](#equate.evaluate.cluster_metrics)(pred_labels, true_labels, \*)      | B³ (the headline), CEAF-e, ARI, V-measure, homogeneity and completeness.                                                                                    |
+| [`blocking_metrics`](#equate.evaluate.blocking_metrics)(candidate_pairs, ...[, n_b])      | Return `{pair_completeness, reduction_ratio, pairs_quality, n_candidates}`.                                                                                 |
+| [`pr_auc`](#equate.evaluate.pr_auc)(scores, y_true)                             | Average precision: the area under the precision-recall step curve.                                                                                          |
+| [`select_threshold`](#equate.evaluate.select_threshold)(scores, y_true, \*[, optimize])   | The score threshold (`score >= t` predicts a match) that maximises `optimize`.                                                                              |
+| [`ranking_metrics`](#equate.evaluate.ranking_metrics)(ranked, gold, \*[, ks])            | Recall@k, MRR and MAP for ranked candidate lists.                                                                                                           |
+| [`pairs_to_labels`](#equate.evaluate.pairs_to_labels)(pairs, \*, n)                      | Cluster label per record `0..n-1` from the transitive closure of `pairs`.                                                                                   |
+| [`labels_to_pairs`](#equate.evaluate.labels_to_pairs)(labels)                            | Every within-cluster pair `(i, j)` with `i < j`.                                                                                                            |
+| [`cross_pairs_to_labels`](#equate.evaluate.cross_pairs_to_labels)(pairs, \*, n_a, n_b)         | Labels over `A + B` (B's records offset by `n_a`) from two-table `(i, j)` pairs.                                                                            |
+| [`entity_split`](#equate.evaluate.entity_split)(entity_ids, \*[, ratios, seed])       | Split records into train / val / test by entity, never by record or pair.                                                                                   |
+| [`assert_no_leakage`](#equate.evaluate.assert_no_leakage)(entity_ids, \*parts)             | Raise `AssertionError` if any entity has records in more than one of `parts`.                                                                               |
+| [`list_benchmarks`](#equate.evaluate.list_benchmarks)()                                  | Names of the registered benchmarks.                                                                                                                         |
+| [`load_benchmark`](#equate.evaluate.load_benchmark)(name, \*\*config)                   | Build a registered benchmark (`config` goes to its loader).                                                                                                 |
+| [`benchmark_matcher`](#equate.evaluate.benchmark_matcher)([matcher, on, n_seeds, ...])     | Score `matcher` on unseen-entity test splits of each benchmark in `on`.                                                                                     |
+| [`subset_pairs`](#equate.evaluate.subset_pairs)(gold, rows_a, rows_b)                 | Gold pairs with both ends in the subset, re-indexed into the subset.                                                                                        |
+| [`linearity`](#equate.evaluate.linearity)(a, b, gold, \*[, max_pairs])             | Best pairwise F1 of a single threshold on TF-IDF cosine similarity over `a × b`.                                                                            |
+| [`difficulty_profile`](#equate.evaluate.difficulty_profile)(a, b, gold)                     | `{'linearity', 'level', 'base_rate', 'n_a', 'n_b', 'n_gold'}` for a matching task.                                                                          |
+| [`data_dir`](#equate.evaluate.data_dir)()                                         | The default root of the benchmark cache (not created until something is written).                                                                           |
+| [`default_store`](#equate.evaluate.default_store)()                                    | The default benchmark cache: a [`FileStore`](#equate.evaluate.FileStore) over [`data_dir()`](#equate.evaluate.data_dir). |
+| [`fetch`](#equate.evaluate.fetch)(key, source, \*[, store, download, get])     | The bytes of `source`, from `store` if cached, else downloaded and cached.                                                                                  |
+| [`abt_buy`](#equate.evaluate.abt_buy)(\*\*config)                                | Abt-Buy: 1081 × 1092 product offers, 1097 matches (Leipzig; textual, hard).                                                                                 |
+| [`amazon_google`](#equate.evaluate.amazon_google)(\*\*config)                          | Amazon-Google: 1363 × 3226 software products, 1300 matches (Leipzig; hard).                                                                                 |
+| [`dblp_acm`](#equate.evaluate.dblp_acm)(\*\*config)                               | DBLP-ACM: 2616 × 2294 publications, 2224 matches (Leipzig; easy).                                                                                           |
+| [`wdc_products`](#equate.evaluate.wdc_products)(\*[, corner_cases, unseen, ...])      | WDC Products as a two-table benchmark with its canonical train/valid/test split.                                                                            |
 
 ### Classes
 
-| [`Scores`](#equate.evaluate.Scores)(precision, recall, f1[, support])      | Precision, recall and their harmonic mean, plus what they were computed over.   |
-|------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
-| [`Split`](#equate.evaluate.Split)(train, val, test)                       | Record indices of each part; the entity ids of a part never occur in another.   |
-| [`Benchmark`](#equate.evaluate.Benchmark)(name, a, b, gold[, meta])           | Two collections and the gold correspondence between them.                       |
-| [`BenchmarkReport`](#equate.evaluate.BenchmarkReport)(rows[, meta])                 | All runs, plus a per-benchmark summary of mean ± std over seeds.                |
-| [`BenchmarkRow`](#equate.evaluate.BenchmarkRow)(benchmark, seed, precision, ...) | One (benchmark, seed) run: the scores, their context, and what they cost.       |
+| [`Scores`](#equate.evaluate.Scores)(precision, recall, f1[, support])         | Precision, recall and their harmonic mean, plus what they were computed over.   |
+|---------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| [`Split`](#equate.evaluate.Split)(train, val, test)                          | Record indices of each part; the entity ids of a part never occur in another.   |
+| [`Benchmark`](#equate.evaluate.Benchmark)(name, a, b, gold[, meta, splits, ...]) | Two collections and the gold correspondence between them.                       |
+| [`BenchmarkReport`](#equate.evaluate.BenchmarkReport)(rows[, meta])                    | All runs, plus a per-benchmark summary of mean ± std over seeds.                |
+| [`BenchmarkRow`](#equate.evaluate.BenchmarkRow)(benchmark, seed, precision, ...)    | One (benchmark, seed) run: the scores, their context, and what they cost.       |
+| [`FileStore`](#equate.evaluate.FileStore)(root)                                  | A `MutableMapping[str, bytes]` over the files under `root` (dol-style).         |
+| [`Source`](#equate.evaluate.Source)(url[, sha256])                            | A remote file: where it is, and the SHA-256 its bytes must have.                |
 
-### *class* equate.evaluate.Benchmark(name, a, b, gold, meta=dict())
+### *class* equate.evaluate.Benchmark(name, a, b, gold, meta=dict(), splits=None, pairs=None, ids=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -52,6 +66,15 @@ Two collections and the gold correspondence between them.
 
 `gold` holds `(i, j)` pairs: `a[i]` corresponds to `b[j]`. `meta` carries
 what a reader needs next to a score — at least `source` and `difficulty`.
+
+Optional, when the suite defines them:
+
+- `splits` — the suite’s canonical record split, `{'train'|'val'|'test':
+  (a_indices, b_indices)}`;
+- `pairs` — the suite’s labelled candidate pairs, `{'train'|'val'|'test':
+  ((i, j, label), ...)}` (the DeepMatcher pair-classification task);
+- `ids` — the publisher’s record ids, `{'a': [...], 'b': [...]}` (kept out of
+  `meta`, which every report copies).
 
 #### *property* base_rate *: [float](https://docs.python.org/3/builtins/functions.html#float)*
 
@@ -82,6 +105,26 @@ One row per benchmark: precision, recall, F1, seconds, base rate, difficulty.
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 One (benchmark, seed) run: the scores, their context, and what they cost.
+
+### *class* equate.evaluate.FileStore(root)
+
+Bases: [`MutableMapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping)
+
+A `MutableMapping[str, bytes]` over the files under `root` (dol-style).
+
+Keys are relative POSIX paths (`'wdc_products/80multi.zip'`) of plain names: no
+`..`/`.`/empty segment, backslash, drive or `.part` suffix, so a key cannot escape
+`root` on any platform. Writes are atomic even with concurrent writers (a unique
+temporary file in the same directory, then a rename), so a reader never sees a
+truncated file.
+
+```pycon
+>>> import tempfile
+>>> s = FileStore(tempfile.mkdtemp())
+>>> s['suite/file.csv'] = b'a,b'
+>>> list(s), s['suite/file.csv']
+(['suite/file.csv'], b'a,b')
+```
 
 ### *class* equate.evaluate.Scores(precision, recall, f1, support=None)
 
@@ -125,11 +168,33 @@ Build from precision and recall; F1 is derived, so it can never disagree.
 
 the size of the gold side (true pairs, or records for a cluster metric)
 
+### *class* equate.evaluate.Source(url, sha256=None)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+A remote file: where it is, and the SHA-256 its bytes must have.
+
+`sha256=None` skips the integrity check (for a file whose publisher re-issues it).
+
 ### *class* equate.evaluate.Split(train, val, test)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Record indices of each part; the entity ids of a part never occur in another.
+
+### equate.evaluate.abt_buy(\*\*config)
+
+Abt-Buy: 1081 × 1092 product offers, 1097 matches (Leipzig; textual, hard).
+
+* **Return type:**
+  [`Benchmark`](equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.Benchmark)
+
+### equate.evaluate.amazon_google(\*\*config)
+
+Amazon-Google: 1363 × 3226 software products, 1300 matches (Leipzig; hard).
+
+* **Return type:**
+  [`Benchmark`](equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.Benchmark)
 
 ### equate.evaluate.assert_no_leakage(entity_ids, \*parts)
 
@@ -162,7 +227,7 @@ averaged over records.
 * **Return type:**
   [`Scores`](equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
 
-### equate.evaluate.benchmark_matcher(matcher=None, , on=('toy_names',), n_seeds=3, ratios=(0.6, 0.2, 0.2), fit=None)
+### equate.evaluate.benchmark_matcher(matcher=None, , on=('toy_names',), n_seeds=3, ratios=(0.6, 0.2, 0.2), fit=None, split='auto')
 
 Score `matcher` on unseen-entity test splits of each benchmark in `on`.
 
@@ -179,6 +244,12 @@ harness train per seed: it gets the train and validation parts only (the split i
 asserted leak-free first), and the matcher it returns is scored on test. Choose a
 threshold on the validation part there ([`select_threshold()`](#equate.evaluate.select_threshold)),
 never on test.
+
+`split` chooses the parts: `'entity'` is the seeded entity split above;
+`'canonical'` uses the benchmark’s own `splits` (one run, `n_seeds` and
+`ratios` ignored; no entity-leakage assertion, since a suite’s *seen-entity*
+variants share entities across parts by design); `'auto'` (default) is canonical
+when the benchmark has `splits`, else entity.
 
 ```pycon
 >>> report = benchmark_matcher(n_seeds=2)
@@ -264,6 +335,34 @@ metric or an entity split needs.
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]
 
+### equate.evaluate.data_dir()
+
+The default root of the benchmark cache (not created until something is written).
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+
+### equate.evaluate.dblp_acm(\*\*config)
+
+DBLP-ACM: 2616 × 2294 publications, 2224 matches (Leipzig; easy).
+
+* **Return type:**
+  [`Benchmark`](equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.Benchmark)
+
+### equate.evaluate.default_store()
+
+The default benchmark cache: a [`FileStore`](#equate.evaluate.FileStore) over [`data_dir()`](#equate.evaluate.data_dir).
+
+* **Return type:**
+  [`FileStore`](equate.evaluate.store.html.md#equate.evaluate.store.FileStore)
+
+### equate.evaluate.difficulty_profile(a, b, gold)
+
+`{'linearity', 'level', 'base_rate', 'n_a', 'n_b', 'n_gold'}` for a matching task.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
 ### equate.evaluate.entity_split(entity_ids, , ratios=(0.6, 0.2, 0.2), seed=0)
 
 Split records into train / val / test by entity, never by record or pair.
@@ -283,6 +382,20 @@ True
 * **Return type:**
   [`Split`](equate.evaluate.split.html.md#equate.evaluate.split.Split)
 
+### equate.evaluate.fetch(key, source, , store=None, download=True, get=None)
+
+The bytes of `source`, from `store` if cached, else downloaded and cached.
+
+The bytes are checked against `source.sha256` **every time**, cached or not: a
+cached copy that no longer matches (corrupted on disk, or a pin updated for a
+re-issued file) is downloaded again; a download that does not match raises
+`ValueError` and nothing is written. With `download=False` a missing or stale
+key raises `FileNotFoundError` instead of reaching the network. `get(url) ->
+bytes` is the downloader (default `http_get()`).
+
+* **Return type:**
+  [`bytes`](https://docs.python.org/3/builtins/stdtypes.html#bytes)
+
 ### equate.evaluate.labels_to_pairs(labels)
 
 Every within-cluster pair `(i, j)` with `i < j`.
@@ -294,6 +407,23 @@ Every within-cluster pair `(i, j)` with `i < j`.
 
 * **Return type:**
   [`set`](https://docs.python.org/3/builtins/stdtypes.html#set)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int)]]
+
+### equate.evaluate.linearity(a, b, gold, , max_pairs=10000000)
+
+Best pairwise F1 of a single threshold on TF-IDF cosine similarity over `a × b`.
+
+Records (mappings) are compared through their joined values. Ties are cut together
+(a threshold cannot split equal scores). `0.0` when there is nothing to find.
+Every pair is scored densely (peak ~130 bytes per pair), so inputs over `max_pairs`
+pairs raise `ValueError` rather than exhaust memory; raise the limit knowingly.
+
+```pycon
+>>> round(linearity(['apple pie', 'kiwi'], ['kiwi', 'apple pie'], {(0, 1), (1, 0)}), 2)
+1.0
+```
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 ### equate.evaluate.list_benchmarks()
 
@@ -392,12 +522,39 @@ are therefore optimistic, and are not a test result.
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`Scores`](equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)]
 
+### equate.evaluate.subset_pairs(gold, rows_a, rows_b)
+
+Gold pairs with both ends in the subset, re-indexed into the subset.
+
+```pycon
+>>> sorted(subset_pairs({(0, 1), (2, 0)}, [2, 0], [0, 1]))
+[(0, 0), (1, 1)]
+```
+
+### equate.evaluate.wdc_products(, corner_cases=80, unseen=100, dev_size='large', seed=0, store=None, download=True, get=None, verify=True, profile=True)
+
+WDC Products as a two-table benchmark with its canonical train/valid/test split.
+
+The defaults pick the hardest generalization variant — 80 % corner cases, every test
+entity unseen in training (research doc 14, §7.6) — with the large development set.
+Gold pairs every `a`/`b` offer of the same product, across parts too (a seen test
+product matches its training offers); only the test-part gold is scored. Row order
+within each part is shuffled with `seed`. `meta['leakage']` counts test offers
+that also appear, identically, in train or valid. WDC’s own files have such overlap:
+hundreds in the 50 %-unseen variants, a few in valid for 0 %. A warning says so.
+
+* **Return type:**
+  [`Benchmark`](equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.Benchmark)
+
 ### Modules
 
-| [`benchmark`](equate.evaluate.benchmark.html.md#module-equate.evaluate.benchmark)   | Self-benchmarking: a benchmark registry and an honest-by-default harness.      |
-|-----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
-| [`labels`](equate.evaluate.labels.html.md#module-equate.evaluate.labels)         | Convert between the two granularities: pairs and cluster labels.               |
-| [`metrics`](equate.evaluate.metrics.html.md#module-equate.evaluate.metrics)       | Pairwise and cluster-level match metrics, dependency-light.                    |
-| [`ranking`](equate.evaluate.ranking.html.md#module-equate.evaluate.ranking)       | Threshold-free and ranking metrics, and threshold selection as its own step.   |
-| [`scores`](equate.evaluate.scores.html.md#module-equate.evaluate.scores)         | The one score type every metric returns: precision and recall, never F1 alone. |
-| [`split`](equate.evaluate.split.html.md#module-equate.evaluate.split)           | Leakage-aware splitting: split over entities, so test entities are unseen.     |
+| [`suites`](equate.evaluate.suites.html.md#module-equate.evaluate.suites)         | Loaders for the standard matching benchmarks, fetched on first use into a store.        |
+|-----------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|
+| [`benchmark`](equate.evaluate.benchmark.html.md#module-equate.evaluate.benchmark)   | Self-benchmarking: a benchmark registry and an honest-by-default harness.               |
+| [`difficulty`](equate.evaluate.difficulty.html.md#module-equate.evaluate.difficulty) | How hard is a benchmark? A measured difficulty profile to print next to a score.        |
+| [`labels`](equate.evaluate.labels.html.md#module-equate.evaluate.labels)         | Convert between the two granularities: pairs and cluster labels.                        |
+| [`metrics`](equate.evaluate.metrics.html.md#module-equate.evaluate.metrics)       | Pairwise and cluster-level match metrics, dependency-light.                             |
+| [`ranking`](equate.evaluate.ranking.html.md#module-equate.evaluate.ranking)       | Threshold-free and ranking metrics, and threshold selection as its own step.            |
+| [`scores`](equate.evaluate.scores.html.md#module-equate.evaluate.scores)         | The one score type every metric returns: precision and recall, never F1 alone.          |
+| [`split`](equate.evaluate.split.html.md#module-equate.evaluate.split)           | Leakage-aware splitting: split over entities, so test entities are unseen.              |
+| [`store`](equate.evaluate.store.html.md#module-equate.evaluate.store)           | Where downloaded benchmark data lives: a store (a `MutableMapping`), never the package. |

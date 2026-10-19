@@ -36,7 +36,7 @@ persistent `dol` store replaces the in-memory dict without touching this code.
 
 | [`explain_pair`](#equate.service.explain_pair)(left, right, score, \*[, ...])   | A structured [`Explanation`](equate.base.html.md#equate.base.Explanation) of a pair: a per-field diff.   |
 |------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| [`record_text`](#equate.service.record_text)(obj)                              | Text of an object for the default text featurizer: a record's values, joined.                                                    |
+| [`record_text`](#equate.service.record_text)(obj)                              | Text of `obj`: a mapping's non-empty values joined by spaces, else `str(obj)`.                                                   |
 | [`to_jsonable`](#equate.service.to_jsonable)(obj)                              | Convert a boundary dataclass (or nested containers of them) to plain JSON data.                                                  |
 | [`json_schemas`](#equate.service.json_schemas)()                                | JSON Schemas of the boundary types, keyed by type name.                                                                          |
 | [`mk_app`](#equate.service.mk_app)([service, cors_origins])               | Mount a [`MatchService`](#equate.service.MatchService) as an HTTP API (FastAPI, built with `qh`).                 |
@@ -347,15 +347,17 @@ Requires `pip install 'equate[service]'`.
 
 ### equate.service.record_text(obj)
 
-Text of an object for the default text featurizer: a record’s values, joined.
-
-A mapping (a JSON record) becomes its non-empty values joined by spaces, so records
-work with the TF-IDF default; anything else becomes `str(obj)`.
+Text of `obj`: a mapping’s non-empty values joined by spaces, else `str(obj)`.
 
 ```pycon
 >>> record_text({'name': 'Jon Smith', 'city': 'Paris', 'zip': None})
 'Jon Smith Paris'
+>>> record_text(42)
+'42'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### equate.service.serve(, host='127.0.0.1', port=8000, service=None)
 

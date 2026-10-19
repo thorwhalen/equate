@@ -227,17 +227,21 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/equate.completion.html">equate.completion</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../../_autosummary/equate.evaluate.html">equate.evaluate</a><input aria-label="Toggle navigation of equate.evaluate" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.evaluate.suites.html">equate.evaluate.suites</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.evaluate.benchmark.html">equate.evaluate.benchmark</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.evaluate.difficulty.html">equate.evaluate.difficulty</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.evaluate.labels.html">equate.evaluate.labels</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.evaluate.metrics.html">equate.evaluate.metrics</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.evaluate.ranking.html">equate.evaluate.ranking</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.evaluate.scores.html">equate.evaluate.scores</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.evaluate.split.html">equate.evaluate.split</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.evaluate.store.html">equate.evaluate.store</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/equate.facade.html">equate.facade</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../../_autosummary/equate.featurize.html">equate.featurize</a><input aria-label="Toggle navigation of equate.featurize" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.featurize.graph.html">equate.featurize.graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.featurize.records.html">equate.featurize.records</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.featurize.text.html">equate.featurize.text</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.featurize.tfidf.html">equate.featurize.tfidf</a></li>
 </ul>
@@ -304,6 +308,7 @@
 <span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -311,6 +316,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">FeaturizerMeta</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate._vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">l2_normalize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.featurize.records</span><span class="w"> </span><span class="kn">import</span> <span class="n">record_text</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"TfidfFeaturizer"</span><span class="p">,</span> <span class="s2">"mk_tfidf"</span><span class="p">,</span> <span class="s2">"char_ngrams"</span><span class="p">,</span> <span class="s2">"DFLT_NGRAM_RANGE"</span><span class="p">]</span>
 
@@ -328,12 +334,23 @@
 <span class="sd">    name/SKU matching) and differs from scikit-learn's per-word ``char_wb`` analyzer. A</span>
 <span class="sd">    text too short for any ``n`` in the range falls back to the padded string itself, so</span>
 <span class="sd">    tiny or empty inputs still yield a (single) feature rather than an all-zero vector.</span>
+<span class="sd">    A record (a mapping) is read through :func:`~equate.featurize.records.record_text`;</span>
+<span class="sd">    any other non-string raises ``TypeError``.</span>
 
 <span class="sd">    &gt;&gt;&gt; char_ngrams('cat', (2, 3))</span>
 <span class="sd">    [' c', 'ca', 'at', 't ', ' ca', 'cat', 'at ']</span>
 <span class="sd">    &gt;&gt;&gt; char_ngrams('', (3, 4))          # too short for any n: falls back to the padding</span>
 <span class="sd">    ['  ']</span>
 <span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">record_text</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>  <span class="c1"># a record reads as its joined values</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="c1"># never stringify silently: str(None) would make every missing value match</span>
+        <span class="c1"># every other, and a token list would be read as its repr</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"the TF-IDF featurizer reads text or records (mappings), got "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">text</span><span class="si">!r:</span><span class="s2">.60</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
     <span class="k">if</span> <span class="n">lowercase</span><span class="p">:</span>
         <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
     <span class="n">padded</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">" </span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2"> "</span>
@@ -452,7 +469,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=01ec8363"></script>
+</div><script src="../../../_static/documentation_options.js?v=a8acf705"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>

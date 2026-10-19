@@ -124,6 +124,18 @@ print(
 
 Also there: `ceaf`, `cluster_metrics` (ARI and V-measure use scikit-learn when installed, numpy otherwise; `pip install 'equate[eval]'`), `blocking_metrics`, `pr_auc`, `ranking_metrics`, `select_threshold` (pass validation data), `entity_split` and `assert_no_leakage`. Benchmarks are a registry (`equate.evaluate.benchmarks`), so a new dataset is a registered loader.
 
+The standard suites download on first use, into `~/.local/share/equate/benchmarks` (or `$EQUATE_DATA_DIR`), never into the package:
+
+```python
+from equate.evaluate import benchmark_matcher, load_benchmark
+
+ds = load_benchmark("amazon_google")      # Leipzig original: complete gold, CC BY 4.0
+ds.meta["difficulty"]                     # literature context + measured linearity
+benchmark_matcher(on=["dblp_acm", "wdc_products"]).to_markdown()
+```
+
+`abt_buy`, `amazon_google` and `dblp_acm` take `source='leipzig'` (default; the complete gold mapping) or `source='deepmatcher'` (DeepMatcher’s preprocessed tables, with its canonical labelled pairs in `ds.pairs`). `wdc_products` takes `corner_cases=80|50|20`, `unseen=0|50|100` and `dev_size='small'|'medium'|'large'`, defaulting to the hardest generalization variant, and carries WDC’s own train/valid/test split, which `benchmark_matcher` uses (`split='auto'`). Every download is checked against a pinned SHA-256. `meta['difficulty_profile']['linearity']` is the best F1 a single TF-IDF cosine threshold reaches over all pairs: near 1, the benchmark cannot tell matchers apart.
+
 ## Matching sequences: `compare='dtw'` and friends
 
 To match a collection of *sequences* (time series, token lists, DNA), compare each pair by aligning its elements, then match the collections as usual.

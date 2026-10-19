@@ -230,17 +230,21 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/equate.completion.html">equate.completion</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="_autosummary/equate.evaluate.html">equate.evaluate</a><input aria-label="Toggle navigation of equate.evaluate" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.evaluate.suites.html">equate.evaluate.suites</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.evaluate.benchmark.html">equate.evaluate.benchmark</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.evaluate.difficulty.html">equate.evaluate.difficulty</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.evaluate.labels.html">equate.evaluate.labels</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.evaluate.metrics.html">equate.evaluate.metrics</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.evaluate.ranking.html">equate.evaluate.ranking</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.evaluate.scores.html">equate.evaluate.scores</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.evaluate.split.html">equate.evaluate.split</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.evaluate.store.html">equate.evaluate.store</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/equate.facade.html">equate.facade</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="_autosummary/equate.featurize.html">equate.featurize</a><input aria-label="Toggle navigation of equate.featurize" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.featurize.graph.html">equate.featurize.graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.featurize.records.html">equate.featurize.records</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.featurize.text.html">equate.featurize.text</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.featurize.tfidf.html">equate.featurize.tfidf</a></li>
 </ul>
@@ -414,6 +418,15 @@ At the time of writing this, we’ve implemented:
 </pre></div>
 </div>
 <p>Also there: <code class="docutils literal notranslate"><span class="pre">ceaf</span></code>, <code class="docutils literal notranslate"><span class="pre">cluster_metrics</span></code> (ARI and V-measure use scikit-learn when installed, numpy otherwise; <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'equate[eval]'</span></code>), <code class="docutils literal notranslate"><span class="pre">blocking_metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">pr_auc</span></code>, <code class="docutils literal notranslate"><span class="pre">ranking_metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">select_threshold</span></code> (pass validation data), <code class="docutils literal notranslate"><span class="pre">entity_split</span></code> and <code class="docutils literal notranslate"><span class="pre">assert_no_leakage</span></code>. Benchmarks are a registry (<code class="docutils literal notranslate"><span class="pre">equate.evaluate.benchmarks</span></code>), so a new dataset is a registered loader.</p>
+<p>The standard suites download on first use, into <code class="docutils literal notranslate"><span class="pre">~/.local/share/equate/benchmarks</span></code> (or <code class="docutils literal notranslate"><span class="pre">$EQUATE_DATA_DIR</span></code>), never into the package:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">equate.evaluate</span><span class="w"> </span><span class="kn">import</span> <span class="n">benchmark_matcher</span><span class="p">,</span> <span class="n">load_benchmark</span>
+
+<span class="n">ds</span> <span class="o">=</span> <span class="n">load_benchmark</span><span class="p">(</span><span class="s2">"amazon_google"</span><span class="p">)</span>      <span class="c1"># Leipzig original: complete gold, CC BY 4.0</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">"difficulty"</span><span class="p">]</span>                     <span class="c1"># literature context + measured linearity</span>
+<span class="n">benchmark_matcher</span><span class="p">(</span><span class="n">on</span><span class="o">=</span><span class="p">[</span><span class="s2">"dblp_acm"</span><span class="p">,</span> <span class="s2">"wdc_products"</span><span class="p">])</span><span class="o">.</span><span class="n">to_markdown</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">abt_buy</span></code>, <code class="docutils literal notranslate"><span class="pre">amazon_google</span></code> and <code class="docutils literal notranslate"><span class="pre">dblp_acm</span></code> take <code class="docutils literal notranslate"><span class="pre">source='leipzig'</span></code> (default; the complete gold mapping) or <code class="docutils literal notranslate"><span class="pre">source='deepmatcher'</span></code> (DeepMatcher’s preprocessed tables, with its canonical labelled pairs in <code class="docutils literal notranslate"><span class="pre">ds.pairs</span></code>). <code class="docutils literal notranslate"><span class="pre">wdc_products</span></code> takes <code class="docutils literal notranslate"><span class="pre">corner_cases=80|50|20</span></code>, <code class="docutils literal notranslate"><span class="pre">unseen=0|50|100</span></code> and <code class="docutils literal notranslate"><span class="pre">dev_size='small'|'medium'|'large'</span></code>, defaulting to the hardest generalization variant, and carries WDC’s own train/valid/test split, which <code class="docutils literal notranslate"><span class="pre">benchmark_matcher</span></code> uses (<code class="docutils literal notranslate"><span class="pre">split='auto'</span></code>). Every download is checked against a pinned SHA-256. <code class="docutils literal notranslate"><span class="pre">meta['difficulty_profile']['linearity']</span></code> is the best F1 a single TF-IDF cosine threshold reaches over all pairs: near 1, the benchmark cannot tell matchers apart.</p>
 </section>
 <section id="matching-sequences-compare-dtw-and-friends">
 <h2>Matching sequences: <code class="docutils literal notranslate"><span class="pre">compare='dtw'</span></code> and friends<a class="headerlink" href="#matching-sequences-compare-dtw-and-friends" title="Link to this heading">¶</a></h2>
@@ -746,7 +759,7 @@ Let’s try two…</p>
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-19 10:59 UTC from <a href="https://github.com/thorwhalen/equate/commit/4fcad0245948ffe341e208e0777a62705dc697c7">4fcad02</a> (master) · equate 0.0.18 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-19 11:34 UTC from <a href="https://github.com/thorwhalen/equate/commit/6078be5b18142d884cb259560809934c6ab6275f">6078be5</a> (master) · equate 0.0.19 · <a href="about-this-build.html">about this build</a></p>
         </article>
       </div>
       <footer>
@@ -782,7 +795,7 @@ Let’s try two…</p>
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=01ec8363"></script>
+</div><script src="_static/documentation_options.js?v=a8acf705"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

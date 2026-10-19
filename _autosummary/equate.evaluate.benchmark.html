@@ -7,7 +7,7 @@
 <link rel="alternate" type="text/markdown" href="equate.evaluate.benchmark.html.md">
 <link rel="describedby" href="../llms.txt" type="text/markdown">
 <link rel="alternate" type="text/markdown" href="equate.evaluate.benchmark.html.md">
-<link rel="describedby" href="llms.txt"><link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="equate.evaluate.labels" href="equate.evaluate.labels.html"><link rel="prev" title="equate.evaluate" href="equate.evaluate.html">
+<link rel="describedby" href="llms.txt"><link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="equate.evaluate.difficulty" href="equate.evaluate.difficulty.html"><link rel="prev" title="equate.evaluate.suites" href="equate.evaluate.suites.html">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
         <title>equate.evaluate.benchmark - equate</title>
@@ -230,17 +230,21 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="equate.completion.html">equate.completion</a></li>
 <li class="toctree-l3 current has-children"><a class="reference internal" href="equate.evaluate.html">equate.evaluate</a><input aria-label="Toggle navigation of equate.evaluate" checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="equate.evaluate.suites.html">equate.evaluate.suites</a></li>
 <li class="toctree-l4 current current-page"><a class="current reference internal" href="#">equate.evaluate.benchmark</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.evaluate.difficulty.html">equate.evaluate.difficulty</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.evaluate.labels.html">equate.evaluate.labels</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.evaluate.metrics.html">equate.evaluate.metrics</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.evaluate.ranking.html">equate.evaluate.ranking</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.evaluate.scores.html">equate.evaluate.scores</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.evaluate.split.html">equate.evaluate.split</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.evaluate.store.html">equate.evaluate.store</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="equate.facade.html">equate.facade</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="equate.featurize.html">equate.featurize</a><input aria-label="Toggle navigation of equate.featurize" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="equate.featurize.graph.html">equate.featurize.graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.featurize.records.html">equate.featurize.records</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.featurize.text.html">equate.featurize.text</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.featurize.tfidf.html">equate.featurize.tfidf</a></li>
 </ul>
@@ -319,9 +323,13 @@ a two-table matching: every unmatched record is a singleton there, and singleton
 well under B³ whatever the matcher did — an empty prediction would read ~0.75.</p>
 <p>Benchmarks are a registry, so adding one is registering a loader, not editing the core.
 The built-in <code class="docutils literal notranslate"><span class="pre">toy_names</span></code> is generated (no download, deterministic): enough to exercise a
-matcher and this harness in CI. Loaders for the standard suites (Abt-Buy, Amazon-Google,
-DBLP-ACM, WDC Products) are not shipped yet; they will register here as lazily-fetched
-optional benchmarks (equate#15).</p>
+matcher and this harness in CI. The standard suites — <code class="docutils literal notranslate"><span class="pre">abt_buy</span></code>, <code class="docutils literal notranslate"><span class="pre">amazon_google</span></code>,
+<code class="docutils literal notranslate"><span class="pre">dblp_acm</span></code> and <code class="docutils literal notranslate"><span class="pre">wdc_products</span></code> — are registered by <a class="reference internal" href="equate.evaluate.suites.html#module-equate.evaluate.suites" title="equate.evaluate.suites"><code class="xref py py-mod docutils literal notranslate"><span class="pre">equate.evaluate.suites</span></code></a> and
+download on first use into a store (<a class="reference internal" href="equate.evaluate.store.html#module-equate.evaluate.store" title="equate.evaluate.store"><code class="xref py py-mod docutils literal notranslate"><span class="pre">equate.evaluate.store</span></code></a>), never the package.</p>
+<p>A benchmark that ships its own <strong>canonical split</strong> (WDC Products’ unseen-entity test sets)
+carries it in <code class="docutils literal notranslate"><span class="pre">Benchmark.splits</span></code>, and <a class="reference internal" href="#equate.evaluate.benchmark.benchmark_matcher" title="equate.evaluate.benchmark.benchmark_matcher"><code class="xref py py-func docutils literal notranslate"><span class="pre">benchmark_matcher()</span></code></a> uses it by default
+(<code class="docutils literal notranslate"><span class="pre">split='auto'</span></code>): the suite’s designers chose those test sets to control difficulty, and
+published numbers are measured on them.</p>
 <p class="rubric">Module Attributes</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
@@ -345,6 +353,9 @@ optional benchmarks (equate#15).</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.benchmark.load_benchmark" title="equate.evaluate.benchmark.load_benchmark"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_benchmark</span></code></a>(name, **config)</p></td>
 <td><p>Build a registered benchmark (<code class="docutils literal notranslate"><span class="pre">config</span></code> goes to its loader).</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.benchmark.subset_pairs" title="equate.evaluate.benchmark.subset_pairs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subset_pairs</span></code></a>(gold, rows_a, rows_b)</p></td>
+<td><p>Gold pairs with both ends in the subset, re-indexed into the subset.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -352,7 +363,7 @@ optional benchmarks (equate#15).</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.benchmark.Benchmark" title="equate.evaluate.benchmark.Benchmark"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Benchmark</span></code></a>(name, a, b, gold[, meta])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.evaluate.benchmark.Benchmark" title="equate.evaluate.benchmark.Benchmark"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Benchmark</span></code></a>(name, a, b, gold[, meta, splits, ...])</p></td>
 <td><p>Two collections and the gold correspondence between them.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#equate.evaluate.benchmark.BenchmarkReport" title="equate.evaluate.benchmark.BenchmarkReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BenchmarkReport</span></code></a>(rows[, meta])</p></td>
@@ -366,11 +377,20 @@ optional benchmarks (equate#15).</p>
 </div>
 <dl class="py class">
 <dt class="sig sig-object py" id="equate.evaluate.benchmark.Benchmark">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.evaluate.benchmark.</span></span><span class="sig-name descname"><span class="pre">Benchmark</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">dict()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/benchmark.html#Benchmark"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.benchmark.Benchmark" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.evaluate.benchmark.</span></span><span class="sig-name descname"><span class="pre">Benchmark</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">dict()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pairs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/benchmark.html#Benchmark"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.benchmark.Benchmark" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Two collections and the gold correspondence between them.</p>
 <p><code class="docutils literal notranslate"><span class="pre">gold</span></code> holds <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> pairs: <code class="docutils literal notranslate"><span class="pre">a[i]</span></code> corresponds to <code class="docutils literal notranslate"><span class="pre">b[j]</span></code>. <code class="docutils literal notranslate"><span class="pre">meta</span></code> carries
 what a reader needs next to a score — at least <code class="docutils literal notranslate"><span class="pre">source</span></code> and <code class="docutils literal notranslate"><span class="pre">difficulty</span></code>.</p>
+<p>Optional, when the suite defines them:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">splits</span></code> — the suite’s canonical record split, <code class="docutils literal notranslate"><span class="pre">{'train'|'val'|'test':</span>
+<span class="pre">(a_indices,</span> <span class="pre">b_indices)}</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pairs</span></code> — the suite’s labelled candidate pairs, <code class="docutils literal notranslate"><span class="pre">{'train'|'val'|'test':</span>
+<span class="pre">((i,</span> <span class="pre">j,</span> <span class="pre">label),</span> <span class="pre">...)}</span></code> (the DeepMatcher pair-classification task);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ids</span></code> — the publisher’s record ids, <code class="docutils literal notranslate"><span class="pre">{'a':</span> <span class="pre">[...],</span> <span class="pre">'b':</span> <span class="pre">[...]}</span></code> (kept out of
+<code class="docutils literal notranslate"><span class="pre">meta</span></code>, which every report copies).</p></li>
+</ul>
 <dl class="field-list simple">
 </dl>
 <dl class="py property">
@@ -423,7 +443,7 @@ what a reader needs next to a score — at least <code class="docutils literal n
 
 <dl class="py function">
 <dt class="sig sig-object py" id="equate.evaluate.benchmark.benchmark_matcher">
-<span class="sig-prename descclassname"><span class="pre">equate.evaluate.benchmark.</span></span><span class="sig-name descname"><span class="pre">benchmark_matcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matcher</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('toy_names',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ratios</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.6,</span> <span class="pre">0.2,</span> <span class="pre">0.2)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/benchmark.html#benchmark_matcher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.benchmark.benchmark_matcher" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">equate.evaluate.benchmark.</span></span><span class="sig-name descname"><span class="pre">benchmark_matcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matcher</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('toy_names',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ratios</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.6,</span> <span class="pre">0.2,</span> <span class="pre">0.2)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/benchmark.html#benchmark_matcher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.benchmark.benchmark_matcher" title="Link to this definition">¶</a></dt>
 <dd><p>Score <code class="docutils literal notranslate"><span class="pre">matcher</span></code> on unseen-entity test splits of each benchmark in <code class="docutils literal notranslate"><span class="pre">on</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">matcher(a,</span> <span class="pre">b)</span></code> returns <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> pairs (a <a class="reference internal" href="equate.base.html#equate.base.Matching" title="equate.base.Matching"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matching</span></code></a>
 qualifies); the default is <code class="xref py py-func docutils literal notranslate"><span class="pre">equate.match()</span></code>. <code class="docutils literal notranslate"><span class="pre">on</span></code> is a benchmark name, a
@@ -437,6 +457,11 @@ harness train per seed: it gets the train and validation parts only (the split i
 asserted leak-free first), and the matcher it returns is scored on test. Choose a
 threshold on the validation part there (<a class="reference internal" href="equate.evaluate.html#equate.evaluate.select_threshold" title="equate.evaluate.select_threshold"><code class="xref py py-func docutils literal notranslate"><span class="pre">select_threshold()</span></code></a>),
 never on test.</p>
+<p><code class="docutils literal notranslate"><span class="pre">split</span></code> chooses the parts: <code class="docutils literal notranslate"><span class="pre">'entity'</span></code> is the seeded entity split above;
+<code class="docutils literal notranslate"><span class="pre">'canonical'</span></code> uses the benchmark’s own <code class="docutils literal notranslate"><span class="pre">splits</span></code> (one run, <code class="docutils literal notranslate"><span class="pre">n_seeds</span></code> and
+<code class="docutils literal notranslate"><span class="pre">ratios</span></code> ignored; no entity-leakage assertion, since a suite’s <em>seen-entity</em>
+variants share entities across parts by design); <code class="docutils literal notranslate"><span class="pre">'auto'</span></code> (default) is canonical
+when the benchmark has <code class="docutils literal notranslate"><span class="pre">splits</span></code>, else entity.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">report</span> <span class="o">=</span> <span class="n">benchmark_matcher</span><span class="p">(</span><span class="n">n_seeds</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">summary</span><span class="p">()[</span><span class="s1">'toy_names'</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="p">[</span><span class="s1">'f1'</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="s1">'n_seeds'</span><span class="p">]</span>
@@ -478,6 +503,16 @@ never on test.</p>
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.evaluate.benchmark.subset_pairs">
+<span class="sig-prename descclassname"><span class="pre">equate.evaluate.benchmark.</span></span><span class="sig-name descname"><span class="pre">subset_pairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rows_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rows_b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/benchmark.html#subset_pairs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.benchmark.subset_pairs" title="Link to this definition">¶</a></dt>
+<dd><p>Gold pairs with both ends in the subset, re-indexed into the subset.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">subset_pairs</span><span class="p">({(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)},</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
+<span class="go">[(0, 0), (1, 1)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </section>
 
         </article>
@@ -485,23 +520,23 @@ never on test.</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="equate.evaluate.labels.html">
+          <a class="next-page" href="equate.evaluate.difficulty.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">equate.evaluate.labels</div>
+                <div class="title">equate.evaluate.difficulty</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="equate.evaluate.html">
+          <a class="prev-page" href="equate.evaluate.suites.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">equate.evaluate</div>
+                <div class="title">equate.evaluate.suites</div>
                 
               </div>
             </a>
@@ -546,6 +581,7 @@ never on test.</p>
 <li><a class="reference internal" href="#equate.evaluate.benchmark.benchmarks"><code class="docutils literal notranslate"><span class="pre">benchmarks</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.benchmark.list_benchmarks"><code class="docutils literal notranslate"><span class="pre">list_benchmarks()</span></code></a></li>
 <li><a class="reference internal" href="#equate.evaluate.benchmark.load_benchmark"><code class="docutils literal notranslate"><span class="pre">load_benchmark()</span></code></a></li>
+<li><a class="reference internal" href="#equate.evaluate.benchmark.subset_pairs"><code class="docutils literal notranslate"><span class="pre">subset_pairs()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -557,7 +593,7 @@ never on test.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=01ec8363"></script>
+</div><script src="../_static/documentation_options.js?v=a8acf705"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

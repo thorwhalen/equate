@@ -1,0 +1,21 @@
+equate.evaluate.suites
+======================
+
+.. automodule:: equate.evaluate.suites
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      MAGELLAN_SOURCES
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      abt_buy
+      amazon_google
+      dblp_acm
+      wdc_products
+   
