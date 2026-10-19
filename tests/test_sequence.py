@@ -446,7 +446,7 @@ def test_subsequence_dtw_dtaidistance_backend_agrees():
         ours = subsequence_dtw_alignment(q, s)
         theirs = subsequence_dtw_alignment(q, s, backend="dtaidistance")
         assert theirs.score == pytest.approx(ours.score)
-        assert theirs.path[-1] == ours.path[-1]
+        assert theirs.path == ours.path
     assert subsequence_dtw([5, 6, 7], [0, 0, 5, 6, 7, 0], backend="dtaidistance") == 0.0
     with pytest.raises(ValueError, match="local cost"):
         subsequence_dtw([1], [1, 2], backend="dtaidistance", local_cost=lambda x, y: 0)

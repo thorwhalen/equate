@@ -152,8 +152,9 @@ format = []
 
 [tool.wads.ci.install]
 # the service tests (HTTP surface, served UI) need qh/fastapi; without this extra CI
-# would skip them (pytest.importorskip) and leave the surface untested
-extras = ["service"]
+# would skip them (pytest.importorskip) and leave the surface untested; `ot` likewise
+# for the Gromov-Wasserstein / soft-matching tests
+extras = ["service", "ot"]
 
 [tool.wads.ci.env]
 required_envvars = []

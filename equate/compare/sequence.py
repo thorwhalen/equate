@@ -394,18 +394,25 @@ def _soft_dtw_backward(C, R, gamma):
     Rp[n + 1, m + 1] = R[n, m]
     E = np.zeros((n + 2, m + 2))
     E[n + 1, m + 1] = 1.0
-    with np.errstate(over="ignore", invalid="ignore"):
-        for j in range(m, 0, -1):
-            for i in range(n, 0, -1):
-                a = np.exp((Rp[i + 1, j] - Rp[i, j] - D[i + 1, j]) / gamma)
-                b = np.exp((Rp[i, j + 1] - Rp[i, j] - D[i, j + 1]) / gamma)
-                c = np.exp((Rp[i + 1, j + 1] - Rp[i, j] - D[i + 1, j + 1]) / gamma)
-                E[i, j] = (
-                    E[i + 1, j] * np.nan_to_num(a)
-                    + E[i, j + 1] * np.nan_to_num(b)
-                    + E[i + 1, j + 1] * np.nan_to_num(c)
-                )
-    return E[1 : n + 1, 1 : m + 1]
+    Rl, Dl, El = (
+        Rp.tolist(),
+        D.tolist(),
+        E.tolist(),
+    )  # scalar math: far faster than numpy
+
+    def weight(r_next, r_here, d_next):
+        x = (r_next - r_here - d_next) / gamma  # always <= 0: no overflow
+        return math.exp(x) if x == x and x != -math.inf else 0.0
+
+    for j in range(m, 0, -1):
+        for i in range(n, 0, -1):
+            here = Rl[i][j]
+            El[i][j] = (
+                El[i + 1][j] * weight(Rl[i + 1][j], here, Dl[i + 1][j])
+                + El[i][j + 1] * weight(Rl[i][j + 1], here, Dl[i][j + 1])
+                + El[i + 1][j + 1] * weight(Rl[i + 1][j + 1], here, Dl[i + 1][j + 1])
+            )
+    return np.array(El)[1 : n + 1, 1 : m + 1]
 
 
 def soft_dtw_alignment(a, b, *, gamma=DFLT_SOFT_DTW_GAMMA):

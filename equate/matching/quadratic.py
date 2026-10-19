@@ -251,10 +251,9 @@ def _attribute_agreement(g1, g2, attribute_similarity):
     """
     shape = (g1.n, g2.n)
     if attribute_similarity is None:
-        l1, l2 = (
-            np.asarray(g1.labels, dtype=object),
-            np.asarray(g2.labels, dtype=object),
-        )
+        codes = {}  # labels -> integer codes: a tuple label stays one label
+        l1 = np.array([codes.setdefault(v, len(codes)) for v in g1.labels], dtype=int)
+        l2 = np.array([codes.setdefault(v, len(codes)) for v in g2.labels], dtype=int)
         return (l1[:, None] == l2[None, :]).astype(float).reshape(shape)
     if callable(attribute_similarity):
         N = np.array(
@@ -385,8 +384,12 @@ def gw(
     scaled to ``[0, 1]``). With a ``node_affinity`` (or ``seeds``) it is *fused* GW: a
     node-feature cost ``1 - affinity/max`` weighted ``1 - alpha`` against the structure
     (``alpha``). ``.plan`` holds the transport plan, the soft correspondence; ``extract``
-    hardens it. ``**gw_params`` go to POT (``max_iter``, ``tol_rel``, ...).
+    hardens it. ``**gw_params`` go to POT (``max_iter``, ``tol_rel``, ...); options that
+    change POT's return type (``log``) are refused.
     """
+    if gw_params.get("log"):
+        raise ValueError("gw: log=True changes POT's return value; it is not supported")
+    gw_params.pop("log", None)
     ot = require("ot", extra="ot", purpose="Gromov-Wasserstein graph alignment")
     g1, g2 = as_graph(G1, label=label), as_graph(G2, label=label)
     seed_pairs = _seed_indices(g1, g2, seeds)

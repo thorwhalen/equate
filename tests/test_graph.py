@@ -460,3 +460,52 @@ def test_new_quadratic_matchers_are_registered():
     from equate.matching import quadratic_matchers
 
     assert {"isorank", "final", "rrwm", "gw", "regal", "cone"} <= set(quadratic_matchers.names())
+
+
+# --- regressions from the adversarial review of #18 ----------------------------------
+
+
+@pytest.mark.parametrize("how", ["final", "regal", "cone"])
+def test_tuple_labels_are_single_labels(how):
+    from equate import align
+
+    path = {0: [1], 1: [0, 2], 2: [1]}
+    m = align(path, path, how=how, label=lambda v: (v % 2, "x"))
+    assert len(m.pairs) == 3
+
+
+def test_cone_scores_takes_label():
+    from equate.matching.embedding_align import cone_scores
+
+    g = {"a": ["b"], "b": ["a"]}
+    kinds = {"a": "x", "b": "y"}
+    assert cone_scores(g, g, label=kinds.get).shape == (2, 2)
+
+
+def test_regal_memory_is_n1_by_n2_not_cubed():
+    import tracemalloc
+
+    from equate.matching.embedding_align import regal_scores
+
+    A, B, _ = _permuted_er(n=400, p=0.02)
+    tracemalloc.start()
+    regal_scores(A, B)
+    _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    assert peak < 60e6  # was ~170 MB at n=400 (an n1 x n2 x dim array)
+
+
+def test_gw_refuses_log():
+    pytest.importorskip("ot")
+    from equate import align
+
+    with pytest.raises(ValueError, match="log"):
+        align({0: [1], 1: [0]}, {0: [1], 1: [0]}, how="gw", log=True)
+
+
+def test_sinkhorn_warns_when_it_cannot_converge():
+    from equate.matching.embedding_align import sinkhorn_plan
+
+    rng = _np.random.default_rng(0)
+    with pytest.warns(RuntimeWarning, match="did not converge"):
+        sinkhorn_plan(rng.random((30, 30)), reg=1e-4, max_iter=3)

@@ -19,6 +19,7 @@ how='regal')`` or ``how='cone'``.
 """
 
 import math
+import warnings
 
 import numpy as np
 from scipy.sparse.csgraph import dijkstra
@@ -39,6 +40,10 @@ DFLT_CONE_DIM = 64
 DFLT_CONE_WINDOW = 10  # NetMF context window
 DFLT_CONE_ITER = 30  # Procrustes / OT alternations
 DFLT_SINKHORN_REG = 0.05
+DFLT_SINKHORN_TOL = 1e-6  # relative violation of the row marginals
+_CHECK_EVERY = 10  # Sinkhorn rounds between convergence checks
+DFLT_SINKHORN_ITER = 1000
+DFLT_INNER_TOL = 1e-4  # CONE's solves: its plan is a heuristic's, marginals to ~1e-4
 
 
 # --- REGAL / xNetMF ---------------------------------------------------------------------
@@ -86,7 +91,8 @@ def _xnetmf_embed(
             for A in As
         ]
     )
-    labels = np.asarray(labels, dtype=object)
+    codes = {}  # labels -> integer codes: a tuple label stays one label
+    labels = np.array([codes.setdefault(v, len(codes)) for v in labels], dtype=int)
     n = F.shape[0]
     p = min(n, max(1, int(DFLT_LANDMARK_FACTOR * math.log2(max(n, 2)))))
     if dim is not None:
@@ -137,8 +143,7 @@ def regal_scores(
         seed=seed,
     )
     Y1, Y2 = Y[: g1.n], Y[g1.n :]
-    dist = np.sqrt(np.maximum(((Y1[:, None, :] - Y2[None, :, :]) ** 2).sum(axis=2), 0))
-    S = np.exp(-dist)
+    S = np.exp(-np.sqrt(_pairwise_sq(Y1, Y2)))  # n1 x n2, never n1 x n2 x dim
     if node_affinity is not None:
         S = S * _prior(g1, g2, node_affinity)
     return S
@@ -164,35 +169,61 @@ def regal(
 # --- CONE-Align -------------------------------------------------------------------------
 
 
-def sinkhorn_plan(cost, *, reg=DFLT_SINKHORN_REG, max_iter=500, tol=1e-9):
+def sinkhorn_plan(
+    cost, *, reg=DFLT_SINKHORN_REG, max_iter=DFLT_SINKHORN_ITER, tol=DFLT_SINKHORN_TOL
+):
     """Entropic optimal-transport plan between uniform marginals (log-domain Sinkhorn).
 
     Pure numpy (no POT): the plan ``P`` minimizes ``<P, cost> - reg * H(P)`` with rows
-    summing to ``1/n`` and columns to ``1/m``.
+    summing to ``1/n`` and columns to ``1/m``. ``reg`` is relative to the cost's spread,
+    so the same value works at any cost scale. Warns if ``max_iter`` runs out first.
 
     >>> P = sinkhorn_plan(np.array([[0.0, 1.0], [1.0, 0.0]]), reg=0.01)
     >>> P.round(3).tolist()
     [[0.5, 0.0], [0.0, 0.5]]
     """
+    return _sinkhorn(cost, reg=reg, max_iter=max_iter, tol=tol)[0]
+
+
+def _sinkhorn(
+    cost,
+    *,
+    reg,
+    max_iter=DFLT_SINKHORN_ITER,
+    tol=DFLT_SINKHORN_TOL,
+    warm=None,
+    warn=True,
+):
+    """``(plan, potentials)``; ``warm`` = potentials of a previous, similar problem."""
     cost = np.asarray(cost, dtype=float)
     n, m = cost.shape
     if n == 0 or m == 0:
-        return np.zeros((n, m))
+        return np.zeros((n, m)), None
     if reg <= 0:
         raise ValueError(f"reg must be > 0, got {reg!r}")
     scale = cost.max() - cost.min() or 1.0
-    K = -(cost - cost.min()) / (
-        reg * scale
-    )  # scale-free: reg is relative to the spread
+    K = -(cost - cost.min()) / (reg * scale)
     log_a, log_b = np.full(n, -math.log(n)), np.full(m, -math.log(m))
-    u, v = np.zeros(n), np.zeros(m)
-    for _ in range(max_iter):
-        u_prev = u
+    u, v = warm if warm is not None else (np.zeros(n), np.zeros(m))
+    for it in range(1, max_iter + 1):
         u = log_a - logsumexp(K + v[None, :], axis=1)
-        v = log_b - logsumexp(K + u[:, None], axis=0)
-        if np.abs(u - u_prev).max() < tol:
-            break
-    return np.exp(K + u[:, None] + v[None, :])
+        v = log_b - logsumexp(K + u[:, None], axis=0)  # columns now match exactly
+        # converged when the rows match too (relative marginal violation), checked
+        # every few rounds: the standard criterion, robust on near-permutation plans
+        if it % _CHECK_EVERY == 0 or it == max_iter:
+            rows = logsumexp(K + u[:, None] + v[None, :], axis=1)
+            if np.abs(np.expm1(rows - log_a)).max() < tol:
+                break
+    else:
+        if not warn:
+            return np.exp(K + u[:, None] + v[None, :]), (u, v)
+        warnings.warn(
+            f"Sinkhorn did not converge in max_iter={max_iter} iterations; raise reg "
+            f"or max_iter",
+            RuntimeWarning,
+            stacklevel=3,
+        )
+    return np.exp(K + u[:, None] + v[None, :]), (u, v)
 
 
 def _netmf(A, dim, window):
@@ -244,6 +275,8 @@ def cone_scores(
     Procrustes on the current correspondence) and a correspondence ``P`` (entropic OT,
     ``reg``, on the distances after rotation). It starts from ``node_affinity`` when given,
     else from REGAL's structural similarity. Seed rows/columns are pinned in every step.
+    The plan's marginals are accurate to about ``1e-4`` (relative): enough to rank and
+    extract; :func:`sinkhorn_plan` is the place for a precise plan.
     """
     g1, g2 = as_graph(G1, label=label), as_graph(G2, label=label)
     if g1.n == 0 or g2.n == 0:
@@ -264,12 +297,18 @@ def cone_scores(
     if node_affinity is not None:
         start = _prior(g1, g2, node_affinity)
     else:
-        start = regal_scores(g1, g2, label=label)
-    P = sinkhorn_plan(pin(1.0 - start / (start.max() or 1.0)), reg=reg)
-    for _ in range(n_iter):
+        start = regal_scores(g1, g2)  # g1, g2 already carry their labels
+    rough = dict(reg=reg, tol=DFLT_INNER_TOL, warn=False)
+    P, _ = _sinkhorn(pin(1.0 - start / (start.max() or 1.0)), **rough)
+    warm = None
+    for round_ in range(n_iter):
         U, _, Vt = np.linalg.svd(Y1.T @ P @ Y2)
         Q = U @ Vt  # rotation of G1's space onto G2's
-        P = sinkhorn_plan(pin(_pairwise_sq(Y1 @ Q, Y2)), reg=reg)
+        cost = pin(_pairwise_sq(Y1 @ Q, Y2))
+        # consecutive problems differ little: warm-starting the potentials saves most of
+        # Sinkhorn's iterations; only the last solve warns if it misses the tolerance
+        last = round_ == n_iter - 1
+        P, warm = _sinkhorn(cost, warm=warm, **{**rough, "warn": last})
     return P
 
 
