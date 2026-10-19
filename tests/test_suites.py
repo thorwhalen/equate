@@ -355,3 +355,32 @@ def test_single_run_report_prints_no_fake_spread():
     ds = load_benchmark("wdc_products", store=wdc_store(), download=False, verify=False)
     table = benchmark_matcher(match, on=[ds]).to_markdown()
     assert "±" not in table.splitlines()[-1]
+
+
+def test_file_store_survives_windows_sharing_violations(tmp_path, monkeypatch):
+    """On Windows, os.replace onto a path another writer is replacing raises
+    PermissionError: retried, and if the file exists a concurrent writer won."""
+    from equate.evaluate import store as st
+
+    real, calls = os.replace, []
+
+    def flaky(src, dst):
+        calls.append(dst)
+        if len(calls) < 3:
+            raise PermissionError("sharing violation")
+        return real(src, dst)
+
+    monkeypatch.setattr(st.time, "sleep", lambda s: None)
+    s = FileStore(tmp_path)
+    monkeypatch.setattr(st.os, "replace", flaky)
+    s["k/x"] = b"1"
+    assert s["k/x"] == b"1" and len(calls) == 3
+
+    def always(src, dst):
+        raise PermissionError("sharing violation")
+
+    monkeypatch.setattr(st.os, "replace", always)
+    s["k/x"] = b"2"  # the file exists: a concurrent writer won, this write is dropped
+    assert s["k/x"] == b"1" and not list(tmp_path.rglob("*.part"))
+    with pytest.raises(PermissionError):
+        s["k/new"] = b"3"  # nothing there: a real failure

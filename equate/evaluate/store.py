@@ -16,6 +16,7 @@ import hashlib
 import logging
 import os
 import tempfile
+import time
 from collections.abc import Callable, Iterator, MutableMapping
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -27,6 +28,7 @@ logger = logging.getLogger("equate.benchmarks")
 
 DFLT_TIMEOUT = 120  # seconds, per download
 _PART = ".part"  # suffix of in-progress writes (never a key)
+_REPLACE_ATTEMPTS = 8  # os.replace retries (Windows sharing violations), ~1.3 s at most
 _USER_AGENT = "equate-benchmarks (https://github.com/thorwhalen/equate)"
 
 
@@ -99,7 +101,7 @@ class FileStore(MutableMapping):
         try:
             with os.fdopen(fd, "wb") as f:
                 f.write(value)
-            os.replace(tmp, path)
+            _replace(tmp, path)
         except BaseException:
             Path(tmp).unlink(missing_ok=True)
             raise
@@ -128,6 +130,27 @@ class FileStore(MutableMapping):
 
     def __repr__(self):
         return f"{type(self).__name__}({str(self.root)!r})"
+
+
+def _replace(tmp, path, *, attempts=_REPLACE_ATTEMPTS):
+    """``os.replace`` that tolerates Windows' transient sharing violations.
+
+    On Windows, replacing a file while another writer is replacing (or a reader holds)
+    the same path raises ``PermissionError``. Retry with a short backoff; if it still
+    fails while the file exists, a concurrent writer won — a valid last-writer-wins
+    order — so drop this write rather than fail.
+    """
+    for k in range(attempts):
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError:
+            if k == attempts - 1:
+                if Path(path).is_file():
+                    Path(tmp).unlink(missing_ok=True)
+                    return
+                raise
+            time.sleep(0.005 * 2**k)
 
 
 def default_store() -> FileStore:
