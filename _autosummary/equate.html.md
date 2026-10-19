@@ -21,4 +21,5 @@ foundation contracts live in [`equate.base`](equate.base.html.md#module-equate.b
 | [`interactive`](equate.interactive.html.md#module-equate.interactive) | The interactive stage: human-in-the-loop review and re-optimization.                |
 | [`matching`](equate.matching.html.md#module-equate.matching)       | The match stage (③): turn a score matrix into a correspondence.                     |
 | [`registry`](equate.registry.html.md#module-equate.registry)       | A tiny name-keyed strategy registry with lazy factories (open-closed dispatch).     |
+| [`service`](equate.service.html.md#module-equate.service)         | The service layer: equate's matching core as JSON-in/JSON-out operations.           |
 | [`util`](equate.util.html.md#module-equate.util)               | Utils for equate.                                                                   |

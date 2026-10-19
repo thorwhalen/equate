@@ -1,4 +1,4 @@
-> built 2026-10-14 07:23 UTC from 26dfabb (master) · equate 0.0.17. Details: build_info.json
+> built 2026-10-19 10:59 UTC from 4fcad02 (master) · equate 0.0.18. Details: build_info.json
 
 # index.html.md
 
@@ -141,6 +141,23 @@ dict(match(A, B, compare="dtw"))  # {0: 1, 1: 0}
 ```
 
 The comparators are `'dtw'` (exact DTW in a Sakoe-Chiba band), `'subsequence_dtw'`, `'soft_dtw'`, `'needleman_wunsch'` and `'smith_waterman'`. A *distance* comparator such as `'dtw'` is minimized automatically, and `sense=` overrides that. `equate.compare.sequence.dtw.align(a, b)` returns an `Alignment(score, path)` with the element-level correspondence. Faster engines are optional: `pip install 'equate[timeseries]'` / `'equate[bio]'`, then pass `backend=`.
+
+## Reviewing matches: the HTTP service and the review UI
+
+`equate.service.MatchService` exposes matching as JSON-in/JSON-out operations: a stateless `match`, and review *sessions* that score two collections once, then take confirm / reject / reassign edits and active-learning labels, re-solving the assignment from the cached scores after each one.
+
+```python
+from equate.service import MatchService
+
+svc = MatchService()
+view = svc.open_session(["Jon Smith", "Kate Doe"], ["Kate Do", "John Smith"])
+svc.edit(view.session_id, [{"action": "reject", "item": 0, "candidate": 1}])
+svc.next_query(view.session_id)  # the pair whose label would help most
+```
+
+`pip install 'equate[service]'` adds the HTTP API (built with [qh](https://github.com/i2mint/qh)): `python -m equate.service serve`, then `POST /match`, `POST /sessions`, `GET|POST /sessions/{id}/candidates/{item}`, `POST /sessions/{id}/edits`, `POST /sessions/{id}/label`. `equate.service.mk_app(service)` returns the FastAPI app to mount elsewhere. Sessions live in any `MutableMapping` (`MatchService(sessions=...)`), so a `dol` store persists them.
+
+The review UI (React, [zodal](https://github.com/i2mint/zodal) + shadcn) is in [`ui/`](): a review queue ordered by uncertainty, side-by-side field diffs, confirm / reject / reassign with optimistic updates, and a labelling widget.
 
 # An example: In search of a import-to-package name matcher
 
@@ -591,7 +608,7 @@ caller hard-coding conversions (decision register D2/D3/D6).
 A comparator can carry this on a `.meta` attribute; the `compare` stage
 (roadmap #4) attaches it when registering strategies.
 
-### *class* equate.base.Explanation(summary='', details=<factory>)
+### *class* equate.base.Explanation(summary='', details=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -1930,7 +1947,7 @@ optional benchmarks (equate#15).
 | [`BenchmarkReport`](_autosummary/equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.BenchmarkReport)(rows[, meta])                 | All runs, plus a per-benchmark summary of mean ± std over seeds.          |
 | [`BenchmarkRow`](_autosummary/equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.BenchmarkRow)(benchmark, seed, precision, ...) | One (benchmark, seed) run: the scores, their context, and what they cost. |
 
-### *class* equate.evaluate.benchmark.Benchmark(name, a, b, gold, meta=<factory>)
+### *class* equate.evaluate.benchmark.Benchmark(name, a, b, gold, meta=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -1943,7 +1960,7 @@ what a reader needs next to a score — at least `source` and `difficulty`.
 
 Share of all `a × b` pairs that are true matches.
 
-### *class* equate.evaluate.benchmark.BenchmarkReport(rows, meta=<factory>)
+### *class* equate.evaluate.benchmark.BenchmarkReport(rows, meta=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -1987,15 +2004,15 @@ asserted leak-free first), and the matcher it returns is scored on test. Choose 
 threshold on the validation part there ([`select_threshold()`](_autosummary/equate.evaluate.html.md#equate.evaluate.select_threshold)),
 never on test.
 
-* **Return type:**
-  [`BenchmarkReport`](_autosummary/equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.BenchmarkReport)
-
 ```pycon
 >>> report = benchmark_matcher(n_seeds=2)
 >>> s = report.summary()['toy_names']
 >>> s['f1'][0] > 0.8, s['n_seeds']
 (True, 2)
 ```
+
+* **Return type:**
+  [`BenchmarkReport`](_autosummary/equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.BenchmarkReport)
 
 ### equate.evaluate.benchmark.benchmarks *= <equate.registry.Registry object>*
 
@@ -2064,7 +2081,7 @@ See `docs/research/14-evaluation-benchmarks-and-methodology.md`.
 | [`BenchmarkReport`](_autosummary/equate.evaluate.html.md#equate.evaluate.BenchmarkReport)(rows[, meta])                 | All runs, plus a per-benchmark summary of mean ± std over seeds.                |
 | [`BenchmarkRow`](_autosummary/equate.evaluate.html.md#equate.evaluate.BenchmarkRow)(benchmark, seed, precision, ...) | One (benchmark, seed) run: the scores, their context, and what they cost.       |
 
-### *class* equate.evaluate.Benchmark(name, a, b, gold, meta=<factory>)
+### *class* equate.evaluate.Benchmark(name, a, b, gold, meta=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -2077,7 +2094,7 @@ what a reader needs next to a score — at least `source` and `difficulty`.
 
 Share of all `a × b` pairs that are true matches.
 
-### *class* equate.evaluate.BenchmarkReport(rows, meta=<factory>)
+### *class* equate.evaluate.BenchmarkReport(rows, meta=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -2141,7 +2158,7 @@ Build from precision and recall; F1 is derived, so it can never disagree.
 * **Return type:**
   [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
 
-#### support *: [int](https://docs.python.org/3/builtins/functions.html#int) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### support *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[int](https://docs.python.org/3/builtins/functions.html#int)]* *= None*
 
 the size of the gold side (true pairs, or records for a cluster metric)
 
@@ -2155,15 +2172,15 @@ Record indices of each part; the entity ids of a part never occur in another.
 
 Raise `AssertionError` if any entity has records in more than one of `parts`.
 
-* **Return type:**
-  [`None`](https://docs.python.org/3/builtins/constants.html#None)
-
 ```pycon
 >>> assert_no_leakage([0, 0, 1], [0], [1])
 Traceback (most recent call last):
     ...
 AssertionError: entity 0 appears in parts 0 and 1 — the split leaks it
 ```
+
+* **Return type:**
+  [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### equate.evaluate.bcubed(pred_labels, true_labels)
 
@@ -2173,14 +2190,14 @@ Per record: precision is the share of its predicted cluster that truly belongs w
 it, recall the share of its true cluster that the prediction kept with it; both are
 averaged over records.
 
-* **Return type:**
-  [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
-
 ```pycon
 >>> s = bcubed([0, 0, 1, 1], [0, 0, 0, 1])
 >>> round(s.precision, 3), round(s.recall, 3)
 (0.75, 0.667)
 ```
+
+* **Return type:**
+  [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
 
 ### equate.evaluate.benchmark_matcher(matcher=None, , on=('toy_names',), n_seeds=3, ratios=(0.6, 0.2, 0.2), fit=None)
 
@@ -2200,15 +2217,15 @@ asserted leak-free first), and the matcher it returns is scored on test. Choose 
 threshold on the validation part there ([`select_threshold()`](_autosummary/equate.evaluate.html.md#equate.evaluate.select_threshold)),
 never on test.
 
-* **Return type:**
-  [`BenchmarkReport`](_autosummary/equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.BenchmarkReport)
-
 ```pycon
 >>> report = benchmark_matcher(n_seeds=2)
 >>> s = report.summary()['toy_names']
 >>> s['f1'][0] > 0.8, s['n_seeds']
 (True, 2)
 ```
+
+* **Return type:**
+  [`BenchmarkReport`](_autosummary/equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.BenchmarkReport)
 
 ### equate.evaluate.blocking_metrics(candidate_pairs, true_pairs, , n_a, n_b=None)
 
@@ -2242,13 +2259,13 @@ number of records. The alignment is a maximum-weight assignment, resolved throug
 equate’s [`matchers`](_autosummary/equate.matching.html.md#equate.matching.matchers) registry (`matcher`), never a
 private Hungarian.
 
-* **Return type:**
-  [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
-
 ```pycon
 >>> round(ceaf([0, 0, 1, 1], [0, 0, 0, 1]).f1, 3)
 0.733
 ```
+
+* **Return type:**
+  [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
 
 ### equate.evaluate.cluster_metrics(pred_labels, true_labels, , backend='auto')
 
@@ -2259,15 +2276,15 @@ installed and the numpy implementations otherwise; `'numpy'` forces the latter,
 `'sklearn'` requires the former. The two agree; the choice only exists so the
 core install needs neither.
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> m = cluster_metrics([0, 0, 1, 1], [0, 0, 0, 1], backend='numpy')
 >>> sorted(m)
 ['ari', 'b3_f1', 'b3_precision', 'b3_recall', 'ceaf_e_f1', 'completeness',
  'homogeneity', 'v_measure']
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### equate.evaluate.cross_pairs_to_labels(pairs, , n_a, n_b)
 
@@ -2276,13 +2293,13 @@ Labels over `A + B` (B’s records offset by `n_a`) from two-table `(i, j)` pair
 The bridge from a matching between two collections to the entity view a cluster
 metric or an entity split needs.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]
-
 ```pycon
 >>> cross_pairs_to_labels([(0, 1)], n_a=2, n_b=2)
 [0, 1, 2, 0]
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]
 
 ### equate.evaluate.entity_split(entity_ids, , ratios=(0.6, 0.2, 0.2), seed=0)
 
@@ -2293,9 +2310,6 @@ Split records into train / val / test by entity, never by record or pair.
 Entities, not records, are shuffled (`seed`) and cut by `ratios`, so the parts
 are disjoint in entities and roughly — not exactly — proportional in records.
 
-* **Return type:**
-  [`Split`](_autosummary/equate.evaluate.split.html.md#equate.evaluate.split.Split)
-
 ```pycon
 >>> s = entity_split([0, 0, 1, 1, 2, 3, 4, 4, 5, 6], seed=1)
 >>> assert_no_leakage([0, 0, 1, 1, 2, 3, 4, 4, 5, 6], s.train, s.test)
@@ -2303,17 +2317,20 @@ are disjoint in entities and roughly — not exactly — proportional in records
 True
 ```
 
+* **Return type:**
+  [`Split`](_autosummary/equate.evaluate.split.html.md#equate.evaluate.split.Split)
+
 ### equate.evaluate.labels_to_pairs(labels)
 
 Every within-cluster pair `(i, j)` with `i < j`.
-
-* **Return type:**
-  [`set`](https://docs.python.org/3/builtins/stdtypes.html#set)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int)]]
 
 ```pycon
 >>> sorted(labels_to_pairs([0, 0, 1, 0]))
 [(0, 1), (0, 3), (1, 3)]
 ```
+
+* **Return type:**
+  [`set`](https://docs.python.org/3/builtins/stdtypes.html#set)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int)]]
 
 ### equate.evaluate.list_benchmarks()
 
@@ -2337,13 +2354,13 @@ Labels are canonical: numbered in order of each cluster’s smallest record, so 
 pair sets that induce the same partition give equal label lists. A record no pair
 mentions is a singleton.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]
-
 ```pycon
 >>> pairs_to_labels([(0, 1), (1, 2), (4, 5)], n=6)
 [0, 0, 0, 1, 2, 2]
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]
 
 ### equate.evaluate.pairwise_prf(pred_pairs, true_pairs, , self_join=False)
 
@@ -2353,14 +2370,14 @@ Pairwise precision / recall / F1 of predicted pairs against gold pairs.
 `(j, i)` as one pair and drops `(i, i)`; otherwise pairs are `(row of A, row
 of B)` and orientation matters.
 
-* **Return type:**
-  [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
-
 ```pycon
 >>> s = pairwise_prf([(0, 0), (1, 2)], [(0, 0), (1, 1)])
 >>> s.precision, s.recall, s.support
 (0.5, 0.5, 2)
 ```
+
+* **Return type:**
+  [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
 
 ### equate.evaluate.pr_auc(scores, y_true)
 
@@ -2369,13 +2386,13 @@ Average precision: the area under the precision-recall step curve.
 Records with tied scores enter the ranking together (one threshold step), so the
 figure does not depend on the input order of ties. No positives → `nan`.
 
-* **Return type:**
-  [`float`](https://docs.python.org/3/builtins/functions.html#float)
-
 ```pycon
 >>> round(pr_auc([0.9, 0.8, 0.7, 0.1], [1, 0, 1, 0]), 3)
 0.833
 ```
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 ### equate.evaluate.ranking_metrics(ranked, gold, , ks=(1, 5, 10))
 
@@ -2385,14 +2402,14 @@ Recall@k, MRR and MAP for ranked candidate lists.
 or a collection of them. Queries with no gold are skipped; a query whose gold never
 appears contributes 0.
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> m = ranking_metrics({'a': ['x', 'y'], 'b': ['z', 'w']}, {'a': 'y', 'b': 'z'}, ks=(1,))
 >>> m['recall_at_1'], m['mrr']
 (0.5, 0.75)
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### equate.evaluate.select_threshold(scores, y_true, , optimize='f1')
 
@@ -2403,14 +2420,14 @@ Pass **validation** scores and labels. `optimize` is `'f1'`, `'precision'` or
 threshold and the [`Scores`](_autosummary/equate.evaluate.html.md#equate.evaluate.Scores) it achieves on the data it was chosen on — which
 are therefore optimistic, and are not a test result.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)]
-
 ```pycon
 >>> t, s = select_threshold([0.9, 0.8, 0.4, 0.3], [1, 1, 0, 1])
 >>> t, round(s.f1, 3)
 (0.3, 0.857)
 ```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)]
 
 ### Modules
 
@@ -2449,25 +2466,25 @@ Labels over `A + B` (B’s records offset by `n_a`) from two-table `(i, j)` pair
 The bridge from a matching between two collections to the entity view a cluster
 metric or an entity split needs.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]
-
 ```pycon
 >>> cross_pairs_to_labels([(0, 1)], n_a=2, n_b=2)
 [0, 1, 2, 0]
 ```
 
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]
+
 ### equate.evaluate.labels.labels_to_pairs(labels)
 
 Every within-cluster pair `(i, j)` with `i < j`.
-
-* **Return type:**
-  [`set`](https://docs.python.org/3/builtins/stdtypes.html#set)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int)]]
 
 ```pycon
 >>> sorted(labels_to_pairs([0, 0, 1, 0]))
 [(0, 1), (0, 3), (1, 3)]
 ```
+
+* **Return type:**
+  [`set`](https://docs.python.org/3/builtins/stdtypes.html#set)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int)]]
 
 ### equate.evaluate.labels.pairs_to_labels(pairs, , n)
 
@@ -2477,13 +2494,13 @@ Labels are canonical: numbered in order of each cluster’s smallest record, so 
 pair sets that induce the same partition give equal label lists. A record no pair
 mentions is a singleton.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]
-
 ```pycon
 >>> pairs_to_labels([(0, 1), (1, 2), (4, 5)], n=6)
 [0, 0, 0, 1, 2, 2]
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]
 
 
 # _autosummary/equate.evaluate.metrics.html.md
@@ -2516,14 +2533,14 @@ Per record: precision is the share of its predicted cluster that truly belongs w
 it, recall the share of its true cluster that the prediction kept with it; both are
 averaged over records.
 
-* **Return type:**
-  [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
-
 ```pycon
 >>> s = bcubed([0, 0, 1, 1], [0, 0, 0, 1])
 >>> round(s.precision, 3), round(s.recall, 3)
 (0.75, 0.667)
 ```
+
+* **Return type:**
+  [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
 
 ### equate.evaluate.metrics.ceaf(pred_labels, true_labels, , variant='entity', matcher='optimal')
 
@@ -2536,13 +2553,13 @@ number of records. The alignment is a maximum-weight assignment, resolved throug
 equate’s [`matchers`](_autosummary/equate.matching.html.md#equate.matching.matchers) registry (`matcher`), never a
 private Hungarian.
 
-* **Return type:**
-  [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
-
 ```pycon
 >>> round(ceaf([0, 0, 1, 1], [0, 0, 0, 1]).f1, 3)
 0.733
 ```
+
+* **Return type:**
+  [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
 
 ### equate.evaluate.metrics.cluster_metrics(pred_labels, true_labels, , backend='auto')
 
@@ -2553,15 +2570,15 @@ installed and the numpy implementations otherwise; `'numpy'` forces the latter,
 `'sklearn'` requires the former. The two agree; the choice only exists so the
 core install needs neither.
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> m = cluster_metrics([0, 0, 1, 1], [0, 0, 0, 1], backend='numpy')
 >>> sorted(m)
 ['ari', 'b3_f1', 'b3_precision', 'b3_recall', 'ceaf_e_f1', 'completeness',
  'homogeneity', 'v_measure']
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### equate.evaluate.metrics.pairwise_prf(pred_pairs, true_pairs, , self_join=False)
 
@@ -2571,14 +2588,14 @@ Pairwise precision / recall / F1 of predicted pairs against gold pairs.
 `(j, i)` as one pair and drops `(i, i)`; otherwise pairs are `(row of A, row
 of B)` and orientation matters.
 
-* **Return type:**
-  [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
-
 ```pycon
 >>> s = pairwise_prf([(0, 0), (1, 2)], [(0, 0), (1, 1)])
 >>> s.precision, s.recall, s.support
 (0.5, 0.5, 2)
 ```
+
+* **Return type:**
+  [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
 
 
 # _autosummary/equate.evaluate.ranking.html.md
@@ -2607,13 +2624,13 @@ Average precision: the area under the precision-recall step curve.
 Records with tied scores enter the ranking together (one threshold step), so the
 figure does not depend on the input order of ties. No positives → `nan`.
 
-* **Return type:**
-  [`float`](https://docs.python.org/3/builtins/functions.html#float)
-
 ```pycon
 >>> round(pr_auc([0.9, 0.8, 0.7, 0.1], [1, 0, 1, 0]), 3)
 0.833
 ```
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 ### equate.evaluate.ranking.ranking_metrics(ranked, gold, , ks=(1, 5, 10))
 
@@ -2623,14 +2640,14 @@ Recall@k, MRR and MAP for ranked candidate lists.
 or a collection of them. Queries with no gold are skipped; a query whose gold never
 appears contributes 0.
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> m = ranking_metrics({'a': ['x', 'y'], 'b': ['z', 'w']}, {'a': 'y', 'b': 'z'}, ks=(1,))
 >>> m['recall_at_1'], m['mrr']
 (0.5, 0.75)
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### equate.evaluate.ranking.select_threshold(scores, y_true, , optimize='f1')
 
@@ -2641,14 +2658,14 @@ Pass **validation** scores and labels. `optimize` is `'f1'`, `'precision'` or
 threshold and the `Scores` it achieves on the data it was chosen on — which
 are therefore optimistic, and are not a test result.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)]
-
 ```pycon
 >>> t, s = select_threshold([0.9, 0.8, 0.4, 0.3], [1, 1, 0, 1])
 >>> t, round(s.f1, 3)
 (0.3, 0.857)
 ```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)]
 
 
 # _autosummary/equate.evaluate.scores.html.md
@@ -2705,7 +2722,7 @@ Build from precision and recall; F1 is derived, so it can never disagree.
 * **Return type:**
   [`Scores`](_autosummary/equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
 
-#### support *: [int](https://docs.python.org/3/builtins/functions.html#int) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### support *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[int](https://docs.python.org/3/builtins/functions.html#int)]* *= None*
 
 the size of the gold side (true pairs, or records for a cluster metric)
 
@@ -2743,15 +2760,15 @@ Record indices of each part; the entity ids of a part never occur in another.
 
 Raise `AssertionError` if any entity has records in more than one of `parts`.
 
-* **Return type:**
-  [`None`](https://docs.python.org/3/builtins/constants.html#None)
-
 ```pycon
 >>> assert_no_leakage([0, 0, 1], [0], [1])
 Traceback (most recent call last):
     ...
 AssertionError: entity 0 appears in parts 0 and 1 — the split leaks it
 ```
+
+* **Return type:**
+  [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### equate.evaluate.split.entity_split(entity_ids, , ratios=(0.6, 0.2, 0.2), seed=0)
 
@@ -2762,15 +2779,15 @@ Split records into train / val / test by entity, never by record or pair.
 Entities, not records, are shuffled (`seed`) and cut by `ratios`, so the parts
 are disjoint in entities and roughly — not exactly — proportional in records.
 
-* **Return type:**
-  [`Split`](_autosummary/equate.evaluate.split.html.md#equate.evaluate.split.Split)
-
 ```pycon
 >>> s = entity_split([0, 0, 1, 1, 2, 3, 4, 4, 5, 6], seed=1)
 >>> assert_no_leakage([0, 0, 1, 1, 2, 3, 4, 4, 5, 6], s.train, s.test)
 >>> sorted(s.train + s.val + s.test) == list(range(10))
 True
 ```
+
+* **Return type:**
+  [`Split`](_autosummary/equate.evaluate.split.html.md#equate.evaluate.split.Split)
 
 
 # _autosummary/equate.facade.html.md
@@ -2787,10 +2804,11 @@ swappable by one keyword (decision register D4): `featurize=`, `compare=`, `bloc
 
 ### Functions
 
-| [`match`](_autosummary/equate.facade.html.md#equate.facade.match)(A[, B, featurize, compare, block, ...])   | Match two collections into a [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching) of scored `(i, j)` pairs.                                  |
-|--------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`dedupe`](_autosummary/equate.facade.html.md#equate.facade.dedupe)(A, \*[, compare, block, threshold, ...]) | Deduplicate a single collection into entity groups.                                                                                                                    |
-| [`resolve`](_autosummary/equate.facade.html.md#equate.facade.resolve)(\*collections, \*\*kwargs)              | Resolve entities across multiple collections: pool them (in order) and [`dedupe()`](_autosummary/equate.facade.html.md#equate.facade.dedupe) -> a Partition over the pooled items. |
+| [`match`](_autosummary/equate.facade.html.md#equate.facade.match)(A[, B, featurize, compare, block, ...])     | Match two collections into a [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching) of scored `(i, j)` pairs.                                  |
+|----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`score_matrix`](_autosummary/equate.facade.html.md#equate.facade.score_matrix)(A, B, \*[, featurize, compare, ...]) | Score `A` against `B` into a [`ScoreMatrix`](_autosummary/equate.base.html.md#equate.base.ScoreMatrix) — stages ① and ②.                                    |
+| [`dedupe`](_autosummary/equate.facade.html.md#equate.facade.dedupe)(A, \*[, compare, block, threshold, ...])   | Deduplicate a single collection into entity groups.                                                                                                                    |
+| [`resolve`](_autosummary/equate.facade.html.md#equate.facade.resolve)(\*collections, \*\*kwargs)                | Resolve entities across multiple collections: pool them (in order) and [`dedupe()`](_autosummary/equate.facade.html.md#equate.facade.dedupe) -> a Partition over the pooled items. |
 
 ### equate.facade.dedupe(A, , compare='ratio', block=None, threshold=0.7, cluster='connected_components', sense=None)
 
@@ -2845,6 +2863,23 @@ Returns a `Matching`: iterate it for `(i, j)` pairs, `dict(...)` it for a mappin
 Resolve entities across multiple collections: pool them (in order) and
 [`dedupe()`](_autosummary/equate.facade.html.md#equate.facade.dedupe) -> a Partition over the pooled items. Generalizes cross-collection
 matching to n-way linkage. Accepts the same keywords as [`dedupe()`](_autosummary/equate.facade.html.md#equate.facade.dedupe).
+
+### equate.facade.score_matrix(A, B, , featurize=None, compare=None, block=None, sense=None)
+
+Score `A` against `B` into a [`ScoreMatrix`](_autosummary/equate.base.html.md#equate.base.ScoreMatrix) — stages ① and ②.
+
+The scoring half of [`match()`](_autosummary/equate.facade.html.md#equate.facade.match), exposed on its own for callers that keep the scores
+and match later or repeatedly (the interactive loop re-solves from them on every edit;
+see [`equate.service`](_autosummary/equate.service.html.md#module-equate.service)). The keywords mean exactly what they mean in [`match()`](_autosummary/equate.facade.html.md#equate.facade.match):
+the default is the TF-IDF + cosine vector route; `compare=` takes the direct pairwise
+route; `block=` scores only the blocker’s candidates into a sparse matrix; `sense`
+defaults to the comparator’s declared polarity.
+
+```pycon
+>>> sm = score_matrix(['apple', 'kiwi'], ['kiwis', 'apples'], compare='ratio')
+>>> sm.shape, sm.sense
+((2, 2), 'maximize')
+```
 
 
 # _autosummary/equate.featurize.graph.html.md
@@ -3214,6 +3249,7 @@ foundation contracts live in [`equate.base`](_autosummary/equate.base.html.md#mo
 | [`interactive`](_autosummary/equate.interactive.html.md#module-equate.interactive) | The interactive stage: human-in-the-loop review and re-optimization.                |
 | [`matching`](_autosummary/equate.matching.html.md#module-equate.matching)       | The match stage (③): turn a score matrix into a correspondence.                     |
 | [`registry`](_autosummary/equate.registry.html.md#module-equate.registry)       | A tiny name-keyed strategy registry with lazy factories (open-closed dispatch).     |
+| [`service`](_autosummary/equate.service.html.md#module-equate.service)         | The service layer: equate's matching core as JSON-in/JSON-out operations.           |
 | [`util`](_autosummary/equate.util.html.md#module-equate.util)               | Utils for equate.                                                                   |
 
 
@@ -3288,7 +3324,7 @@ replayable log.
 | [`ConstraintSet`](_autosummary/equate.interactive.constraints.html.md#equate.interactive.constraints.ConstraintSet)([forced, forbidden])   | Append-only record of user edits: `forced` (confirmed) and `forbidden` (rejected) `(i, j)` edges.   |
 |---------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
 
-### *class* equate.interactive.constraints.ConstraintSet(forced=<factory>, forbidden=<factory>)
+### *class* equate.interactive.constraints.ConstraintSet(forced=list(), forbidden=list())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -3378,7 +3414,7 @@ candidates is unambiguous (no rival to be confused with), so its margin is `+inf
 
 The top-`n` `(right_index, score)` candidates for left item `i`.
 
-### *class* equate.interactive.ConstraintSet(forced=<factory>, forbidden=<factory>)
+### *class* equate.interactive.ConstraintSet(forced=list(), forbidden=list())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -3953,6 +3989,379 @@ A callable `spec` passes through unchanged; a `str` is looked up and its
 factory is called with `(*args, **kwargs)`.
 
 
+# _autosummary/equate.service.html.md
+
+# equate.service
+
+The service layer: equate’s matching core as JSON-in/JSON-out operations.
+
+This module is the **surface-free** half of the HTTP service (doc 10 §5, decision D10).
+Every operation is a plain method taking JSON-able arguments and returning a dataclass of
+JSON-able fields, so any surface can project it: [`mk_app()`](_autosummary/equate.service.html.md#equate.service.mk_app) mounts it as an HTTP API
+with `qh` (`pip install 'equate[service]'`), and the review UI in `ui/` consumes the
+same payloads through Zod schemas generated from [`json_schemas()`](_autosummary/equate.service.html.md#equate.service.json_schemas).
+
+Two kinds of operation:
+
+- **stateless** — [`MatchService.match()`](_autosummary/equate.service.html.md#equate.service.MatchService.match): two collections in, scored pairs out (the
+  batch core, cached by content);
+- **session-scoped** — the interactive loop of doc 08. [`MatchService.open_session()`](_autosummary/equate.service.html.md#equate.service.MatchService.open_session)
+  scores the two collections *once* and keeps a [`CandidateStore`](_autosummary/equate.interactive.html.md#equate.interactive.CandidateStore)
+  of top-k candidates; [`candidates()`](_autosummary/equate.service.html.md#equate.service.MatchService.candidates) reads (or refreshes) one item’s
+  top-k; [`edit()`](_autosummary/equate.service.html.md#equate.service.MatchService.edit) applies confirm / reject / reassign edits and returns
+  the locally re-optimized assignment (one constrained LAP over the cached scores, never a
+  re-score); [`label()`](_autosummary/equate.service.html.md#equate.service.MatchService.label) is the active-learning `Oracle` endpoint: it
+  records a human/LLM/crowd label and returns the next most-informative query.
+
+Every response carries an [`Accounting`](_autosummary/equate.service.html.md#equate.service.Accounting) of the time and item counts each tier
+(`score`, `match`, `reoptimize`, …) cost, so a caller can budget expensive
+cascades (doc 06). Sessions live in any `MutableMapping` (`sessions=`), so a
+persistent `dol` store replaces the in-memory dict without touching this code.
+
+```pycon
+>>> svc = MatchService()
+>>> result = svc.match(['apple pie', 'banana split'], ['banana splitt', 'aple pie'])
+>>> [(p.left, p.right) for p in result.pairs]
+[('apple pie', 'aple pie'), ('banana split', 'banana splitt')]
+```
+
+### Functions
+
+| [`explain_pair`](_autosummary/equate.service.html.md#equate.service.explain_pair)(left, right, score, \*[, ...])   | A structured [`Explanation`](_autosummary/equate.base.html.md#equate.base.Explanation) of a pair: a per-field diff.   |
+|------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| [`record_text`](_autosummary/equate.service.html.md#equate.service.record_text)(obj)                              | Text of an object for the default text featurizer: a record's values, joined.                                                    |
+| [`to_jsonable`](_autosummary/equate.service.html.md#equate.service.to_jsonable)(obj)                              | Convert a boundary dataclass (or nested containers of them) to plain JSON data.                                                  |
+| [`json_schemas`](_autosummary/equate.service.html.md#equate.service.json_schemas)()                                | JSON Schemas of the boundary types, keyed by type name.                                                                          |
+| [`mk_app`](_autosummary/equate.service.html.md#equate.service.mk_app)([service, cors_origins])               | Mount a [`MatchService`](_autosummary/equate.service.html.md#equate.service.MatchService) as an HTTP API (FastAPI, built with `qh`).                 |
+| [`serve`](_autosummary/equate.service.html.md#equate.service.serve)(\*[, host, port, service])              | Run the HTTP service with uvicorn (`python -m equate.service serve`).                                                            |
+
+### Classes
+
+| [`MatchService`](_autosummary/equate.service.html.md#equate.service.MatchService)(\*[, sessions, cache, mk_id, ...])   | equate's matching core as stateless + session-scoped JSON-able operations.      |
+|----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| [`Accounting`](_autosummary/equate.service.html.md#equate.service.Accounting)([tiers])                               | Per-tier cost/latency ledger.                                                   |
+| [`TierCost`](_autosummary/equate.service.html.md#equate.service.TierCost)([calls, seconds, items])                 | What one tier (`score`, `match`, `reoptimize`, ...) has cost so far.            |
+| [`Edit`](_autosummary/equate.service.html.md#equate.service.Edit)(action, item, candidate[, source])           | One user edit of the assignment.                                                |
+| [`Label`](_autosummary/equate.service.html.md#equate.service.Label)(item, candidate, is_match[, source])        | An oracle's verdict on one `item -> candidate` pair (active learning).          |
+| [`FieldDiff`](_autosummary/equate.service.html.md#equate.service.FieldDiff)(field, left, right, similarity)         | One field of a side-by-side comparison: both values and their similarity.       |
+| [`CandidateView`](_autosummary/equate.service.html.md#equate.service.CandidateView)(candidate, right, score[, ...])     | A scored candidate for an item, with the right-hand object and an explanation.  |
+| [`PairView`](_autosummary/equate.service.html.md#equate.service.PairView)(item, candidate, left, right, score)     | A matched pair: indices, both objects, the score, and whether a user fixed it.  |
+| [`ReviewItem`](_autosummary/equate.service.html.md#equate.service.ReviewItem)(item, left, assigned, status, ...)     | One row of the review queue: an item, its current match and its alternatives.   |
+| [`Query`](_autosummary/equate.service.html.md#equate.service.Query)(item, left, candidate, margin)              | An active-learning query: the pair an oracle should label next.                 |
+| [`MatchResult`](_autosummary/equate.service.html.md#equate.service.MatchResult)(pairs[, groups, accounting, cached])  | Stateless match output: `pairs` (or `groups` for `how='cluster'`).              |
+| [`SessionView`](_autosummary/equate.service.html.md#equate.service.SessionView)(session_id, n_left, n_right, ...)     | A session's state: its current assignment and the review queue to work through. |
+| [`EditResult`](_autosummary/equate.service.html.md#equate.service.EditResult)(session_id, assignment, changed, ...)  | The result of an edit: the re-optimized assignment and what it changed.         |
+| [`LabelResult`](_autosummary/equate.service.html.md#equate.service.LabelResult)(label, result, next)                  | The result of a label: what was recorded, the edit result, and the next query.  |
+| [`Session`](_autosummary/equate.service.html.md#equate.service.Session)(session_id, A, B, scores, store, k, ...)  | Server-side session state.                                                      |
+
+### Exceptions
+
+| [`SessionNotFound`](_autosummary/equate.service.html.md#equate.service.SessionNotFound)   | No session with that id (an HTTP 404).   |
+|--------------------------------------------------------------------|------------------------------------------|
+
+### *class* equate.service.Accounting(tiers=dict())
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+Per-tier cost/latency ledger. `tiers` maps a tier name to its [`TierCost`](_autosummary/equate.service.html.md#equate.service.TierCost).
+
+Plain data (it is part of a session, which must pickle into any store); an external
+budget or metrics sink attaches through the `hook` argument of [`record()`](_autosummary/equate.service.html.md#equate.service.Accounting.record).
+
+#### merge(other)
+
+Add `other`’s tiers into this ledger (a committed operation’s costs).
+
+#### record(tier, seconds, items=0, , hook=None)
+
+Add one call of `tier` that took `seconds` over `items` items, and tell
+`hook(tier, seconds, items)` if one is given.
+
+#### snapshot()
+
+A copy, so a response never aliases the session’s live ledger.
+
+#### timed(tier, items=0, , hook=None)
+
+Context manager recording the wall-clock time of its body under `tier`.
+
+### *class* equate.service.CandidateView(candidate, right, score, explanation=None)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+A scored candidate for an item, with the right-hand object and an explanation.
+
+### *class* equate.service.Edit(action, item, candidate, source='human')
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+One user edit of the assignment.
+
+- `confirm` — force `item -> candidate` (a confirmed match);
+- `reject` — forbid `item -> candidate`;
+- `reassign` — confirm a *different* candidate for `item` (its previous forced
+  match, and any other item forced onto `candidate`, are released);
+- `clear` — drop any constraint on `item -> candidate` (undo).
+
+`item` indexes the left collection, `candidate` the right one; `source` says who
+made the edit (`'human'`, `'llm'`, …) — provenance for a later precedence policy.
+
+### *class* equate.service.EditResult(session_id, assignment, changed, accounting)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The result of an edit: the re-optimized assignment and what it changed.
+
+`changed` lists the items whose match moved, so a UI re-renders only that block.
+
+### *class* equate.service.FieldDiff(field, left, right, similarity)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+One field of a side-by-side comparison: both values and their similarity.
+
+### *class* equate.service.Label(item, candidate, is_match, source='human')
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+An oracle’s verdict on one `item -> candidate` pair (active learning).
+
+### *class* equate.service.LabelResult(label, result, next)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The result of a label: what was recorded, the edit result, and the next query.
+
+### *class* equate.service.MatchResult(pairs, groups=None, accounting=Accounting(), cached=False)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+Stateless match output: `pairs` (or `groups` for `how='cluster'`).
+
+### *class* equate.service.MatchService(\*, sessions=None, cache='default', mk_id=<function MatchService.<lambda>>, field_compare='ratio', on_cost=None)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+equate’s matching core as stateless + session-scoped JSON-able operations.
+
+Every seam is a keyword argument with a working default:
+
+- `sessions` — where sessions live (any `MutableMapping`; default an in-memory
+  dict; pass a pickle-valued `dol` store to persist them);
+- `cache` — where stateless match results are cached (default a bounded LRU; pass
+  `None` to disable);
+- `mk_id` — session-id factory (default `uuid4().hex`);
+- `field_compare` — the per-field comparator used in explanations;
+- `on_cost` — `(tier, seconds, items)` hook called on every accounted tier.
+
+#### candidates(session_id, item, , k=None)
+
+Item `item`’s top-k candidates (best first), with explanations.
+
+With `k` (larger or smaller than the session’s), the item’s top-k is
+**refreshed** from the cached scores and stored — no re-scoring.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
+#### close_session(session_id)
+
+Forget a session. Returns whether it existed.
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+#### edit(session_id, edits)
+
+Apply `edits` ([`Edit`](_autosummary/equate.service.html.md#equate.service.Edit) or dicts) and re-optimize the assignment.
+
+Atomic: if an edit is invalid or the edits leave no feasible assignment, a
+`ValueError` is raised and the session is unchanged. One constrained LAP over the
+cached scores — an edit is a cheap re-solve, never a re-score. Concurrent edits of
+one session (in this process) are serialized, so none is lost.
+
+* **Return type:**
+  [`EditResult`](_autosummary/equate.service.html.md#equate.service.EditResult)
+
+#### label(session_id, item, candidate, is_match, , source='human')
+
+Record an oracle label and apply it (a match confirms, a non-match rejects).
+
+Returns the edit result and the next active-learning [`Query`](_autosummary/equate.service.html.md#equate.service.Query) — the most
+uncertain item no label has decided yet (`None` when none is left).
+
+* **Return type:**
+  [`LabelResult`](_autosummary/equate.service.html.md#equate.service.LabelResult)
+
+#### match(A, B, , featurize=None, compare=None, block=None, how='assign', threshold=None, sense=None)
+
+Match two collections (stateless). Mirrors `equate.match()`.
+
+`how` is `'assign'` (optimal 1:1), `'greedy'`, `'stable'`, `'soft'` or
+`'cluster'` (then `groups` lists the entity clusters over the pooled `A + B`
+indices, `B` offset by `len(A)`). Pairs below `threshold` (above it, for a
+`'minimize'` sense) are dropped. Results are cached by content.
+
+* **Return type:**
+  [`MatchResult`](_autosummary/equate.service.html.md#equate.service.MatchResult)
+
+#### next_query(session_id)
+
+The next pair to label: uncertainty sampling over the not-yet-decided items.
+
+An item is decided once it is confirmed. The pair offered is the item’s current
+match when it has one, else its best candidate that is neither rejected for it nor
+confirmed for another item — so labelling never steals a confirmed match back and
+forth. An item with no such candidate left is skipped.
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Query`](_autosummary/equate.service.html.md#equate.service.Query)]
+
+#### open_session(A, B, , k=5, featurize=None, compare=None, block=None, sense=None)
+
+Score `A` against `B` once and open an interactive review session.
+
+The session keeps each item’s top-`k` candidates and the optimal 1:1
+assignment; every later edit re-solves from these cached scores.
+
+* **Return type:**
+  [`SessionView`](_autosummary/equate.service.html.md#equate.service.SessionView)
+
+#### review(session_id, , n=None, include_confirmed=True)
+
+The review queue: items ordered most-uncertain first (smallest margin).
+
+Confirmed items come last (a human already decided them); `include_confirmed=
+False` drops them. Each [`ReviewItem`](_autosummary/equate.service.html.md#equate.service.ReviewItem) carries its top-k candidates with
+field-diff explanations — everything a review row needs.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
+#### view(session_id, , n=None)
+
+The current state of a session (`n` caps the review queue length).
+
+* **Return type:**
+  [`SessionView`](_autosummary/equate.service.html.md#equate.service.SessionView)
+
+### *class* equate.service.PairView(item, candidate, left, right, score, status='proposed')
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+A matched pair: indices, both objects, the score, and whether a user fixed it.
+
+### *class* equate.service.Query(item, left, candidate, margin)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+An active-learning query: the pair an oracle should label next.
+
+### *class* equate.service.ReviewItem(item, left, assigned, status, margin, candidates)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+One row of the review queue: an item, its current match and its alternatives.
+
+`margin` is the top-1/top-2 score gap (`None` when there is no rival) — small
+means ambiguous, which is why the queue puts it first.
+
+### *class* equate.service.Session(session_id, A, B, scores, store, k, assignment, edits=list(), labels=list(), accounting=Accounting())
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+Server-side session state. Not a boundary type: [`SessionView`](_autosummary/equate.service.html.md#equate.service.SessionView) is its view.
+
+Everything is plain data (no open handles), so a session pickles into any `dol`
+store passed as `MatchService(sessions=...)`.
+
+### *exception* equate.service.SessionNotFound
+
+Bases: [`KeyError`](https://docs.python.org/3/builtins/exceptions.html#KeyError)
+
+No session with that id (an HTTP 404).
+
+### *class* equate.service.SessionView(session_id, n_left, n_right, sense, k, assignment, review, edits, labels, accounting)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+A session’s state: its current assignment and the review queue to work through.
+
+### *class* equate.service.TierCost(calls=0, seconds=0.0, items=0)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+What one tier (`score`, `match`, `reoptimize`, …) has cost so far.
+
+### equate.service.explain_pair(left, right, score, , field_compare='ratio')
+
+A structured [`Explanation`](_autosummary/equate.base.html.md#equate.base.Explanation) of a pair: a per-field diff.
+
+Records (mappings) are compared field by field over the union of their keys; any other
+object is one field named `value`. A side that is absent, `None` or `''` has no
+similarity (`None`): missing is not the same as different. `details['fields']` is a list of
+[`FieldDiff`](_autosummary/equate.service.html.md#equate.service.FieldDiff) dicts — the payload a UI renders as a side-by-side diff.
+
+```pycon
+>>> e = explain_pair({'name': 'Jon'}, {'name': 'Jon', 'city': 'Paris'}, 0.8)
+>>> [(f['field'], f['similarity']) for f in e.details['fields']]
+[('name', 1.0), ('city', None)]
+```
+
+### equate.service.json_schemas()
+
+JSON Schemas of the boundary types, keyed by type name.
+
+Generated from the dataclasses with `pydantic` (part of `equate[service]`). The UI
+keeps a snapshot of the *field names* (`ui/src/schema/fields.json`) and a test on
+each side fails when the Python types and the Zod schemas drift apart.
+
+### equate.service.mk_app(service=None, , cors_origins=('http://localhost:5173', 'http://127.0.0.1:5173'))
+
+Mount a [`MatchService`](_autosummary/equate.service.html.md#equate.service.MatchService) as an HTTP API (FastAPI, built with `qh`).
+
+Routes (JSON in, JSON out):
+
+```default
+POST   /match                                       stateless match
+POST   /sessions                                    open a review session
+GET    /sessions/{session_id}                       session state + review queue
+DELETE /sessions/{session_id}                       close it
+GET    /sessions/{session_id}/candidates/{item}     an item's top-k
+POST   /sessions/{session_id}/candidates/{item}     refresh it with {"k": ...}
+POST   /sessions/{session_id}/edits                 {"edits": [...]} -> re-optimized
+POST   /sessions/{session_id}/label                 oracle label -> next query
+GET    /sessions/{session_id}/next                  the next query to label
+```
+
+An unknown session is a 404; an invalid or infeasible edit a 422. `cors_origins`
+lets the review UI’s dev server (vite, port 5173) call it; pass `()` to disable.
+Requires `pip install 'equate[service]'`.
+
+### equate.service.record_text(obj)
+
+Text of an object for the default text featurizer: a record’s values, joined.
+
+A mapping (a JSON record) becomes its non-empty values joined by spaces, so records
+work with the TF-IDF default; anything else becomes `str(obj)`.
+
+```pycon
+>>> record_text({'name': 'Jon Smith', 'city': 'Paris', 'zip': None})
+'Jon Smith Paris'
+```
+
+### equate.service.serve(, host='127.0.0.1', port=8000, service=None)
+
+Run the HTTP service with uvicorn (`python -m equate.service serve`).
+
+### equate.service.to_jsonable(obj)
+
+Convert a boundary dataclass (or nested containers of them) to plain JSON data.
+
+Non-finite floats become `None` (JSON has no `inf`/`nan`); tuples become lists;
+numpy scalars become Python numbers.
+
+
 # _autosummary/equate.util.html.md
 
 # equate.util
@@ -4095,16 +4504,18 @@ See: [https://en.wikipedia.org/wiki/Stable_marriage_problem](https://en.wikipedi
 
 # About this build
 
-This documentation was built on **2026-10-14 07:23 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/26dfabbd5aaef584c5253d0dac2a2d4de23729bc"><code>26dfabb</code></a> on branch <code>master</code>, for **equate 0.0.17** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-19 10:59 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/4fcad0245948ffe341e208e0777a62705dc697c7"><code>4fcad02</code></a> on branch <code>master</code>, for **equate 0.0.18** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.18) is behind the latest release on PyPI (0.0.19): `pip install equate` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/equate/commit/26dfabbd5aaef584c5253d0dac2a2d4de23729bc"><code>26dfabbd5aaef584c5253d0dac2a2d4de23729bc</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/equate/commit/4fcad0245948ffe341e208e0777a62705dc697c7"><code>4fcad0245948ffe341e208e0777a62705dc697c7</code></a> |
 | Branch              | <code>master</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -4115,9 +4526,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/equate</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/38527795590">38527795590</a>    |
+| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/39241165161">39241165161</a>    |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>26dfabbd5aaef584c5253d0dac2a2d4de23729bc</code> (in the history of the built commit) |
+| Event commit | <code>4fcad0245948ffe341e208e0777a62705dc697c7</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -4142,13 +4553,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/equate/0.0.17/">0.0.17</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/equate/0.0.19/">0.0.19</a>, newer than the documented version (0.0.18).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/equate && cd equate
-git checkout 26dfabbd5aaef584c5253d0dac2a2d4de23729bc
+git checkout 4fcad0245948ffe341e208e0777a62705dc697c7
 pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

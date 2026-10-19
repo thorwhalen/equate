@@ -9,6 +9,7 @@ equate.facade
    .. autosummary::
    
       match
+      score_matrix
       dedupe
       resolve
    

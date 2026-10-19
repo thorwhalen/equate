@@ -115,7 +115,7 @@ caller hard-coding conversions (decision register D2/D3/D6).
 A comparator can carry this on a `.meta` attribute; the `compare` stage
 (roadmap #4) attaches it when registering strategies.
 
-### *class* equate.base.Explanation(summary='', details=<factory>)
+### *class* equate.base.Explanation(summary='', details=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 

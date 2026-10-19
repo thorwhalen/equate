@@ -46,6 +46,7 @@
 - [equate.matching.quadratic](equate.matching.quadratic.html.md): Quadratic matchers: align the &#42;nodes&#42; of two graphs (network alignment).
 - [equate.matching.soft](equate.matching.soft.html.md): Soft / optimal-transport matching (stage ③): a fractional transport plan rather than a
 - [equate.registry](equate.registry.html.md): A tiny name-keyed strategy registry with lazy factories (open-closed dispatch).
+- [equate.service](equate.service.html.md): The service layer: equate’s matching core as JSON-in/JSON-out operations.
 - [equate.util](equate.util.html.md): Utils for equate.
 
 ## Optional

@@ -13,6 +13,7 @@
         <title>equate.facade - equate</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
     
@@ -258,6 +259,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="equate.registry.html">equate.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="equate.service.html">equate.service</a></li>
 <li class="toctree-l3"><a class="reference internal" href="equate.util.html">equate.util</a></li>
 </ul>
 </li>
@@ -317,10 +319,13 @@ swappable by one keyword (decision register D4): <code class="docutils literal n
 <tr class="row-odd"><td><p><a class="reference internal" href="#equate.facade.match" title="equate.facade.match"><code class="xref py py-obj docutils literal notranslate"><span class="pre">match</span></code></a>(A[, B, featurize, compare, block, ...])</p></td>
 <td><p>Match two collections into a <a class="reference internal" href="equate.base.html#equate.base.Matching" title="equate.base.Matching"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matching</span></code></a> of scored <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> pairs.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.facade.dedupe" title="equate.facade.dedupe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dedupe</span></code></a>(A, *[, compare, block, threshold, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.facade.score_matrix" title="equate.facade.score_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_matrix</span></code></a>(A, B, *[, featurize, compare, ...])</p></td>
+<td><p>Score <code class="docutils literal notranslate"><span class="pre">A</span></code> against <code class="docutils literal notranslate"><span class="pre">B</span></code> into a <a class="reference internal" href="equate.base.html#equate.base.ScoreMatrix" title="equate.base.ScoreMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreMatrix</span></code></a> — stages ① and ②.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.facade.dedupe" title="equate.facade.dedupe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dedupe</span></code></a>(A, *[, compare, block, threshold, ...])</p></td>
 <td><p>Deduplicate a single collection into entity groups.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.facade.resolve" title="equate.facade.resolve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code></a>(*collections, **kwargs)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.facade.resolve" title="equate.facade.resolve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code></a>(*collections, **kwargs)</p></td>
 <td><p>Resolve entities across multiple collections: pool them (in order) and <a class="reference internal" href="#equate.facade.dedupe" title="equate.facade.dedupe"><code class="xref py py-func docutils literal notranslate"><span class="pre">dedupe()</span></code></a> -&gt; a Partition over the pooled items.</p></td>
 </tr>
 </tbody>
@@ -382,6 +387,23 @@ else maximized. Pass <code class="docutils literal notranslate"><span class="pre
 matching to n-way linkage. Accepts the same keywords as <a class="reference internal" href="#equate.facade.dedupe" title="equate.facade.dedupe"><code class="xref py py-func docutils literal notranslate"><span class="pre">dedupe()</span></code></a>.</p>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.facade.score_matrix">
+<span class="sig-prename descclassname"><span class="pre">equate.facade.</span></span><span class="sig-name descname"><span class="pre">score_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">featurize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compare</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/facade.html#score_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.facade.score_matrix" title="Link to this definition">¶</a></dt>
+<dd><p>Score <code class="docutils literal notranslate"><span class="pre">A</span></code> against <code class="docutils literal notranslate"><span class="pre">B</span></code> into a <a class="reference internal" href="equate.base.html#equate.base.ScoreMatrix" title="equate.base.ScoreMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreMatrix</span></code></a> — stages ① and ②.</p>
+<p>The scoring half of <a class="reference internal" href="#equate.facade.match" title="equate.facade.match"><code class="xref py py-func docutils literal notranslate"><span class="pre">match()</span></code></a>, exposed on its own for callers that keep the scores
+and match later or repeatedly (the interactive loop re-solves from them on every edit;
+see <a class="reference internal" href="equate.service.html#module-equate.service" title="equate.service"><code class="xref py py-mod docutils literal notranslate"><span class="pre">equate.service</span></code></a>). The keywords mean exactly what they mean in <a class="reference internal" href="#equate.facade.match" title="equate.facade.match"><code class="xref py py-func docutils literal notranslate"><span class="pre">match()</span></code></a>:
+the default is the TF-IDF + cosine vector route; <code class="docutils literal notranslate"><span class="pre">compare=</span></code> takes the direct pairwise
+route; <code class="docutils literal notranslate"><span class="pre">block=</span></code> scores only the blocker’s candidates into a sparse matrix; <code class="docutils literal notranslate"><span class="pre">sense</span></code>
+defaults to the comparator’s declared polarity.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sm</span> <span class="o">=</span> <span class="n">score_matrix</span><span class="p">([</span><span class="s1">'apple'</span><span class="p">,</span> <span class="s1">'kiwi'</span><span class="p">],</span> <span class="p">[</span><span class="s1">'kiwis'</span><span class="p">,</span> <span class="s1">'apples'</span><span class="p">],</span> <span class="n">compare</span><span class="o">=</span><span class="s1">'ratio'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sm</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">sm</span><span class="o">.</span><span class="n">sense</span>
+<span class="go">((2, 2), 'maximize')</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </section>
 
         </article>
@@ -439,6 +461,7 @@ matching to n-way linkage. Accepts the same keywords as <a class="reference inte
 <li><a class="reference internal" href="#equate.facade.dedupe"><code class="docutils literal notranslate"><span class="pre">dedupe()</span></code></a></li>
 <li><a class="reference internal" href="#equate.facade.match"><code class="docutils literal notranslate"><span class="pre">match()</span></code></a></li>
 <li><a class="reference internal" href="#equate.facade.resolve"><code class="docutils literal notranslate"><span class="pre">resolve()</span></code></a></li>
+<li><a class="reference internal" href="#equate.facade.score_matrix"><code class="docutils literal notranslate"><span class="pre">score_matrix()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -450,7 +473,7 @@ matching to n-way linkage. Accepts the same keywords as <a class="reference inte
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=a39b7224"></script>
+</div><script src="../_static/documentation_options.js?v=01ec8363"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

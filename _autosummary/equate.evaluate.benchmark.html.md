@@ -39,7 +39,7 @@ optional benchmarks (equate#15).
 | [`BenchmarkReport`](#equate.evaluate.benchmark.BenchmarkReport)(rows[, meta])                 | All runs, plus a per-benchmark summary of mean ± std over seeds.          |
 | [`BenchmarkRow`](#equate.evaluate.benchmark.BenchmarkRow)(benchmark, seed, precision, ...) | One (benchmark, seed) run: the scores, their context, and what they cost. |
 
-### *class* equate.evaluate.benchmark.Benchmark(name, a, b, gold, meta=<factory>)
+### *class* equate.evaluate.benchmark.Benchmark(name, a, b, gold, meta=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -52,7 +52,7 @@ what a reader needs next to a score — at least `source` and `difficulty`.
 
 Share of all `a × b` pairs that are true matches.
 
-### *class* equate.evaluate.benchmark.BenchmarkReport(rows, meta=<factory>)
+### *class* equate.evaluate.benchmark.BenchmarkReport(rows, meta=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -96,15 +96,15 @@ asserted leak-free first), and the matcher it returns is scored on test. Choose 
 threshold on the validation part there ([`select_threshold()`](equate.evaluate.html.md#equate.evaluate.select_threshold)),
 never on test.
 
-* **Return type:**
-  [`BenchmarkReport`](#equate.evaluate.benchmark.BenchmarkReport)
-
 ```pycon
 >>> report = benchmark_matcher(n_seeds=2)
 >>> s = report.summary()['toy_names']
 >>> s['f1'][0] > 0.8, s['n_seeds']
 (True, 2)
 ```
+
+* **Return type:**
+  [`BenchmarkReport`](#equate.evaluate.benchmark.BenchmarkReport)
 
 ### equate.evaluate.benchmark.benchmarks *= <equate.registry.Registry object>*
 

@@ -48,9 +48,10 @@
 - [equate.matching.quadratic](_autosummary/equate.matching.quadratic.html.md): Quadratic matchers: align the &#42;nodes&#42; of two graphs (network alignment).
 - [equate.matching.soft](_autosummary/equate.matching.soft.html.md): Soft / optimal-transport matching (stage ③): a fractional transport plan rather than a
 - [equate.registry](_autosummary/equate.registry.html.md): A tiny name-keyed strategy registry with lazy factories (open-closed dispatch).
+- [equate.service](_autosummary/equate.service.html.md): The service layer: equate’s matching core as JSON-in/JSON-out operations.
 - [equate.util](_autosummary/equate.util.html.md): Utils for equate.
 - [For AI agents](ai-agents.html.md): &#96;equate&#96; ships artifacts for coding agents alongside its code. This page lists
-- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-10-14 07:23 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
+- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-10-19 10:59 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
 
 ## Optional
 

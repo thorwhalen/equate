@@ -13,6 +13,7 @@
         <title>equate</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
     
@@ -258,6 +259,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/equate.registry.html">equate.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/equate.service.html">equate.service</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/equate.util.html">equate.util</a></li>
 </ul>
 </li>
@@ -424,6 +426,20 @@ At the time of writing this, we’ve implemented:
 </pre></div>
 </div>
 <p>The comparators are <code class="docutils literal notranslate"><span class="pre">'dtw'</span></code> (exact DTW in a Sakoe-Chiba band), <code class="docutils literal notranslate"><span class="pre">'subsequence_dtw'</span></code>, <code class="docutils literal notranslate"><span class="pre">'soft_dtw'</span></code>, <code class="docutils literal notranslate"><span class="pre">'needleman_wunsch'</span></code> and <code class="docutils literal notranslate"><span class="pre">'smith_waterman'</span></code>. A <em>distance</em> comparator such as <code class="docutils literal notranslate"><span class="pre">'dtw'</span></code> is minimized automatically, and <code class="docutils literal notranslate"><span class="pre">sense=</span></code> overrides that. <code class="docutils literal notranslate"><span class="pre">equate.compare.sequence.dtw.align(a,</span> <span class="pre">b)</span></code> returns an <code class="docutils literal notranslate"><span class="pre">Alignment(score,</span> <span class="pre">path)</span></code> with the element-level correspondence. Faster engines are optional: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'equate[timeseries]'</span></code> / <code class="docutils literal notranslate"><span class="pre">'equate[bio]'</span></code>, then pass <code class="docutils literal notranslate"><span class="pre">backend=</span></code>.</p>
+</section>
+<section id="reviewing-matches-the-http-service-and-the-review-ui">
+<h2>Reviewing matches: the HTTP service and the review UI<a class="headerlink" href="#reviewing-matches-the-http-service-and-the-review-ui" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">equate.service.MatchService</span></code> exposes matching as JSON-in/JSON-out operations: a stateless <code class="docutils literal notranslate"><span class="pre">match</span></code>, and review <em>sessions</em> that score two collections once, then take confirm / reject / reassign edits and active-learning labels, re-solving the assignment from the cached scores after each one.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">equate.service</span><span class="w"> </span><span class="kn">import</span> <span class="n">MatchService</span>
+
+<span class="n">svc</span> <span class="o">=</span> <span class="n">MatchService</span><span class="p">()</span>
+<span class="n">view</span> <span class="o">=</span> <span class="n">svc</span><span class="o">.</span><span class="n">open_session</span><span class="p">([</span><span class="s2">"Jon Smith"</span><span class="p">,</span> <span class="s2">"Kate Doe"</span><span class="p">],</span> <span class="p">[</span><span class="s2">"Kate Do"</span><span class="p">,</span> <span class="s2">"John Smith"</span><span class="p">])</span>
+<span class="n">svc</span><span class="o">.</span><span class="n">edit</span><span class="p">(</span><span class="n">view</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="p">[{</span><span class="s2">"action"</span><span class="p">:</span> <span class="s2">"reject"</span><span class="p">,</span> <span class="s2">"item"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"candidate"</span><span class="p">:</span> <span class="mi">1</span><span class="p">}])</span>
+<span class="n">svc</span><span class="o">.</span><span class="n">next_query</span><span class="p">(</span><span class="n">view</span><span class="o">.</span><span class="n">session_id</span><span class="p">)</span>  <span class="c1"># the pair whose label would help most</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'equate[service]'</span></code> adds the HTTP API (built with <a class="reference external" href="https://github.com/i2mint/qh">qh</a>): <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">equate.service</span> <span class="pre">serve</span></code>, then <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/match</span></code>, <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/sessions</span></code>, <code class="docutils literal notranslate"><span class="pre">GET|POST</span> <span class="pre">/sessions/{id}/candidates/{item}</span></code>, <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/sessions/{id}/edits</span></code>, <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/sessions/{id}/label</span></code>. <code class="docutils literal notranslate"><span class="pre">equate.service.mk_app(service)</span></code> returns the FastAPI app to mount elsewhere. Sessions live in any <code class="docutils literal notranslate"><span class="pre">MutableMapping</span></code> (<code class="docutils literal notranslate"><span class="pre">MatchService(sessions=...)</span></code>), so a <code class="docutils literal notranslate"><span class="pre">dol</span></code> store persists them.</p>
+<p>The review UI (React, <a class="reference external" href="https://github.com/i2mint/zodal">zodal</a> + shadcn) is in <a class="reference internal" href="#ui/README.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ui/</span></code></span></a>: a review queue ordered by uncertainty, side-by-side field diffs, confirm / reject / reassign with optimistic updates, and a labelling widget.</p>
 </section>
 </section>
 <section id="an-example-in-search-of-a-import-to-package-name-matcher">
@@ -730,7 +746,7 @@ Let’s try two…</p>
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-14 07:23 UTC from <a href="https://github.com/thorwhalen/equate/commit/26dfabbd5aaef584c5253d0dac2a2d4de23729bc">26dfabb</a> (master) · equate 0.0.17 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-19 10:59 UTC from <a href="https://github.com/thorwhalen/equate/commit/4fcad0245948ffe341e208e0777a62705dc697c7">4fcad02</a> (master) · equate 0.0.18 · <a href="about-this-build.html">about this build</a></p>
         </article>
       </div>
       <footer>
@@ -766,7 +782,7 @@ Let’s try two…</p>
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=a39b7224"></script>
+</div><script src="_static/documentation_options.js?v=01ec8363"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

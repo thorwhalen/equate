@@ -13,6 +13,7 @@
         <title>equate.evaluate - equate</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
     
@@ -258,6 +259,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="equate.registry.html">equate.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="equate.service.html">equate.service</a></li>
 <li class="toctree-l3"><a class="reference internal" href="equate.util.html">equate.util</a></li>
 </ul>
 </li>
@@ -395,7 +397,7 @@ See <code class="docutils literal notranslate"><span class="pre">docs/research/1
 </div>
 <dl class="py class">
 <dt class="sig sig-object py" id="equate.evaluate.Benchmark">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.evaluate.</span></span><span class="sig-name descname"><span class="pre">Benchmark</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/benchmark.html#Benchmark"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.Benchmark" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.evaluate.</span></span><span class="sig-name descname"><span class="pre">Benchmark</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">dict()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/benchmark.html#Benchmark"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.Benchmark" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Two collections and the gold correspondence between them.</p>
 <p><code class="docutils literal notranslate"><span class="pre">gold</span></code> holds <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> pairs: <code class="docutils literal notranslate"><span class="pre">a[i]</span></code> corresponds to <code class="docutils literal notranslate"><span class="pre">b[j]</span></code>. <code class="docutils literal notranslate"><span class="pre">meta</span></code> carries
@@ -412,7 +414,7 @@ what a reader needs next to a score — at least <code class="docutils literal n
 
 <dl class="py class">
 <dt class="sig sig-object py" id="equate.evaluate.BenchmarkReport">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.evaluate.</span></span><span class="sig-name descname"><span class="pre">BenchmarkReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/benchmark.html#BenchmarkReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.BenchmarkReport" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.evaluate.</span></span><span class="sig-name descname"><span class="pre">BenchmarkReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">dict()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/benchmark.html#BenchmarkReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.BenchmarkReport" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>All runs, plus a per-benchmark summary of mean ± std over seeds.</p>
 <dl class="field-list simple">
@@ -501,7 +503,7 @@ set has recall 1.0 (there was nothing to find). Both empty is a perfect score.</
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="equate.evaluate.Scores.support">
-<span class="sig-name descname"><span class="pre">support</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#equate.evaluate.Scores.support" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">support</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#equate.evaluate.Scores.support" title="Link to this definition">¶</a></dt>
 <dd><p>the size of the gold side (true pairs, or records for a cluster metric)</p>
 </dd></dl>
 
@@ -520,17 +522,17 @@ set has recall 1.0 (there was nothing to find). Both empty is a perfect score.</
 <dt class="sig sig-object py" id="equate.evaluate.assert_no_leakage">
 <span class="sig-prename descclassname"><span class="pre">equate.evaluate.</span></span><span class="sig-name descname"><span class="pre">assert_no_leakage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_ids</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">parts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/split.html#assert_no_leakage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.assert_no_leakage" title="Link to this definition">¶</a></dt>
 <dd><p>Raise <code class="docutils literal notranslate"><span class="pre">AssertionError</span></code> if any entity has records in more than one of <code class="docutils literal notranslate"><span class="pre">parts</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">assert_no_leakage</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 <span class="gt">Traceback (most recent call last):</span>
 <span class="w">    </span><span class="o">...</span>
 <span class="gr">AssertionError</span>: <span class="n">entity 0 appears in parts 0 and 1 — the split leaks it</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -540,16 +542,16 @@ set has recall 1.0 (there was nothing to find). Both empty is a perfect score.</
 <p>Per record: precision is the share of its predicted cluster that truly belongs with
 it, recall the share of its true cluster that the prediction kept with it; both are
 averaged over records.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="equate.evaluate.scores.html#equate.evaluate.scores.Scores" title="equate.evaluate.scores.Scores"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scores</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">bcubed</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">recall</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 <span class="go">(0.75, 0.667)</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="equate.evaluate.scores.html#equate.evaluate.scores.Scores" title="equate.evaluate.scores.Scores"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scores</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -568,17 +570,17 @@ harness train per seed: it gets the train and validation parts only (the split i
 asserted leak-free first), and the matcher it returns is scored on test. Choose a
 threshold on the validation part there (<a class="reference internal" href="#equate.evaluate.select_threshold" title="equate.evaluate.select_threshold"><code class="xref py py-func docutils literal notranslate"><span class="pre">select_threshold()</span></code></a>),
 never on test.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="equate.evaluate.benchmark.html#equate.evaluate.benchmark.BenchmarkReport" title="equate.evaluate.benchmark.BenchmarkReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">BenchmarkReport</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">report</span> <span class="o">=</span> <span class="n">benchmark_matcher</span><span class="p">(</span><span class="n">n_seeds</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">summary</span><span class="p">()[</span><span class="s1">'toy_names'</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="p">[</span><span class="s1">'f1'</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="s1">'n_seeds'</span><span class="p">]</span>
 <span class="go">(True, 2)</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="equate.evaluate.benchmark.html#equate.evaluate.benchmark.BenchmarkReport" title="equate.evaluate.benchmark.BenchmarkReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">BenchmarkReport</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -613,15 +615,15 @@ pairs are canonicalized to unordered <code class="docutils literal notranslate">
 number of records. The alignment is a maximum-weight assignment, resolved through
 equate’s <a class="reference internal" href="equate.matching.html#equate.matching.matchers" title="equate.matching.matchers"><code class="xref py py-data docutils literal notranslate"><span class="pre">matchers</span></code></a> registry (<code class="docutils literal notranslate"><span class="pre">matcher</span></code>), never a
 private Hungarian.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">ceaf</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">f1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">0.733</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="equate.evaluate.scores.html#equate.evaluate.scores.Scores" title="equate.evaluate.scores.Scores"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scores</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">ceaf</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">f1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-<span class="go">0.733</span>
-</pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -632,17 +634,17 @@ private Hungarian.</p>
 installed and the numpy implementations otherwise; <code class="docutils literal notranslate"><span class="pre">'numpy'</span></code> forces the latter,
 <code class="docutils literal notranslate"><span class="pre">'sklearn'</span></code> requires the former. The two agree; the choice only exists so the
 core install needs neither.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">cluster_metrics</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">backend</span><span class="o">=</span><span class="s1">'numpy'</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
 <span class="go">['ari', 'b3_f1', 'b3_precision', 'b3_recall', 'ceaf_e_f1', 'completeness',</span>
 <span class="go"> 'homogeneity', 'v_measure']</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -651,15 +653,15 @@ core install needs neither.</p>
 <dd><p>Labels over <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">+</span> <span class="pre">B</span></code> (B’s records offset by <code class="docutils literal notranslate"><span class="pre">n_a</span></code>) from two-table <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> pairs.</p>
 <p>The bridge from a matching between two collections to the entity view a cluster
 metric or an entity split needs.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cross_pairs_to_labels</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)],</span> <span class="n">n_a</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">n_b</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">[0, 1, 2, 0]</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cross_pairs_to_labels</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)],</span> <span class="n">n_a</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">n_b</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="go">[0, 1, 2, 0]</span>
-</pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -670,32 +672,32 @@ metric or an entity split needs.</p>
 <a class="reference internal" href="#equate.evaluate.cross_pairs_to_labels" title="equate.evaluate.cross_pairs_to_labels"><code class="xref py py-func docutils literal notranslate"><span class="pre">cross_pairs_to_labels()</span></code></a> over a two-table gold matching).
 Entities, not records, are shuffled (<code class="docutils literal notranslate"><span class="pre">seed</span></code>) and cut by <code class="docutils literal notranslate"><span class="pre">ratios</span></code>, so the parts
 are disjoint in entities and roughly — not exactly — proportional in records.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="equate.evaluate.split.html#equate.evaluate.split.Split" title="equate.evaluate.split.Split"><code class="xref py py-class docutils literal notranslate"><span class="pre">Split</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">entity_split</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">assert_no_leakage</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="n">s</span><span class="o">.</span><span class="n">train</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">test</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">train</span> <span class="o">+</span> <span class="n">s</span><span class="o">.</span><span class="n">val</span> <span class="o">+</span> <span class="n">s</span><span class="o">.</span><span class="n">test</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
 <span class="go">True</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="equate.evaluate.split.html#equate.evaluate.split.Split" title="equate.evaluate.split.Split"><code class="xref py py-class docutils literal notranslate"><span class="pre">Split</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="equate.evaluate.labels_to_pairs">
 <span class="sig-prename descclassname"><span class="pre">equate.evaluate.</span></span><span class="sig-name descname"><span class="pre">labels_to_pairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/labels.html#labels_to_pairs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.labels_to_pairs" title="Link to this definition">¶</a></dt>
 <dd><p>Every within-cluster pair <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> with <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">&lt;</span> <span class="pre">j</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">labels_to_pairs</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
+<span class="go">[(0, 1), (0, 3), (1, 3)]</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#set" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]]</span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">labels_to_pairs</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
-<span class="go">[(0, 1), (0, 3), (1, 3)]</span>
-</pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -727,15 +729,15 @@ are disjoint in entities and roughly — not exactly — proportional in records
 <p>Labels are canonical: numbered in order of each cluster’s smallest record, so two
 pair sets that induce the same partition give equal label lists. A record no pair
 mentions is a singleton.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pairs_to_labels</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">)],</span> <span class="n">n</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="go">[0, 0, 0, 1, 2, 2]</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pairs_to_labels</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">)],</span> <span class="n">n</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
-<span class="go">[0, 0, 0, 1, 2, 2]</span>
-</pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -745,16 +747,16 @@ mentions is a singleton.</p>
 <p><code class="docutils literal notranslate"><span class="pre">self_join=True</span></code> (deduplication within one collection) treats <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> and
 <code class="docutils literal notranslate"><span class="pre">(j,</span> <span class="pre">i)</span></code> as one pair and drops <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">i)</span></code>; otherwise pairs are <code class="docutils literal notranslate"><span class="pre">(row</span> <span class="pre">of</span> <span class="pre">A,</span> <span class="pre">row</span>
 <span class="pre">of</span> <span class="pre">B)</span></code> and orientation matters.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="equate.evaluate.scores.html#equate.evaluate.scores.Scores" title="equate.evaluate.scores.Scores"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scores</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">pairwise_prf</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)],</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">recall</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">support</span>
 <span class="go">(0.5, 0.5, 2)</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="equate.evaluate.scores.html#equate.evaluate.scores.Scores" title="equate.evaluate.scores.Scores"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scores</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -763,15 +765,15 @@ mentions is a singleton.</p>
 <dd><p>Average precision: the area under the precision-recall step curve.</p>
 <p>Records with tied scores enter the ranking together (one threshold step), so the
 figure does not depend on the input order of ties. No positives → <code class="docutils literal notranslate"><span class="pre">nan</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">pr_auc</span><span class="p">([</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">0.833</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">pr_auc</span><span class="p">([</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span> <span class="mi">3</span><span class="p">)</span>
-<span class="go">0.833</span>
-</pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -781,16 +783,16 @@ figure does not depend on the input order of ties. No positives → <code class=
 <p><code class="docutils literal notranslate"><span class="pre">ranked[q]</span></code> is query <code class="docutils literal notranslate"><span class="pre">q</span></code>’s candidates, best first; <code class="docutils literal notranslate"><span class="pre">gold[q]</span></code> is its true match
 or a collection of them. Queries with no gold are skipped; a query whose gold never
 appears contributes 0.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">ranking_metrics</span><span class="p">({</span><span class="s1">'a'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'x'</span><span class="p">,</span> <span class="s1">'y'</span><span class="p">],</span> <span class="s1">'b'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'z'</span><span class="p">,</span> <span class="s1">'w'</span><span class="p">]},</span> <span class="p">{</span><span class="s1">'a'</span><span class="p">:</span> <span class="s1">'y'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">:</span> <span class="s1">'z'</span><span class="p">},</span> <span class="n">ks</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">[</span><span class="s1">'recall_at_1'</span><span class="p">],</span> <span class="n">m</span><span class="p">[</span><span class="s1">'mrr'</span><span class="p">]</span>
 <span class="go">(0.5, 0.75)</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -801,16 +803,16 @@ appears contributes 0.</p>
 <code class="docutils literal notranslate"><span class="pre">'recall'</span></code>; ties go to the higher threshold (fewer predicted matches). Returns the
 threshold and the <a class="reference internal" href="#equate.evaluate.Scores" title="equate.evaluate.Scores"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scores</span></code></a> it achieves on the data it was chosen on — which
 are therefore optimistic, and are not a test result.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference internal" href="equate.evaluate.scores.html#equate.evaluate.scores.Scores" title="equate.evaluate.scores.Scores"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scores</span></code></a>]</span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">select_threshold</span><span class="p">([</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">f1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 <span class="go">(0.3, 0.857)</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference internal" href="equate.evaluate.scores.html#equate.evaluate.scores.Scores" title="equate.evaluate.scores.Scores"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scores</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <p class="rubric">Modules</p>
@@ -937,7 +939,7 @@ are therefore optimistic, and are not a test result.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=a39b7224"></script>
+</div><script src="../_static/documentation_options.js?v=01ec8363"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

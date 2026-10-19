@@ -62,7 +62,7 @@ candidates is unambiguous (no rival to be confused with), so its margin is `+inf
 
 The top-`n` `(right_index, score)` candidates for left item `i`.
 
-### *class* equate.interactive.ConstraintSet(forced=<factory>, forbidden=<factory>)
+### *class* equate.interactive.ConstraintSet(forced=list(), forbidden=list())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 

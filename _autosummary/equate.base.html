@@ -13,6 +13,7 @@
         <title>equate.base - equate</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
     
@@ -258,6 +259,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="equate.registry.html">equate.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="equate.service.html">equate.service</a></li>
 <li class="toctree-l3"><a class="reference internal" href="equate.util.html">equate.util</a></li>
 </ul>
 </li>
@@ -471,7 +473,7 @@ comparators stay directional and are only symmetrized at the matcher boundary).<
 
 <dl class="py class">
 <dt class="sig sig-object py" id="equate.base.Explanation">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.base.</span></span><span class="sig-name descname"><span class="pre">Explanation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">summary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">details</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/base.html#Explanation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.base.Explanation" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.base.</span></span><span class="sig-name descname"><span class="pre">Explanation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">summary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">details</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">dict()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/base.html#Explanation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.base.Explanation" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Render-agnostic justification for a decision (rules / attributions / diffs).</p>
 <p>A structured payload, never a printed string, so any UI can render it declaratively.</p>
@@ -853,7 +855,7 @@ Empty inputs return an empty array (an empty collection yields an empty matching
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=a39b7224"></script>
+</div><script src="../_static/documentation_options.js?v=01ec8363"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

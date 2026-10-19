@@ -44,7 +44,7 @@ See `docs/research/14-evaluation-benchmarks-and-methodology.md`.
 | [`BenchmarkReport`](#equate.evaluate.BenchmarkReport)(rows[, meta])                 | All runs, plus a per-benchmark summary of mean ± std over seeds.                |
 | [`BenchmarkRow`](#equate.evaluate.BenchmarkRow)(benchmark, seed, precision, ...) | One (benchmark, seed) run: the scores, their context, and what they cost.       |
 
-### *class* equate.evaluate.Benchmark(name, a, b, gold, meta=<factory>)
+### *class* equate.evaluate.Benchmark(name, a, b, gold, meta=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -57,7 +57,7 @@ what a reader needs next to a score — at least `source` and `difficulty`.
 
 Share of all `a × b` pairs that are true matches.
 
-### *class* equate.evaluate.BenchmarkReport(rows, meta=<factory>)
+### *class* equate.evaluate.BenchmarkReport(rows, meta=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -121,7 +121,7 @@ Build from precision and recall; F1 is derived, so it can never disagree.
 * **Return type:**
   [`Scores`](equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
 
-#### support *: [int](https://docs.python.org/3/builtins/functions.html#int) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### support *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[int](https://docs.python.org/3/builtins/functions.html#int)]* *= None*
 
 the size of the gold side (true pairs, or records for a cluster metric)
 
@@ -135,15 +135,15 @@ Record indices of each part; the entity ids of a part never occur in another.
 
 Raise `AssertionError` if any entity has records in more than one of `parts`.
 
-* **Return type:**
-  [`None`](https://docs.python.org/3/builtins/constants.html#None)
-
 ```pycon
 >>> assert_no_leakage([0, 0, 1], [0], [1])
 Traceback (most recent call last):
     ...
 AssertionError: entity 0 appears in parts 0 and 1 — the split leaks it
 ```
+
+* **Return type:**
+  [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### equate.evaluate.bcubed(pred_labels, true_labels)
 
@@ -153,14 +153,14 @@ Per record: precision is the share of its predicted cluster that truly belongs w
 it, recall the share of its true cluster that the prediction kept with it; both are
 averaged over records.
 
-* **Return type:**
-  [`Scores`](equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
-
 ```pycon
 >>> s = bcubed([0, 0, 1, 1], [0, 0, 0, 1])
 >>> round(s.precision, 3), round(s.recall, 3)
 (0.75, 0.667)
 ```
+
+* **Return type:**
+  [`Scores`](equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
 
 ### equate.evaluate.benchmark_matcher(matcher=None, , on=('toy_names',), n_seeds=3, ratios=(0.6, 0.2, 0.2), fit=None)
 
@@ -180,15 +180,15 @@ asserted leak-free first), and the matcher it returns is scored on test. Choose 
 threshold on the validation part there ([`select_threshold()`](#equate.evaluate.select_threshold)),
 never on test.
 
-* **Return type:**
-  [`BenchmarkReport`](equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.BenchmarkReport)
-
 ```pycon
 >>> report = benchmark_matcher(n_seeds=2)
 >>> s = report.summary()['toy_names']
 >>> s['f1'][0] > 0.8, s['n_seeds']
 (True, 2)
 ```
+
+* **Return type:**
+  [`BenchmarkReport`](equate.evaluate.benchmark.html.md#equate.evaluate.benchmark.BenchmarkReport)
 
 ### equate.evaluate.blocking_metrics(candidate_pairs, true_pairs, , n_a, n_b=None)
 
@@ -222,13 +222,13 @@ number of records. The alignment is a maximum-weight assignment, resolved throug
 equate’s [`matchers`](equate.matching.html.md#equate.matching.matchers) registry (`matcher`), never a
 private Hungarian.
 
-* **Return type:**
-  [`Scores`](equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
-
 ```pycon
 >>> round(ceaf([0, 0, 1, 1], [0, 0, 0, 1]).f1, 3)
 0.733
 ```
+
+* **Return type:**
+  [`Scores`](equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
 
 ### equate.evaluate.cluster_metrics(pred_labels, true_labels, , backend='auto')
 
@@ -239,15 +239,15 @@ installed and the numpy implementations otherwise; `'numpy'` forces the latter,
 `'sklearn'` requires the former. The two agree; the choice only exists so the
 core install needs neither.
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> m = cluster_metrics([0, 0, 1, 1], [0, 0, 0, 1], backend='numpy')
 >>> sorted(m)
 ['ari', 'b3_f1', 'b3_precision', 'b3_recall', 'ceaf_e_f1', 'completeness',
  'homogeneity', 'v_measure']
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### equate.evaluate.cross_pairs_to_labels(pairs, , n_a, n_b)
 
@@ -256,13 +256,13 @@ Labels over `A + B` (B’s records offset by `n_a`) from two-table `(i, j)` pair
 The bridge from a matching between two collections to the entity view a cluster
 metric or an entity split needs.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]
-
 ```pycon
 >>> cross_pairs_to_labels([(0, 1)], n_a=2, n_b=2)
 [0, 1, 2, 0]
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]
 
 ### equate.evaluate.entity_split(entity_ids, , ratios=(0.6, 0.2, 0.2), seed=0)
 
@@ -273,9 +273,6 @@ Split records into train / val / test by entity, never by record or pair.
 Entities, not records, are shuffled (`seed`) and cut by `ratios`, so the parts
 are disjoint in entities and roughly — not exactly — proportional in records.
 
-* **Return type:**
-  [`Split`](equate.evaluate.split.html.md#equate.evaluate.split.Split)
-
 ```pycon
 >>> s = entity_split([0, 0, 1, 1, 2, 3, 4, 4, 5, 6], seed=1)
 >>> assert_no_leakage([0, 0, 1, 1, 2, 3, 4, 4, 5, 6], s.train, s.test)
@@ -283,17 +280,20 @@ are disjoint in entities and roughly — not exactly — proportional in records
 True
 ```
 
+* **Return type:**
+  [`Split`](equate.evaluate.split.html.md#equate.evaluate.split.Split)
+
 ### equate.evaluate.labels_to_pairs(labels)
 
 Every within-cluster pair `(i, j)` with `i < j`.
-
-* **Return type:**
-  [`set`](https://docs.python.org/3/builtins/stdtypes.html#set)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int)]]
 
 ```pycon
 >>> sorted(labels_to_pairs([0, 0, 1, 0]))
 [(0, 1), (0, 3), (1, 3)]
 ```
+
+* **Return type:**
+  [`set`](https://docs.python.org/3/builtins/stdtypes.html#set)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int)]]
 
 ### equate.evaluate.list_benchmarks()
 
@@ -317,13 +317,13 @@ Labels are canonical: numbered in order of each cluster’s smallest record, so 
 pair sets that induce the same partition give equal label lists. A record no pair
 mentions is a singleton.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]
-
 ```pycon
 >>> pairs_to_labels([(0, 1), (1, 2), (4, 5)], n=6)
 [0, 0, 0, 1, 2, 2]
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]
 
 ### equate.evaluate.pairwise_prf(pred_pairs, true_pairs, , self_join=False)
 
@@ -333,14 +333,14 @@ Pairwise precision / recall / F1 of predicted pairs against gold pairs.
 `(j, i)` as one pair and drops `(i, i)`; otherwise pairs are `(row of A, row
 of B)` and orientation matters.
 
-* **Return type:**
-  [`Scores`](equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
-
 ```pycon
 >>> s = pairwise_prf([(0, 0), (1, 2)], [(0, 0), (1, 1)])
 >>> s.precision, s.recall, s.support
 (0.5, 0.5, 2)
 ```
+
+* **Return type:**
+  [`Scores`](equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
 
 ### equate.evaluate.pr_auc(scores, y_true)
 
@@ -349,13 +349,13 @@ Average precision: the area under the precision-recall step curve.
 Records with tied scores enter the ranking together (one threshold step), so the
 figure does not depend on the input order of ties. No positives → `nan`.
 
-* **Return type:**
-  [`float`](https://docs.python.org/3/builtins/functions.html#float)
-
 ```pycon
 >>> round(pr_auc([0.9, 0.8, 0.7, 0.1], [1, 0, 1, 0]), 3)
 0.833
 ```
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 ### equate.evaluate.ranking_metrics(ranked, gold, , ks=(1, 5, 10))
 
@@ -365,14 +365,14 @@ Recall@k, MRR and MAP for ranked candidate lists.
 or a collection of them. Queries with no gold are skipped; a query whose gold never
 appears contributes 0.
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> m = ranking_metrics({'a': ['x', 'y'], 'b': ['z', 'w']}, {'a': 'y', 'b': 'z'}, ks=(1,))
 >>> m['recall_at_1'], m['mrr']
 (0.5, 0.75)
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### equate.evaluate.select_threshold(scores, y_true, , optimize='f1')
 
@@ -383,14 +383,14 @@ Pass **validation** scores and labels. `optimize` is `'f1'`, `'precision'` or
 threshold and the [`Scores`](#equate.evaluate.Scores) it achieves on the data it was chosen on — which
 are therefore optimistic, and are not a test result.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`Scores`](equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)]
-
 ```pycon
 >>> t, s = select_threshold([0.9, 0.8, 0.4, 0.3], [1, 1, 0, 1])
 >>> t, round(s.f1, 3)
 (0.3, 0.857)
 ```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`Scores`](equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)]
 
 ### Modules
 

@@ -1,0 +1,43 @@
+equate.service
+==============
+
+.. automodule:: equate.service
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      explain_pair
+      record_text
+      to_jsonable
+      json_schemas
+      mk_app
+      serve
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      MatchService
+      Accounting
+      TierCost
+      Edit
+      Label
+      FieldDiff
+      CandidateView
+      PairView
+      ReviewItem
+      Query
+      MatchResult
+      SessionView
+      EditResult
+      LabelResult
+      Session
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      SessionNotFound
+   

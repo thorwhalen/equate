@@ -21,4 +21,5 @@
    interactive
    matching
    registry
+   service
    util

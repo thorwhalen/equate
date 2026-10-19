@@ -10,10 +10,11 @@ swappable by one keyword (decision register D4): `featurize=`, `compare=`, `bloc
 
 ### Functions
 
-| [`match`](#equate.facade.match)(A[, B, featurize, compare, block, ...])   | Match two collections into a [`Matching`](equate.base.html.md#equate.base.Matching) of scored `(i, j)` pairs.                                  |
-|--------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`dedupe`](#equate.facade.dedupe)(A, \*[, compare, block, threshold, ...]) | Deduplicate a single collection into entity groups.                                                                                                                    |
-| [`resolve`](#equate.facade.resolve)(\*collections, \*\*kwargs)              | Resolve entities across multiple collections: pool them (in order) and [`dedupe()`](#equate.facade.dedupe) -> a Partition over the pooled items. |
+| [`match`](#equate.facade.match)(A[, B, featurize, compare, block, ...])     | Match two collections into a [`Matching`](equate.base.html.md#equate.base.Matching) of scored `(i, j)` pairs.                                  |
+|----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`score_matrix`](#equate.facade.score_matrix)(A, B, \*[, featurize, compare, ...]) | Score `A` against `B` into a [`ScoreMatrix`](equate.base.html.md#equate.base.ScoreMatrix) — stages ① and ②.                                    |
+| [`dedupe`](#equate.facade.dedupe)(A, \*[, compare, block, threshold, ...])   | Deduplicate a single collection into entity groups.                                                                                                                    |
+| [`resolve`](#equate.facade.resolve)(\*collections, \*\*kwargs)                | Resolve entities across multiple collections: pool them (in order) and [`dedupe()`](#equate.facade.dedupe) -> a Partition over the pooled items. |
 
 ### equate.facade.dedupe(A, , compare='ratio', block=None, threshold=0.7, cluster='connected_components', sense=None)
 
@@ -68,3 +69,20 @@ Returns a `Matching`: iterate it for `(i, j)` pairs, `dict(...)` it for a mappin
 Resolve entities across multiple collections: pool them (in order) and
 [`dedupe()`](#equate.facade.dedupe) -> a Partition over the pooled items. Generalizes cross-collection
 matching to n-way linkage. Accepts the same keywords as [`dedupe()`](#equate.facade.dedupe).
+
+### equate.facade.score_matrix(A, B, , featurize=None, compare=None, block=None, sense=None)
+
+Score `A` against `B` into a [`ScoreMatrix`](equate.base.html.md#equate.base.ScoreMatrix) — stages ① and ②.
+
+The scoring half of [`match()`](#equate.facade.match), exposed on its own for callers that keep the scores
+and match later or repeatedly (the interactive loop re-solves from them on every edit;
+see [`equate.service`](equate.service.html.md#module-equate.service)). The keywords mean exactly what they mean in [`match()`](#equate.facade.match):
+the default is the TF-IDF + cosine vector route; `compare=` takes the direct pairwise
+route; `block=` scores only the blocker’s candidates into a sparse matrix; `sense`
+defaults to the comparator’s declared polarity.
+
+```pycon
+>>> sm = score_matrix(['apple', 'kiwi'], ['kiwis', 'apples'], compare='ratio')
+>>> sm.shape, sm.sense
+((2, 2), 'maximize')
+```

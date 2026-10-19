@@ -22,13 +22,13 @@ Average precision: the area under the precision-recall step curve.
 Records with tied scores enter the ranking together (one threshold step), so the
 figure does not depend on the input order of ties. No positives → `nan`.
 
-* **Return type:**
-  [`float`](https://docs.python.org/3/builtins/functions.html#float)
-
 ```pycon
 >>> round(pr_auc([0.9, 0.8, 0.7, 0.1], [1, 0, 1, 0]), 3)
 0.833
 ```
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 ### equate.evaluate.ranking.ranking_metrics(ranked, gold, , ks=(1, 5, 10))
 
@@ -38,14 +38,14 @@ Recall@k, MRR and MAP for ranked candidate lists.
 or a collection of them. Queries with no gold are skipped; a query whose gold never
 appears contributes 0.
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> m = ranking_metrics({'a': ['x', 'y'], 'b': ['z', 'w']}, {'a': 'y', 'b': 'z'}, ks=(1,))
 >>> m['recall_at_1'], m['mrr']
 (0.5, 0.75)
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### equate.evaluate.ranking.select_threshold(scores, y_true, , optimize='f1')
 
@@ -56,11 +56,11 @@ Pass **validation** scores and labels. `optimize` is `'f1'`, `'precision'` or
 threshold and the `Scores` it achieves on the data it was chosen on — which
 are therefore optimistic, and are not a test result.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`Scores`](equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)]
-
 ```pycon
 >>> t, s = select_threshold([0.9, 0.8, 0.4, 0.3], [1, 1, 0, 1])
 >>> t, round(s.f1, 3)
 (0.3, 0.857)
 ```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`Scores`](equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)]

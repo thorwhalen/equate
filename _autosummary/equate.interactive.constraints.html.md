@@ -19,7 +19,7 @@ replayable log.
 | [`ConstraintSet`](#equate.interactive.constraints.ConstraintSet)([forced, forbidden])   | Append-only record of user edits: `forced` (confirmed) and `forbidden` (rejected) `(i, j)` edges.   |
 |---------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
 
-### *class* equate.interactive.constraints.ConstraintSet(forced=<factory>, forbidden=<factory>)
+### *class* equate.interactive.constraints.ConstraintSet(forced=list(), forbidden=list())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 

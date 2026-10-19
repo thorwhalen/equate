@@ -29,15 +29,15 @@ Record indices of each part; the entity ids of a part never occur in another.
 
 Raise `AssertionError` if any entity has records in more than one of `parts`.
 
-* **Return type:**
-  [`None`](https://docs.python.org/3/builtins/constants.html#None)
-
 ```pycon
 >>> assert_no_leakage([0, 0, 1], [0], [1])
 Traceback (most recent call last):
     ...
 AssertionError: entity 0 appears in parts 0 and 1 — the split leaks it
 ```
+
+* **Return type:**
+  [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### equate.evaluate.split.entity_split(entity_ids, , ratios=(0.6, 0.2, 0.2), seed=0)
 
@@ -48,12 +48,12 @@ Split records into train / val / test by entity, never by record or pair.
 Entities, not records, are shuffled (`seed`) and cut by `ratios`, so the parts
 are disjoint in entities and roughly — not exactly — proportional in records.
 
-* **Return type:**
-  [`Split`](#equate.evaluate.split.Split)
-
 ```pycon
 >>> s = entity_split([0, 0, 1, 1, 2, 3, 4, 4, 5, 6], seed=1)
 >>> assert_no_leakage([0, 0, 1, 1, 2, 3, 4, 4, 5, 6], s.train, s.test)
 >>> sorted(s.train + s.val + s.test) == list(range(10))
 True
 ```
+
+* **Return type:**
+  [`Split`](#equate.evaluate.split.Split)

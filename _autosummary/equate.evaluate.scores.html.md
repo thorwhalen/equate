@@ -50,6 +50,6 @@ Build from precision and recall; F1 is derived, so it can never disagree.
 * **Return type:**
   [`Scores`](#equate.evaluate.scores.Scores)
 
-#### support *: [int](https://docs.python.org/3/builtins/functions.html#int) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+#### support *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[int](https://docs.python.org/3/builtins/functions.html#int)]* *= None*
 
 the size of the gold side (true pairs, or records for a cluster metric)

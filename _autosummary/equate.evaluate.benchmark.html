@@ -13,6 +13,7 @@
         <title>equate.evaluate.benchmark - equate</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
     
@@ -258,6 +259,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="equate.registry.html">equate.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="equate.service.html">equate.service</a></li>
 <li class="toctree-l3"><a class="reference internal" href="equate.util.html">equate.util</a></li>
 </ul>
 </li>
@@ -364,7 +366,7 @@ optional benchmarks (equate#15).</p>
 </div>
 <dl class="py class">
 <dt class="sig sig-object py" id="equate.evaluate.benchmark.Benchmark">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.evaluate.benchmark.</span></span><span class="sig-name descname"><span class="pre">Benchmark</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/benchmark.html#Benchmark"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.benchmark.Benchmark" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.evaluate.benchmark.</span></span><span class="sig-name descname"><span class="pre">Benchmark</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">dict()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/benchmark.html#Benchmark"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.benchmark.Benchmark" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Two collections and the gold correspondence between them.</p>
 <p><code class="docutils literal notranslate"><span class="pre">gold</span></code> holds <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> pairs: <code class="docutils literal notranslate"><span class="pre">a[i]</span></code> corresponds to <code class="docutils literal notranslate"><span class="pre">b[j]</span></code>. <code class="docutils literal notranslate"><span class="pre">meta</span></code> carries
@@ -381,7 +383,7 @@ what a reader needs next to a score — at least <code class="docutils literal n
 
 <dl class="py class">
 <dt class="sig sig-object py" id="equate.evaluate.benchmark.BenchmarkReport">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.evaluate.benchmark.</span></span><span class="sig-name descname"><span class="pre">BenchmarkReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/benchmark.html#BenchmarkReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.benchmark.BenchmarkReport" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.evaluate.benchmark.</span></span><span class="sig-name descname"><span class="pre">BenchmarkReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">dict()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/evaluate/benchmark.html#BenchmarkReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.evaluate.benchmark.BenchmarkReport" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>All runs, plus a per-benchmark summary of mean ± std over seeds.</p>
 <dl class="field-list simple">
@@ -435,17 +437,17 @@ harness train per seed: it gets the train and validation parts only (the split i
 asserted leak-free first), and the matcher it returns is scored on test. Choose a
 threshold on the validation part there (<a class="reference internal" href="equate.evaluate.html#equate.evaluate.select_threshold" title="equate.evaluate.select_threshold"><code class="xref py py-func docutils literal notranslate"><span class="pre">select_threshold()</span></code></a>),
 never on test.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#equate.evaluate.benchmark.BenchmarkReport" title="equate.evaluate.benchmark.BenchmarkReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">BenchmarkReport</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">report</span> <span class="o">=</span> <span class="n">benchmark_matcher</span><span class="p">(</span><span class="n">n_seeds</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">summary</span><span class="p">()[</span><span class="s1">'toy_names'</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="p">[</span><span class="s1">'f1'</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="s1">'n_seeds'</span><span class="p">]</span>
 <span class="go">(True, 2)</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#equate.evaluate.benchmark.BenchmarkReport" title="equate.evaluate.benchmark.BenchmarkReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">BenchmarkReport</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py data">
@@ -555,7 +557,7 @@ never on test.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=a39b7224"></script>
+</div><script src="../_static/documentation_options.js?v=01ec8363"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

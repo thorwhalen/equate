@@ -26,14 +26,14 @@ Per record: precision is the share of its predicted cluster that truly belongs w
 it, recall the share of its true cluster that the prediction kept with it; both are
 averaged over records.
 
-* **Return type:**
-  [`Scores`](equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
-
 ```pycon
 >>> s = bcubed([0, 0, 1, 1], [0, 0, 0, 1])
 >>> round(s.precision, 3), round(s.recall, 3)
 (0.75, 0.667)
 ```
+
+* **Return type:**
+  [`Scores`](equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
 
 ### equate.evaluate.metrics.ceaf(pred_labels, true_labels, , variant='entity', matcher='optimal')
 
@@ -46,13 +46,13 @@ number of records. The alignment is a maximum-weight assignment, resolved throug
 equate’s [`matchers`](equate.matching.html.md#equate.matching.matchers) registry (`matcher`), never a
 private Hungarian.
 
-* **Return type:**
-  [`Scores`](equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
-
 ```pycon
 >>> round(ceaf([0, 0, 1, 1], [0, 0, 0, 1]).f1, 3)
 0.733
 ```
+
+* **Return type:**
+  [`Scores`](equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
 
 ### equate.evaluate.metrics.cluster_metrics(pred_labels, true_labels, , backend='auto')
 
@@ -63,15 +63,15 @@ installed and the numpy implementations otherwise; `'numpy'` forces the latter,
 `'sklearn'` requires the former. The two agree; the choice only exists so the
 core install needs neither.
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> m = cluster_metrics([0, 0, 1, 1], [0, 0, 0, 1], backend='numpy')
 >>> sorted(m)
 ['ari', 'b3_f1', 'b3_precision', 'b3_recall', 'ceaf_e_f1', 'completeness',
  'homogeneity', 'v_measure']
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### equate.evaluate.metrics.pairwise_prf(pred_pairs, true_pairs, , self_join=False)
 
@@ -81,11 +81,11 @@ Pairwise precision / recall / F1 of predicted pairs against gold pairs.
 `(j, i)` as one pair and drops `(i, i)`; otherwise pairs are `(row of A, row
 of B)` and orientation matters.
 
-* **Return type:**
-  [`Scores`](equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)
-
 ```pycon
 >>> s = pairwise_prf([(0, 0), (1, 2)], [(0, 0), (1, 1)])
 >>> s.precision, s.recall, s.support
 (0.5, 0.5, 2)
 ```
+
+* **Return type:**
+  [`Scores`](equate.evaluate.scores.html.md#equate.evaluate.scores.Scores)

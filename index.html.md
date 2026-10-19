@@ -138,6 +138,23 @@ dict(match(A, B, compare="dtw"))  # {0: 1, 1: 0}
 
 The comparators are `'dtw'` (exact DTW in a Sakoe-Chiba band), `'subsequence_dtw'`, `'soft_dtw'`, `'needleman_wunsch'` and `'smith_waterman'`. A *distance* comparator such as `'dtw'` is minimized automatically, and `sense=` overrides that. `equate.compare.sequence.dtw.align(a, b)` returns an `Alignment(score, path)` with the element-level correspondence. Faster engines are optional: `pip install 'equate[timeseries]'` / `'equate[bio]'`, then pass `backend=`.
 
+## Reviewing matches: the HTTP service and the review UI
+
+`equate.service.MatchService` exposes matching as JSON-in/JSON-out operations: a stateless `match`, and review *sessions* that score two collections once, then take confirm / reject / reassign edits and active-learning labels, re-solving the assignment from the cached scores after each one.
+
+```python
+from equate.service import MatchService
+
+svc = MatchService()
+view = svc.open_session(["Jon Smith", "Kate Doe"], ["Kate Do", "John Smith"])
+svc.edit(view.session_id, [{"action": "reject", "item": 0, "candidate": 1}])
+svc.next_query(view.session_id)  # the pair whose label would help most
+```
+
+`pip install 'equate[service]'` adds the HTTP API (built with [qh](https://github.com/i2mint/qh)): `python -m equate.service serve`, then `POST /match`, `POST /sessions`, `GET|POST /sessions/{id}/candidates/{item}`, `POST /sessions/{id}/edits`, `POST /sessions/{id}/label`. `equate.service.mk_app(service)` returns the FastAPI app to mount elsewhere. Sessions live in any `MutableMapping` (`MatchService(sessions=...)`), so a `dol` store persists them.
+
+The review UI (React, [zodal](https://github.com/i2mint/zodal) + shadcn) is in [`ui/`](): a review queue ordered by uncertainty, side-by-side field diffs, confirm / reject / reassign with optimistic updates, and a labelling widget.
+
 # An example: In search of a import-to-package name matcher
 
 Here, we’ll go through an actual practical example of when you might want to match
