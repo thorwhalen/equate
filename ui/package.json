@@ -10,7 +10,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b",
-    "test": "vitest run"
+    "test": "vitest run",
+    "ci-local": "npm test && npm run build"
   },
   "dependencies": {
     "@zodal/core": "0.2.0",
@@ -41,6 +42,17 @@
     "@zodal/ui-shadcn": {
       "@zodal/core": "$@zodal/core",
       "@zodal/ui": "$@zodal/ui"
+    }
+  },
+  "wads": {
+    "ci": {
+      "nodeVersions": [
+        "20",
+        "22"
+      ],
+      "publish": {
+        "enabled": false
+      }
     }
   }
 }

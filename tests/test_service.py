@@ -507,3 +507,39 @@ def test_floor_assignment_is_lexicographic_unlike_match_threshold():
     assert _pairs(filtered.pairs) == {1: 0}  # best total first (a-y, b-x), then a-y dropped
     v = svc.open_session(["a", "b"], ["x", "y"], compare=cmp, floor=0.5)
     assert _pairs(v.assignment) == {0: 0, 1: 1}  # both acceptable pairs kept
+
+
+# --- serving the built UI (equate#22) -----------------------------------------------
+
+
+def _fake_bundle(tmp_path):
+    (tmp_path / "assets").mkdir()
+    (tmp_path / "index.html").write_text('<div id="root"></div><script src="/assets/app.js"></script>')
+    (tmp_path / "assets" / "app.js").write_text("console.log(1)")
+    return tmp_path
+
+
+def test_mk_app_serves_the_ui_and_moves_the_api_under_api(tmp_path):
+    pytest.importorskip("qh")
+    from qh.testing import test_app
+
+    from equate.service import mk_app
+
+    with test_app(mk_app(ui_dir=_fake_bundle(tmp_path))) as c:
+        assert '<div id="root">' in c.get("/").text
+        assert c.get("/?session=abc").status_code == 200  # the UI's own route
+        assert c.get("/assets/app.js").text == "console.log(1)"
+        v = c.post("/api/sessions", json={"A": A, "B": B}).json()
+        assert {p["item"]: p["candidate"] for p in v["assignment"]} == TRUTH
+        assert c.get("/api/sessions/nope").status_code == 404
+        assert c.post("/sessions", json={"A": A, "B": B}).status_code in (404, 405)  # not at /
+
+
+def test_mk_app_ui_dir_errors(tmp_path):
+    pytest.importorskip("qh")
+    from equate.service import mk_app
+
+    with pytest.raises(FileNotFoundError, match="npm run build"):
+        mk_app(ui_dir=tmp_path)
+    with pytest.raises(ValueError, match="api_prefix"):
+        mk_app(ui_dir=_fake_bundle(tmp_path), api_prefix="/")
