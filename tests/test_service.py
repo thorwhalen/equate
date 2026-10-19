@@ -543,3 +543,17 @@ def test_mk_app_ui_dir_errors(tmp_path):
         mk_app(ui_dir=tmp_path)
     with pytest.raises(ValueError, match="api_prefix"):
         mk_app(ui_dir=_fake_bundle(tmp_path), api_prefix="/")
+
+
+def test_served_ui_docs_point_at_the_api_prefix(tmp_path):
+    pytest.importorskip("qh")
+    from qh.testing import test_app
+
+    from equate.service import mk_app
+
+    with test_app(mk_app(ui_dir=_fake_bundle(tmp_path))) as c:
+        spec = c.get("/api/openapi.json").json()
+        assert spec["servers"] == [{"url": "/api"}]
+        assert any(p.startswith("/sessions") for p in spec["paths"])
+        assert c.get("/api/docs").status_code == 200
+        assert c.get("/openapi.json").status_code == 404  # no empty root spec

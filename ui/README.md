@@ -20,7 +20,7 @@ cd ui && npm install && npm run build && cd ..
 python -m equate.service serve ui=ui/dist   # UI at http://127.0.0.1:8000/, API under /api
 ```
 
-(`equate.service.mk_app(ui_dir="ui/dist")` is the same app to mount elsewhere.) The wheel does not ship a prebuilt bundle yet; build it from a checkout.
+(`equate.service.mk_app(ui_dir="ui/dist")` is the same app to mount elsewhere; the API's docs are at `/api/docs`.) The wheel does not ship a prebuilt bundle yet; build it from a checkout. The bundle is built for the site root with its API at `/api`: serving it under a sub-path, or the API under another prefix, needs a matching build (vite `base`, `VITE_EQUATE_API`).
 
 `EQUATE_API_TARGET=http://host:port npm run dev` points the dev proxy at another service; `VITE_EQUATE_API=https://... npm run build` builds a UI that calls a service directly (the service allows CORS from the vite dev origins by default; see `mk_app(cors_origins=...)`).
 

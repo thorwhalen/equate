@@ -28,6 +28,7 @@ on:
   pull_request:
     paths:
       - "ui/**"
+      - ".github/workflows/ui-ci.yml"
 jobs:
   npm-ci:
     uses: i2mint/wads/.github/workflows/npm-ci.yml@master

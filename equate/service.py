@@ -1062,7 +1062,9 @@ def mk_app(
     ``ui_dir`` serves the review UI from the same app: a built bundle (``cd ui && npm run
     build`` → ``ui/dist``) is mounted at ``/`` and the routes above move under
     ``api_prefix`` (default ``/api``, the path the UI calls — as its dev proxy does), so
-    one process and one origin serve both.
+    one process and one origin serve both; the API's docs are at ``{api_prefix}/docs``.
+    The bundle has its API path baked in at build time, so a different ``api_prefix``
+    needs a UI built with the same ``VITE_EQUATE_API``.
     """
     from equate._dependencies import require
 
@@ -1224,12 +1226,32 @@ def _with_ui(api, *, ui_dir, api_prefix):
     static = require(
         "fastapi.staticfiles", extra="service", purpose="serving the review UI"
     )
-    root = fastapi.FastAPI(title="equate review")
-    root.mount(api_prefix.rstrip("/"), api)
+    # no docs on the root: its spec would be empty and shadow nothing useful; the API's
+    # own docs live at {api_prefix}/docs
+    root = fastapi.FastAPI(
+        title="equate review", docs_url=None, redoc_url=None, openapi_url=None
+    )
+    prefix = api_prefix.rstrip("/")
+    _serve_openapi_under(api, prefix)
+    root.mount(prefix, api)
     # html=True serves index.html at "/" (the UI keeps its state in ?session=...)
     root.mount("/", static.StaticFiles(directory=ui_dir, html=True), name="ui")
     root.state.match_service = api.state.match_service
     return root
+
+
+def _serve_openapi_under(api, prefix):
+    """Make ``api``'s OpenAPI spec name ``prefix`` as its server, so "Try it out" in
+    ``{prefix}/docs`` calls ``{prefix}/sessions``, not ``/sessions`` (qh's spec builder
+    drops ``app.servers``; i2mint/qh#24)."""
+    build = api.openapi
+
+    def openapi():
+        spec = build()
+        spec["servers"] = [{"url": prefix}]
+        return spec
+
+    api.openapi = openapi
 
 
 def _int(x, what):
