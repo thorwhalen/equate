@@ -14,7 +14,12 @@ const obj = z.unknown();
 
 export const EditAction = z.enum(['confirm', 'reject', 'reassign', 'clear']);
 
-export const Edit = z.object({ action: EditAction, item: index, candidate: index });
+export const Edit = z.object({
+  action: EditAction,
+  item: index,
+  candidate: index,
+  source: z.string(), // who made it: 'human', 'llm', ...
+});
 
 export const Label = z.object({
   item: index,

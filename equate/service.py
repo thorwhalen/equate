@@ -33,7 +33,10 @@ import hashlib
 import json
 import math
 import time
+import threading
 import uuid
+from copy import deepcopy
+from collections import defaultdict
 from functools import wraps
 from collections import OrderedDict
 from collections.abc import Mapping, MutableMapping
@@ -128,6 +131,15 @@ class Accounting:
         finally:
             self.record(tier, time.perf_counter() - t0, items, hook=hook)
 
+    def merge(self, other):
+        """Add ``other``'s tiers into this ledger (a committed operation's costs)."""
+        for tier, c in other.tiers.items():
+            mine = self.tiers.setdefault(tier, TierCost())
+            mine.calls += c.calls
+            mine.seconds += c.seconds
+            mine.items += c.items
+        return self
+
     def snapshot(self):
         """A copy, so a response never aliases the session's live ledger."""
         return Accounting({k: TierCost(**asdict(v)) for k, v in self.tiers.items()})
@@ -146,12 +158,14 @@ class Edit:
       match, and any other item forced onto ``candidate``, are released);
     - ``clear`` — drop any constraint on ``item -> candidate`` (undo).
 
-    ``item`` indexes the left collection, ``candidate`` the right one.
+    ``item`` indexes the left collection, ``candidate`` the right one; ``source`` says who
+    made the edit (``'human'``, ``'llm'``, ...) — provenance for a later precedence policy.
     """
 
     action: EditAction
     item: int
     candidate: int
+    source: str = "human"
 
 
 @dataclass
@@ -310,6 +324,29 @@ def record_text(obj):
 _MISSING = (None, "")  # a field absent, null or empty is "missing", not "dissimilar"
 
 
+def _as_scorable(items, featurize, compare):
+    """What the scorer sees of ``items``.
+
+    A callable comparator (a record-aware Python function) gets the raw items. Otherwise
+    records (mappings) have no text of their own, so a named strategy gets their joined
+    values; and on the default text route (no comparator, a text featurizer) scalars are
+    turned into text too. Sequences, graphs and numbers for a named comparator (``'dtw'``,
+    ``'exp_decay'``) pass through untouched.
+    """
+    if callable(compare):
+        return items
+    text_route = compare is None and featurize in _TEXT_FEATURIZERS
+    return [
+        record_text(x)
+        if isinstance(x, Mapping) or (text_route and isinstance(x, (int, float)))
+        else x
+        for x in items
+    ]
+
+
+_TEXT_FEATURIZERS = (None, "tfidf", "sbert", "openai")
+
+
 def _fields_of(obj):
     return dict(obj) if isinstance(obj, Mapping) else {"value": obj}
 
@@ -363,9 +400,13 @@ def to_jsonable(obj):
 
 
 def _content_key(payload):
-    """A stable hash of a JSON-able payload, or ``None`` if it is not JSON-able."""
+    """A hash of a JSON-able payload, or ``None`` if it is not JSON-able.
+
+    Key order is **kept** (no ``sort_keys``): a record's text joins its values in key order,
+    so two records differing only in key order really do score differently.
+    """
     try:
-        blob = json.dumps(payload, sort_keys=True, default=None)
+        blob = json.dumps(payload, default=None)
     except (TypeError, ValueError):
         return None
     return hashlib.sha256(blob.encode()).hexdigest()
@@ -497,20 +538,20 @@ class MatchService:
         self.sessions = {} if sessions is None else sessions
         self.cache = _LRU() if cache == "default" else cache
         self.mk_id = mk_id
+        # in-process concurrency: one lock per session (edits read-modify-write the edit
+        # log), one for the cache. A multi-process store needs its own versioning.
+        self._session_locks = defaultdict(threading.Lock)
+        self._cache_lock = threading.Lock()
         self.field_compare = field_compare
         self.on_cost = on_cost
 
     # -- scoring ------------------------------------------------------------------
 
     def _score(self, A, B, acc, *, featurize, compare, block, sense):
-        # records (mappings) have no text of their own: the registered featurizers and
-        # comparators score text, so they get the records' joined values; only a callable
-        # comparator (a record-aware Python function) sees the raw records
-        has_records = any(isinstance(x, Mapping) for x in A + B)
-        if has_records and not callable(compare):
-            A_, B_ = [record_text(a) for a in A], [record_text(b) for b in B]
-        else:
-            A_, B_ = A, B
+        A_, B_ = (
+            _as_scorable(A, featurize, compare),
+            _as_scorable(B, featurize, compare),
+        )
         with self._timed(acc, "score", len(A) * len(B)):
             sm = score_matrix(
                 A_, B_, featurize=featurize, compare=compare, block=block, sense=sense
@@ -546,10 +587,11 @@ class MatchService:
         key = None
         if self.cache is not None:
             key = _content_key([A, B, config, how, threshold])
-            if key is not None and key in self.cache:
-                return MatchResult(
-                    **{**asdict_shallow(self.cache[key]), "cached": True}
-                )
+            with self._cache_lock:
+                hit = self.cache.get(key) if key is not None else None
+            if hit is not None:
+                # a deep copy: a caller mutating its result must never corrupt the cache
+                return MatchResult(**{**asdict_shallow(deepcopy(hit)), "cached": True})
 
         acc = Accounting()
         sm = self._score(A, B, acc, **config)
@@ -576,7 +618,8 @@ class MatchService:
                 result = MatchResult(pairs=views)
         result.accounting = acc.snapshot()
         if key is not None:
-            self.cache[key] = result
+            with self._cache_lock:
+                self.cache[key] = deepcopy(result)
         return result
 
     # -- sessions -----------------------------------------------------------------
@@ -597,6 +640,7 @@ class MatchService:
         The session keeps each item's top-``k`` candidates and the optimal 1:1
         assignment; every later edit re-solves from these cached scores.
         """
+        k = _positive_int(k, "k")
         A, B = list(A), list(B)
         acc = Accounting()
         sm = self._score(
@@ -684,32 +728,42 @@ class MatchService:
         With ``k`` (larger or smaller than the session's), the item's top-k is
         **refreshed** from the cached scores and stored — no re-scoring.
         """
-        s = self._load(session_id)
-        item = self._check_index(item, len(s.A), "item")
-        if k is not None:
+        if k is None:
+            s = self._load(session_id)
+            return self._candidate_views(s, self._check_index(item, len(s.A), "item"))
+        k = _positive_int(k, "k")
+        with self._session_locks[session_id]:
+            s = self._load(session_id)
+            item = self._check_index(item, len(s.A), "item")
             with self._timed(s.accounting, "candidates", 1):
                 row = CandidateStore.from_scores(
-                    s.scores.data[item : item + 1], k=int(k), sense=s.scores.sense
+                    s.scores.data[item : item + 1], k=k, sense=s.scores.sense
                 )
                 s.store.candidates[item] = row.candidates[0]
             self._save(s)
-        return self._candidate_views(s, item)
+            return self._candidate_views(s, item)
 
     def edit(self, session_id: str, edits: list) -> EditResult:
         """Apply ``edits`` (:class:`Edit` or dicts) and re-optimize the assignment.
 
-        Atomic: if the edits leave no feasible assignment, a ``ValueError`` is raised and
-        the session is unchanged. One constrained LAP over the cached scores — an edit is
-        a cheap re-solve, never a re-score.
+        Atomic: if an edit is invalid or the edits leave no feasible assignment, a
+        ``ValueError`` is raised and the session is unchanged. One constrained LAP over the
+        cached scores — an edit is a cheap re-solve, never a re-score. Concurrent edits of
+        one session (in this process) are serialized, so none is lost.
         """
+        with self._session_locks[session_id]:
+            return self._edit(session_id, edits)
+
+    def _edit(self, session_id, edits, *, label=None):
         s = self._load(session_id)
         new = []
         for e in map(_as_edit, edits):
             item = self._check_index(e.item, len(s.A), "item")
             candidate = self._check_index(e.candidate, len(s.B), "candidate")
-            new.append(Edit(e.action, item, candidate))
+            new.append(Edit(e.action, item, candidate, str(e.source)))
         log = s.edits + new
-        with self._timed(s.accounting, "reoptimize", len(s.A) + len(s.B)):
+        acc = Accounting()
+        with self._timed(acc, "reoptimize", len(s.A) + len(s.B)):
             assignment = _resolve_edits(s.scores, log)
         before = dict(s.assignment)
         after = dict(assignment)
@@ -717,6 +771,11 @@ class MatchService:
             i for i in set(before) | set(after) if before.get(i) != after.get(i)
         )
         s.edits, s.assignment = log, assignment
+        s.accounting.merge(acc)
+        if label is not None:
+            s.labels.append(
+                label
+            )  # in the same save as its edit: no half-applied label
         self._save(s)
         return EditResult(
             session_id=s.session_id,
@@ -739,13 +798,18 @@ class MatchService:
         Returns the edit result and the next active-learning :class:`Query` — the most
         uncertain item no label has decided yet (``None`` when none is left).
         """
-        lab = Label(int(item), int(candidate), bool(is_match), source)
-        action = "confirm" if lab.is_match else "reject"
-        result = self.edit(session_id, [Edit(action, lab.item, lab.candidate)])
-        s = self._load(session_id)
-        s.labels.append(lab)
-        self._save(s)
-        return LabelResult(label=lab, result=result, next=self.next_query(session_id))
+        if not isinstance(is_match, bool):
+            raise ValueError(f"is_match must be a boolean, got {is_match!r}")
+        with self._session_locks[session_id]:
+            s = self._load(session_id)
+            item = self._check_index(item, len(s.A), "item")
+            candidate = self._check_index(candidate, len(s.B), "candidate")
+            lab = Label(item, candidate, is_match, str(source))
+            action = "confirm" if is_match else "reject"
+            result = self._edit(
+                session_id, [Edit(action, item, candidate, lab.source)], label=lab
+            )
+            return LabelResult(lab, result, next=self.next_query(session_id))
 
     def next_query(self, session_id: str) -> Optional[Query]:
         """The next pair to label: uncertainty sampling over the not-yet-decided items.
@@ -808,7 +872,9 @@ class MatchService:
             candidate=j,
             left=sm.row_labels[i],
             right=sm.col_labels[j],
-            score=_finite_or_none(sm.score_at(i, j)),
+            # a user-forced pair on a non-candidate (blocked-out / rejected) cell has no
+            # score: reading the raw cell would report a hole as a real 0
+            score=_finite_or_none(sm.score_at(i, j)) if _is_stored(sm, i, j) else None,
             status=status,
         )
 
@@ -835,6 +901,20 @@ class MatchService:
                 )
             )
         return views
+
+
+def _is_stored(sm, i, j):
+    """Whether ``(i, j)`` is a candidate cell of ``sm`` (every cell of a dense matrix)."""
+    if not sm.is_sparse:
+        return True
+    lo, hi = sm.data.indptr[i], sm.data.indptr[i + 1]
+    return j in sm.data.indices[lo:hi]
+
+
+def _positive_int(x, what):
+    if isinstance(x, bool) or not isinstance(x, int) or x < 1:
+        raise ValueError(f"{what} must be a positive integer, got {x!r}")
+    return x
 
 
 def asdict_shallow(obj):

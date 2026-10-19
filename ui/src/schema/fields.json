@@ -2,7 +2,8 @@
   "Edit": [
     "action",
     "item",
-    "candidate"
+    "candidate",
+    "source"
   ],
   "Label": [
     "item",

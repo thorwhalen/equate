@@ -332,9 +332,103 @@ def test_a_session_pickles_so_any_dol_store_can_persist_it():
     import pickle
 
     seen = []
-    svc = MatchService(on_cost=lambda *a: seen.append(a))  # the hook is not session state
+    svc = MatchService(
+        on_cost=lambda *a: seen.append(a)
+    )  # the hook is not session state
     v = svc.open_session(A, B)
     svc.edit(v.session_id, [Edit("confirm", 0, 1)])
     clone = pickle.loads(pickle.dumps(svc.sessions[v.session_id]))
     assert clone.assignment == svc.sessions[v.session_id].assignment
     assert seen  # ...yet it was called
+
+
+# --- regressions from the adversarial review of #12 --------------------------------
+
+
+def test_cache_distinguishes_key_order_of_records():
+    svc = MatchService()
+    B_ = [
+        {"name": "Paris", "city": "Jon Smith"},
+        {"name": "Jon Smith", "city": "Paris"},
+    ]
+    a1 = [{"name": "Jon Smith", "city": "Paris"}]
+    a2 = [{"city": "Paris", "name": "Jon Smith"}]
+    uncached = MatchService(cache=None)
+    svc.match(a1, B_)
+    assert _pairs(svc.match(a2, B_).pairs) == _pairs(uncached.match(a2, B_).pairs)
+    assert svc.match(a2, B_).pairs[0].left == a2[0]
+
+
+def test_cache_never_hands_out_its_own_objects():
+    svc = MatchService()
+    svc.match(A, B).pairs.clear()  # the miss's result
+    svc.match(A, B).pairs.clear()  # a hit's result
+    assert _pairs(svc.match(A, B).pairs) == TRUTH
+
+
+def test_a_forced_non_candidate_pair_has_no_score():
+    blocker = lambda A, B: [(0, 0), (1, 1)]  # noqa: E731
+    dist = lambda a, b: 10.0 + abs(len(a) - len(b))  # noqa: E731
+    svc = MatchService()
+    v = svc.open_session(
+        ["aa", "b"], ["cc", "d"], compare=dist, block=blocker, sense="minimize"
+    )
+    r = svc.edit(v.session_id, [Edit("confirm", 0, 1)])  # (0, 1) was blocked out
+    scores = {(p.item, p.candidate): p.score for p in r.assignment}
+    assert scores[(0, 1)] is None
+
+
+def test_plain_number_items_on_the_default_route():
+    assert len(MatchService().match([1, 22], [22, 1]).pairs) == 2
+
+
+def test_sequences_still_reach_a_named_comparator_raw():
+    r = MatchService().match(
+        [[0, 1, 2], [5, 6, 7]], [[5, 6, 6, 7], [0, 1, 2]], compare="dtw"
+    )
+    assert _pairs(r.pairs) == {0: 1, 1: 0}
+
+
+def test_k_and_is_match_are_validated():
+    svc, v = _session()
+    for bad in (0, -1, 2.5, True):
+        with pytest.raises(ValueError):
+            svc.candidates(v.session_id, 0, k=bad)
+    with pytest.raises(ValueError):
+        svc.open_session(A, B, k=0)
+    with pytest.raises(ValueError):
+        svc.label(v.session_id, 0, 1, "false")
+    assert svc.view(v.session_id).labels == []
+
+
+def test_label_records_its_source_on_the_edit_atomically():
+    svc, v = _session()
+    svc.label(v.session_id, 0, 1, True, source="llm")
+    view = svc.view(v.session_id)
+    assert [(e.action, e.source) for e in view.edits] == [("confirm", "llm")]
+    assert [lab.source for lab in view.labels] == ["llm"]
+
+
+def test_a_failed_edit_leaves_the_session_untouched():
+    svc, v = _session()
+    before = svc.view(v.session_id)
+    with pytest.raises(ValueError):
+        svc.edit(v.session_id, [{"action": "bogus", "item": 0, "candidate": 0}])
+    after = svc.view(v.session_id)
+    assert after.edits == before.edits and after.accounting == before.accounting
+
+
+def test_concurrent_edits_on_one_session_are_all_kept():
+    from concurrent.futures import ThreadPoolExecutor
+
+    svc = MatchService()
+    n = 30
+    v = svc.open_session([f"x{i}" for i in range(n)], [f"x{i}" for i in range(n)])
+    with ThreadPoolExecutor(8) as pool:
+        list(
+            pool.map(
+                lambda i: svc.edit(v.session_id, [Edit("reject", i, (i + 1) % n)]),
+                range(n),
+            )
+        )
+    assert len(svc.view(v.session_id).edits) == n

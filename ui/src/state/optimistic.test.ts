@@ -30,7 +30,7 @@ const session: SessionView = {
 
 describe('applyOptimistic', () => {
   it('confirm takes the candidate and displaces its holder', () => {
-    const s = applyOptimistic(session, { action: 'confirm', item: 1, candidate: 0 });
+    const s = applyOptimistic(session, { action: 'confirm', item: 1, candidate: 0, source: 'human' });
     expect(s.assignment).toEqual([
       { item: 1, candidate: 0, left: 'l1', right: 'r0', score: 0.7, status: 'confirmed' },
     ]);
@@ -43,7 +43,7 @@ describe('applyOptimistic', () => {
   });
 
   it('reject unassigns the rejected pair only', () => {
-    const s = applyOptimistic(session, { action: 'reject', item: 0, candidate: 0 });
+    const s = applyOptimistic(session, { action: 'reject', item: 0, candidate: 0, source: 'human' });
     expect(s.assignment.map((p) => p.item)).toEqual([1]);
     expect(s.review.find((r) => r.item === 0)?.status).toBe('unmatched');
   });
@@ -51,7 +51,7 @@ describe('applyOptimistic', () => {
 
 describe('reconcile', () => {
   it('takes the server assignment and keeps queue order', () => {
-    const optimistic = applyOptimistic(session, { action: 'confirm', item: 1, candidate: 0 });
+    const optimistic = applyOptimistic(session, { action: 'confirm', item: 1, candidate: 0, source: 'human' });
     const s = reconcile(optimistic, {
       session_id: 's',
       assignment: [

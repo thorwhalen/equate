@@ -13,7 +13,15 @@ function candidateOf(row: ReviewItem | undefined, j: number) {
   return row?.candidates.find((c) => c.candidate === j);
 }
 
-export function applyOptimistic(session: SessionView, edit: Edit): SessionView {
+/**
+ * The session as it will look once `edit` lands. `record: false` re-applies an edit that is
+ * already in `session.edits` (a still-unacknowledged one, after a reconcile).
+ */
+export function applyOptimistic(
+  session: SessionView,
+  edit: Edit,
+  { record = true }: { record?: boolean } = {},
+): SessionView {
   return produce(session, (d) => {
     const row = d.review.find((r) => r.item === edit.item);
     if (edit.action === 'confirm' || edit.action === 'reassign') {
@@ -56,7 +64,7 @@ export function applyOptimistic(session: SessionView, edit: Edit): SessionView {
       if (p) p.status = 'proposed';
       if (row && row.assigned === edit.candidate) row.status = 'proposed';
     }
-    d.edits.push(edit);
+    if (record) d.edits.push(edit);
   });
 }
 

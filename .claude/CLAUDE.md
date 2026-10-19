@@ -65,6 +65,9 @@ adding a structured strategy, decide which of these three seams it belongs to.
   blocked-matching semantics, D11), not an `inf` — so rejecting every candidate leaves an
   item unmatched instead of making the LAP infeasible. Edits fold latest-wins
   (`_effective_constraints`).
+- **Concurrency:** edits of one session are serialized by a per-session lock (in-process
+  only); a multi-process session store needs versioning first. An edit or a label is
+  atomic — a failed one leaves the session (log, labels, accounting) untouched.
 - **HTTP errors are mapped in `mk_app`**, because qh turns any exception into a 500:
   `SessionNotFound` → 404, other `KeyError`/`ValueError`/`TypeError` → 422.
 - **`ui/`** is a Vite + React + zodal app with its own `npm test` / `npm run build`; hosted CI

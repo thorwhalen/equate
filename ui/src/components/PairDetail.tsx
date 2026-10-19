@@ -30,7 +30,7 @@ export function PairDetail() {
   const rejected = rejectedPairs(session.edits);
   const busy = pending.includes(row.item);
   const act = (action: EditAction, c: CandidateView) =>
-    edit({ action, item: row.item, candidate: c.candidate });
+    edit({ action, item: row.item, candidate: c.candidate, source: 'human' });
 
   return (
     <Card aria-busy={busy}>

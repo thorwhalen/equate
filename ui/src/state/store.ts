@@ -10,7 +10,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import type { Client, OpenSessionParams } from '../api/client';
-import type { Edit, Query, SessionView } from '../schema/equate';
+import type { Edit, EditResult, Query, SessionView } from '../schema/equate';
 import { applyOptimistic, reconcile } from './optimistic';
 
 export type Status = 'idle' | 'loading' | 'ready' | 'error';
@@ -37,9 +37,53 @@ const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 export function createReviewStore(client: Client) {
   let chain: Promise<void> = Promise.resolve();
+  // edits sent but not yet answered, oldest first: a reconcile reflects only the edits the
+  // server has answered, so these are re-applied on top or the screen would flip back
+  let unacked: Edit[] = [];
 
   return create<ReviewState>()(
     immer((set, get) => {
+      function landed(id: string, edit: Edit, result: EditResult) {
+        unacked = unacked.filter((e) => e !== edit);
+        set((s) => {
+          if (s.session?.session_id !== id) return;
+          let next = reconcile(s.session, result);
+          for (const e of unacked) next = applyOptimistic(next, e, { record: false });
+          s.session = next;
+          s.flash = result.changed;
+        });
+      }
+
+      /** Show `edit` at once, then run `request` after every earlier edit has landed. */
+      function send(edit: Edit, request: (id: string) => Promise<void>): Promise<void> {
+        const session = get().session;
+        if (!session) return Promise.resolve();
+        const id = session.session_id;
+        set((s) => {
+          s.session = applyOptimistic(s.session as SessionView, edit);
+          s.pending.push(edit.item);
+          s.flash = [];
+        });
+        unacked.push(edit);
+        chain = chain.then(async () => {
+          try {
+            await request(id);
+          } catch (e) {
+            unacked = [];
+            await get().load(id, true); // the server is the authority: drop the prediction
+            set((s) => {
+              s.error = `That edit was not applied: ${message(e)}`;
+            });
+          } finally {
+            set((s) => {
+              const at = s.pending.indexOf(edit.item);
+              if (at >= 0) s.pending.splice(at, 1);
+            });
+          }
+        });
+        return chain;
+      }
+
       async function refreshQuery(id: string) {
         const query = await client.next(id);
         set((s) => {
@@ -123,46 +167,33 @@ export function createReviewStore(client: Client) {
         },
 
         edit(edit) {
-          const session = get().session;
-          if (!session) return Promise.resolve();
-          const id = session.session_id;
-          set((s) => {
-            s.session = applyOptimistic(s.session as SessionView, edit);
-            s.pending.push(edit.item);
-            s.flash = [];
-          });
-          chain = chain.then(async () => {
-            try {
-              const result = await client.edit(id, [edit]);
-              set((s) => {
-                if (s.session?.session_id !== id) return;
-                s.session = reconcile(s.session, result);
-                s.flash = result.changed;
-              });
+          return send(edit, (id) =>
+            client.edit(id, [edit]).then(async (result) => {
+              landed(id, edit, result);
               await refreshQuery(id);
-            } catch (e) {
-              await get().load(id, true); // the server is the authority: drop the prediction
-              set((s) => {
-                s.error = `That edit was not applied: ${message(e)}`;
-              });
-            } finally {
-              set((s) => {
-                const at = s.pending.indexOf(edit.item);
-                if (at >= 0) s.pending.splice(at, 1);
-              });
-            }
-          });
-          return chain;
+            }),
+          );
         },
 
         async label(isMatch) {
           const { session, query } = get();
           if (!session || !query) return;
-          await get().edit({
+          const edit: Edit = {
             action: isMatch ? 'confirm' : 'reject',
             item: query.item,
             candidate: query.candidate.candidate,
-          });
+            source: 'human',
+          };
+          // the Oracle endpoint: records the label with its edit, and returns the next query
+          await send(edit, (id) =>
+            client.label(id, edit.item, edit.candidate, isMatch).then((res) => {
+              landed(id, edit, res.result);
+              set((s) => {
+                s.session?.labels.push(res.label);
+                s.query = res.next;
+              });
+            }),
+          );
         },
 
         async moreCandidates(item) {
