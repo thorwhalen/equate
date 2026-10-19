@@ -131,8 +131,8 @@ The standard suites download on first use, into `~/.local/share/equate/benchmark
 ```python
 from equate.evaluate import benchmark_matcher, load_benchmark
 
-ds = load_benchmark("amazon_google")      # Leipzig original: complete gold, CC BY 4.0
-ds.meta["difficulty"]                     # literature context + measured linearity
+ds = load_benchmark("amazon_google")  # Leipzig original: complete gold, CC BY 4.0
+ds.meta["difficulty"]  # literature context + measured linearity
 benchmark_matcher(on=["dblp_acm", "wdc_products"]).to_markdown()
 ```
 
