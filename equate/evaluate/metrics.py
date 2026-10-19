@@ -9,7 +9,7 @@ implementations here otherwise; CEAF's cluster alignment goes through equate's o
 matcher seam rather than a second Hungarian.
 """
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from math import comb
 
 import numpy as np
@@ -81,6 +81,82 @@ def bcubed(pred_labels: Sequence, true_labels: Sequence) -> Scores:
     precision = (table**2 / pred_sizes[None, :]).sum() / n
     recall = (table**2 / true_sizes[:, None]).sum() / n
     return Scores.from_pr(precision, recall, support=n)
+
+
+def unit_cost(x: int, y: int) -> float:
+    """Cost 1 per split or merge, whatever the sizes (GMD counts operations)."""
+    return 1.0
+
+
+def pair_cost(x: int, y: int) -> float:
+    """Cost ``x * y``: the record pairs a split separates or a merge joins — with it,
+    GMD equals the number of pairwise errors (false positives + false negatives)."""
+    return float(x * y)
+
+
+def linear_cost(k1: float = 0.0, k2: float = 1.0) -> Callable:
+    """A cost ``k1 + k2 * x * y`` — the order-independent family GMD is defined for.
+
+    >>> linear_cost(1, 0)(3, 4), linear_cost(0, 1)(3, 4)
+    (1.0, 12.0)
+    """
+
+    def cost(x: int, y: int) -> float:
+        return float(k1 + k2 * x * y)
+
+    return cost
+
+
+def gmd(
+    pred_labels: Sequence,
+    true_labels: Sequence,
+    *,
+    merge_cost: Callable = unit_cost,
+    split_cost: Callable = unit_cost,
+) -> float:
+    """Generalized merge distance: the cost of the splits and merges that turn the
+    predicted clustering into the true one (Menestrina, Whang & Garcia-Molina, VLDB 2010).
+
+    ``split_cost(x, y)`` prices splitting a cluster of ``x + y`` records into ``x`` and
+    ``y``; ``merge_cost(x, y)`` merging an ``x``- and a ``y``-record cluster. The defaults
+    (:func:`unit_cost`) count operations; :func:`pair_cost` for both gives the pairwise
+    error count; :func:`linear_cost` ``(k1, k2)`` is ``k1 + k2·x·y``. Unlike F-measures it
+    is a distance (``0`` = identical), and its costs let an application say whether a
+    wrong merge hurts more than a missed one. Linear time.
+
+    As in the paper, this is the cost of the *legal* path — split each predicted cluster
+    along the true clusters, then merge the pieces of each true cluster — and the costs
+    must be **operation-order independent** (constant, ``k·x·y``, or ``k1 + k2·x·y``):
+    for other costs the result can depend on the labels' names. With unit costs a path
+    that merges first can occasionally be cheaper; GMD is defined as the legal path.
+
+    >>> gmd([0, 0, 1, 1], [0, 0, 0, 1])   # split {2, 3}, merge {2} into {0, 1}
+    2.0
+    >>> gmd([0, 0, 1, 1], [0, 0, 0, 1], merge_cost=pair_cost, split_cost=pair_cost)
+    3.0
+    """
+    pred, true = _check_labels(pred_labels, true_labels)
+    members: dict = {}
+    for k, p in enumerate(pred.tolist()):
+        members.setdefault(p, []).append(true[k].item())
+    merged_so_far: dict = {}  # true cluster -> records of it already placed
+    cost = 0.0
+    for p in sorted(members, key=str):
+        pieces: dict = {}
+        for t in members[p]:
+            pieces[t] = pieces.get(t, 0) + 1
+        placed = 0
+        for t in sorted(pieces, key=str):
+            count = pieces[t]
+            if placed:  # this piece is split off the rest of the predicted cluster
+                cost += split_cost(count, placed)
+            placed += count
+            if merged_so_far.get(
+                t
+            ):  # ...and merged into the true cluster's other pieces
+                cost += merge_cost(count, merged_so_far[t])
+            merged_so_far[t] = merged_so_far.get(t, 0) + count
+    return float(cost)
 
 
 def ceaf(

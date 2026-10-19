@@ -225,3 +225,124 @@ def test_toy_gold_is_unambiguous(seed):
     ds = load_benchmark("toy_names", n_entities=200, seed=seed)
     assert len(set(ds.a)) == len(ds.a) and len(set(ds.b)) == len(ds.b)
     assert not set(ds.a) & set(ds.b)
+
+
+# --- bootstrap CIs and GMD (equate#25) -----------------------------------------------
+
+from equate.evaluate import bootstrap_ci, gmd, labels_to_pairs, pair_cost  # noqa: E402
+
+
+def test_gmd_counts_operations_and_equals_pairwise_errors_with_pair_cost():
+    import numpy as np
+
+    assert gmd([0, 0, 1, 1], [0, 0, 0, 1]) == 2.0  # one split, one merge
+    assert gmd([0, 1, 2], [0, 1, 2]) == 0.0
+    assert gmd([0, 0, 0], [0, 1, 2]) == 2.0  # split twice
+    assert gmd([0, 1, 2], [5, 5, 5]) == 2.0  # merge twice (labels need not agree)
+    rng = np.random.default_rng(1)
+    for _ in range(200):
+        n = int(rng.integers(1, 10))
+        p, t = rng.integers(0, 4, n), rng.integers(0, 4, n)
+        errors = set(labels_to_pairs(p)) ^ set(labels_to_pairs(t))
+        assert gmd(p, t, merge_cost=pair_cost, split_cost=pair_cost) == len(errors)
+
+
+def test_gmd_costs_are_asymmetric_on_purpose():
+    over, under = [0, 0, 0, 0], [0, 1, 2, 3]  # one big cluster vs singletons
+    truth = [0, 0, 1, 1]
+    cheap_merge = dict(merge_cost=lambda x, y: 0.1, split_cost=lambda x, y: 1.0)
+    assert gmd(over, truth, **cheap_merge) == 1.0  # one split needed
+    assert gmd(under, truth, **cheap_merge) == pytest.approx(0.2)  # two cheap merges
+
+
+def test_bootstrap_ci_brackets_the_point_estimate_and_is_reproducible():
+    gold = {(i, i) for i in range(40)}
+    pred = {(i, i) for i in range(30)} | {(i, i + 1) for i in range(30, 40)}
+    ents = [f"e{i}" for i in range(41)]
+    a = bootstrap_ci(pred, gold, ents, n_boot=500)
+    assert a == bootstrap_ci(pred, gold, ents, n_boot=500)  # seeded
+    lo, hi = a["f1"]
+    assert lo < 0.75 < hi and hi - lo < 0.5
+    narrow = bootstrap_ci(pred, gold, ents, level=0.5, n_boot=500)
+    assert narrow["f1"][1] - narrow["f1"][0] < hi - lo
+    with pytest.raises(ValueError):
+        bootstrap_ci(pred, gold, ents, level=1.5)
+
+
+def test_bootstrap_resamples_entities_not_pairs():
+    # one entity owns all the errors: resampling entities must swing F1 widely
+    gold = {(0, 0), (1, 1), (2, 2), (3, 3)}
+    pred = {(0, 0), (1, 1), (2, 2), (3, 9)}
+    ci = bootstrap_ci(pred, gold, ["a", "b", "c", "d"], n_boot=2000)
+    assert ci["f1"][0] < 0.6 and ci["f1"][1] == 1.0
+
+
+def test_harness_ci_auto_only_for_single_runs():
+    ds = load_benchmark("toy_names", n_entities=40)
+    multi = benchmark_matcher(on=[ds], n_seeds=2)
+    assert all(r.ci is None for r in multi.rows)
+    single = benchmark_matcher(on=[ds], n_seeds=1)
+    assert set(single.rows[0].ci) == {"precision", "recall", "f1"}
+    assert "[" in single.to_markdown().splitlines()[-1]
+    always = benchmark_matcher(on=[ds], n_seeds=2, ci=0.9)
+    assert all(r.ci for r in always.rows)
+    assert benchmark_matcher(on=[ds], n_seeds=1, ci=None).rows[0].ci is None
+    with pytest.raises(ValueError, match="ci must be"):
+        benchmark_matcher(on=[ds], ci=95)
+
+
+# --- regressions from the adversarial review of #25 --------------------------------
+
+
+def test_degenerate_resamples_do_not_inflate_the_interval():
+    # 20 entities, 1 gold pair, 1 wrong prediction: every score is 0
+    gold, pred = {(0, 0)}, {(5, 5)}
+    ci = bootstrap_ci(pred, gold, [f"e{i}" for i in range(20)], n_boot=500)
+    assert ci["f1"] == (0.0, 0.0)  # was (0.0, 1.0): empty resamples counted as perfect
+
+
+def test_auto_ci_follows_the_rows_actually_scored():
+    import warnings
+
+    # 3 seeds requested, 2 skipped (no gold pair in their test part): one run is left
+    ds = load_benchmark("toy_names", n_entities=2, n_distractors=2)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        report = benchmark_matcher(on=[ds], n_seeds=3, ratios=(0.5, 0.25, 0.25))
+    assert len(report.rows) == 1 and report.rows[0].ci is not None
+
+
+def test_bad_ci_arguments_fail_before_the_matcher_runs():
+    calls = []
+
+    def matcher(a, b):
+        calls.append(1)
+        return []
+
+    for kw in ({"ci": 1.5}, {"ci": "always"}, {"n_boot": 0}, {"n_boot": True}):
+        with pytest.raises(ValueError):
+            benchmark_matcher(matcher, on=["toy_names"], n_seeds=1, **kw)
+    assert calls == []
+
+
+def test_rows_with_an_interval_stay_hashable():
+    row = benchmark_matcher(on=["toy_names"], n_seeds=1).rows[0]
+    assert row.ci and isinstance(hash(row), int)
+
+
+def test_bootstrap_memory_is_chunked():
+    ents = [f"e{i}" for i in range(20_000)]
+    gold = {(i, i) for i in range(20_000)}
+    ci = bootstrap_ci(gold, gold, ents, n_boot=200)  # 200 × 20k at once would be 32 MB+
+    assert ci["f1"] == (1.0, 1.0)
+
+
+def test_linear_cost_is_the_order_independent_family():
+    from equate.evaluate import linear_cost
+
+    assert gmd([0, 0, 1, 1], [0, 0, 0, 1], merge_cost=linear_cost(0, 1), split_cost=linear_cost(0, 1)) == 3.0
+    # label names do not matter for this family
+    p = [0] * 6
+    assert gmd(p, [0, 1, 1, 2, 2, 2], split_cost=linear_cost(1, 2)) == gmd(
+        p, [2, 1, 1, 0, 0, 0], split_cost=linear_cost(1, 2)
+    )
