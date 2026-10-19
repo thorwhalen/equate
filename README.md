@@ -9,8 +9,10 @@ pip install equate
 ```python
 from equate import match
 
-m = match(["apple pie", "banana split", "cherry tart"],
-          ["cherry tarte", "aple pie", "banana split"])
+m = match(
+    ["apple pie", "banana split", "cherry tart"],
+    ["cherry tarte", "aple pie", "banana split"],
+)
 dict(m.labeled_pairs())
 # {'apple pie': 'aple pie', 'banana split': 'banana split', 'cherry tart': 'cherry tarte'}
 m.scores  # [0.76, 1.0, 0.84]
@@ -23,10 +25,12 @@ m.scores  # [0.76, 1.0, 0.84]
 Matching factors into three stages: **featurize → compare → match**. Each takes a registered name or any callable.
 
 ```python
-match(A, B, compare="jaro_winkler")        # score raw pairs with a string comparator instead
-match(A, B, featurize="sbert")             # dense embeddings (pip install 'equate[embeddings]')
-match(A, B, block="sorted_neighborhood")   # score only candidate pairs (sparse), for scale
-match(A, B, how="greedy")                  # or 'assign' (default), 'stable', 'soft'
+match(A, B, compare="jaro_winkler")  # score raw pairs with a string comparator instead
+match(A, B, featurize="sbert")  # dense embeddings (pip install 'equate[embeddings]')
+match(
+    A, B, block="sorted_neighborhood"
+)  # score only candidate pairs (sparse), for scale
+match(A, B, how="greedy")  # or 'assign' (default), 'stable', 'soft'
 match(A, B, compare="levenshtein_distance")  # a distance: minimized automatically
 ```
 
@@ -60,7 +64,9 @@ from equate import find_join_keys, complete_table
 orders = {"customer": ["C-001", "C-002", "C-001"], "city": [None, "Lyon", None]}
 customers = {"cid": ["C-002", "C-001"], "city": ["Lille", "Paris"]}
 
-find_join_keys(orders, customers)[0]   # ColumnMatch(left='customer', right='cid', score=1.0, ...)
+find_join_keys(orders, customers)[
+    0
+]  # ColumnMatch(left='customer', right='cid', score=1.0, ...)
 complete_table(orders, customers).table
 # {'customer': ['C-001', 'C-002', 'C-001'], 'city': ['Paris', 'Lyon', 'Paris']}
 ```
