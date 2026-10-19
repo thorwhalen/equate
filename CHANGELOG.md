@@ -6,6 +6,19 @@ releases CI publishes to PyPI.
 
 ## Unreleased
 
+**Structured matchers, round 2** (#18; doc 12 §4, D8). All are new entries at existing seams.
+
+- New quadratic matchers for `equate.align(G1, G2, how=...)`:
+  - `'final'`: FINAL-N (Zhang & Tong, KDD 2016), IsoRank's propagation gated by node-attribute agreement (`label=` or `attribute_similarity=`). Core.
+  - `'regal'`: REGAL/xNetMF (Heimann et al., CIKM 2018). The nodes of both graphs are embedded jointly from k-hop degree histograms plus labels (Nyström), and nodes are matched by embedding similarity. Core.
+  - `'cone'`: CONE-Align (Chen et al., CIKM 2020). Each graph gets its own NetMF embedding; the two spaces are aligned by alternating orthogonal Procrustes with an entropic-OT correspondence, starting from REGAL. Core; `equate.matching.embedding_align.sinkhorn_plan` is the in-house Sinkhorn: log-domain, stopping on the relative marginal violation, and warning if it runs out of iterations. CONE warm-starts its solves.
+  - `'gw'`: Gromov-Wasserstein optimal transport on shortest-path distances, fused with `node_affinity` and seeds when given (`equate[ot]`). `.plan` is the transport plan.
+
+  On a relabeled 40-node random graph each recovers at least 95 % of the correspondence (tested), and seeds are kept; REGAL is unsupervised and does not otherwise use them. Node labels may be any hashable, tuples included, and REGAL's memory is n1 × n2.
+- `soft_dtw_alignment(a, b, gamma=)` (also `soft_dtw.plan`) is soft-DTW's expected alignment matrix: an element-level soft plan, the gradient of soft-DTW with respect to the step costs. It is checked against finite differences, and it tends to the DTW path as `gamma` goes to 0.
+- `subsequence_dtw(..., backend='dtaidistance')` runs `dtaidistance.subsequence`, with the step penalty off and the argmin end point (`best_match()`'s `minlength=2` refuses one-element matches), so it returns the same score and path as the numpy core.
+- PLANETALIGN is not wrapped: it is not on PyPI, and the in-house aligners cover its core methods.
+
 **Service hardening** (#23).
 
 - The review queue's margin is computed over each item's *open* candidates: those not rejected for it and not confirmed for another item. The queue and `next_query` now follow the edits instead of asking about one item until every candidate is rejected.
