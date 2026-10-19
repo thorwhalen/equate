@@ -432,3 +432,49 @@ def test_concurrent_edits_on_one_session_are_all_kept():
             )
         )
     assert len(svc.view(v.session_id).edits) == n
+
+
+# --- session score floor (equate#21) -----------------------------------------------
+
+
+def test_threshold_keeps_a_reject_from_forcing_a_bad_pair():
+    names_a = ["Ann Lee", "Bob Martin"]
+    names_b = ["Anne Li", "Bob Martin", "Zoe Bernard"]
+    svc = MatchService()
+    loose = svc.open_session(names_a, names_b, compare="ratio")
+    r = svc.edit(loose.session_id, [Edit("reject", 0, 0)])
+    assert _pairs(r.assignment)[0] == 2  # without a floor: pushed onto "Zoe Bernard"
+
+    v = svc.open_session(names_a, names_b, compare="ratio", threshold=0.5)
+    assert v.threshold == 0.5
+    assert {c.candidate for c in svc.candidates(v.session_id, 0)} == {0}  # only Anne Li
+    r = svc.edit(v.session_id, [Edit("reject", 0, 0)])
+    assert 0 not in _pairs(r.assignment)  # left unmatched instead
+    assert {row.item: row.status for row in svc.review(v.session_id)}[0] == "unmatched"
+
+
+def test_threshold_is_a_ceiling_for_a_distance():
+    svc = MatchService()
+    v = svc.open_session(["abc", "xyz"], ["abd", "qqqq"], compare="levenshtein_distance", threshold=1)
+    assert v.sense == "minimize"
+    assert _pairs(v.assignment) == {0: 0}  # xyz->qqqq (distance 4) is past the ceiling
+
+
+def test_threshold_with_blocking_and_unbounded_scores():
+    blocker = lambda A, B: [(0, 0), (0, 1), (1, 1)]  # noqa: E731
+    big = lambda a, b: 100.0 * len(set(a) & set(b))  # noqa: E731
+    svc = MatchService()
+    v = svc.open_session(["ab", "cd"], ["ab", "cx"], compare=big, block=blocker, threshold=150)
+    assert _pairs(v.assignment) == {0: 0}  # (1, 1) scores 100: below the floor
+    assert svc.candidates(v.session_id, 1) == []
+
+
+def test_threshold_is_validated():
+    for bad in ("high", float("nan"), True):
+        with pytest.raises(ValueError):
+            MatchService().open_session(A, B, threshold=bad)
+
+
+def test_http_session_threshold(client):
+    v = client.post("/sessions", json={"A": A, "B": B, "threshold": 0.99}).json()
+    assert v["threshold"] == 0.99 and v["assignment"] == []

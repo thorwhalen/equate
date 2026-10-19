@@ -6,6 +6,8 @@ releases CI publishes to PyPI.
 
 ## Unreleased
 
+**Session score floor** (#21). `MatchService.open_session(..., threshold=)` (also `POST /sessions`) sets a score floor, which is a ceiling for a `'minimize'` sense. Pairs that fail it are not candidates: they are never proposed or offered for review, and a reject never pushes an item onto one; the item is left unmatched. It uses the same non-candidate mechanism as rejects and blocking. `SessionView.threshold` reports it. The review UI's setup form has a "Minimum score" field. Its numeric fields now keep what was typed and show an inline error, instead of snapping an emptied field back to its default.
+
 **Benchmark loaders for the standard suites** (#15; doc 14 §6, §8.3, §8.5).
 
 - `load_benchmark('abt_buy' | 'amazon_google' | 'dblp_acm' | 'wdc_products')` downloads on first use into a store, never the package. The default is a `FileStore` under `$EQUATE_DATA_DIR`, else `$XDG_DATA_HOME/equate/benchmarks`, else `~/.local/share/equate/benchmarks`; any `MutableMapping` (`store=`) works. Every read is checked against a pinned SHA-256, from cache or network, so a corrupted cached copy is fetched again. `download=False` stays offline, `get=` swaps the downloader, and `verify=False` is for a trusted mirror. `FileStore` writes atomically, even with concurrent writers. The stdlib is enough, so the new `equate[benchmarks]` extra is empty for now.

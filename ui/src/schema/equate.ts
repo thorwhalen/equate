@@ -98,6 +98,7 @@ export const SessionView = z.object({
   edits: z.array(Edit),
   labels: z.array(Label),
   accounting: Accounting,
+  threshold: z.number().nullable(), // the score floor (a ceiling for 'minimize')
 });
 
 export const EditResult = z.object({

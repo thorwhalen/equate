@@ -41,6 +41,8 @@ function ReviewScreen({ sessionId }: { sessionId: string }) {
         <p className="text-sm">
           {session.n_left} × {session.n_right} items · {session.assignment.length} matched ·{' '}
           {confirmed} confirmed
+          {session.threshold !== null &&
+            ` · ${session.sense === 'minimize' ? 'max' : 'min'} score ${session.threshold}`}
         </p>
         <CostSummary accounting={session.accounting} />
       </div>

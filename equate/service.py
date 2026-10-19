@@ -261,6 +261,7 @@ class SessionView:
     edits: list
     labels: list
     accounting: Accounting
+    threshold: Optional[float] = None
 
 
 @dataclass
@@ -303,6 +304,7 @@ class Session:
     edits: list = field(default_factory=list)  # [Edit, ...] — the replayable log
     labels: list = field(default_factory=list)  # [Label, ...]
     accounting: Accounting = field(default_factory=Accounting)
+    threshold: Optional[float] = None  # the score floor applied at open (equate#21)
 
 
 # --- Helpers -------------------------------------------------------------------------
@@ -468,6 +470,27 @@ def _without_rejected(sm, forbidden):
     mask = sm.candidate_mask()
     for i, j in forbidden:
         mask[i, j] = False
+    return _restricted(sm, mask)
+
+
+def _below_threshold_removed(sm, threshold):
+    """``sm`` keeping only the cells that pass ``threshold`` (at or above it for a
+    ``'maximize'`` sense, at or below for ``'minimize'``): the others become holes.
+
+    The same mechanism as a reject, so a session never *forces* a pair past the floor:
+    the lexicographic re-solve leaves an item unmatched instead (equate#21).
+    """
+    if threshold is None:
+        return sm
+    mask = sm.candidate_mask()
+    for i, j, v in sm.stored_entries():
+        if not _passes(v, threshold, sm.sense):
+            mask[i, j] = False
+    return _restricted(sm, mask)
+
+
+def _restricted(sm, mask):
+    """``sm`` as a sparse matrix storing exactly the cells where ``mask`` is True."""
     rows, cols = np.nonzero(mask)
     values = np.asarray(sm.data[rows, cols]).ravel()
     # coo keeps explicitly-stored zeros, so a real 0.0 score stays a candidate
@@ -621,18 +644,25 @@ class MatchService:
         compare: Optional[str] = None,
         block: Optional[str] = None,
         sense: Optional[str] = None,
+        threshold: Optional[float] = None,
     ) -> SessionView:
         """Score ``A`` against ``B`` once and open an interactive review session.
 
         The session keeps each item's top-``k`` candidates and the optimal 1:1
         assignment; every later edit re-solves from these cached scores.
+
+        ``threshold`` is a score floor (a ceiling for a ``'minimize'`` sense): pairs that
+        fail it are not candidates at all, so they are never proposed, never offered for
+        review, and a reject never pushes an item onto one — the item is left unmatched.
         """
         k = _positive_int(k, "k")
+        threshold = _finite_or_error(threshold, "threshold")
         A, B = list(A), list(B)
         acc = Accounting()
         sm = self._score(
             A, B, acc, featurize=featurize, compare=compare, block=block, sense=sense
         )
+        sm = _below_threshold_removed(sm, threshold)
         with self._timed(acc, "candidates", len(A)):
             store = CandidateStore.from_scores(sm.data, k=k, sense=sm.sense)
         with self._timed(acc, "reoptimize", len(A) + len(B)):
@@ -646,6 +676,7 @@ class MatchService:
             k=k,
             assignment=assignment,
             accounting=acc,
+            threshold=threshold,
         )
         self._save(session)
         return self.view(session.session_id)
@@ -664,6 +695,7 @@ class MatchService:
             edits=list(s.edits),
             labels=list(s.labels),
             accounting=s.accounting.snapshot(),
+            threshold=getattr(s, "threshold", None),  # sessions pickled before #21
         )
 
     def review(
@@ -898,6 +930,14 @@ def _is_stored(sm, i, j):
     return j in sm.data.indices[lo:hi]
 
 
+def _finite_or_error(x, what):
+    if x is None:
+        return None
+    if isinstance(x, bool) or not isinstance(x, (int, float)) or not math.isfinite(x):
+        raise ValueError(f"{what} must be a finite number, got {x!r}")
+    return float(x)
+
+
 def _positive_int(x, what):
     if isinstance(x, bool) or not isinstance(x, int) or x < 1:
         raise ValueError(f"{what} must be a positive integer, got {x!r}")
@@ -1039,6 +1079,7 @@ def mk_app(service: Optional[MatchService] = None, *, cors_origins=DFLT_CORS_ORI
         compare: Optional[str] = None,
         block: Optional[str] = None,
         sense: Optional[str] = None,
+        threshold: Optional[float] = None,
     ):
         return J(
             svc.open_session(
@@ -1049,6 +1090,7 @@ def mk_app(service: Optional[MatchService] = None, *, cors_origins=DFLT_CORS_ORI
                 compare=compare,
                 block=block,
                 sense=sense,
+                threshold=threshold,
             )
         )
 
