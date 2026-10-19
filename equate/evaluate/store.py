@@ -15,7 +15,7 @@ loaders gain optional dependencies.
 import hashlib
 import logging
 import os
-import urllib.request
+import tempfile
 from collections.abc import Callable, Iterator, MutableMapping
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -26,6 +26,7 @@ __all__ = ["Source", "FileStore", "data_dir", "default_store", "fetch", "http_ge
 logger = logging.getLogger("equate.benchmarks")
 
 DFLT_TIMEOUT = 120  # seconds, per download
+_PART = ".part"  # suffix of in-progress writes (never a key)
 _USER_AGENT = "equate-benchmarks (https://github.com/thorwhalen/equate)"
 
 
@@ -51,9 +52,11 @@ def data_dir() -> Path:
 class FileStore(MutableMapping):
     """A ``MutableMapping[str, bytes]`` over the files under ``root`` (dol-style).
 
-    Keys are relative POSIX paths (``'wdc_products/80multi.zip'``); a key cannot escape
-    ``root``. Writes are atomic (a temporary file, then a rename), so an interrupted
-    download never leaves a truncated file that a later read would trust.
+    Keys are relative POSIX paths (``'wdc_products/80multi.zip'``) of plain names: no
+    ``..``/``.``/empty segment, backslash, drive or ``.part`` suffix, so a key cannot escape
+    ``root`` on any platform. Writes are atomic even with concurrent writers (a unique
+    temporary file in the same directory, then a rename), so a reader never sees a
+    truncated file.
 
     >>> import tempfile
     >>> s = FileStore(tempfile.mkdtemp())
@@ -66,12 +69,20 @@ class FileStore(MutableMapping):
         self.root = Path(root).expanduser()
 
     def _path(self, key) -> Path:
-        rel = PurePosixPath(key)
-        if not key or rel.is_absolute() or ".." in rel.parts:
+        parts = key.split("/") if isinstance(key, str) else None
+        if (
+            not parts
+            or any(p in ("", ".", "..") for p in parts)
+            or "\\" in key
+            or ":" in key
+            or key.endswith(_PART)
+            or PurePosixPath(key).is_absolute()
+        ):
             raise KeyError(
-                f"invalid store key {key!r}: use a relative path inside the store"
+                f"invalid store key {key!r}: use a relative path of plain names "
+                f"inside the store"
             )
-        return self.root.joinpath(*rel.parts)
+        return self.root.joinpath(*parts)
 
     def __getitem__(self, key) -> bytes:
         path = self._path(key)
@@ -82,9 +93,16 @@ class FileStore(MutableMapping):
     def __setitem__(self, key, value: bytes):
         path = self._path(key)
         path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = path.with_name(path.name + ".part")
-        tmp.write_bytes(value)
-        os.replace(tmp, path)
+        fd, tmp = tempfile.mkstemp(
+            dir=path.parent, prefix=path.name + ".", suffix=_PART
+        )
+        try:
+            with os.fdopen(fd, "wb") as f:
+                f.write(value)
+            os.replace(tmp, path)
+        except BaseException:
+            Path(tmp).unlink(missing_ok=True)
+            raise
 
     def __delitem__(self, key):
         path = self._path(key)
@@ -96,7 +114,7 @@ class FileStore(MutableMapping):
         if not self.root.is_dir():
             return
         for p in sorted(self.root.rglob("*")):
-            if p.is_file() and not p.name.endswith(".part"):
+            if p.is_file() and not p.name.endswith(_PART):
                 yield p.relative_to(self.root).as_posix()
 
     def __len__(self):
@@ -119,6 +137,8 @@ def default_store() -> FileStore:
 
 def http_get(url: str, *, timeout: float = DFLT_TIMEOUT) -> bytes:
     """Download ``url`` (stdlib ``urllib``) and return its bytes."""
+    import urllib.request  # here, not at import time: importing equate.evaluate stays cheap
+
     request = urllib.request.Request(url, headers={"User-Agent": _USER_AGENT})
     with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310
         return response.read()
@@ -134,28 +154,35 @@ def fetch(
 ) -> bytes:
     """The bytes of ``source``, from ``store`` if cached, else downloaded and cached.
 
-    A download is checked against ``source.sha256`` before it is stored: a mismatch
-    raises ``ValueError`` and nothing is written (the publisher changed the file, or the
-    download was corrupted). With ``download=False`` a missing key raises
-    ``FileNotFoundError`` instead of reaching the network. ``get(url) -> bytes`` is the
-    downloader (default :func:`http_get`).
+    The bytes are checked against ``source.sha256`` **every time**, cached or not: a
+    cached copy that no longer matches (corrupted on disk, or a pin updated for a
+    re-issued file) is downloaded again; a download that does not match raises
+    ``ValueError`` and nothing is written. With ``download=False`` a missing or stale
+    key raises ``FileNotFoundError`` instead of reaching the network. ``get(url) ->
+    bytes`` is the downloader (default :func:`http_get`).
     """
     store = default_store() if store is None else store
     if key in store:
-        return store[key]
+        data = store[key]
+        if _matches(data, source):
+            return data
+        logger.warning("cached %s does not match its pinned SHA-256; re-fetching", key)
     if not download:
         raise FileNotFoundError(
-            f"{key!r} is not in the benchmark cache {store!r} and download=False; "
-            f"fetch it from {source.url}"
+            f"{key!r} is not (validly) in the benchmark cache {store!r} and "
+            f"download=False; fetch it from {source.url}"
         )
     logger.info("downloading %s -> %s", source.url, key)
     data = (get or http_get)(source.url)
-    if source.sha256 is not None:
-        digest = hashlib.sha256(data).hexdigest()
-        if digest != source.sha256:
-            raise ValueError(
-                f"{source.url} has SHA-256 {digest}, expected {source.sha256}: the "
-                f"publisher changed the file or the download is corrupt; nothing was cached"
-            )
+    if not _matches(data, source):
+        raise ValueError(
+            f"{source.url} has SHA-256 {hashlib.sha256(data).hexdigest()}, expected "
+            f"{source.sha256}: the publisher changed the file or the download is "
+            f"corrupt; nothing was cached"
+        )
     store[key] = data
     return data
+
+
+def _matches(data: bytes, source: Source) -> bool:
+    return source.sha256 is None or hashlib.sha256(data).hexdigest() == source.sha256

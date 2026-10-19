@@ -5,7 +5,8 @@ Registered in :data:`~equate.evaluate.benchmarks` (research doc 14, §6 and §8.
 - ``abt_buy``, ``amazon_google``, ``dblp_acm`` — the product and bibliographic tables the
   Magellan / DeepMatcher suite made standard. ``source='leipzig'`` (default) loads the
   original tables of the Leipzig database group with their **complete** gold mapping
-  (CC BY 4.0). ``source='deepmatcher'`` loads DeepMatcher's preprocessed tables with its
+  (CC BY 4.0). ``source='deepmatcher'`` (named ``<suite>_deepmatcher``, so a report keeps
+  the two apart) loads DeepMatcher's preprocessed tables with its
   canonical labelled train/valid/test pairs in ``Benchmark.pairs``; its gold is the
   labelled positives only, which misses true matches its blocking dropped (``meta``
   says how many), so it is the source for comparing pair classifiers with published
@@ -16,8 +17,9 @@ Registered in :data:`~equate.evaluate.benchmarks` (research doc 14, §6 and §8.
   multi-class files, with its train/valid/test sets as ``Benchmark.splits``.
 
 Every loader takes ``store=`` (any ``MutableMapping``; default
-:func:`~equate.evaluate.store.default_store`), ``download=`` and ``get=`` (the
-downloader), checks each download against a pinned SHA-256, and fills ``meta`` with
+:func:`~equate.evaluate.store.default_store`), ``download=``, ``get=`` (the downloader)
+and ``verify=`` (check the pinned SHA-256, on every read — default on; off only for a
+trusted mirror), puts the publisher's record ids in ``Benchmark.ids``, and fills ``meta`` with
 ``source``, ``license``, a ``difficulty`` sentence and a measured ``difficulty_profile``
 (:func:`~equate.evaluate.difficulty.difficulty_profile`, cached in the store).
 """
@@ -32,9 +34,11 @@ from collections import defaultdict
 from collections.abc import MutableMapping
 from typing import Callable, Optional
 
+import numpy as np
+
 from equate.evaluate.benchmark import Benchmark, benchmarks, subset_pairs
 from equate.evaluate.difficulty import difficulty_profile
-from equate.evaluate.store import Source, default_store, fetch
+from equate.evaluate.store import Source as _Source, default_store, fetch
 
 __all__ = ["abt_buy", "amazon_google", "dblp_acm", "wdc_products", "MAGELLAN_SOURCES"]
 
@@ -67,6 +71,7 @@ _MAGELLAN = {
             "b9ff2937d97371b7a00b0a97033213bfbdee24e8f1a0718a41ea8364472a8ff8",
             ("Abt.csv", "Buy.csv", "abt_buy_perfectMapping.csv"),
         ),
+        default_source="leipzig",
         deepmatcher="Textual/Abt-Buy",
         sha_dm={
             "tableA.csv": "20b79995258c4ef80bb96b731762a6fe869650cc42dcb2c58994bda91b0d81aa",
@@ -91,6 +96,7 @@ _MAGELLAN = {
                 "Amzon_GoogleProducts_perfectMapping.csv",
             ),
         ),
+        default_source="leipzig",
         deepmatcher="Structured/Amazon-Google",
         sha_dm={
             "tableA.csv": "04a797511d83af9e27469778081c50397857b199d49e2f83c119390f14301947",
@@ -111,6 +117,7 @@ _MAGELLAN = {
             "e37e7ed8e06722499e6d9e94583fdec279207b13ce6270a37595b6a5d594bc40",
             ("DBLP2.csv", "ACM.csv", "DBLP-ACM_perfectMapping.csv"),
         ),
+        default_source="leipzig",
         deepmatcher="Structured/DBLP-ACM",
         sha_dm={
             "tableA.csv": "a83dfac196a4e263f3adac7aaf095c7198254a98fcaed0ec68d59130c74c43a7",
@@ -128,6 +135,8 @@ _MAGELLAN = {
 
 #: the selectable sources of the three Magellan/DeepMatcher tables
 MAGELLAN_SOURCES = ("leipzig", "deepmatcher")
+#: bump when the difficulty profile's definition changes, so cached profiles are re-measured
+PROFILE_VERSION = 1
 
 _WDC_SHA = {
     80: "5385e2491e82c7f6c208d8eac7ec777a4a44180769f3a339c99803ff2b068981",
@@ -186,8 +195,9 @@ def _difficulty_sentence(base: str, profile: Optional[dict]) -> str:
     if not profile:
         return base
     return (
-        f"{base}. Measured: linearity {profile['linearity']:.2f} "
-        f"({profile['level']}; best F1 of one TF-IDF cosine threshold)"
+        f"{base}. Measured on the whole-table task: linearity "
+        f"{profile['linearity']:.2f} ({profile['level']}; best F1 of one TF-IDF cosine "
+        f"threshold over all pairs)"
     )
 
 
@@ -197,16 +207,22 @@ def _difficulty_sentence(base: str, profile: Optional[dict]) -> str:
 def _magellan(
     name,
     *,
-    source="leipzig",
+    source: Optional[str] = None,
     store: Optional[MutableMapping] = None,
     download: bool = True,
     get: Optional[Callable] = None,
+    verify: bool = True,
     profile: bool = True,
 ) -> Benchmark:
-    _check_choice("source", source, MAGELLAN_SOURCES)
     spec = _MAGELLAN[name]
+    source = spec["default_source"] if source is None else source
+    _check_choice("source", source, MAGELLAN_SOURCES)
     store = default_store() if store is None else store
     kw = dict(store=store, download=download, get=get)
+
+    def Source(url, sha):  # noqa: N802 — the pinned hash, unless verification is off
+        return _Source(url, sha if verify else None)
+
     if source == "leipzig":
         zip_name, sha, (file_a, file_b, file_map) = spec["leipzig"]
         archive = zipfile.ZipFile(
@@ -255,19 +271,26 @@ def _magellan(
         }
     a = [_record(r) for r in rows_a]
     b = [_record(r) for r in rows_b]
-    prof = _profile(store, f"{name}/profile-{source}.json", a, b, gold, compute=profile)
+    prof = _profile(
+        store,
+        f"{name}/profile-v{PROFILE_VERSION}-{source}.json",
+        a,
+        b,
+        gold,
+        compute=profile,
+    )
     meta.update(
         {
             "title": spec["title"],
-            "record_ids": {
-                "a": [r["id"] for r in rows_a],
-                "b": [r["id"] for r in rows_b],
-            },
             "difficulty": _difficulty_sentence(spec["difficulty"], prof),
             "difficulty_profile": prof,
         }
     )
-    return Benchmark(name, a, b, gold, meta=meta, pairs=pairs)
+    ids = {"a": [r["id"] for r in rows_a], "b": [r["id"] for r in rows_b]}
+    # a non-default source is a different task (other tables, other gold): its own name,
+    # so a report never averages the two together
+    label = name if source == spec["default_source"] else f"{name}_{source}"
+    return Benchmark(label, a, b, gold, meta=meta, pairs=pairs, ids=ids)
 
 
 def abt_buy(**config) -> Benchmark:
@@ -296,10 +319,12 @@ for _name, _fn in (
 # --- WDC Products ----------------------------------------------------------------------
 
 
-def _wdc_part(offers):
+def _wdc_part(offers, rng):
     """Split one part's offers into two tables: within each entity (cluster), offers
     alternate between ``a`` and ``b`` in id order — a two-offer cluster (every test set)
-    becomes one ``a``/``b`` match."""
+    becomes one ``a``/``b`` match. Each table is then shuffled (``rng``): built in
+    cluster order, the gold would be the diagonal, which an index-order matcher gets
+    for free."""
     by_cluster = defaultdict(list)
     for o in offers:
         by_cluster[o["cluster_id"]].append(o)
@@ -307,7 +332,9 @@ def _wdc_part(offers):
     for cluster in sorted(by_cluster):
         for k, o in enumerate(sorted(by_cluster[cluster], key=lambda o: o["id"])):
             (a if k % 2 == 0 else b).append(o)
-    return a, b
+    return [a[i] for i in rng.permutation(len(a))], [
+        b[i] for i in rng.permutation(len(b))
+    ]
 
 
 def wdc_products(
@@ -315,18 +342,22 @@ def wdc_products(
     corner_cases: int = 80,
     unseen: int = 100,
     dev_size: str = "large",
+    seed: int = 0,
     store: Optional[MutableMapping] = None,
     download: bool = True,
     get: Optional[Callable] = None,
+    verify: bool = True,
     profile: bool = True,
 ) -> Benchmark:
     """WDC Products as a two-table benchmark with its canonical train/valid/test split.
 
     The defaults pick the hardest generalization variant — 80 % corner cases, every test
     entity unseen in training (research doc 14, §7.6) — with the large development set.
-    Gold pairs every ``a``/``b`` offer of the same product. ``meta['leakage']`` counts test
-    offers that also appear (identically) in train or valid: WDC's own files have such
-    overlap in the 50 %-unseen variants, and a warning says so.
+    Gold pairs every ``a``/``b`` offer of the same product, across parts too (a seen test
+    product matches its training offers); only the test-part gold is scored. Row order
+    within each part is shuffled with ``seed``. ``meta['leakage']`` counts test offers
+    that also appear, identically, in train or valid. WDC's own files have such overlap:
+    hundreds in the 50 %-unseen variants, a few in valid for 0 %. A warning says so.
     """
     _check_choice("corner_cases", corner_cases, WDC_CORNER_CASES)
     _check_choice("unseen", unseen, WDC_UNSEEN)
@@ -337,7 +368,9 @@ def wdc_products(
         io.BytesIO(
             fetch(
                 f"wdc_products/{zip_name}",
-                Source(f"{_WDC}/{zip_name}", _WDC_SHA[corner_cases]),
+                _Source(
+                    f"{_WDC}/{zip_name}", _WDC_SHA[corner_cases] if verify else None
+                ),
                 store=store,
                 download=download,
                 get=get,
@@ -356,8 +389,9 @@ def wdc_products(
         "test": offers(f"{unseen:03d}un_gs"),
     }
     a, b, splits, cluster_a, cluster_b, ids = [], [], {}, [], [], {"a": [], "b": []}
+    rng = np.random.default_rng(seed)
     for part, part_offers in parts.items():
-        pa, pb = _wdc_part(part_offers)
+        pa, pb = _wdc_part(part_offers, rng)
         splits[part] = (
             tuple(range(len(a), len(a) + len(pa))),
             tuple(range(len(b), len(b) + len(pb))),
@@ -390,7 +424,7 @@ def wdc_products(
     sub = subset_pairs(gold, test_a, test_b)
     prof = _profile(
         store,
-        f"wdc_products/profile-{corner_cases}cc-{unseen}un.json",
+        f"wdc_products/profile-v{PROFILE_VERSION}-{corner_cases}cc-{unseen}un-s{seed}.json",
         [a[i] for i in test_a],
         [b[j] for j in test_b],
         sub,
@@ -406,19 +440,21 @@ def wdc_products(
         "title": "WDC Products",
         "source": f"{_WDC}/{zip_name} (Peeters, Der & Bizer, EDBT 2024)",
         "license": WDC_LICENSE,
-        "gold": "complete within the offers: every a/b pair of the same product",
+        "gold": (
+            "complete within the offers: every a/b pair of the same product, across "
+            "parts too (only the test part is scored)"
+        ),
         "variant": {
             "corner_cases": corner_cases,
             "unseen": unseen,
             "dev_size": dev_size,
         },
-        "record_ids": ids,
         "leakage": leakage,
         "difficulty": _difficulty_sentence(base, prof),
         "difficulty_profile": prof,
     }
     name = f"wdc_products_{corner_cases}cc_{unseen}un_{dev_size}"
-    return Benchmark(name, a, b, gold, meta=meta, splits=splits)
+    return Benchmark(name, a, b, gold, meta=meta, splits=splits, ids=ids)
 
 
 benchmarks.register("wdc_products", wdc_products)

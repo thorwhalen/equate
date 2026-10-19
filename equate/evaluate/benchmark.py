@@ -50,7 +50,9 @@ class Benchmark:
     - ``splits`` — the suite's canonical record split, ``{'train'|'val'|'test':
       (a_indices, b_indices)}``;
     - ``pairs`` — the suite's labelled candidate pairs, ``{'train'|'val'|'test':
-      ((i, j, label), ...)}`` (the DeepMatcher pair-classification task).
+      ((i, j, label), ...)}`` (the DeepMatcher pair-classification task);
+    - ``ids`` — the publisher's record ids, ``{'a': [...], 'b': [...]}`` (kept out of
+      ``meta``, which every report copies).
     """
 
     name: str
@@ -60,6 +62,7 @@ class Benchmark:
     meta: dict = field(default_factory=dict)
     splits: Optional[dict] = None
     pairs: Optional[dict] = None
+    ids: Optional[dict] = None
 
     @property
     def base_rate(self) -> float:
@@ -185,7 +188,14 @@ class BenchmarkReport:
         head = "| benchmark | precision | recall | F1 | seconds | test base rate | seeds | difficulty |"
         lines = [head, "|" + "---|" * 8]
         for name, s in self.summary().items():
-            cells = [f"{s[m][0]:.3f} ± {s[m][1]:.3f}" for m in self._METRICS]
+            # one run (a canonical split) has no spread: print no "± 0.000" that reads
+            # as zero variance
+            cells = [
+                f"{s[m][0]:.3f}"
+                if s["n_seeds"] == 1
+                else f"{s[m][0]:.3f} ± {s[m][1]:.3f}"
+                for m in self._METRICS
+            ]
             difficulty = self.meta.get(name, {}).get("difficulty", "")
             lines.append(
                 f"| {name} | "
@@ -281,6 +291,11 @@ def benchmark_matcher(
     rows, meta = [], {}
     for spec in on:
         ds = spec if isinstance(spec, Benchmark) else load_benchmark(spec)
+        if ds.name in meta:
+            raise ValueError(
+                f"two benchmarks are named {ds.name!r}; their rows would be averaged "
+                f"together — give them distinct names"
+            )
         meta[ds.name] = dict(ds.meta)
         n_a, n_b = len(ds.a), len(ds.b)
         entity = cross_pairs_to_labels(ds.gold, n_a=n_a, n_b=n_b)

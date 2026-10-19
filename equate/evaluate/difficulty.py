@@ -22,38 +22,47 @@ __all__ = ["linearity", "difficulty_profile", "difficulty_label"]
 #: linearity at or above which a benchmark is "easy" / "moderate" (else "hard")
 DFLT_EASY_AT = 0.9
 DFLT_MODERATE_AT = 0.7
+#: the largest a × b that :func:`linearity` scores densely: peak memory is ~130 bytes per
+#: pair (the TF-IDF scoring dominates), so 10M pairs is ~1.3 GB; Amazon-Google is 4.4M
+DFLT_MAX_PAIRS = 10_000_000
 
 
-def linearity(a: Sequence, b: Sequence, gold) -> float:
+def linearity(
+    a: Sequence, b: Sequence, gold, *, max_pairs: int = DFLT_MAX_PAIRS
+) -> float:
     """Best pairwise F1 of a single threshold on TF-IDF cosine similarity over ``a × b``.
 
     Records (mappings) are compared through their joined values. Ties are cut together
     (a threshold cannot split equal scores). ``0.0`` when there is nothing to find.
+    Every pair is scored densely (peak ~130 bytes per pair), so inputs over ``max_pairs``
+    pairs raise ``ValueError`` rather than exhaust memory; raise the limit knowingly.
 
     >>> round(linearity(['apple pie', 'kiwi'], ['kiwi', 'apple pie'], {(0, 1), (1, 0)}), 2)
     1.0
     """
     gold = {(int(i), int(j)) for i, j in gold}
-    if not gold or not len(a) or not len(b):
+    n, m = len(a), len(b)
+    if not gold or not n or not m:
         return 0.0
+    if n * m > max_pairs:
+        raise ValueError(
+            f"{n} x {m} = {n * m} pairs is over max_pairs={max_pairs}: linearity "
+            f"scores every pair densely"
+        )
     from equate.facade import score_matrix
     from equate.featurize.records import record_text
 
-    S = np.asarray(
+    flat = np.asarray(
         score_matrix([record_text(x) for x in a], [record_text(x) for x in b]).data,
         dtype=float,
-    )
-    m = S.shape[1]
-    flat = S.ravel()
-    is_gold = np.zeros(flat.shape, dtype=bool)
-    is_gold[[i * m + j for i, j in gold]] = True
-    order = np.argsort(-flat, kind="stable")
-    tp = np.cumsum(is_gold[order])
-    k = np.arange(1, flat.size + 1)
-    f1 = 2 * tp / (k + len(gold))
-    ranked = flat[order]
-    cut = np.r_[ranked[1:] != ranked[:-1], True]  # last position of each tie group
-    return float(f1[cut].max())
+    ).ravel()
+    gold_scores = np.sort(flat[[i * m + j for i, j in gold]])
+    ranked = np.sort(flat)[::-1]  # descending
+    # cut after the last element of each tie group: k pairs at or above that score
+    k = np.flatnonzero(np.r_[ranked[1:] != ranked[:-1], True]) + 1
+    thresholds = ranked[k - 1]
+    tp = len(gold_scores) - np.searchsorted(gold_scores, thresholds, side="left")
+    return float((2 * tp / (k + len(gold_scores))).max())
 
 
 def difficulty_label(

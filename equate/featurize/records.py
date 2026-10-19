@@ -20,5 +20,10 @@ def record_text(obj) -> str:
     '42'
     """
     if isinstance(obj, Mapping):
-        return " ".join(str(v) for v in obj.values() if v not in (None, ""))
+        return " ".join(str(v) for v in obj.values() if not _missing(v))
     return obj if isinstance(obj, str) else str(obj)
+
+
+def _missing(v) -> bool:
+    # identity / type checks only: `v in (None, "")` breaks on a numpy array value
+    return v is None or (isinstance(v, str) and v == "")
