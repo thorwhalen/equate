@@ -228,7 +228,7 @@ def test_blocked_session_never_assigns_a_hole():
 
 def test_views_are_json_serializable_with_no_infinities():
     svc = MatchService()
-    v = svc.open_session(["solo"], ["a", "b"], k=1)  # k=1 -> margin is +inf
+    v = svc.open_session(["solo"], ["a"])  # one candidate: no rival, margin +inf
     payload = to_jsonable(v)
     text = json.dumps(payload, allow_nan=False)
     assert payload["review"][0]["margin"] is None
@@ -689,3 +689,75 @@ def test_http_handlers_run_off_the_event_loop():
     with test_app(mk_app(svc)) as c:
         c.post("/match", json={"A": A, "B": B})
     assert threads and all("worker" in name.lower() for name in threads)
+
+
+# --- regressions from the adversarial review of #23 --------------------------------
+
+
+def test_rejecting_the_top_candidate_does_not_make_an_item_certain():
+    svc = MatchService()
+    sid = svc.open_session(A, B, k=2).session_id
+    top = svc.candidates(sid, 0)[0].candidate
+    svc.edit(sid, [Edit("reject", 0, top)])
+    row = {r.item: r for r in svc.review(sid)}[0]
+    assert row.margin is not None  # rivals outside the stored top-k still count
+
+
+def test_a_data_key_is_never_a_session():
+    from equate.service import SessionNotFound
+
+    store = _PickleStore()
+    svc = MatchService(sessions=store)
+    sid = svc.open_session(A, B).session_id
+    with pytest.raises(SessionNotFound):
+        svc.view(f"{sid}.data")
+    assert svc.close_session(f"{sid}.data") is False
+    fresh = MatchService(sessions=store)  # another process: nothing cached
+    assert _pairs(fresh.view(sid).assignment) == TRUTH  # the data survived
+
+
+def test_http_data_key_is_404_and_close_leaves_data_alone(client):
+    sid = client.post("/sessions", json={"A": A, "B": B}).json()["session_id"]
+    assert client.get(f"/sessions/{sid}.data").status_code == 404
+    assert client.delete(f"/sessions/{sid}.data").json() == {"closed": False}
+    assert client.get(f"/sessions/{sid}").status_code == 200
+
+
+def test_an_id_collision_is_refused_before_anything_is_written():
+    from equate.service import SessionConflict
+
+    store = _PickleStore()
+    svc = MatchService(sessions=store, mk_id=lambda: "fixed")
+    svc.open_session(A, B)
+    before = dict.__getitem__(store, "fixed.data")
+    with pytest.raises(SessionConflict):
+        svc.open_session(["x"], ["y"])
+    assert dict.__getitem__(store, "fixed.data") == before
+    with pytest.raises(SessionConflict):
+        MatchService(mk_id=lambda: "bad.data").open_session(A, B)
+
+
+def test_an_outranked_label_says_it_was_not_applied():
+    svc = MatchService(precedence=("human", "llm"))
+    sid = svc.open_session(A, B).session_id
+    svc.edit(sid, [Edit("confirm", 0, 1, "human")])
+    assert svc.label(sid, 0, 1, False, source="llm").applied is False
+    assert svc.label(sid, 2, 2, True, source="llm").applied is True
+
+
+def test_session_data_is_read_from_the_store_once_per_process():
+    class Counting(_PickleStore):
+        reads = 0
+
+        def __getitem__(self, k):
+            if k.endswith(".data"):
+                type(self).reads += 1
+            return super().__getitem__(k)
+
+    store = Counting()
+    sid = MatchService(sessions=store).open_session(A, B).session_id
+    other = MatchService(sessions=store)
+    for _ in range(4):
+        other.view(sid)
+        other.edit(sid, [Edit("reject", 0, 0)])
+    assert Counting.reads == 1

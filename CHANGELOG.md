@@ -13,6 +13,8 @@ releases CI publishes to PyPI.
 - A session is stored as two keys: its immutable `SessionData` (both collections and the score matrix, written once) and its small mutable state (saved on every edit). An edit no longer re-writes the n × m scores. Sessions saved by earlier versions still load and migrate on their next save.
 - `Session.version` is checked on save. A save that finds a newer version (another process saved first) raises `SessionConflict`, an HTTP 409, instead of losing that change.
 - HTTP handlers are async and run the service in a worker thread, so one long scoring call no longer blocks other requests.
+- `LabelResult.applied` says whether a label took effect: `false` when a more authoritative source's decision stands.
+- A session's immutable data is cached per process, so a read does not unpickle the scores again. Ids ending in `.data` are reserved. The default in-memory store is per process, so use a shared store with `uvicorn --workers N`.
 - Errors map narrowly: an unknown strategy name (the new `equate.registry.UnknownStrategyError`, still a `KeyError`) or a bad value or type is a 422; any other exception is a genuine 500.
 
 **Confidence intervals and GMD** (#25; doc 14 §7.4).

@@ -74,7 +74,12 @@ adding a structured strategy, decide which of these three seams it belongs to.
   a worker thread (async endpoints), never on the event loop. An edit or a label is
   atomic — a failed one leaves the session (log, labels, accounting) untouched.
 - **HTTP errors are mapped in `mk_app`**, because qh turns any exception into a 500:
-  `SessionNotFound` → 404, other `KeyError`/`ValueError`/`TypeError` → 422.
+  `SessionNotFound` → 404, `SessionConflict` → 409, `UnknownStrategyError` (a caller's
+  unknown strategy name) / `ValueError` / `TypeError` → 422; anything else stays a 500.
+- **Multi-process:** the default in-memory `sessions` dict is per process — under
+  `uvicorn --workers N` (N > 1) pass a shared store (`MatchService(sessions=<dol store>)`),
+  or requests land on workers without the session (404). Ids ending in `.data` are
+  reserved for the session data keys.
 - **`ui/`** is a Vite + React + zodal app with its own `npm test` / `npm run build`
   (`npm run ci-local` = both). Hosted CI runs them on any `ui/**` change
   (`.github/workflows/ui-ci.yml` → the wads npm workflow, config under `wads` in

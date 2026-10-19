@@ -86,6 +86,7 @@ __all__ = [
 DFLT_K = 5  # candidates retained per item (the CandidateStore top-k)
 DFLT_FIELD_COMPARE = "ratio"  # per-field similarity shown in a field diff
 DFLT_MATCH_CACHE_SIZE = 128  # stateless /match results kept (LRU)
+DFLT_DATA_CACHE_SIZE = 16  # sessions whose immutable data is kept in memory (LRU)
 DFLT_CORS_ORIGINS = ("http://localhost:5173", "http://127.0.0.1:5173")  # vite dev
 DFLT_API_PREFIX = "/api"  # where the API lives when the app also serves the UI
 
@@ -294,6 +295,7 @@ class LabelResult:
     label: Label
     result: EditResult
     next: Optional[Query]
+    applied: bool = True  # False when a more authoritative source's decision stands
 
 
 @dataclass
@@ -638,6 +640,10 @@ class MatchService:
         self.field_compare = field_compare
         self.on_cost = on_cost
         self.precedence = tuple(precedence) if precedence else None
+        # session data is immutable once written: cache it per process, so a read does not
+        # unpickle the n × m scores again (bounded, least-recently-used)
+        self._data_cache = _LRU(DFLT_DATA_CACHE_SIZE)
+        self._data_lock = threading.Lock()
 
     # -- scoring ------------------------------------------------------------------
 
@@ -763,8 +769,20 @@ class MatchService:
             accounting=acc,
             floor=floor,
         )
+        sid = session.session_id
+        if (
+            not isinstance(sid, str)
+            or sid.endswith(_DATA_SUFFIX)
+            or sid in self.sessions
+        ):
+            raise SessionConflict(
+                f"session id {sid!r} is taken or reserved; mk_id must make unique ids "
+                f"not ending in {_DATA_SUFFIX!r}"
+            )
         data = SessionData(A, B, sm)
-        self.sessions[_data_key(session.session_id)] = data  # written once
+        self.sessions[_data_key(sid)] = data  # written once
+        with self._data_lock:
+            self._data_cache[_data_key(sid)] = data
         session.__dict__["_attached"] = data
         self._save(session)
         return self.view(session.session_id)
@@ -918,7 +936,12 @@ class MatchService:
             result = self._edit(
                 session_id, [Edit(action, item, candidate, lab.source)], label=lab
             )
-            return LabelResult(lab, result, next=self.next_query(session_id))
+            cs = self._constraints(self._load(session_id))
+            pair = (item, candidate)
+            applied = pair in set(cs.forced) if is_match else pair in set(cs.forbidden)
+            return LabelResult(
+                lab, result, next=self.next_query(session_id), applied=applied
+            )
 
     def next_query(self, session_id: str) -> Optional[Query]:
         """The next pair to label: uncertainty sampling over the not-yet-decided items.
@@ -947,8 +970,15 @@ class MatchService:
 
     def close_session(self, session_id: str) -> bool:
         """Forget a session. Returns whether it existed."""
+        if not isinstance(session_id, str) or session_id.endswith(_DATA_SUFFIX):
+            return False  # a data key is not a session
+        # the state first: a concurrent reader then finds no session, never a state
+        # whose data has gone
+        existed = self.sessions.pop(session_id, None) is not None
         self.sessions.pop(_data_key(session_id), None)
-        return self.sessions.pop(session_id, None) is not None
+        with self._data_lock:
+            self._data_cache.pop(_data_key(session_id), None)
+        return existed
 
     # -- internals ----------------------------------------------------------------
 
@@ -956,21 +986,45 @@ class MatchService:
         return _effective_constraints(s.edits, self.precedence)
 
     def _load(self, session_id) -> Session:
+        if not isinstance(session_id, str) or session_id.endswith(_DATA_SUFFIX):
+            # a data key is not a session: never load, view or close it as one
+            raise SessionNotFound(f"no session {session_id!r}")
         try:
             s = self.sessions[session_id]
         except KeyError:
             raise SessionNotFound(f"no session {session_id!r}") from None
+        if not isinstance(s, Session):
+            raise SessionNotFound(f"no session {session_id!r}")
         if s.__dict__.get("_attached") is None:
-            if "scores" in s.__dict__:  # pickled before equate#23: migrate on next save
-                data = s._data()
-                for name in ("A", "B", "scores"):
-                    s.__dict__.pop(name, None)
-                self.sessions[_data_key(session_id)] = data
-            else:
-                data = self.sessions[_data_key(session_id)]
-            s.__dict__["_attached"] = data
+            s.__dict__["_attached"] = self._session_data(s, session_id)
         s.__dict__["_loaded_version"] = getattr(s, "version", 0)
         return s
+
+    def _session_data(self, s, session_id) -> SessionData:
+        """The immutable data of a session: from the in-process cache, the store, or —
+        for a session pickled before equate#23 — its own state, migrated once."""
+        key = _data_key(session_id)
+        legacy = "scores" in s.__dict__
+        with self._data_lock:
+            cached = None if legacy else self._data_cache.get(key)
+        if cached is not None:
+            return cached
+        if legacy:  # the old one-key layout: split it, once
+            data = s._data()
+            for name in ("A", "B", "scores"):
+                s.__dict__.pop(name, None)
+            self.sessions[key] = data
+            self.sessions[session_id] = s  # same version: a migration, not an edit
+        else:
+            try:
+                data = self.sessions[key]
+            except KeyError:
+                raise SessionNotFound(
+                    f"session {session_id!r} has lost its data (closed meanwhile?)"
+                ) from None
+        with self._data_lock:
+            self._data_cache[key] = data
+        return data
 
     def _save(self, session):
         """Persist the state (re-assigned, so a write-through ``dol`` store sees it).
@@ -1047,21 +1101,35 @@ class MatchService:
 def _margin(s, i, constraints):
     """Item ``i``'s confidence margin over its **open** candidates.
 
-    The top-1 vs top-2 score gap among the candidates still available to it — not
-    rejected for it, not confirmed for another item — so the queue reflects the edits
-    made so far (equate#23). A session floor counts as a virtual runner-up: an item left
-    with one open candidate just past the floor is a borderline call, not a certain one.
+    The top-1 vs top-2 score gap among every candidate still available to it — read from
+    the session's cached score row (not just the retained top-k), minus those rejected
+    for it and those confirmed for another item — so the queue follows the edits made so
+    far (equate#23). A session floor counts as a virtual runner-up: an item left with one
+    open candidate just past the floor is a borderline call, not a certain one.
     """
-    forbidden = set(constraints.forbidden)
-    taken = {j for i2, j in constraints.forced if i2 != i}
-    open_ = [
-        score
-        for j, score in s.store.candidates.get(i, [])
-        if (i, j) not in forbidden and j not in taken
-    ]
-    m = abs(open_[0] - open_[1]) if len(open_) >= 2 else math.inf
-    if s.floor is not None and open_ and not math.isnan(open_[0]):
-        m = min(m, abs(open_[0] - s.floor))
+    sm = s.scores
+    if sm.is_sparse:
+        lo, hi = sm.data.indptr[i], sm.data.indptr[i + 1]
+        cols = sm.data.indices[lo:hi]
+        vals = np.asarray(sm.data.data[lo:hi], dtype=float)
+    else:
+        vals = np.asarray(sm.data[i], dtype=float)
+        cols = np.arange(vals.size)
+    closed = {j for i2, j in constraints.forced if i2 != i}
+    closed |= {j for i2, j in constraints.forbidden if i2 == i}
+    keep = ~np.isnan(vals)
+    if closed:
+        keep &= ~np.isin(cols, list(closed))
+    vals = vals[keep]
+    if sm.sense == "minimize":
+        vals = -vals  # best = largest, so one code path ranks both senses
+    if vals.size > 2:
+        vals = np.partition(vals, -2)[-2:]  # the top two, in linear time
+    best = np.sort(vals)[::-1]
+    m = float(best[0] - best[1]) if best.size >= 2 else math.inf
+    if s.floor is not None and best.size:
+        top = best[0] if sm.sense == "maximize" else -best[0]
+        m = min(m, abs(top - s.floor))
     return m
 
 
@@ -1073,9 +1141,13 @@ def _is_stored(sm, i, j):
     return j in sm.data.indices[lo:hi]
 
 
+_DATA_SUFFIX = ".data"  # reserved: no session id may end with it
+
+
 def _data_key(session_id) -> str:
-    """Where a session's immutable :class:`SessionData` lives, beside its state."""
-    return f"{session_id}.data"
+    """Where a session's immutable :class:`SessionData` lives, beside its state (in the
+    same ``sessions`` mapping; ids ending in ``.data`` are reserved for it)."""
+    return f"{session_id}{_DATA_SUFFIX}"
 
 
 def _finite_or_error(x, what):
@@ -1181,7 +1253,10 @@ def mk_app(
 
     An unknown session is a 404, a session another process changed first a 409, an
     invalid edit or unknown strategy a 422. Handlers run in a worker thread, so a long
-    scoring call does not block other requests. ``cors_origins``
+    scoring call does not block other requests. The default in-memory session store is
+    per process: with several server processes (``uvicorn --workers N``) pass a shared
+    store, ``MatchService(sessions=<dol store>)``, or a request can reach a process that
+    does not hold its session. ``cors_origins``
     lets the review UI's dev server (vite, port 5173) call it; pass ``()`` to disable.
     Requires ``pip install 'equate[service]'``.
 
