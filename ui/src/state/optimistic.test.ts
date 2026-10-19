@@ -26,6 +26,7 @@ const session: SessionView = {
   edits: [],
   labels: [],
   accounting: { tiers: {} },
+  floor: null,
 };
 
 describe('applyOptimistic', () => {

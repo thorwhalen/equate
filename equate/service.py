@@ -32,6 +32,7 @@ persistent ``dol`` store replaces the in-memory dict without touching this code.
 import hashlib
 import json
 import math
+import numbers
 import time
 import threading
 import uuid
@@ -261,6 +262,7 @@ class SessionView:
     edits: list
     labels: list
     accounting: Accounting
+    floor: Optional[float] = None
 
 
 @dataclass
@@ -303,6 +305,7 @@ class Session:
     edits: list = field(default_factory=list)  # [Edit, ...] — the replayable log
     labels: list = field(default_factory=list)  # [Label, ...]
     accounting: Accounting = field(default_factory=Accounting)
+    floor: Optional[float] = None  # the score floor applied at open (equate#21)
 
 
 # --- Helpers -------------------------------------------------------------------------
@@ -468,6 +471,34 @@ def _without_rejected(sm, forbidden):
     mask = sm.candidate_mask()
     for i, j in forbidden:
         mask[i, j] = False
+    return _restricted(sm, mask)
+
+
+def _past_floor_removed(sm, floor):
+    """``sm`` keeping only the cells that pass ``floor`` (at or above it for a
+    ``'maximize'`` sense, at or below for ``'minimize'``; NaN never passes): the others
+    become holes.
+
+    The same mechanism as a reject, so a session never *forces* a pair past the floor:
+    the lexicographic re-solve leaves an item unmatched instead (equate#21).
+    """
+    if floor is None:
+        return sm
+    mask = sm.candidate_mask()
+    if sm.is_sparse:
+        coo = sm.data.tocoo()
+        rows, cols, values = coo.row, coo.col, coo.data
+    else:
+        rows, cols = np.nonzero(mask)
+        values = sm.data[rows, cols]
+    with np.errstate(invalid="ignore"):
+        fails = ~(values >= floor if sm.sense == "maximize" else values <= floor)
+    mask[rows[fails], cols[fails]] = False
+    return _restricted(sm, mask)
+
+
+def _restricted(sm, mask):
+    """``sm`` as a sparse matrix storing exactly the cells where ``mask`` is True."""
     rows, cols = np.nonzero(mask)
     values = np.asarray(sm.data[rows, cols]).ravel()
     # coo keeps explicitly-stored zeros, so a real 0.0 score stays a candidate
@@ -621,18 +652,29 @@ class MatchService:
         compare: Optional[str] = None,
         block: Optional[str] = None,
         sense: Optional[str] = None,
+        floor: Optional[float] = None,
     ) -> SessionView:
         """Score ``A`` against ``B`` once and open an interactive review session.
 
         The session keeps each item's top-``k`` candidates and the optimal 1:1
         assignment; every later edit re-solves from these cached scores.
+
+        ``floor`` is the lowest acceptable score (the highest acceptable distance for a
+        ``'minimize'`` sense). Pairs past it are not candidates at all: never proposed,
+        never offered for review, and a reject never pushes an item onto one — the item is
+        left unmatched. Like blocking (D11), the assignment is then *lexicographic*: as
+        many acceptable pairs as possible, then the best total score — so a floor can
+        change the opening assignment, not just trim it. That is unlike
+        :meth:`match`'s ``threshold``, which solves first and then drops weak pairs.
         """
         k = _positive_int(k, "k")
+        floor = _finite_or_error(floor, "floor")
         A, B = list(A), list(B)
         acc = Accounting()
         sm = self._score(
             A, B, acc, featurize=featurize, compare=compare, block=block, sense=sense
         )
+        sm = _past_floor_removed(sm, floor)
         with self._timed(acc, "candidates", len(A)):
             store = CandidateStore.from_scores(sm.data, k=k, sense=sm.sense)
         with self._timed(acc, "reoptimize", len(A) + len(B)):
@@ -646,6 +688,7 @@ class MatchService:
             k=k,
             assignment=assignment,
             accounting=acc,
+            floor=floor,
         )
         self._save(session)
         return self.view(session.session_id)
@@ -664,6 +707,7 @@ class MatchService:
             edits=list(s.edits),
             labels=list(s.labels),
             accounting=s.accounting.snapshot(),
+            floor=s.floor,
         )
 
     def review(
@@ -680,7 +724,7 @@ class MatchService:
         assigned = dict(s.assignment)
 
         def order(i):
-            m = s.store.margin(i)
+            m = _margin(s, i)
             return (i in forced, m if math.isfinite(m) else math.inf, i)
 
         items = sorted(range(len(s.A)), key=order)
@@ -701,7 +745,7 @@ class MatchService:
                     left=s.A[i],
                     assigned=assigned.get(i),
                     status=status,
-                    margin=_finite_or_none(s.store.margin(i)),
+                    margin=_finite_or_none(_margin(s, i)),
                     candidates=self._candidate_views(s, i),
                 )
             )
@@ -890,12 +934,37 @@ class MatchService:
         return views
 
 
+def _margin(s, i):
+    """Item ``i``'s confidence margin: top-1 vs top-2 score gap, where a session floor
+    counts as a virtual runner-up — an item left with one candidate just past the floor
+    is a borderline call, not a certain one (it would otherwise read as ``inf``)."""
+    m = s.store.margin(i)
+    top = s.store.top(i)
+    if s.floor is not None and top and not math.isnan(top[0][1]):
+        m = min(m, abs(top[0][1] - s.floor))
+    return m
+
+
 def _is_stored(sm, i, j):
     """Whether ``(i, j)`` is a candidate cell of ``sm`` (every cell of a dense matrix)."""
     if not sm.is_sparse:
         return True
     lo, hi = sm.data.indptr[i], sm.data.indptr[i + 1]
     return j in sm.data.indices[lo:hi]
+
+
+def _finite_or_error(x, what):
+    if x is None:
+        return None
+    try:
+        if isinstance(x, bool) or not isinstance(x, numbers.Real):
+            raise TypeError
+        value = float(x)  # a numpy scalar is a Real; a huge int overflows here
+    except (TypeError, OverflowError):
+        raise ValueError(f"{what} must be a finite number, got {x!r:.80}") from None
+    if not math.isfinite(value):
+        raise ValueError(f"{what} must be a finite number, got {x!r:.80}")
+    return value
 
 
 def _positive_int(x, what):
@@ -1039,6 +1108,7 @@ def mk_app(service: Optional[MatchService] = None, *, cors_origins=DFLT_CORS_ORI
         compare: Optional[str] = None,
         block: Optional[str] = None,
         sense: Optional[str] = None,
+        floor: Optional[float] = None,
     ):
         return J(
             svc.open_session(
@@ -1049,6 +1119,7 @@ def mk_app(service: Optional[MatchService] = None, *, cors_origins=DFLT_CORS_ORI
                 compare=compare,
                 block=block,
                 sense=sense,
+                floor=floor,
             )
         )
 

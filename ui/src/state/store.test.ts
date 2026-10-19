@@ -20,6 +20,7 @@ const session: SessionView = {
   edits: [],
   labels: [],
   accounting: { tiers: {} },
+  floor: null,
 };
 
 function fakeClient(overrides: Partial<Client> = {}): Client {

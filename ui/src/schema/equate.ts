@@ -98,6 +98,8 @@ export const SessionView = z.object({
   edits: z.array(Edit),
   labels: z.array(Label),
   accounting: Accounting,
+  // the score floor (a ceiling for 'minimize'); optional so an older server still parses
+  floor: z.number().nullable().optional(),
 });
 
 export const EditResult = z.object({

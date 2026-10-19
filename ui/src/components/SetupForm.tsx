@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { DEMO_LEFT, DEMO_RIGHT, toJsonLines } from '../demo';
 import { drafts, useReview } from '../state/instance';
 import { navigate } from '../route';
+import { DEFAULT_K, MAX_K, parseSetup, type FieldErrors } from '../setup';
 import { parseItems } from '../util/items';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -17,7 +18,6 @@ const COMPARATORS = [
   { value: 'jaro_winkler', label: 'Jaro-Winkler' },
   { value: 'monge_elkan', label: 'Monge-Elkan (token-wise)' },
 ];
-const DEFAULT_K = 5;
 const SAVE_DELAY_MS = 400;
 
 function count(text: string): string {
@@ -33,7 +33,10 @@ export function SetupForm() {
   const status = useReview((s) => s.status);
   const [left, setLeft] = useState('');
   const [right, setRight] = useState('');
-  const [k, setK] = useState(DEFAULT_K);
+  // numeric fields hold what was typed; parseSetup decides what it means
+  const [k, setK] = useState(String(DEFAULT_K));
+  const [floor, setFloor] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [compare, setCompare] = useState('');
   const [restoredAt, setRestoredAt] = useState<number | null>(null);
   const [inputError, setInputError] = useState<string | null>(null);
@@ -44,7 +47,8 @@ export function SetupForm() {
       if (d && !loaded.current && (d.left || d.right)) {
         setLeft(d.left);
         setRight(d.right);
-        setK(d.k);
+        setK(String(d.k));
+        setFloor(d.floor ?? '');
         setCompare(d.compare);
         setRestoredAt(d.savedAt);
       }
@@ -54,9 +58,19 @@ export function SetupForm() {
 
   useEffect(() => {
     if (!loaded.current) return;
-    const t = setTimeout(() => drafts.save({ left, right, k, compare }), SAVE_DELAY_MS);
+    const t = setTimeout(
+      () => drafts.save({ left, right, k, floor, compare }),
+      SAVE_DELAY_MS,
+    );
     return () => clearTimeout(t);
-  }, [left, right, k, compare]);
+  }, [left, right, k, floor, compare]);
+
+  // leaving a field resolves its draft: an invalid one keeps its text and says why
+  const checkFields = () => {
+    const r = parseSetup({ k, floor });
+    setFieldErrors(r.ok ? {} : r.errors);
+    return r;
+  };
 
   async function start() {
     let A: unknown[];
@@ -73,7 +87,15 @@ export function SetupForm() {
       return;
     }
     setInputError(null);
-    const id = await open({ A, B, k, compare: compare || null });
+    const params = checkFields();
+    if (!params.ok) return;
+    const id = await open({
+      A,
+      B,
+      k: params.value.k,
+      floor: params.value.floor,
+      compare: compare || null,
+    });
     if (id) {
       await drafts.clear();
       navigate({ session: id });
@@ -136,12 +158,39 @@ export function SetupForm() {
             Candidates per item
             <input
               type="number"
+              inputMode="numeric"
               min={1}
-              max={50}
-              className="h-9 w-24 rounded-md border border-border bg-background px-2 text-sm"
+              max={MAX_K}
+              aria-invalid={!!fieldErrors.k}
+              aria-describedby={fieldErrors.k ? 'k-error' : undefined}
+              className="h-9 w-24 rounded-md border border-border bg-background px-2 text-sm aria-invalid:border-destructive"
               value={k}
-              onChange={(e) => setK(Math.max(1, Number(e.target.value) || DEFAULT_K))}
+              onChange={(e) => setK(e.target.value)}
+              onBlur={checkFields}
             />
+            {fieldErrors.k && (
+              <span id="k-error" className="text-xs font-normal text-destructive">
+                {fieldErrors.k}
+              </span>
+            )}
+          </label>
+          <label className="flex flex-col gap-1 text-sm font-medium">
+            Minimum score
+            <input
+              type="text"
+              inputMode="decimal"
+              placeholder="none"
+              aria-invalid={!!fieldErrors.floor}
+              aria-describedby="floor-help"
+              className="h-9 w-28 rounded-md border border-border bg-background px-2 text-sm aria-invalid:border-destructive"
+              value={floor}
+              onChange={(e) => setFloor(e.target.value)}
+              onBlur={checkFields}
+            />
+            <span id="floor-help" className="max-w-56 text-xs font-normal text-muted-foreground">
+              {fieldErrors.floor ??
+                'Pairs scoring below it are never proposed, so rejecting an item\'s last good candidate leaves it unmatched.'}
+            </span>
           </label>
           <div className="ml-auto flex gap-2">
             <Button

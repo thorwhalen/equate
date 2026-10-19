@@ -19,7 +19,7 @@ describe('Zod schemas mirror the Python boundary types', () => {
       session_id: 's1', n_left: 1, n_right: 1, sense: 'maximize', k: 5,
       assignment: [{ item: 0, candidate: 0, left: 'a', right: 'a', score: 1, status: 'proposed' }],
       review: [{ item: 0, left: 'a', assigned: 0, status: 'proposed', margin: null, candidates: [] }],
-      edits: [], labels: [], accounting: { tiers: { score: { calls: 1, seconds: 0.01, items: 1 } } },
+      edits: [], labels: [], accounting: { tiers: { score: { calls: 1, seconds: 0.01, items: 1 } } }, floor: null,
     };
     expect(SessionView.parse(payload).review[0].margin).toBeNull();
   });

@@ -167,7 +167,7 @@ svc.edit(view.session_id, [{"action": "reject", "item": 0, "candidate": 1}])
 svc.next_query(view.session_id)  # the pair whose label would help most
 ```
 
-`pip install 'equate[service]'` adds the HTTP API (built with [qh](https://github.com/i2mint/qh)): `python -m equate.service serve`, then `POST /match`, `POST /sessions`, `GET|POST /sessions/{id}/candidates/{item}`, `POST /sessions/{id}/edits`, `POST /sessions/{id}/label`. `equate.service.mk_app(service)` returns the FastAPI app to mount elsewhere. Sessions live in any `MutableMapping` (`MatchService(sessions=...)`), so a `dol` store persists them.
+`pip install 'equate[service]'` adds the HTTP API (built with [qh](https://github.com/i2mint/qh)): `python -m equate.service serve`, then `POST /match`, `POST /sessions`, `GET|POST /sessions/{id}/candidates/{item}`, `POST /sessions/{id}/edits`, `POST /sessions/{id}/label`. `equate.service.mk_app(service)` returns the FastAPI app to mount elsewhere. Sessions live in any `MutableMapping` (`MatchService(sessions=...)`), so a `dol` store persists them. `open_session(..., floor=0.5)` sets a score floor: a pair below it is never proposed, so rejecting an item's only good candidate leaves the item unmatched instead of handing it a poor one.
 
 The review UI (React, [zodal](https://github.com/i2mint/zodal) + shadcn) is in [`ui/`](ui/README.md): a review queue ordered by uncertainty, side-by-side field diffs, confirm / reject / reassign with optimistic updates, and a labelling widget.
 
