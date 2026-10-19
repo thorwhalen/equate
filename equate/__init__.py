@@ -54,6 +54,11 @@ from equate.interactive import (
     uncertainty_sampling,
 )
 from equate.facade import match, score_matrix, dedupe, resolve
+from equate.completion import (
+    find_join_keys,
+    find_near_duplicate_columns,
+    complete_table,
+)
 
 from equate.util import (
     match_keys_to_values,

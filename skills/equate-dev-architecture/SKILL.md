@@ -1,6 +1,6 @@
 ---
 name: equate-dev-architecture
-description: Read before designing, reviewing, or modifying equate's core matching architecture. Covers the featurize→compare→match/resolve pipeline, the module layout, the stage protocols, the resolved score-sense / ScoreMatrix / structured-return contracts, and the "own the orchestration, wrap the libraries" rule. Triggers when working on equate's public API, adding or adjusting a pipeline stage, choosing where a concern lives, or making any design decision about the matching core. This is the north-star for the redesign — the target architecture, not (yet) the current code.
+description: Read before designing, reviewing, or modifying equate's core matching architecture. Covers the featurize→compare→match/resolve pipeline, the module layout, the stage protocols, the resolved score-sense / ScoreMatrix / structured-return contracts, and the "own the orchestration, wrap the libraries" rule. Triggers when working on equate's public API, adding or adjusting a pipeline stage, choosing where a concern lives, or making any design decision about the matching core. The module map describes the shipped code; open issues hold what is still to build.
 metadata:
   audience: developers
   project: equate
@@ -23,17 +23,15 @@ contracts, and the defaults.
 > with zero config; every stage must be replaceable with one keyword argument;
 > **no heavy library is ever a hard dependency.**
 
-## Current state vs target (do not confuse them)
+## Shipped state (the redesign epic landed, #2–#13)
 
-- **Current code** = `equate/util.py` (a `similarity_matrix` featurize+compare
-  feeding a family of `matcher(similarity_matrix) → (i,j)` functions: greedy,
-  hungarian/JV default, max-weight, stable-marriage, kuhn-munkres) + `match_greedily`
-  (direct stdlib path) + `completion.py` (WIP tabular join-key duplicate). No
-  registries, no blocking seam, no interactive layer yet.
-- **Target** = the module sketch below. The redesign (see the roadmap epic) builds
-  it incrementally. When you touch the core, move *toward* the target; keep the
-  current public names working (back-compat re-exports) so external PyPI users and
-  existing doctests don't break silently.
+The module sketch below **is the code** now; the ``← #N`` marks say which issue built
+each part. The pre-redesign API (`equate/util.py`: `similarity_matrix`,
+`match_keys_to_values`, `match_greedily`, the `*_matching` functions; `completion`'s
+legacy `similarity_matrix`/`mk_text_to_vect`) is **kept working** for external PyPI users
+— new work goes through the registries and facades, and an old name is only ever removed
+after a deprecation cycle. What is still *target* (not built) is tracked as open issues
+on `thorwhalen/equate` (e.g. `PartitionPosterior`, collective ER, more suites).
 
 ## The three stages (and the Python idiom each generalizes)
 
@@ -149,8 +147,11 @@ equate/
 │                   #   tfidf.py = pure numpy/scipy char-n-gram TF-IDF (core default);
 │                   #   text.py = [sbert|openai|…] dense embedders behind extras (lazy)
 │                   #   graph.py = 'wl' Weisfeiler-Lehman (core) | 'grakel' [graph-kernels]  ← #10
+│                   #   records.py = record_text (a dict reads as its values); columns.py =
+│                   #   'value_set' (a column as its normalized value set)  ← #13
 ├── compare/        # registry; direct() vs featurized(); string(difflib | rapidfuzz|jellyfish [extra]);  ← #5
 │                   #   numeric_geo(decay/haversine); vector(cosine/dot/angular); vectorize(combiners+FS); calibrate
+│                   #   sets.py = jaccard / overlap / containment (directional) over value sets  ← #13
 │                   #   sequence.py = DTW (banded)/subsequence/soft-DTW, NW/SW → Alignment(score,path)  ← #10
 ├── block/          # Blocker (lazy candidate pairs); all_pairs default; keyed/SNM blocking;  ← #6
 │                   #   brute_knn (core) + ann/lsh [extra]; metablock; score_candidates→sparse; PC/RR/PQ
@@ -170,7 +171,10 @@ equate/
 ├── service.py      # MatchService: JSON-in/JSON-out (stateless match + review sessions:  ← #12
 │                   #   candidates / edits / label), per-tier Accounting; mk_app() = qh HTTP
 │                   #   surface (lazy, equate[service]); ui/ = the zodal + shadcn review UI
-└── util.py         # existing helpers + back-compat re-exports
+├── completion.py   # tables as objects: find_join_keys (value_set featurizer + containment  ← #13
+│                   #   comparator + CandidateStore top-k), find_near_duplicate_columns,
+│                   #   complete_table (key discovery -> fuzzy row alignment -> fill)
+└── util.py         # the pre-redesign API, kept working (back-compat)
 ```
 
 ## The rules that keep the core clean
