@@ -372,46 +372,49 @@ persistent <code class="docutils literal notranslate"><span class="pre">dol</spa
 <tr class="row-odd"><td><p><a class="reference internal" href="#equate.service.MatchService" title="equate.service.MatchService"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MatchService</span></code></a>(*[, sessions, cache, mk_id, ...])</p></td>
 <td><p>equate's matching core as stateless + session-scoped JSON-able operations.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.service.Accounting" title="equate.service.Accounting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Accounting</span></code></a>([tiers])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.service.SessionData" title="equate.service.SessionData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SessionData</span></code></a>(A, B, scores)</p></td>
+<td><p>The immutable part of a session: both collections and their score matrix.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.service.Accounting" title="equate.service.Accounting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Accounting</span></code></a>([tiers])</p></td>
 <td><p>Per-tier cost/latency ledger.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.service.TierCost" title="equate.service.TierCost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TierCost</span></code></a>([calls, seconds, items])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.service.TierCost" title="equate.service.TierCost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TierCost</span></code></a>([calls, seconds, items])</p></td>
 <td><p>What one tier (<code class="docutils literal notranslate"><span class="pre">score</span></code>, <code class="docutils literal notranslate"><span class="pre">match</span></code>, <code class="docutils literal notranslate"><span class="pre">reoptimize</span></code>, ...) has cost so far.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.service.Edit" title="equate.service.Edit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Edit</span></code></a>(action, item, candidate[, source])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.service.Edit" title="equate.service.Edit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Edit</span></code></a>(action, item, candidate[, source])</p></td>
 <td><p>One user edit of the assignment.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.service.Label" title="equate.service.Label"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Label</span></code></a>(item, candidate, is_match[, source])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.service.Label" title="equate.service.Label"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Label</span></code></a>(item, candidate, is_match[, source])</p></td>
 <td><p>An oracle's verdict on one <code class="docutils literal notranslate"><span class="pre">item</span> <span class="pre">-&gt;</span> <span class="pre">candidate</span></code> pair (active learning).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.service.FieldDiff" title="equate.service.FieldDiff"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FieldDiff</span></code></a>(field, left, right, similarity)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.service.FieldDiff" title="equate.service.FieldDiff"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FieldDiff</span></code></a>(field, left, right, similarity)</p></td>
 <td><p>One field of a side-by-side comparison: both values and their similarity.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.service.CandidateView" title="equate.service.CandidateView"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CandidateView</span></code></a>(candidate, right, score[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.service.CandidateView" title="equate.service.CandidateView"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CandidateView</span></code></a>(candidate, right, score[, ...])</p></td>
 <td><p>A scored candidate for an item, with the right-hand object and an explanation.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.service.PairView" title="equate.service.PairView"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PairView</span></code></a>(item, candidate, left, right, score)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.service.PairView" title="equate.service.PairView"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PairView</span></code></a>(item, candidate, left, right, score)</p></td>
 <td><p>A matched pair: indices, both objects, the score, and whether a user fixed it.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.service.ReviewItem" title="equate.service.ReviewItem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ReviewItem</span></code></a>(item, left, assigned, status, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.service.ReviewItem" title="equate.service.ReviewItem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ReviewItem</span></code></a>(item, left, assigned, status, ...)</p></td>
 <td><p>One row of the review queue: an item, its current match and its alternatives.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.service.Query" title="equate.service.Query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Query</span></code></a>(item, left, candidate, margin)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.service.Query" title="equate.service.Query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Query</span></code></a>(item, left, candidate, margin)</p></td>
 <td><p>An active-learning query: the pair an oracle should label next.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.service.MatchResult" title="equate.service.MatchResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MatchResult</span></code></a>(pairs[, groups, accounting, cached])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.service.MatchResult" title="equate.service.MatchResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MatchResult</span></code></a>(pairs[, groups, accounting, cached])</p></td>
 <td><p>Stateless match output: <code class="docutils literal notranslate"><span class="pre">pairs</span></code> (or <code class="docutils literal notranslate"><span class="pre">groups</span></code> for <code class="docutils literal notranslate"><span class="pre">how='cluster'</span></code>).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.service.SessionView" title="equate.service.SessionView"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SessionView</span></code></a>(session_id, n_left, n_right, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.service.SessionView" title="equate.service.SessionView"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SessionView</span></code></a>(session_id, n_left, n_right, ...)</p></td>
 <td><p>A session's state: its current assignment and the review queue to work through.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.service.EditResult" title="equate.service.EditResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EditResult</span></code></a>(session_id, assignment, changed, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.service.EditResult" title="equate.service.EditResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EditResult</span></code></a>(session_id, assignment, changed, ...)</p></td>
 <td><p>The result of an edit: the re-optimized assignment and what it changed.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#equate.service.LabelResult" title="equate.service.LabelResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LabelResult</span></code></a>(label, result, next)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.service.LabelResult" title="equate.service.LabelResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LabelResult</span></code></a>(label, result, next[, applied])</p></td>
 <td><p>The result of a label: what was recorded, the edit result, and the next query.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#equate.service.Session" title="equate.service.Session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Session</span></code></a>(session_id, A, B, scores, store, k, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.service.Session" title="equate.service.Session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Session</span></code></a>(session_id, store, k, assignment[, ...])</p></td>
 <td><p>Server-side session state.</p></td>
 </tr>
 </tbody>
@@ -423,6 +426,9 @@ persistent <code class="docutils literal notranslate"><span class="pre">dol</spa
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#equate.service.SessionNotFound" title="equate.service.SessionNotFound"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SessionNotFound</span></code></a></p></td>
 <td><p>No session with that id (an HTTP 404).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.service.SessionConflict" title="equate.service.SessionConflict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SessionConflict</span></code></a></p></td>
+<td><p>The session changed in the store since it was read (an HTTP 409): another process saved it first.</p></td>
 </tr>
 </tbody>
 </table>
@@ -520,7 +526,7 @@ made the edit (<code class="docutils literal notranslate"><span class="pre">'hum
 
 <dl class="py class">
 <dt class="sig sig-object py" id="equate.service.LabelResult">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.service.</span></span><span class="sig-name descname"><span class="pre">LabelResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/service.html#LabelResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.service.LabelResult" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.service.</span></span><span class="sig-name descname"><span class="pre">LabelResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">applied</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/service.html#LabelResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.service.LabelResult" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>The result of a label: what was recorded, the edit result, and the next query.</p>
 <dl class="field-list simple">
@@ -538,7 +544,7 @@ made the edit (<code class="docutils literal notranslate"><span class="pre">'hum
 
 <dl class="py class">
 <dt class="sig sig-object py" id="equate.service.MatchService">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.service.</span></span><span class="sig-name descname"><span class="pre">MatchService</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sessions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mk_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">MatchService.&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_compare</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ratio'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_cost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/service.html#MatchService"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.service.MatchService" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.service.</span></span><span class="sig-name descname"><span class="pre">MatchService</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sessions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mk_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">MatchService.&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_compare</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ratio'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_cost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precedence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/service.html#MatchService"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.service.MatchService" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>equate’s matching core as stateless + session-scoped JSON-able operations.</p>
 <p>Every seam is a keyword argument with a working default:</p>
@@ -549,7 +555,10 @@ dict; pass a pickle-valued <code class="docutils literal notranslate"><span clas
 <code class="docutils literal notranslate"><span class="pre">None</span></code> to disable);</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">mk_id</span></code> — session-id factory (default <code class="docutils literal notranslate"><span class="pre">uuid4().hex</span></code>);</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">field_compare</span></code> — the per-field comparator used in explanations;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">on_cost</span></code> — <code class="docutils literal notranslate"><span class="pre">(tier,</span> <span class="pre">seconds,</span> <span class="pre">items)</span></code> hook called on every accounted tier.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">on_cost</span></code> — <code class="docutils literal notranslate"><span class="pre">(tier,</span> <span class="pre">seconds,</span> <span class="pre">items)</span></code> hook called on every accounted tier;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">precedence</span></code> — edit sources ranked most authoritative first (<code class="docutils literal notranslate"><span class="pre">('human',</span>
+<span class="pre">'llm')</span></code>): a less authoritative edit never overrides a more authoritative one
+(default <code class="docutils literal notranslate"><span class="pre">None</span></code>: the latest edit wins, whoever made it).</p></li>
 </ul>
 <dl class="field-list simple">
 </dl>
@@ -713,11 +722,34 @@ means ambiguous, which is why the queue puts it first.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="equate.service.Session">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.service.</span></span><span class="sig-name descname"><span class="pre">Session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assignment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">list()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">list()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accounting</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Accounting()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">floor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/service.html#Session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.service.Session" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.service.</span></span><span class="sig-name descname"><span class="pre">Session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assignment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">list()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">list()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accounting</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Accounting()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">floor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/service.html#Session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.service.Session" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Server-side session state. Not a boundary type: <a class="reference internal" href="#equate.service.SessionView" title="equate.service.SessionView"><code class="xref py py-class docutils literal notranslate"><span class="pre">SessionView</span></code></a> is its view.</p>
-<p>Everything is plain data (no open handles), so a session pickles into any <code class="docutils literal notranslate"><span class="pre">dol</span></code>
-store passed as <code class="docutils literal notranslate"><span class="pre">MatchService(sessions=...)</span></code>.</p>
+<p>The mutable part only — the edit log, labels, assignment and candidates — saved after
+every change; <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">B</span></code> and <code class="docutils literal notranslate"><span class="pre">scores</span></code> read through the attached
+<a class="reference internal" href="#equate.service.SessionData" title="equate.service.SessionData"><code class="xref py py-class docutils literal notranslate"><span class="pre">SessionData</span></code></a>. Everything is plain data, so both pickle into any <code class="docutils literal notranslate"><span class="pre">dol</span></code> store
+passed as <code class="docutils literal notranslate"><span class="pre">MatchService(sessions=...)</span></code>. <code class="docutils literal notranslate"><span class="pre">version</span></code> counts saves: a save that finds
+a newer version in the store raises <a class="reference internal" href="#equate.service.SessionConflict" title="equate.service.SessionConflict"><code class="xref py py-class docutils literal notranslate"><span class="pre">SessionConflict</span></code></a> instead of overwriting a
+change made by another process.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="equate.service.SessionConflict">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.service.</span></span><span class="sig-name descname"><span class="pre">SessionConflict</span></span><a class="reference internal" href="../_modules/equate/service.html#SessionConflict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.service.SessionConflict" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></a></p>
+<p>The session changed in the store since it was read (an HTTP 409): another process
+saved it first. Re-read the session and retry the edit.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="equate.service.SessionData">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.service.</span></span><span class="sig-name descname"><span class="pre">SessionData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/service.html#SessionData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.service.SessionData" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>The immutable part of a session: both collections and their score matrix.</p>
+<p>Written once, when the session opens; every later save writes only the small
+<a class="reference internal" href="#equate.service.Session" title="equate.service.Session"><code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code></a> state — not the <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">×</span> <span class="pre">m</span></code> scores (equate#23).</p>
 <dl class="field-list simple">
 </dl>
 </dd></dl>
@@ -787,7 +819,12 @@ each side fails when the Python types and the Zod schemas drift apart.</p>
 <span class="n">GET</span>    <span class="o">/</span><span class="n">sessions</span><span class="o">/</span><span class="p">{</span><span class="n">session_id</span><span class="p">}</span><span class="o">/</span><span class="nb">next</span>                  <span class="n">the</span> <span class="nb">next</span> <span class="n">query</span> <span class="n">to</span> <span class="n">label</span>
 </pre></div>
 </div>
-<p>An unknown session is a 404; an invalid or infeasible edit a 422. <code class="docutils literal notranslate"><span class="pre">cors_origins</span></code>
+<p>An unknown session is a 404, a session another process changed first a 409, an
+invalid edit or unknown strategy a 422. Handlers run in a worker thread, so a long
+scoring call does not block other requests. The default in-memory session store is
+per process: with several server processes (<code class="docutils literal notranslate"><span class="pre">uvicorn</span> <span class="pre">--workers</span> <span class="pre">N</span></code>) pass a shared
+store, <code class="docutils literal notranslate"><span class="pre">MatchService(sessions=&lt;dol</span> <span class="pre">store&gt;)</span></code>, or a request can reach a process that
+does not hold its session. <code class="docutils literal notranslate"><span class="pre">cors_origins</span></code>
 lets the review UI’s dev server (vite, port 5173) call it; pass <code class="docutils literal notranslate"><span class="pre">()</span></code> to disable.
 Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'equate[service]'</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">ui_dir</span></code> serves the review UI from the same app: a built bundle (<code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">ui</span> <span class="pre">&amp;&amp;</span> <span class="pre">npm</span> <span class="pre">run</span>
@@ -919,6 +956,8 @@ numpy scalars become Python numbers.</p>
 <li><a class="reference internal" href="#equate.service.Query"><code class="docutils literal notranslate"><span class="pre">Query</span></code></a></li>
 <li><a class="reference internal" href="#equate.service.ReviewItem"><code class="docutils literal notranslate"><span class="pre">ReviewItem</span></code></a></li>
 <li><a class="reference internal" href="#equate.service.Session"><code class="docutils literal notranslate"><span class="pre">Session</span></code></a></li>
+<li><a class="reference internal" href="#equate.service.SessionConflict"><code class="docutils literal notranslate"><span class="pre">SessionConflict</span></code></a></li>
+<li><a class="reference internal" href="#equate.service.SessionData"><code class="docutils literal notranslate"><span class="pre">SessionData</span></code></a></li>
 <li><a class="reference internal" href="#equate.service.SessionNotFound"><code class="docutils literal notranslate"><span class="pre">SessionNotFound</span></code></a></li>
 <li><a class="reference internal" href="#equate.service.SessionView"><code class="docutils literal notranslate"><span class="pre">SessionView</span></code></a></li>
 <li><a class="reference internal" href="#equate.service.TierCost"><code class="docutils literal notranslate"><span class="pre">TierCost</span></code></a></li>
@@ -939,7 +978,7 @@ numpy scalars become Python numbers.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=5cf12315"></script>
+</div><script src="../_static/documentation_options.js?v=b4d262a5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

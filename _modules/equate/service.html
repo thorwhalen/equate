@@ -342,7 +342,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">wraps</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span><span class="p">,</span> <span class="n">wraps</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">MutableMapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
@@ -358,10 +358,13 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.featurize.records</span><span class="w"> </span><span class="kn">import</span> <span class="n">record_text</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.interactive</span><span class="w"> </span><span class="kn">import</span> <span class="n">CandidateStore</span><span class="p">,</span> <span class="n">ConstraintSet</span><span class="p">,</span> <span class="n">reoptimize</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">equate.matching</span><span class="w"> </span><span class="kn">import</span> <span class="n">harden</span><span class="p">,</span> <span class="n">resolve_matcher</span><span class="p">,</span> <span class="n">soft_match</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">equate.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">UnknownStrategyError</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"MatchService"</span><span class="p">,</span>
     <span class="s2">"SessionNotFound"</span><span class="p">,</span>
+    <span class="s2">"SessionConflict"</span><span class="p">,</span>
+    <span class="s2">"SessionData"</span><span class="p">,</span>
     <span class="s2">"Accounting"</span><span class="p">,</span>
     <span class="s2">"TierCost"</span><span class="p">,</span>
     <span class="s2">"Edit"</span><span class="p">,</span>
@@ -387,6 +390,7 @@
 <span class="n">DFLT_K</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># candidates retained per item (the CandidateStore top-k)</span>
 <span class="n">DFLT_FIELD_COMPARE</span> <span class="o">=</span> <span class="s2">"ratio"</span>  <span class="c1"># per-field similarity shown in a field diff</span>
 <span class="n">DFLT_MATCH_CACHE_SIZE</span> <span class="o">=</span> <span class="mi">128</span>  <span class="c1"># stateless /match results kept (LRU)</span>
+<span class="n">DFLT_DATA_CACHE_SIZE</span> <span class="o">=</span> <span class="mi">16</span>  <span class="c1"># sessions whose immutable data is kept in memory (LRU)</span>
 <span class="n">DFLT_CORS_ORIGINS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"http://localhost:5173"</span><span class="p">,</span> <span class="s2">"http://127.0.0.1:5173"</span><span class="p">)</span>  <span class="c1"># vite dev</span>
 <span class="n">DFLT_API_PREFIX</span> <span class="o">=</span> <span class="s2">"/api"</span>  <span class="c1"># where the API lives when the app also serves the UI</span>
 
@@ -397,6 +401,14 @@
 <a class="viewcode-back" href="../../_autosummary/equate.service.html#equate.service.SessionNotFound">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SessionNotFound</span><span class="p">(</span><span class="ne">KeyError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""No session with that id (an HTTP 404)."""</span></div>
+
+
+
+<div class="viewcode-block" id="SessionConflict">
+<a class="viewcode-back" href="../../_autosummary/equate.service.html#equate.service.SessionConflict">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SessionConflict</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The session changed in the store since it was read (an HTTP 409): another process</span>
+<span class="sd">    saved it first. Re-read the session and retry the edit."""</span></div>
 
 
 
@@ -642,7 +654,24 @@
 
     <span class="n">label</span><span class="p">:</span> <span class="n">Label</span>
     <span class="n">result</span><span class="p">:</span> <span class="n">EditResult</span>
-    <span class="nb">next</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Query</span><span class="p">]</span></div>
+    <span class="nb">next</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Query</span><span class="p">]</span>
+    <span class="n">applied</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># False when a more authoritative source's decision stands</span></div>
+
+
+
+<div class="viewcode-block" id="SessionData">
+<a class="viewcode-back" href="../../_autosummary/equate.service.html#equate.service.SessionData">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SessionData</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The immutable part of a session: both collections and their score matrix.</span>
+
+<span class="sd">    Written once, when the session opens; every later save writes only the small</span>
+<span class="sd">    :class:`Session` state — not the ``n × m`` scores (equate#23).</span>
+<span class="sd">    """</span>
+
+    <span class="n">A</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">B</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">scores</span><span class="p">:</span> <span class="n">ScoreMatrix</span></div>
 
 
 
@@ -652,21 +681,42 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">Session</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Server-side session state. Not a boundary type: :class:`SessionView` is its view.</span>
 
-<span class="sd">    Everything is plain data (no open handles), so a session pickles into any ``dol``</span>
-<span class="sd">    store passed as ``MatchService(sessions=...)``.</span>
+<span class="sd">    The mutable part only — the edit log, labels, assignment and candidates — saved after</span>
+<span class="sd">    every change; ``A``, ``B`` and ``scores`` read through the attached</span>
+<span class="sd">    :class:`SessionData`. Everything is plain data, so both pickle into any ``dol`` store</span>
+<span class="sd">    passed as ``MatchService(sessions=...)``. ``version`` counts saves: a save that finds</span>
+<span class="sd">    a newer version in the store raises :class:`SessionConflict` instead of overwriting a</span>
+<span class="sd">    change made by another process.</span>
 <span class="sd">    """</span>
 
     <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">A</span><span class="p">:</span> <span class="nb">list</span>
-    <span class="n">B</span><span class="p">:</span> <span class="nb">list</span>
-    <span class="n">scores</span><span class="p">:</span> <span class="n">ScoreMatrix</span>
     <span class="n">store</span><span class="p">:</span> <span class="n">CandidateStore</span>
     <span class="n">k</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">assignment</span><span class="p">:</span> <span class="nb">list</span>  <span class="c1"># [(i, j), ...]</span>
     <span class="n">edits</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>  <span class="c1"># [Edit, ...] — the replayable log</span>
     <span class="n">labels</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>  <span class="c1"># [Label, ...]</span>
     <span class="n">accounting</span><span class="p">:</span> <span class="n">Accounting</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">Accounting</span><span class="p">)</span>
-    <span class="n">floor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># the score floor applied at open (equate#21)</span></div>
+    <span class="n">floor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># the score floor applied at open (equate#21)</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SessionData</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"_attached"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">data</span>
+        <span class="n">legacy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>  <span class="c1"># pickled before equate#23: the data is inline</span>
+        <span class="k">return</span> <span class="n">SessionData</span><span class="p">(</span><span class="n">legacy</span><span class="p">[</span><span class="s2">"A"</span><span class="p">],</span> <span class="n">legacy</span><span class="p">[</span><span class="s2">"B"</span><span class="p">],</span> <span class="n">legacy</span><span class="p">[</span><span class="s2">"scores"</span><span class="p">])</span>
+
+    <span class="n">A</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">()</span><span class="o">.</span><span class="n">A</span><span class="p">)</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">()</span><span class="o">.</span><span class="n">B</span><span class="p">)</span>
+    <span class="n">scores</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">()</span><span class="o">.</span><span class="n">scores</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># the data is stored once under its own key, never again with each state save</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"_attached"</span><span class="p">,</span> <span class="s2">"_loaded_version"</span><span class="p">)</span>
+        <span class="p">}</span></div>
 
 
 
@@ -789,39 +839,67 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">popitem</span><span class="p">(</span><span class="n">last</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_effective_constraints</span><span class="p">(</span><span class="n">edits</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_effective_constraints</span><span class="p">(</span><span class="n">edits</span><span class="p">,</span> <span class="n">precedence</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Fold an edit log into the :class:`ConstraintSet` it currently means.</span>
 
 <span class="sd">    The log is append-only (replayable); this resolves it: the latest decision about a</span>
 <span class="sd">    pair wins, an item has at most one confirmed match, and a candidate is confirmed for at</span>
 <span class="sd">    most one item (a later confirm/reassign releases the earlier holder).</span>
+
+<span class="sd">    ``precedence`` (e.g. ``('human', 'llm')``) ranks edit sources, most authoritative</span>
+<span class="sd">    first; a source it does not list ranks last. An edit never overrides a decision made</span>
+<span class="sd">    by a *more* authoritative source — an LLM label cannot release a human's confirm —</span>
+<span class="sd">    and is simply ignored (it stays in the log). Among equal ranks the latest wins.</span>
 <span class="sd">    """</span>
+    <span class="n">rank</span> <span class="o">=</span> <span class="n">_ranker</span><span class="p">(</span><span class="n">precedence</span><span class="p">)</span>
     <span class="n">forced</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># item -&gt; candidate</span>
     <span class="n">forbidden</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># (item, candidate) -&gt; rank of the source that made the standing decision</span>
     <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edits</span><span class="p">:</span>
         <span class="n">pair</span> <span class="o">=</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">item</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">candidate</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">rank</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">action</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"confirm"</span><span class="p">,</span> <span class="s2">"reassign"</span><span class="p">,</span> <span class="s2">"reject"</span><span class="p">,</span> <span class="s2">"clear"</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"unknown edit action </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">action</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">action</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"confirm"</span><span class="p">,</span> <span class="s2">"reassign"</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">forced</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
-                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">e</span><span class="o">.</span><span class="n">item</span> <span class="ow">or</span> <span class="n">j</span> <span class="o">==</span> <span class="n">e</span><span class="o">.</span><span class="n">candidate</span><span class="p">:</span>
-                    <span class="k">del</span> <span class="n">forced</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">displaced</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">forced</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">e</span><span class="o">.</span><span class="n">item</span> <span class="ow">or</span> <span class="n">j</span> <span class="o">==</span> <span class="n">e</span><span class="o">.</span><span class="n">candidate</span>
+            <span class="p">]</span>
+            <span class="c1"># what this confirm would undo: other confirms it displaces, a reject of it</span>
+            <span class="n">undone</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">displaced</span> <span class="k">if</span> <span class="n">b</span> <span class="o">!=</span> <span class="n">pair</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">forbidden</span><span class="p">:</span>
+                <span class="n">undone</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">owner</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">r</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">undone</span><span class="p">):</span>
+                <span class="k">continue</span>  <span class="c1"># outranked</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">displaced</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">forced</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">owner</span><span class="o">.</span><span class="n">pop</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
             <span class="n">forced</span><span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">item</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">candidate</span>
             <span class="n">forbidden</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">action</span> <span class="o">==</span> <span class="s2">"reject"</span><span class="p">:</span>
+            <span class="n">owner</span><span class="p">[</span><span class="n">pair</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># reject / clear</span>
+            <span class="k">if</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">owner</span> <span class="ow">and</span> <span class="n">owner</span><span class="p">[</span><span class="n">pair</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">r</span><span class="p">:</span>
+                <span class="k">continue</span>  <span class="c1"># outranked</span>
             <span class="k">if</span> <span class="n">forced</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="n">e</span><span class="o">.</span><span class="n">candidate</span><span class="p">:</span>
                 <span class="k">del</span> <span class="n">forced</span><span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">item</span><span class="p">]</span>
-            <span class="n">forbidden</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">action</span> <span class="o">==</span> <span class="s2">"clear"</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">forced</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="n">e</span><span class="o">.</span><span class="n">candidate</span><span class="p">:</span>
-                <span class="k">del</span> <span class="n">forced</span><span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">item</span><span class="p">]</span>
-            <span class="n">forbidden</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"unknown edit action </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">action</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">action</span> <span class="o">==</span> <span class="s2">"reject"</span><span class="p">:</span>
+                <span class="n">forbidden</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span>
+                <span class="n">owner</span><span class="p">[</span><span class="n">pair</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">forbidden</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span>
+                <span class="n">owner</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">pair</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="n">cs</span> <span class="o">=</span> <span class="n">ConstraintSet</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">forced</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">cs</span><span class="o">.</span><span class="n">confirm</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">forbidden</span><span class="p">):</span>
         <span class="n">cs</span><span class="o">.</span><span class="n">reject</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">cs</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ranker</span><span class="p">(</span><span class="n">precedence</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">precedence</span><span class="p">:</span>
+        <span class="k">return</span> <span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="mi">0</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="p">{</span><span class="n">source</span><span class="p">:</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">source</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">precedence</span><span class="p">)}</span>
+    <span class="k">return</span> <span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">order</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="s2">"source"</span><span class="p">,</span> <span class="s2">"human"</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">order</span><span class="p">))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_without_rejected</span><span class="p">(</span><span class="n">sm</span><span class="p">,</span> <span class="n">forbidden</span><span class="p">):</span>
@@ -876,10 +954,10 @@
     <span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_edits</span><span class="p">(</span><span class="n">sm</span><span class="p">,</span> <span class="n">edits</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_edits</span><span class="p">(</span><span class="n">sm</span><span class="p">,</span> <span class="n">edits</span><span class="p">,</span> <span class="n">precedence</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""The optimal 1:1 assignment of ``sm`` under an edit log (confirms forced, rejects</span>
 <span class="sd">    removed). Raises ``ValueError`` if no assignment honours the confirms."""</span>
-    <span class="n">cs</span> <span class="o">=</span> <span class="n">_effective_constraints</span><span class="p">(</span><span class="n">edits</span><span class="p">)</span>
+    <span class="n">cs</span> <span class="o">=</span> <span class="n">_effective_constraints</span><span class="p">(</span><span class="n">edits</span><span class="p">,</span> <span class="n">precedence</span><span class="p">)</span>
     <span class="n">forced_only</span> <span class="o">=</span> <span class="n">ConstraintSet</span><span class="p">(</span><span class="n">forced</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">cs</span><span class="o">.</span><span class="n">forced</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">reoptimize</span><span class="p">(</span><span class="n">_without_rejected</span><span class="p">(</span><span class="n">sm</span><span class="p">,</span> <span class="n">cs</span><span class="o">.</span><span class="n">forbidden</span><span class="p">),</span> <span class="n">forced_only</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sm</span><span class="o">.</span><span class="n">sense</span><span class="p">)</span>
 
@@ -911,7 +989,10 @@
 <span class="sd">      ``None`` to disable);</span>
 <span class="sd">    - ``mk_id`` — session-id factory (default ``uuid4().hex``);</span>
 <span class="sd">    - ``field_compare`` — the per-field comparator used in explanations;</span>
-<span class="sd">    - ``on_cost`` — ``(tier, seconds, items)`` hook called on every accounted tier.</span>
+<span class="sd">    - ``on_cost`` — ``(tier, seconds, items)`` hook called on every accounted tier;</span>
+<span class="sd">    - ``precedence`` — edit sources ranked most authoritative first (``('human',</span>
+<span class="sd">      'llm')``): a less authoritative edit never overrides a more authoritative one</span>
+<span class="sd">      (default ``None``: the latest edit wins, whoever made it).</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -922,6 +1003,7 @@
         <span class="n">mk_id</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">,</span>
         <span class="n">field_compare</span><span class="o">=</span><span class="n">DFLT_FIELD_COMPARE</span><span class="p">,</span>
         <span class="n">on_cost</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">precedence</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">sessions</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">sessions</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">_LRU</span><span class="p">()</span> <span class="k">if</span> <span class="n">cache</span> <span class="o">==</span> <span class="s2">"default"</span> <span class="k">else</span> <span class="n">cache</span>
@@ -932,6 +1014,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_cache_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">field_compare</span> <span class="o">=</span> <span class="n">field_compare</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">on_cost</span> <span class="o">=</span> <span class="n">on_cost</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precedence</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">precedence</span><span class="p">)</span> <span class="k">if</span> <span class="n">precedence</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="c1"># session data is immutable once written: cache it per process, so a read does not</span>
+        <span class="c1"># unpickle the n × m scores again (bounded, least-recently-used)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_cache</span> <span class="o">=</span> <span class="n">_LRU</span><span class="p">(</span><span class="n">DFLT_DATA_CACHE_SIZE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
 
     <span class="c1"># -- scoring ------------------------------------------------------------------</span>
 
@@ -1056,15 +1143,27 @@
             <span class="n">assignment</span> <span class="o">=</span> <span class="n">reoptimize</span><span class="p">(</span><span class="n">sm</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sm</span><span class="o">.</span><span class="n">sense</span><span class="p">)</span> <span class="k">if</span> <span class="n">A</span> <span class="ow">and</span> <span class="n">B</span> <span class="k">else</span> <span class="p">[]</span>
         <span class="n">session</span> <span class="o">=</span> <span class="n">Session</span><span class="p">(</span>
             <span class="n">session_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mk_id</span><span class="p">(),</span>
-            <span class="n">A</span><span class="o">=</span><span class="n">A</span><span class="p">,</span>
-            <span class="n">B</span><span class="o">=</span><span class="n">B</span><span class="p">,</span>
-            <span class="n">scores</span><span class="o">=</span><span class="n">sm</span><span class="p">,</span>
             <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
             <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span>
             <span class="n">assignment</span><span class="o">=</span><span class="n">assignment</span><span class="p">,</span>
             <span class="n">accounting</span><span class="o">=</span><span class="n">acc</span><span class="p">,</span>
             <span class="n">floor</span><span class="o">=</span><span class="n">floor</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="n">sid</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">session_id</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sid</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">sid</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_DATA_SUFFIX</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">sid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="n">SessionConflict</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"session id </span><span class="si">{</span><span class="n">sid</span><span class="si">!r}</span><span class="s2"> is taken or reserved; mk_id must make unique ids "</span>
+                <span class="sa">f</span><span class="s2">"not ending in </span><span class="si">{</span><span class="n">_DATA_SUFFIX</span><span class="si">!r}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">SessionData</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">sm</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span><span class="p">[</span><span class="n">_data_key</span><span class="p">(</span><span class="n">sid</span><span class="p">)]</span> <span class="o">=</span> <span class="n">data</span>  <span class="c1"># written once</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_cache</span><span class="p">[</span><span class="n">_data_key</span><span class="p">(</span><span class="n">sid</span><span class="p">)]</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="n">session</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_attached"</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_save</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">session_id</span><span class="p">)</span></div>
 
@@ -1101,11 +1200,13 @@
 <span class="sd">        field-diff explanations — everything a review row needs.</span>
 <span class="sd">        """</span>
         <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load</span><span class="p">(</span><span class="n">session_id</span><span class="p">)</span>
-        <span class="n">forced</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">_effective_constraints</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">edits</span><span class="p">)</span><span class="o">.</span><span class="n">forced</span><span class="p">)</span>
+        <span class="n">cs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_constraints</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">forced</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cs</span><span class="o">.</span><span class="n">forced</span><span class="p">)</span>
         <span class="n">assigned</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">assignment</span><span class="p">)</span>
+        <span class="n">margins</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">_margin</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">cs</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">A</span><span class="p">))}</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">order</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
-            <span class="n">m</span> <span class="o">=</span> <span class="n">_margin</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">margins</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">forced</span><span class="p">,</span> <span class="n">m</span> <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">else</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
 
         <span class="n">items</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">A</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
@@ -1126,7 +1227,7 @@
                     <span class="n">left</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                     <span class="n">assigned</span><span class="o">=</span><span class="n">assigned</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
                     <span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="p">,</span>
-                    <span class="n">margin</span><span class="o">=</span><span class="n">_finite_or_none</span><span class="p">(</span><span class="n">_margin</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">)),</span>
+                    <span class="n">margin</span><span class="o">=</span><span class="n">_finite_or_none</span><span class="p">(</span><span class="n">margins</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
                     <span class="n">candidates</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_candidate_views</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span>
                 <span class="p">)</span>
             <span class="p">)</span>
@@ -1183,7 +1284,7 @@
         <span class="n">log</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">edits</span> <span class="o">+</span> <span class="n">new</span>
         <span class="n">acc</span> <span class="o">=</span> <span class="n">Accounting</span><span class="p">()</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timed</span><span class="p">(</span><span class="n">acc</span><span class="p">,</span> <span class="s2">"reoptimize"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">A</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">B</span><span class="p">)):</span>
-            <span class="n">assignment</span> <span class="o">=</span> <span class="n">_resolve_edits</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">scores</span><span class="p">,</span> <span class="n">log</span><span class="p">)</span>
+            <span class="n">assignment</span> <span class="o">=</span> <span class="n">_resolve_edits</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">scores</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">precedence</span><span class="p">)</span>
         <span class="n">before</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">assignment</span><span class="p">)</span>
         <span class="n">after</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">assignment</span><span class="p">)</span>
         <span class="n">changed</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
@@ -1230,7 +1331,12 @@
             <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edit</span><span class="p">(</span>
                 <span class="n">session_id</span><span class="p">,</span> <span class="p">[</span><span class="n">Edit</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">candidate</span><span class="p">,</span> <span class="n">lab</span><span class="o">.</span><span class="n">source</span><span class="p">)],</span> <span class="n">label</span><span class="o">=</span><span class="n">lab</span>
             <span class="p">)</span>
-            <span class="k">return</span> <span class="n">LabelResult</span><span class="p">(</span><span class="n">lab</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="nb">next</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">next_query</span><span class="p">(</span><span class="n">session_id</span><span class="p">))</span></div>
+            <span class="n">cs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_constraints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_load</span><span class="p">(</span><span class="n">session_id</span><span class="p">))</span>
+            <span class="n">pair</span> <span class="o">=</span> <span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">candidate</span><span class="p">)</span>
+            <span class="n">applied</span> <span class="o">=</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">cs</span><span class="o">.</span><span class="n">forced</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_match</span> <span class="k">else</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">cs</span><span class="o">.</span><span class="n">forbidden</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">LabelResult</span><span class="p">(</span>
+                <span class="n">lab</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="nb">next</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">next_query</span><span class="p">(</span><span class="n">session_id</span><span class="p">),</span> <span class="n">applied</span><span class="o">=</span><span class="n">applied</span>
+            <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="MatchService.next_query">
@@ -1244,7 +1350,7 @@
 <span class="sd">        forth. An item with no such candidate left is skipped.</span>
 <span class="sd">        """</span>
         <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load</span><span class="p">(</span><span class="n">session_id</span><span class="p">)</span>
-        <span class="n">cs</span> <span class="o">=</span> <span class="n">_effective_constraints</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">edits</span><span class="p">)</span>
+        <span class="n">cs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_constraints</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
         <span class="n">forbidden</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">cs</span><span class="o">.</span><span class="n">forbidden</span><span class="p">)</span>
         <span class="n">taken</span> <span class="o">=</span> <span class="p">{</span><span class="n">j</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">cs</span><span class="o">.</span><span class="n">forced</span><span class="p">}</span>
         <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">review</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">include_confirmed</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -1265,20 +1371,86 @@
 <a class="viewcode-back" href="../../_autosummary/equate.service.html#equate.service.MatchService.close_session">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">close_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Forget a session. Returns whether it existed."""</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="n">session_id</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_DATA_SUFFIX</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># a data key is not a session</span>
+        <span class="c1"># the state first: a concurrent reader then finds no session, never a state</span>
+        <span class="c1"># whose data has gone</span>
+        <span class="n">existed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">_data_key</span><span class="p">(</span><span class="n">session_id</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_lock</span><span class="p">:</span>
+            <span class="c1"># not .pop(key, None): on Python 3.10 an OrderedDict subclass's pop goes</span>
+            <span class="c1"># through the overridden __getitem__ and raises for a missing key</span>
+            <span class="k">if</span> <span class="n">_data_key</span><span class="p">(</span><span class="n">session_id</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_cache</span><span class="p">:</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_cache</span><span class="p">[</span><span class="n">_data_key</span><span class="p">(</span><span class="n">session_id</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">existed</span></div>
 
 
     <span class="c1"># -- internals ----------------------------------------------------------------</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_effective_constraints</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">edits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">precedence</span><span class="p">)</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Session</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="n">session_id</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_DATA_SUFFIX</span><span class="p">):</span>
+            <span class="c1"># a data key is not a session: never load, view or close it as one</span>
+            <span class="k">raise</span> <span class="n">SessionNotFound</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no session </span><span class="si">{</span><span class="n">session_id</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span><span class="p">[</span><span class="n">session_id</span><span class="p">]</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span><span class="p">[</span><span class="n">session_id</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">SessionNotFound</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no session </span><span class="si">{</span><span class="n">session_id</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">Session</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">SessionNotFound</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no session </span><span class="si">{</span><span class="n">session_id</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"_attached"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">s</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_attached"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_data</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">session_id</span><span class="p">)</span>
+        <span class="n">s</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_loaded_version"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s2">"version"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_session_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">session_id</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SessionData</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The immutable data of a session: from the in-process cache, the store, or —</span>
+<span class="sd">        for a session pickled before equate#23 — its own state, migrated once."""</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">_data_key</span><span class="p">(</span><span class="n">session_id</span><span class="p">)</span>
+        <span class="n">legacy</span> <span class="o">=</span> <span class="s2">"scores"</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="vm">__dict__</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_lock</span><span class="p">:</span>
+            <span class="n">cached</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">legacy</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cached</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cached</span>
+        <span class="k">if</span> <span class="n">legacy</span><span class="p">:</span>  <span class="c1"># the old one-key layout: split it, once</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">_data</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"A"</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">,</span> <span class="s2">"scores"</span><span class="p">):</span>
+                <span class="n">s</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span><span class="p">[</span><span class="n">session_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>  <span class="c1"># same version: a migration, not an edit</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SessionNotFound</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"session </span><span class="si">{</span><span class="n">session_id</span><span class="si">!r}</span><span class="s2"> has lost its data (closed meanwhile?)"</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">return</span> <span class="n">data</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">):</span>
-        <span class="c1"># re-assign so a write-through store (dol) persists the mutated session</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span><span class="p">[</span><span class="n">session</span><span class="o">.</span><span class="n">session_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">session</span>
+<span class="w">        </span><span class="sd">"""Persist the state (re-assigned, so a write-through ``dol`` store sees it).</span>
+
+<span class="sd">        Optimistic concurrency: if the store holds a newer version than the one this</span>
+<span class="sd">        session was loaded at, another process saved first — raise</span>
+<span class="sd">        :class:`SessionConflict` rather than silently drop its change. (The check and the</span>
+<span class="sd">        write are two store calls; a store with compare-and-set closes that window.)</span>
+<span class="sd">        """</span>
+        <span class="n">sid</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">session_id</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
+        <span class="n">loaded</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"_loaded_version"</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="s2">"version"</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">current</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">session</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="s2">"version"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">!=</span> <span class="n">loaded</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SessionConflict</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"session </span><span class="si">{</span><span class="n">sid</span><span class="si">!r}</span><span class="s2"> changed since it was read (version "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">getattr</span><span class="p">(</span><span class="n">current</span><span class="p">,</span><span class="w"> </span><span class="s1">'version'</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="si">}</span><span class="s2">, read at </span><span class="si">{</span><span class="n">loaded</span><span class="si">}</span><span class="s2">); re-read it"</span>
+                <span class="p">)</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">loaded</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">session</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_loaded_version"</span><span class="p">]</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">version</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span><span class="p">[</span><span class="n">sid</span><span class="p">]</span> <span class="o">=</span> <span class="n">session</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_index</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">what</span><span class="p">):</span>
@@ -1307,7 +1479,7 @@
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_assignment_views</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
-        <span class="n">forced</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">_effective_constraints</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">edits</span><span class="p">)</span><span class="o">.</span><span class="n">forced</span><span class="p">)</span>
+        <span class="n">forced</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_constraints</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">forced</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">[</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_pair_view</span><span class="p">(</span>
                 <span class="n">s</span><span class="o">.</span><span class="n">scores</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="s2">"confirmed"</span> <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="n">forced</span> <span class="k">else</span> <span class="s2">"proposed"</span>
@@ -1332,14 +1504,38 @@
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_margin</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Item ``i``'s confidence margin: top-1 vs top-2 score gap, where a session floor</span>
-<span class="sd">    counts as a virtual runner-up — an item left with one candidate just past the floor</span>
-<span class="sd">    is a borderline call, not a certain one (it would otherwise read as ``inf``)."""</span>
-    <span class="n">m</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">margin</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-    <span class="n">top</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">top</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">floor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">top</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">top</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]):</span>
-        <span class="n">m</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">top</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">s</span><span class="o">.</span><span class="n">floor</span><span class="p">))</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_margin</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">constraints</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Item ``i``'s confidence margin over its **open** candidates.</span>
+
+<span class="sd">    The top-1 vs top-2 score gap among every candidate still available to it — read from</span>
+<span class="sd">    the session's cached score row (not just the retained top-k), minus those rejected</span>
+<span class="sd">    for it and those confirmed for another item — so the queue follows the edits made so</span>
+<span class="sd">    far (equate#23). A session floor counts as a virtual runner-up: an item left with one</span>
+<span class="sd">    open candidate just past the floor is a borderline call, not a certain one.</span>
+<span class="sd">    """</span>
+    <span class="n">sm</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">scores</span>
+    <span class="k">if</span> <span class="n">sm</span><span class="o">.</span><span class="n">is_sparse</span><span class="p">:</span>
+        <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">indptr</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sm</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">indptr</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">indices</span><span class="p">[</span><span class="n">lo</span><span class="p">:</span><span class="n">hi</span><span class="p">]</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sm</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">lo</span><span class="p">:</span><span class="n">hi</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sm</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">vals</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">closed</span> <span class="o">=</span> <span class="p">{</span><span class="n">j</span> <span class="k">for</span> <span class="n">i2</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">constraints</span><span class="o">.</span><span class="n">forced</span> <span class="k">if</span> <span class="n">i2</span> <span class="o">!=</span> <span class="n">i</span><span class="p">}</span>
+    <span class="n">closed</span> <span class="o">|=</span> <span class="p">{</span><span class="n">j</span> <span class="k">for</span> <span class="n">i2</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">constraints</span><span class="o">.</span><span class="n">forbidden</span> <span class="k">if</span> <span class="n">i2</span> <span class="o">==</span> <span class="n">i</span><span class="p">}</span>
+    <span class="n">keep</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">closed</span><span class="p">:</span>
+        <span class="n">keep</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">closed</span><span class="p">))</span>
+    <span class="n">vals</span> <span class="o">=</span> <span class="n">vals</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">sm</span><span class="o">.</span><span class="n">sense</span> <span class="o">==</span> <span class="s2">"minimize"</span><span class="p">:</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="o">-</span><span class="n">vals</span>  <span class="c1"># best = largest, so one code path ranks both senses</span>
+    <span class="k">if</span> <span class="n">vals</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>  <span class="c1"># the top two, in linear time</span>
+    <span class="n">best</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">vals</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">best</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">best</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">if</span> <span class="n">best</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="k">else</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span>
+    <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">floor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">best</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+        <span class="n">top</span> <span class="o">=</span> <span class="n">best</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">sm</span><span class="o">.</span><span class="n">sense</span> <span class="o">==</span> <span class="s2">"maximize"</span> <span class="k">else</span> <span class="o">-</span><span class="n">best</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">top</span> <span class="o">-</span> <span class="n">s</span><span class="o">.</span><span class="n">floor</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">m</span>
 
 
@@ -1349,6 +1545,15 @@
         <span class="k">return</span> <span class="kc">True</span>
     <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">indptr</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sm</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">indptr</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">sm</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">indices</span><span class="p">[</span><span class="n">lo</span><span class="p">:</span><span class="n">hi</span><span class="p">]</span>
+
+
+<span class="n">_DATA_SUFFIX</span> <span class="o">=</span> <span class="s2">".data"</span>  <span class="c1"># reserved: no session id may end with it</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_data_key</span><span class="p">(</span><span class="n">session_id</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Where a session's immutable :class:`SessionData` lives, beside its state (in the</span>
+<span class="sd">    same ``sessions`` mapping; ids ending in ``.data`` are reserved for it)."""</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session_id</span><span class="si">}{</span><span class="n">_DATA_SUFFIX</span><span class="si">}</span><span class="s2">"</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_finite_or_error</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">what</span><span class="p">):</span>
@@ -1457,7 +1662,12 @@
 <span class="sd">        POST   /sessions/{session_id}/label                 oracle label -&gt; next query</span>
 <span class="sd">        GET    /sessions/{session_id}/next                  the next query to label</span>
 
-<span class="sd">    An unknown session is a 404; an invalid or infeasible edit a 422. ``cors_origins``</span>
+<span class="sd">    An unknown session is a 404, a session another process changed first a 409, an</span>
+<span class="sd">    invalid edit or unknown strategy a 422. Handlers run in a worker thread, so a long</span>
+<span class="sd">    scoring call does not block other requests. The default in-memory session store is</span>
+<span class="sd">    per process: with several server processes (``uvicorn --workers N``) pass a shared</span>
+<span class="sd">    store, ``MatchService(sessions=&lt;dol store&gt;)``, or a request can reach a process that</span>
+<span class="sd">    does not hold its session. ``cors_origins``</span>
 <span class="sd">    lets the review UI's dev server (vite, port 5173) call it; pass ``()`` to disable.</span>
 <span class="sd">    Requires ``pip install 'equate[service]'``.</span>
 
@@ -1482,17 +1692,29 @@
     <span class="n">svc</span> <span class="o">=</span> <span class="n">service</span> <span class="ow">or</span> <span class="n">MatchService</span><span class="p">()</span>
     <span class="n">J</span> <span class="o">=</span> <span class="n">to_jsonable</span>
 
+    <span class="n">to_thread</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="s2">"anyio"</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"service"</span><span class="p">)</span><span class="o">.</span><span class="n">to_thread</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">http_errors</span><span class="p">(</span><span class="n">adapter</span><span class="p">):</span>
-        <span class="c1"># qh turns any exception into a 500 but passes HTTPException through, so map</span>
-        <span class="c1"># the service's error contract here: unknown session -&gt; 404, bad input -&gt; 422</span>
+<span class="w">        </span><span class="sd">"""An async endpoint running ``adapter`` in a worker thread, with the service's</span>
+<span class="sd">        error contract.</span>
+
+<span class="sd">        qh calls a *sync* function on the event loop, so one long scoring call would stall</span>
+<span class="sd">        every other request; an ``async`` endpoint that hands the work to a thread keeps</span>
+<span class="sd">        the server responsive (sessions are guarded by per-session locks). qh turns any</span>
+<span class="sd">        exception into a 500 but passes ``HTTPException`` through, so the contract is</span>
+<span class="sd">        mapped here: unknown session → 404; a session changed by another writer → 409;</span>
+<span class="sd">        an unknown strategy name or a bad value/type → 422. Anything else is a real 500.</span>
+<span class="sd">        """</span>
+
         <span class="nd">@wraps</span><span class="p">(</span><span class="n">adapter</span><span class="p">)</span>
-        <span class="k">def</span><span class="w"> </span><span class="nf">wrapped</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">wrapped</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">adapter</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">return</span> <span class="k">await</span> <span class="n">to_thread</span><span class="o">.</span><span class="n">run_sync</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="n">adapter</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
             <span class="k">except</span> <span class="n">SessionNotFound</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-            <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="c1"># an unknown strategy name (registry KeyError), a bad value or shape</span>
+            <span class="k">except</span> <span class="n">SessionConflict</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="mi">409</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="k">except</span> <span class="p">(</span><span class="n">UnknownStrategyError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="mi">422</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span> <span class="k">else</span> <span class="n">e</span><span class="p">))</span>
 
         <span class="k">return</span> <span class="n">wrapped</span>
@@ -1730,7 +1952,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=5cf12315"></script>
+</div><script src="../../_static/documentation_options.js?v=b4d262a5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

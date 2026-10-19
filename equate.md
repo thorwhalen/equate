@@ -1,4 +1,4 @@
-> built 2026-10-19 12:41 UTC from 581611b (master) · equate 0.0.23. Details: build_info.json
+> built 2026-10-19 13:01 UTC from f9eb2e1 (master) · equate 0.0.24. Details: build_info.json
 
 # index.html.md
 
@@ -120,7 +120,7 @@ svc.edit(view.session_id, [{"action": "reject", "item": 0, "candidate": 1}])
 svc.next_query(view.session_id)  # the pair whose label would help most
 ```
 
-`pip install 'equate[service]'` adds the HTTP API (built with [qh](https://github.com/i2mint/qh)): `python -m equate.service serve`, then `POST /match`, `POST /sessions`, `GET|POST /sessions/{id}/candidates/{item}`, `POST /sessions/{id}/edits`, `POST /sessions/{id}/label`. `equate.service.mk_app(service)` returns the FastAPI app to mount elsewhere. `python -m equate.service serve ui=ui/dist` also serves the built review UI from the same process. Sessions live in any `MutableMapping` (`MatchService(sessions=...)`), so a `dol` store persists them. `open_session(..., floor=0.5)` sets a score floor: a pair below it is never proposed, so rejecting an item’s only good candidate leaves the item unmatched instead of handing it a poor one.
+`pip install 'equate[service]'` adds the HTTP API (built with [qh](https://github.com/i2mint/qh)): `python -m equate.service serve`, then `POST /match`, `POST /sessions`, `GET|POST /sessions/{id}/candidates/{item}`, `POST /sessions/{id}/edits`, `POST /sessions/{id}/label`. `equate.service.mk_app(service)` returns the FastAPI app to mount elsewhere. `python -m equate.service serve ui=ui/dist` also serves the built review UI from the same process. Sessions live in any `MutableMapping` (`MatchService(sessions=...)`), so a `dol` store persists them. Use one when running several server processes (`uvicorn --workers N`): the default in-memory store is per process. `open_session(..., floor=0.5)` sets a score floor: a pair below it is never proposed, so rejecting an item’s only good candidate leaves the item unmatched instead of handing it a poor one.
 
 The review UI (React, [zodal](https://github.com/i2mint/zodal) + shadcn) is in [`ui/`](): a review queue ordered by uncertainty, side-by-side field diffs, confirm / reject / reassign with optimistic updates, and a labelling widget.
 
@@ -5009,6 +5009,11 @@ accepts both, and users can register their own strategies without subclassing.
 | [`Registry`](_autosummary/equate.registry.html.md#equate.registry.Registry)(kind)   | A `name -> lazy factory` registry for one pipeline stage's strategies.   |
 |-------------------------------------------------------------------|--------------------------------------------------------------------------|
 
+### Exceptions
+
+| [`UnknownStrategyError`](_autosummary/equate.registry.html.md#equate.registry.UnknownStrategyError)   | No strategy is registered under that name (a `KeyError`, for back-compat).   |
+|-------------------------------------------------------------------------|------------------------------------------------------------------------------|
+
 ### *class* equate.registry.Registry(kind)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
@@ -5073,6 +5078,15 @@ Resolve `spec` to a strategy.
 A callable `spec` passes through unchanged; a `str` is looked up and its
 factory is called with `(*args, **kwargs)`.
 
+### *exception* equate.registry.UnknownStrategyError
+
+Bases: [`KeyError`](https://docs.python.org/3/builtins/exceptions.html#KeyError)
+
+No strategy is registered under that name (a `KeyError`, for back-compat).
+
+Its own type lets a surface tell a caller’s unknown name (an HTTP 422) from a
+`KeyError` raised by a bug.
+
 
 # _autosummary/equate.service.html.md
 
@@ -5124,6 +5138,7 @@ persistent `dol` store replaces the in-memory dict without touching this code.
 
 | [`MatchService`](_autosummary/equate.service.html.md#equate.service.MatchService)(\*[, sessions, cache, mk_id, ...])   | equate's matching core as stateless + session-scoped JSON-able operations.      |
 |----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| [`SessionData`](_autosummary/equate.service.html.md#equate.service.SessionData)(A, B, scores)                         | The immutable part of a session: both collections and their score matrix.       |
 | [`Accounting`](_autosummary/equate.service.html.md#equate.service.Accounting)([tiers])                               | Per-tier cost/latency ledger.                                                   |
 | [`TierCost`](_autosummary/equate.service.html.md#equate.service.TierCost)([calls, seconds, items])                 | What one tier (`score`, `match`, `reoptimize`, ...) has cost so far.            |
 | [`Edit`](_autosummary/equate.service.html.md#equate.service.Edit)(action, item, candidate[, source])           | One user edit of the assignment.                                                |
@@ -5136,13 +5151,14 @@ persistent `dol` store replaces the in-memory dict without touching this code.
 | [`MatchResult`](_autosummary/equate.service.html.md#equate.service.MatchResult)(pairs[, groups, accounting, cached])  | Stateless match output: `pairs` (or `groups` for `how='cluster'`).              |
 | [`SessionView`](_autosummary/equate.service.html.md#equate.service.SessionView)(session_id, n_left, n_right, ...)     | A session's state: its current assignment and the review queue to work through. |
 | [`EditResult`](_autosummary/equate.service.html.md#equate.service.EditResult)(session_id, assignment, changed, ...)  | The result of an edit: the re-optimized assignment and what it changed.         |
-| [`LabelResult`](_autosummary/equate.service.html.md#equate.service.LabelResult)(label, result, next)                  | The result of a label: what was recorded, the edit result, and the next query.  |
-| [`Session`](_autosummary/equate.service.html.md#equate.service.Session)(session_id, A, B, scores, store, k, ...)  | Server-side session state.                                                      |
+| [`LabelResult`](_autosummary/equate.service.html.md#equate.service.LabelResult)(label, result, next[, applied])       | The result of a label: what was recorded, the edit result, and the next query.  |
+| [`Session`](_autosummary/equate.service.html.md#equate.service.Session)(session_id, store, k, assignment[, ...])  | Server-side session state.                                                      |
 
 ### Exceptions
 
-| [`SessionNotFound`](_autosummary/equate.service.html.md#equate.service.SessionNotFound)   | No session with that id (an HTTP 404).   |
-|--------------------------------------------------------------------|------------------------------------------|
+| [`SessionNotFound`](_autosummary/equate.service.html.md#equate.service.SessionNotFound)   | No session with that id (an HTTP 404).                                                            |
+|--------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| [`SessionConflict`](_autosummary/equate.service.html.md#equate.service.SessionConflict)   | The session changed in the store since it was read (an HTTP 409): another process saved it first. |
 
 ### *class* equate.service.Accounting(tiers=dict())
 
@@ -5211,7 +5227,7 @@ Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 An oracle’s verdict on one `item -> candidate` pair (active learning).
 
-### *class* equate.service.LabelResult(label, result, next)
+### *class* equate.service.LabelResult(label, result, next, applied=True)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -5223,7 +5239,7 @@ Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Stateless match output: `pairs` (or `groups` for `how='cluster'`).
 
-### *class* equate.service.MatchService(\*, sessions=None, cache='default', mk_id=<function MatchService.<lambda>>, field_compare='ratio', on_cost=None)
+### *class* equate.service.MatchService(\*, sessions=None, cache='default', mk_id=<function MatchService.<lambda>>, field_compare='ratio', on_cost=None, precedence=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -5237,7 +5253,10 @@ Every seam is a keyword argument with a working default:
   `None` to disable);
 - `mk_id` — session-id factory (default `uuid4().hex`);
 - `field_compare` — the per-field comparator used in explanations;
-- `on_cost` — `(tier, seconds, items)` hook called on every accounted tier.
+- `on_cost` — `(tier, seconds, items)` hook called on every accounted tier;
+- `precedence` — edit sources ranked most authoritative first (`('human',
+  'llm')`): a less authoritative edit never overrides a more authoritative one
+  (default `None`: the latest edit wins, whoever made it).
 
 #### candidates(session_id, item, , k=None)
 
@@ -5359,14 +5378,34 @@ One row of the review queue: an item, its current match and its alternatives.
 `margin` is the top-1/top-2 score gap (`None` when there is no rival) — small
 means ambiguous, which is why the queue puts it first.
 
-### *class* equate.service.Session(session_id, A, B, scores, store, k, assignment, edits=list(), labels=list(), accounting=Accounting(), floor=None)
+### *class* equate.service.Session(session_id, store, k, assignment, edits=list(), labels=list(), accounting=Accounting(), floor=None, version=0)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Server-side session state. Not a boundary type: [`SessionView`](_autosummary/equate.service.html.md#equate.service.SessionView) is its view.
 
-Everything is plain data (no open handles), so a session pickles into any `dol`
-store passed as `MatchService(sessions=...)`.
+The mutable part only — the edit log, labels, assignment and candidates — saved after
+every change; `A`, `B` and `scores` read through the attached
+[`SessionData`](_autosummary/equate.service.html.md#equate.service.SessionData). Everything is plain data, so both pickle into any `dol` store
+passed as `MatchService(sessions=...)`. `version` counts saves: a save that finds
+a newer version in the store raises [`SessionConflict`](_autosummary/equate.service.html.md#equate.service.SessionConflict) instead of overwriting a
+change made by another process.
+
+### *exception* equate.service.SessionConflict
+
+Bases: [`RuntimeError`](https://docs.python.org/3/builtins/exceptions.html#RuntimeError)
+
+The session changed in the store since it was read (an HTTP 409): another process
+saved it first. Re-read the session and retry the edit.
+
+### *class* equate.service.SessionData(A, B, scores)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The immutable part of a session: both collections and their score matrix.
+
+Written once, when the session opens; every later save writes only the small
+[`Session`](_autosummary/equate.service.html.md#equate.service.Session) state — not the `n × m` scores (equate#23).
 
 ### *exception* equate.service.SessionNotFound
 
@@ -5427,7 +5466,12 @@ POST   /sessions/{session_id}/label                 oracle label -> next query
 GET    /sessions/{session_id}/next                  the next query to label
 ```
 
-An unknown session is a 404; an invalid or infeasible edit a 422. `cors_origins`
+An unknown session is a 404, a session another process changed first a 409, an
+invalid edit or unknown strategy a 422. Handlers run in a worker thread, so a long
+scoring call does not block other requests. The default in-memory session store is
+per process: with several server processes (`uvicorn --workers N`) pass a shared
+store, `MatchService(sessions=<dol store>)`, or a request can reach a process that
+does not hold its session. `cors_origins`
 lets the review UI’s dev server (vite, port 5173) call it; pass `()` to disable.
 Requires `pip install 'equate[service]'`.
 
@@ -5609,18 +5653,18 @@ See: [https://en.wikipedia.org/wiki/Stable_marriage_problem](https://en.wikipedi
 
 # About this build
 
-This documentation was built on **2026-10-19 12:41 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/581611b1af75c5b15918e9eef9e93e3b7ba2b4cf"><code>581611b</code></a> on branch <code>master</code>, for **equate 0.0.23** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-19 13:01 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/f9eb2e1cc9e83648b244b2d53990fa8163b29e82"><code>f9eb2e1</code></a> on branch <code>master</code>, for **equate 0.0.24** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.23) is behind the latest release on PyPI (0.0.24): `pip install equate` gives newer code than these docs describe.
+- The documented version (0.0.24) is behind the latest release on PyPI (0.0.25): `pip install equate` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/equate/commit/581611b1af75c5b15918e9eef9e93e3b7ba2b4cf"><code>581611b1af75c5b15918e9eef9e93e3b7ba2b4cf</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/equate/commit/f9eb2e1cc9e83648b244b2d53990fa8163b29e82"><code>f9eb2e1cc9e83648b244b2d53990fa8163b29e82</code></a> |
 | Branch              | <code>master</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -5631,9 +5675,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/equate</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/39253749154">39253749154</a>    |
+| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/39256388694">39256388694</a>    |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>581611b1af75c5b15918e9eef9e93e3b7ba2b4cf</code> (in the history of the built commit) |
+| Event commit | <code>f9eb2e1cc9e83648b244b2d53990fa8163b29e82</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -5658,13 +5702,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/equate/0.0.24/">0.0.24</a>, newer than the documented version (0.0.23).
+Latest release: <a href="https://pypi.org/project/equate/0.0.25/">0.0.25</a>, newer than the documented version (0.0.24).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/equate && cd equate
-git checkout 581611b1af75c5b15918e9eef9e93e3b7ba2b4cf
+git checkout f9eb2e1cc9e83648b244b2d53990fa8163b29e82
 pip install "epythet==0.2.18"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

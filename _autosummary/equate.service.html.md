@@ -46,6 +46,7 @@ persistent `dol` store replaces the in-memory dict without touching this code.
 
 | [`MatchService`](#equate.service.MatchService)(\*[, sessions, cache, mk_id, ...])   | equate's matching core as stateless + session-scoped JSON-able operations.      |
 |----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| [`SessionData`](#equate.service.SessionData)(A, B, scores)                         | The immutable part of a session: both collections and their score matrix.       |
 | [`Accounting`](#equate.service.Accounting)([tiers])                               | Per-tier cost/latency ledger.                                                   |
 | [`TierCost`](#equate.service.TierCost)([calls, seconds, items])                 | What one tier (`score`, `match`, `reoptimize`, ...) has cost so far.            |
 | [`Edit`](#equate.service.Edit)(action, item, candidate[, source])           | One user edit of the assignment.                                                |
@@ -58,13 +59,14 @@ persistent `dol` store replaces the in-memory dict without touching this code.
 | [`MatchResult`](#equate.service.MatchResult)(pairs[, groups, accounting, cached])  | Stateless match output: `pairs` (or `groups` for `how='cluster'`).              |
 | [`SessionView`](#equate.service.SessionView)(session_id, n_left, n_right, ...)     | A session's state: its current assignment and the review queue to work through. |
 | [`EditResult`](#equate.service.EditResult)(session_id, assignment, changed, ...)  | The result of an edit: the re-optimized assignment and what it changed.         |
-| [`LabelResult`](#equate.service.LabelResult)(label, result, next)                  | The result of a label: what was recorded, the edit result, and the next query.  |
-| [`Session`](#equate.service.Session)(session_id, A, B, scores, store, k, ...)  | Server-side session state.                                                      |
+| [`LabelResult`](#equate.service.LabelResult)(label, result, next[, applied])       | The result of a label: what was recorded, the edit result, and the next query.  |
+| [`Session`](#equate.service.Session)(session_id, store, k, assignment[, ...])  | Server-side session state.                                                      |
 
 ### Exceptions
 
-| [`SessionNotFound`](#equate.service.SessionNotFound)   | No session with that id (an HTTP 404).   |
-|--------------------------------------------------------------------|------------------------------------------|
+| [`SessionNotFound`](#equate.service.SessionNotFound)   | No session with that id (an HTTP 404).                                                            |
+|--------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| [`SessionConflict`](#equate.service.SessionConflict)   | The session changed in the store since it was read (an HTTP 409): another process saved it first. |
 
 ### *class* equate.service.Accounting(tiers=dict())
 
@@ -133,7 +135,7 @@ Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 An oracle’s verdict on one `item -> candidate` pair (active learning).
 
-### *class* equate.service.LabelResult(label, result, next)
+### *class* equate.service.LabelResult(label, result, next, applied=True)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -145,7 +147,7 @@ Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Stateless match output: `pairs` (or `groups` for `how='cluster'`).
 
-### *class* equate.service.MatchService(\*, sessions=None, cache='default', mk_id=<function MatchService.<lambda>>, field_compare='ratio', on_cost=None)
+### *class* equate.service.MatchService(\*, sessions=None, cache='default', mk_id=<function MatchService.<lambda>>, field_compare='ratio', on_cost=None, precedence=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -159,7 +161,10 @@ Every seam is a keyword argument with a working default:
   `None` to disable);
 - `mk_id` — session-id factory (default `uuid4().hex`);
 - `field_compare` — the per-field comparator used in explanations;
-- `on_cost` — `(tier, seconds, items)` hook called on every accounted tier.
+- `on_cost` — `(tier, seconds, items)` hook called on every accounted tier;
+- `precedence` — edit sources ranked most authoritative first (`('human',
+  'llm')`): a less authoritative edit never overrides a more authoritative one
+  (default `None`: the latest edit wins, whoever made it).
 
 #### candidates(session_id, item, , k=None)
 
@@ -281,14 +286,34 @@ One row of the review queue: an item, its current match and its alternatives.
 `margin` is the top-1/top-2 score gap (`None` when there is no rival) — small
 means ambiguous, which is why the queue puts it first.
 
-### *class* equate.service.Session(session_id, A, B, scores, store, k, assignment, edits=list(), labels=list(), accounting=Accounting(), floor=None)
+### *class* equate.service.Session(session_id, store, k, assignment, edits=list(), labels=list(), accounting=Accounting(), floor=None, version=0)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Server-side session state. Not a boundary type: [`SessionView`](#equate.service.SessionView) is its view.
 
-Everything is plain data (no open handles), so a session pickles into any `dol`
-store passed as `MatchService(sessions=...)`.
+The mutable part only — the edit log, labels, assignment and candidates — saved after
+every change; `A`, `B` and `scores` read through the attached
+[`SessionData`](#equate.service.SessionData). Everything is plain data, so both pickle into any `dol` store
+passed as `MatchService(sessions=...)`. `version` counts saves: a save that finds
+a newer version in the store raises [`SessionConflict`](#equate.service.SessionConflict) instead of overwriting a
+change made by another process.
+
+### *exception* equate.service.SessionConflict
+
+Bases: [`RuntimeError`](https://docs.python.org/3/builtins/exceptions.html#RuntimeError)
+
+The session changed in the store since it was read (an HTTP 409): another process
+saved it first. Re-read the session and retry the edit.
+
+### *class* equate.service.SessionData(A, B, scores)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The immutable part of a session: both collections and their score matrix.
+
+Written once, when the session opens; every later save writes only the small
+[`Session`](#equate.service.Session) state — not the `n × m` scores (equate#23).
 
 ### *exception* equate.service.SessionNotFound
 
@@ -349,7 +374,12 @@ POST   /sessions/{session_id}/label                 oracle label -> next query
 GET    /sessions/{session_id}/next                  the next query to label
 ```
 
-An unknown session is a 404; an invalid or infeasible edit a 422. `cors_origins`
+An unknown session is a 404, a session another process changed first a 409, an
+invalid edit or unknown strategy a 422. Handlers run in a worker thread, so a long
+scoring call does not block other requests. The default in-memory session store is
+per process: with several server processes (`uvicorn --workers N`) pass a shared
+store, `MatchService(sessions=<dol store>)`, or a request can reach a process that
+does not hold its session. `cors_origins`
 lets the review UI’s dev server (vite, port 5173) call it; pass `()` to disable.
 Requires `pip install 'equate[service]'`.
 

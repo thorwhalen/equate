@@ -20,6 +20,7 @@ equate.service
    .. autosummary::
    
       MatchService
+      SessionData
       Accounting
       TierCost
       Edit
@@ -40,4 +41,5 @@ equate.service
    .. autosummary::
    
       SessionNotFound
+      SessionConflict
    

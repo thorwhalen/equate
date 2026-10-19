@@ -328,6 +328,16 @@ accepts both, and users can register their own strategies without subclassing.</
 </tbody>
 </table>
 </div>
+<p class="rubric">Exceptions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.registry.UnknownStrategyError" title="equate.registry.UnknownStrategyError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UnknownStrategyError</span></code></a></p></td>
+<td><p>No strategy is registered under that name (a <code class="docutils literal notranslate"><span class="pre">KeyError</span></code>, for back-compat).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py class">
 <dt class="sig sig-object py" id="equate.registry.Registry">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.registry.</span></span><span class="sig-name descname"><span class="pre">Registry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/registry.html#Registry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.registry.Registry" title="Link to this definition">¶</a></dt>
@@ -413,6 +423,15 @@ factory is called with <code class="docutils literal notranslate"><span class="p
 
 </dd></dl>
 
+<dl class="py exception">
+<dt class="sig sig-object py" id="equate.registry.UnknownStrategyError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.registry.</span></span><span class="sig-name descname"><span class="pre">UnknownStrategyError</span></span><a class="reference internal" href="../_modules/equate/registry.html#UnknownStrategyError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.registry.UnknownStrategyError" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#KeyError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">KeyError</span></code></a></p>
+<p>No strategy is registered under that name (a <code class="docutils literal notranslate"><span class="pre">KeyError</span></code>, for back-compat).</p>
+<p>Its own type lets a surface tell a caller’s unknown name (an HTTP 422) from a
+<code class="docutils literal notranslate"><span class="pre">KeyError</span></code> raised by a bug.</p>
+</dd></dl>
+
 </section>
 
         </article>
@@ -476,6 +495,7 @@ factory is called with <code class="docutils literal notranslate"><span class="p
 <li><a class="reference internal" href="#equate.registry.Registry.resolve"><code class="docutils literal notranslate"><span class="pre">Registry.resolve()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#equate.registry.UnknownStrategyError"><code class="docutils literal notranslate"><span class="pre">UnknownStrategyError</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -487,7 +507,7 @@ factory is called with <code class="docutils literal notranslate"><span class="p
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=5cf12315"></script>
+</div><script src="../_static/documentation_options.js?v=b4d262a5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

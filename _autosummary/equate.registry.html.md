@@ -13,6 +13,11 @@ accepts both, and users can register their own strategies without subclassing.
 | [`Registry`](#equate.registry.Registry)(kind)   | A `name -> lazy factory` registry for one pipeline stage's strategies.   |
 |-------------------------------------------------------------------|--------------------------------------------------------------------------|
 
+### Exceptions
+
+| [`UnknownStrategyError`](#equate.registry.UnknownStrategyError)   | No strategy is registered under that name (a `KeyError`, for back-compat).   |
+|-------------------------------------------------------------------------|------------------------------------------------------------------------------|
+
 ### *class* equate.registry.Registry(kind)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
@@ -76,3 +81,12 @@ Resolve `spec` to a strategy.
 
 A callable `spec` passes through unchanged; a `str` is looked up and its
 factory is called with `(*args, **kwargs)`.
+
+### *exception* equate.registry.UnknownStrategyError
+
+Bases: [`KeyError`](https://docs.python.org/3/builtins/exceptions.html#KeyError)
+
+No strategy is registered under that name (a `KeyError`, for back-compat).
+
+Its own type lets a surface tell a caller’s unknown name (an HTTP 422) from a
+`KeyError` raised by a bug.
