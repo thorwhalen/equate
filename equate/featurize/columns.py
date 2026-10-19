@@ -7,7 +7,7 @@ comparators (``jaccard``, ``overlap``, ``containment``) used for join-key discov
 near-duplicate columns.
 """
 
-import math
+import numbers
 from collections.abc import Callable, Iterable
 
 from equate.base import FeaturizerMeta
@@ -16,23 +16,34 @@ __all__ = ["value_set", "normalize_value", "is_missing"]
 
 
 def is_missing(v) -> bool:
-    """``None``, an empty/blank string, or a float NaN."""
+    """``None``, an empty/blank string, a NaN of any float type, or pandas' ``NA`` / ``NaT``.
+
+    >>> [is_missing(v) for v in (None, ' ', float('nan'), 0, 'x')]
+    [True, True, True, False, False]
+    """
     if v is None:
         return True
     if isinstance(v, str):
         return not v.strip()
-    return isinstance(v, float) and math.isnan(v)
+    if type(v).__name__ in ("NAType", "NaTType"):  # pandas, without importing it
+        return True
+    try:
+        return bool(v != v)  # NaN is the one value unequal to itself (numpy floats too)
+    except (TypeError, ValueError):
+        return False
 
 
 def normalize_value(v) -> str:
     """The default cell normalization: text, stripped and lower-cased; ``1.0`` and ``1``
-    read alike (an integral float drops its ``.0``).
+    read alike (an integral real drops its ``.0``, numpy scalars included).
 
     >>> normalize_value('  Paris '), normalize_value(3.0), normalize_value(3)
     ('paris', '3', '3')
     """
-    if isinstance(v, float) and v.is_integer():
-        v = int(v)
+    if isinstance(v, numbers.Real) and not isinstance(v, (bool, numbers.Integral)):
+        f = float(v)
+        if f.is_integer():
+            v = int(f)
     return str(v).strip().lower()
 
 

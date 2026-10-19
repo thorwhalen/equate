@@ -98,8 +98,16 @@ def test_complete_table_adds_named_columns_and_matches_fuzzy_keys():
     done = complete_table(
         target, CUSTOMERS, on=("cust", "cid"), columns={"customer_name": "name"}
     )
-    assert done.table["customer_name"] == ["Jon", "Ann", None]  # a missing key fills nothing
-    assert done.filled == {"customer_name": 2}
+    # 'C-002 ' is an exact match once normalized; 'c001' vs 'c-001' is fuzzy (0.89), under
+    # the default 0.9 floor; a missing key fills nothing
+    assert done.table["customer_name"] == [None, "Ann", None]
+    loose = complete_table(
+        target, CUSTOMERS, on=("cust", "cid"), columns={"customer_name": "name"},
+        min_row_score=0.85,
+    )
+    assert loose.table["customer_name"] == ["Jon", "Ann", None]
+    assert loose.filled == {"customer_name": 2}
+    assert [score is None for _, _, score in loose.rows] == [False, True]  # fuzzy, exact
 
 
 def test_complete_table_row_floor_and_one_to_one():
@@ -107,8 +115,9 @@ def test_complete_table_row_floor_and_one_to_one():
     done = complete_table(target, CUSTOMERS, on=("k", "cid"))
     assert done.table["name"] == ["Jon", None]  # 'zzz' resembles nothing: not filled
     assert len(done.rows) == 1
+    # 'zzz' scores 0 against every key: a tie, so even with no floor it fills nothing
     loose = complete_table(target, CUSTOMERS, on=("k", "cid"), min_row_score=None)
-    assert loose.table["name"][1] is not None
+    assert loose.table["name"][1] is None
     # one-to-one: two target rows cannot both take source row C-001
     twins = {"k": ["C-001", "C-001"], "name": [None, None]}
     one = complete_table(twins, CUSTOMERS, on=("k", "cid"), how="optimal", min_row_score=None)
@@ -129,3 +138,73 @@ def test_complete_table_errors():
 def test_column_match_is_a_plain_record():
     m = ColumnMatch("a", "b", 0.5)
     assert (m.left, m.right, m.score, m.explanation) == ("a", "b", 0.5, None)
+
+
+# --- regressions from the adversarial review of #13 ----------------------------------
+
+
+def test_an_unknown_key_never_borrows_another_rows_values():
+    done = complete_table(
+        {"sku": ["A100", "A200", "A300"], "p": [None] * 3},
+        {"sku": ["A100", "A200", "A301"], "p": [1, 2, 3]},
+    )
+    assert done.table["p"] == [1, 2, None]  # A300 is not A100 (nor, at 0.75, A301)
+    ids = complete_table({"id": [1, 2, 12], "v": [None] * 3}, {"id": [1, 2, 13], "v": list("abc")})
+    assert ids.table["v"] == ["a", "b", None]
+
+
+def test_key_election_prefers_the_column_with_more_shared_values():
+    left = {"city": [None, "Lyon", None], "cust": ["c1", "c2", "c3"]}
+    right = {"id": ["c3", "c1", "c2", "c9"], "city": ["Nice", "Paris", "Lyon", "Lille"]}
+    assert (find_join_keys(left, right)[0].left, find_join_keys(left, right)[0].right) == ("cust", "id")
+    assert complete_table(left, right).table["city"] == ["Paris", "Lyon", "Nice"]
+
+
+def test_keys_are_normalized_the_same_way_for_rows():
+    done = complete_table({"k": ["ABC", "DEF"], "v": [None, None]}, {"k": ["abc", "def"], "v": [1, 2]})
+    assert done.table["v"] == [1, 2] and all(score is None for *_, score in done.rows)
+    nums = complete_table({"k": [1, 2], "v": [None, None]}, {"k": [1.0, 2.0], "v": ["x", "y"]})
+    assert nums.table["v"] == ["x", "y"]
+
+
+def test_exact_join_is_linear_not_quadratic():
+    import time
+
+    n = 20_000
+    keys = [f"K{i:06d}" for i in range(n)]
+    t0 = time.perf_counter()
+    done = complete_table({"k": keys, "v": [None] * n}, {"k": keys[::-1], "v": list(range(n))[::-1]})
+    assert done.filled == {"v": n} and done.table["v"][:3] == [0, 1, 2]
+    assert time.perf_counter() - t0 < 10  # the old all-pairs alignment took minutes
+
+
+def test_duplicate_source_keys_contribute_their_first_value():
+    done = complete_table({"k": ["x1"], "v": [None]}, {"k": ["x1", "x1"], "v": [None, "B"]})
+    assert done.table["v"] == ["B"]
+
+
+def test_pandas_missing_values():
+    pd = pytest.importorskip("pandas")
+    target = pd.DataFrame({"k": ["a", "b"], "v": pd.array([pd.NA, "x"], dtype="string")})
+    done = complete_table(target, pd.DataFrame({"k": ["a", "b"], "v": ["A", "B"]}))
+    assert done.table["v"] == ["A", "x"]
+
+
+def test_column_names_are_kept_and_strings_are_not_columns():
+    assert as_columns({0: [1], "0": [2]}) == {0: [1], "0": [2]}
+    done = complete_table({0: ["a"], 1: [None]}, {0: ["a"], 1: ["z"]}, on=(0, 0))
+    assert done.table == {0: ["a"], 1: ["z"]}
+    with pytest.raises(TypeError, match="string"):
+        as_columns({"a": "xyz"})
+
+
+def test_directional_near_duplicates_keep_both_directions():
+    table = {"a": [1, 2, 3, 4], "b": [1, 2]}
+    found = find_near_duplicate_columns(table, compare="containment", threshold=0.9)
+    assert [(m.left, m.right) for m in found] == [("b", "a")]
+
+
+def test_legacy_names_survive_star_import():
+    namespace = {}
+    exec("from equate.completion import *", namespace)
+    assert {"similarity_matrix", "mk_text_to_vect", "hungarian_matching", "complete_table"} <= set(namespace)

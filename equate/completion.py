@@ -34,7 +34,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import partial
 from itertools import chain
-from typing import Optional
+from typing import Any, Optional
 
 from equate._dependencies import require
 from equate._vector import cosine_similarity
@@ -53,6 +53,15 @@ __all__ = [
     "find_join_keys",
     "find_near_duplicate_columns",
     "complete_table",
+    # the pre-redesign API, kept importable (also by `import *`)
+    "similarity_matrix",
+    "mk_text_to_vect",
+    "transform_text",
+    "greedy_matching",
+    "hungarian_matching",
+    "maximal_matching",
+    "stable_marriage_matching",
+    "kuhn_munkres_matching",
 ]
 
 DFLT_KEY_COMPARE = (
@@ -61,7 +70,7 @@ DFLT_KEY_COMPARE = (
 DFLT_MIN_KEY_SCORE = 0.5
 DFLT_DUPLICATE_COMPARE = "jaccard"
 DFLT_DUPLICATE_THRESHOLD = 0.9
-DFLT_MIN_ROW_SCORE = 0.5
+DFLT_MIN_ROW_SCORE = 0.9  # fuzzy key matches only; exact matches always align
 
 
 # --- tables ---------------------------------------------------------------------------
@@ -71,22 +80,32 @@ def as_columns(table) -> dict:
     """``{column name: list of values}`` from a column mapping, a list of row mappings,
     or a DataFrame-like object (``.columns`` + ``table[column]``).
 
-    Rows missing a column get ``None`` there; column order is first-seen order.
+    Column names are kept as they are (an ``int`` stays an ``int``). Rows missing a
+    column get ``None`` there; column order is first-seen order. A column must be a
+    sequence of cells, not a string.
 
     >>> as_columns([{'a': 1}, {'a': 2, 'b': 'x'}])
     {'a': [1, 2], 'b': [None, 'x']}
     """
     if isinstance(table, Mapping):
-        return {str(c): list(v) for c, v in table.items()}
-    if hasattr(table, "columns") and not isinstance(table, (list, tuple)):
-        return {str(c): list(table[c]) for c in table.columns}
-    if isinstance(table, Sequence) and all(isinstance(r, Mapping) for r in table):
+        columns = dict(table.items())
+    elif hasattr(table, "columns") and not isinstance(table, (list, tuple)):
+        columns = {c: table[c] for c in table.columns}
+    elif isinstance(table, Sequence) and all(isinstance(r, Mapping) for r in table):
         names = list(dict.fromkeys(c for row in table for c in row))
-        return {str(c): [row.get(c) for row in table] for c in names}
-    raise TypeError(
-        "a table is a mapping of column -> values, a list of row mappings, or a "
-        f"DataFrame-like object; got {type(table).__name__}"
-    )
+        return {c: [row.get(c) for row in table] for c in names}
+    else:
+        raise TypeError(
+            "a table is a mapping of column -> values, a list of row mappings, or a "
+            f"DataFrame-like object; got {type(table).__name__}"
+        )
+    for name, values in columns.items():
+        if isinstance(values, (str, bytes)) or not hasattr(values, "__iter__"):
+            raise TypeError(
+                f"column {name!r} must be a sequence of cells, got "
+                f"{type(values).__name__} (a string would be read character by character)"
+            )
+    return {c: list(v) for c, v in columns.items()}
 
 
 def _n_rows(columns: dict) -> int:
@@ -103,8 +122,8 @@ def _n_rows(columns: dict) -> int:
 class ColumnMatch:
     """A scored correspondence between a ``left`` and a ``right`` column."""
 
-    left: str
-    right: str
+    left: Any
+    right: Any
     score: float
     explanation: Optional[Explanation] = None
 
@@ -114,8 +133,9 @@ class Completion:
     """The completed table and how it was completed.
 
     ``table`` is the target as columns, with missing cells filled; ``key`` the join key
-    used; ``rows`` the aligned ``(target_row, source_row, score)`` triples; ``filled`` the
-    number of cells filled per column; ``columns`` the ``{target: source}`` columns used.
+    used; ``rows`` the aligned ``(target_row, source_row, score)`` triples (``score`` is
+    ``None`` for an exact key match, the fuzzy score otherwise); ``filled`` the number of
+    cells filled per column; ``columns`` the ``{target: source}`` columns used.
     """
 
     table: dict
@@ -168,7 +188,8 @@ def find_join_keys(
     ``'containment'``: the share of the left column's distinct values found in the right
     one — a foreign key scores 1.0 against its primary key whatever else that holds).
     Each left column keeps its top-``k`` right columns scoring at least ``min_score``.
-    Returns :class:`ColumnMatch` es sorted by score (ties: left, then right column order).
+    Returns :class:`ColumnMatch` es sorted by score; ties go to the pair sharing more
+    distinct values (a real key over a low-cardinality column), then to column order.
     """
     left, right = as_columns(left), as_columns(right)
     sets_l, sets_r, sm = _column_scores(left, right, compare)
@@ -183,7 +204,16 @@ def find_join_keys(
     order = {
         (a, b): n for n, (a, b) in enumerate((a, b) for a in names_l for b in names_r)
     }
-    return sorted(found, key=lambda m: (-m.score, order[(m.left, m.right)]))
+    # ties on the score are broken by evidence: more shared distinct values first, so a
+    # many-valued key beats a 2-value column that happens to be fully contained too
+    return sorted(
+        found,
+        key=lambda m: (
+            -m.score,
+            -m.explanation.details["shared"],
+            order[(m.left, m.right)],
+        ),
+    )
 
 
 def find_near_duplicate_columns(
@@ -196,15 +226,18 @@ def find_near_duplicate_columns(
 
     Each column is featurized as its value set and every pair compared with ``compare``
     (default ``'jaccard'``); pairs scoring at least ``threshold`` are returned as
-    :class:`ColumnMatch` es (earlier column on the left), best first.
+    :class:`ColumnMatch` es, best first — earlier column on the left for a symmetric
+    comparator, both directions for a directional one (``'containment'``).
     """
     columns = as_columns(table)
     sets, _, sm = _column_scores(columns, columns, compare)
     names = list(columns)
+    meta = getattr(resolve_comparator(compare), "meta", None)
+    symmetric = getattr(meta, "is_symmetric", True)
     found = [
         ColumnMatch(names[i], names[j], s, _explain(sets[i], sets[j], s))
         for i, j, s in sm.stored_entries()
-        if i < j and s >= threshold
+        if (i < j if symmetric else i != j) and s >= threshold
     ]
     return sorted(
         found, key=lambda m: (-m.score, names.index(m.left), names.index(m.right))
@@ -232,25 +265,75 @@ def _resolve_key(target, source, on, compare, min_key_score):
 
 
 def _align_rows(keys_t, keys_s, *, row_compare, how, min_row_score):
-    """``(target_row, source_row, score)`` for each aligned row (missing keys skipped)."""
-    present_t = [i for i, v in enumerate(keys_t) if not is_missing(v)]
-    present_s = [j for j, v in enumerate(keys_s) if not is_missing(v)]
-    if not present_t or not present_s:
+    """``(target_row, source_rows, score)`` for each aligned target row.
+
+    Keys are normalized (:func:`~equate.featurize.columns.normalize_value`) the same way
+    join-key discovery normalizes them. Equal normalized keys align **exactly** (a hash
+    join: linear time, score ``None``); only the target keys left over are matched
+    **fuzzily** (``row_compare``) against the distinct source keys, and an ambiguous best
+    (a tie between two source keys) aligns nothing. ``source_rows`` lists every source row
+    carrying the aligned key, in order. With a one-to-one ``how``, each source row is
+    used at most once.
+    """
+    from equate.featurize.columns import normalize_value
+
+    by_key = {}
+    for j, v in enumerate(keys_s):
+        if not is_missing(v):
+            by_key.setdefault(normalize_value(v), []).append(j)
+    one_to_one = how != "best"
+    used = set()
+    rows, leftover = [], []
+    for i, v in enumerate(keys_t):
+        if is_missing(v):
+            continue
+        sources = [j for j in by_key.get(normalize_value(v), ()) if j not in used]
+        if sources:
+            if one_to_one:
+                sources = sources[:1]
+                used.add(sources[0])
+            rows.append((i, sources, None))
+        else:
+            leftover.append(i)
+    if leftover and row_compare is not None:
+        rows.extend(
+            _fuzzy_rows(
+                keys_t,
+                leftover,
+                by_key,
+                used,
+                row_compare=row_compare,
+                how=how,
+                min_row_score=min_row_score,
+            )
+        )
+    return sorted(rows, key=lambda r: r[0])
+
+
+def _fuzzy_rows(keys_t, leftover, by_key, used, *, row_compare, how, min_row_score):
+    from equate.featurize.columns import normalize_value
+
+    free = {k: [j for j in js if j not in used] for k, js in by_key.items()}
+    free_keys = [k for k, js in free.items() if js]
+    if not free_keys:
         return []
-    sm = score_matrix(
-        [str(keys_t[i]) for i in present_t],
-        [str(keys_s[j]) for j in present_s],
-        compare=row_compare,
-    )
-    if how == "best":  # n:1 — each target row takes its best source row (a lookup)
-        store = CandidateStore.from_scores(sm.data, k=1, sense=sm.sense)
-        pairs = [(i, c[0][0], c[0][1]) for i, c in store.candidates.items() if c]
-    else:  # one-to-one, with any matcher of the match stage
-        pairs = [(i, j, sm.score_at(i, j)) for i, j in resolve_matcher(how)(sm)]
+    texts = [normalize_value(keys_t[i]) for i in leftover]
+    sm = score_matrix(texts, free_keys, compare=row_compare)
+    out = []
+    if how == "best":
+        store = CandidateStore.from_scores(sm.data, k=2, sense=sm.sense)
+        for r, cands in store.candidates.items():
+            if not cands or (len(cands) > 1 and cands[0][1] == cands[1][1]):
+                continue  # nothing, or a tie: an ambiguous key fills nothing
+            c, score = cands[0]
+            out.append((leftover[r], free[free_keys[c]], float(score)))
+    else:
+        for r, c in resolve_matcher(how)(sm):
+            out.append((leftover[r], free[free_keys[c]][:1], float(sm.score_at(r, c))))
     return [
-        (present_t[i], present_s[j], float(score))
-        for i, j, score in pairs
-        if min_row_score is None or _passes(score, min_row_score, sm.sense)
+        row
+        for row in out
+        if min_row_score is None or _passes(row[2], min_row_score, sm.sense)
     ]
 
 
@@ -274,16 +357,20 @@ def complete_table(
 
     1. **Key** — ``on=(target_column, source_column)``, or discovered with
        :func:`find_join_keys` (``key_compare``, ``min_key_score``).
-    2. **Rows** — key values aligned by fuzzy matching (``row_compare``, default the
-       ``'ratio'`` edit similarity, so ``'c-01'`` meets ``'C01'``; ``None`` is TF-IDF
-       cosine). ``how='best'`` (default) gives each target row its best source row
-       (n:1, a lookup); a matcher name (``'optimal'``, ``'greedy'``, ``'stable'``) aligns
-       rows one-to-one.
-       Alignments scoring below ``min_row_score`` (``None`` keeps all) are dropped.
+    2. **Rows** — key values are normalized (case, spacing, ``1.0`` = ``1``) and joined
+       **exactly** first. Only target keys with no exact partner are matched
+       **fuzzily** with ``row_compare`` (default the ``'ratio'`` edit similarity, so a
+       stray character still meets its key; ``None`` turns fuzzy matching off) and kept only
+       when they score at least ``min_row_score`` (default ``0.9``; for a *distance*
+       comparator it is a maximum) and are not tied between two source keys.
+       ``how='best'`` (default) is a lookup: each target row takes its source key, so
+       many target rows may share one. A matcher name (``'optimal'``, ``'greedy'``,
+       ``'stable'``) aligns rows one-to-one instead.
     3. **Fill** — for each ``{target_column: source_column}`` in ``columns`` (default:
        the columns both tables share, except the key), a missing target cell (``None``,
-       blank, NaN) takes the aligned source row's value. A target column that does not
-       exist yet is created. Present values are never overwritten.
+       blank, NaN, pandas ``NA``) takes the value of the first aligned source row that
+       has one. A target column that does not exist yet is created. Present values are
+       never overwritten.
     """
     t_cols, s_cols = as_columns(target), as_columns(source)
     n = _n_rows(t_cols)
@@ -296,7 +383,7 @@ def complete_table(
     missing_src = [s for s in columns.values() if s not in s_cols]
     if missing_src:
         raise KeyError(f"no source column(s) {missing_src}; columns are {list(s_cols)}")
-    rows = _align_rows(
+    aligned = _align_rows(
         t_cols[key.left],
         s_cols[key.right],
         row_compare=row_compare,
@@ -308,12 +395,18 @@ def complete_table(
     for t_col, s_col in columns.items():
         values = table.setdefault(t_col, [None] * n)
         count = 0
-        for i, j, _ in rows:
-            new = s_cols[s_col][j]
-            if is_missing(values[i]) and not is_missing(new):
+        for i, sources, _ in aligned:
+            if not is_missing(values[i]):
+                continue
+            new = next(
+                (s_cols[s_col][j] for j in sources if not is_missing(s_cols[s_col][j])),
+                None,
+            )
+            if new is not None:
                 values[i] = new
                 count += 1
         filled[t_col] = count
+    rows = [(i, sources[0], score) for i, sources, score in aligned]
     return Completion(
         table=table, key=key, rows=rows, filled=filled, columns=dict(columns)
     )

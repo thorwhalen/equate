@@ -159,6 +159,8 @@ The core needs only numpy and scipy. Everything heavier is an extra, imported on
 | `active`, `llm` | scikit-activeml; openai | active learning; LLM re-ranking |
 | `service` | qh, fastapi, pydantic, uvicorn | the HTTP service |
 | `benchmarks` | (nothing yet) | the standard benchmark loaders |
+| `grub`, `sklearn` | grub; scikit-learn | the legacy featurizers of the original API |
+| `examples`, `dev` | pandas, py2store, requests; pytest, ruff | the example scripts; development |
 
 ## Design
 
@@ -166,7 +168,7 @@ The core needs only numpy and scipy. Everything heavier is an extra, imported on
 
 ## The original API
 
-The first versions of `equate` exposed the functions below. They still work, unchanged, and the redesigned stages are built from the same pieces: `similarity_matrix` is `score_matrix` with the TF-IDF default, and the `equate.util` matchers are now in the `matchers` registry. New code should prefer `match` / `score_matrix`.
+The first versions of `equate` exposed the functions below, and they are all still importable, with the same signatures. One thing changed underneath: the default featurizer is now `equate`'s own character n-gram TF-IDF instead of `grub`'s word TF-IDF (#4), so similarity *scores* differ from older releases, while the matchings in these examples are the same. The redesigned stages are built from the same pieces: `similarity_matrix` is `score_matrix` with the TF-IDF default, and the `equate.util` matchers are now in the `matchers` registry. New code should prefer `match` / `score_matrix`. The old `grub`-based `equate.completion.similarity_matrix` still needs `pip install 'equate[grub]'`.
 
 ### Greedy matching with a score function: `match_greedily`
 
@@ -234,7 +236,7 @@ keys = ["apple pie", "apple crumble", "banana split"]
 values = ["american pie", "big apple", "american girl", "banana republic"]
 m = similarity_matrix(keys, values)
 m.round(2).tolist()
-# == [[0.54, 0.38, 0.0, 0.0], [0.0, 0.33, 0.0, 0.0], [0.0, 0.0, 0.0, 0.41]]
+# == [[0.32, 0.42, 0.01, 0.0], [0.04, 0.35, 0.01, 0.02], [0.03, 0.04, 0.02, 0.44]]
 ```
 
 The `equate.util` module has a few optimal matching function you can use from 
