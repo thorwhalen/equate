@@ -49,6 +49,7 @@
 - [equate.interactive.review](equate.interactive.review.html.md): Human review triage and active-learning query selection.
 - [equate.matching](equate.matching.html.md): The match stage (③): turn a score matrix into a correspondence.
 - [equate.matching.assign](equate.matching.assign.html.md): Assignment matchers (stage ③): turn a score matrix into matched &#96;(i, j)&#96; pairs.
+- [equate.matching.embedding_align](equate.matching.embedding_align.html.md): Embedding-based network alignment: embed both graphs’ nodes, then match the embeddings.
 - [equate.matching.quadratic](equate.matching.quadratic.html.md): Quadratic matchers: align the &#42;nodes&#42; of two graphs (network alignment).
 - [equate.matching.soft](equate.matching.soft.html.md): Soft / optimal-transport matching (stage ③): a fractional transport plan rather than a
 - [equate.registry](equate.registry.html.md): A tiny name-keyed strategy registry with lazy factories (open-closed dispatch).

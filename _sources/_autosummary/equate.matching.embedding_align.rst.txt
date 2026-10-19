@@ -1,0 +1,16 @@
+equate.matching.embedding\_align
+================================
+
+.. automodule:: equate.matching.embedding_align
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      regal
+      regal_scores
+      cone
+      cone_scores
+      sinkhorn_plan
+   

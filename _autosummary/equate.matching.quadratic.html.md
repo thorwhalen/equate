@@ -12,8 +12,18 @@ optimal LAP) for the final 1:1 correspondence.
 - `'isorank'` (core) — IsoRank (Singh, Xu & Berger 2008): “two nodes match if their
   neighbors match”, the stationary point of a random walk on the product graph, blended
   with an optional prior `node_affinity`.
+- `'final'` (core) — FINAL (Zhang & Tong 2016): IsoRank’s propagation gated by node
+  attribute agreement (`label=` / `attribute_similarity=`).
+- `'regal'`, `'cone'` (core, [`equate.matching.embedding_align`](equate.matching.embedding_align.html.md#module-equate.matching.embedding_align)) — embedding
+  aligners: REGAL/xNetMF (joint structural embeddings) and CONE-Align (per-graph NetMF
+  embeddings aligned by Procrustes + optimal transport).
+- `'gw'` (`equate[ot]`) — Gromov-Wasserstein optimal transport on shortest-path
+  distances (fused with `node_affinity` when given); `.plan` is the transport plan.
 - `'rrwm'` (`equate[graph-matching]`) — pygmtools’ reweighted random walk solver on
   the full quadratic affinity (edge-weight agreement + `node_affinity`).
+
+PLANETALIGN is not wrapped: it has no PyPI distribution, and the in-house aligners above
+cover its core methods (a git-sourced backend can register here later as another entry).
 
 Use [`align()`](#equate.matching.quadratic.align) (also `equate.align`), or pick a strategy from the
 [`quadratic_matchers`](#equate.matching.quadratic.quadratic_matchers) registry. `seeds` are known node correspondences
@@ -34,6 +44,9 @@ Use [`align()`](#equate.matching.quadratic.align) (also `equate.align`), or pick
 | [`isorank`](#equate.matching.quadratic.isorank)(G1, G2, \*[, node_affinity, seeds, ...]) | Align two graphs with IsoRank -> a [`Matching`](equate.base.html.md#equate.base.Matching) of node pairs. |
 | [`isorank_scores`](#equate.matching.quadratic.isorank_scores)(G1, G2, \*[, node_affinity, ...]) | The IsoRank node-pair score matrix `R` (`n1 x n2`, sums to 1).                                                                   |
 | [`rrwm`](#equate.matching.quadratic.rrwm)(G1, G2, \*[, node_affinity, seeds, ...])    | Align two graphs with pygmtools' RRWM — requires `equate[graph-matching]`.                                                       |
+| [`final`](#equate.matching.quadratic.final)(G1, G2, \*[, node_affinity, seeds, ...])   | Align two graphs with FINAL -> a [`Matching`](equate.base.html.md#equate.base.Matching) of node pairs.   |
+| [`final_scores`](#equate.matching.quadratic.final_scores)(G1, G2, \*[, node_affinity, ...])   | The FINAL node-pair score matrix (Zhang & Tong, KDD 2016; the FINAL-N variant).                                                  |
+| [`gw`](#equate.matching.quadratic.gw)(G1, G2, \*[, node_affinity, seeds, ...])      | Align two graphs by Gromov-Wasserstein optimal transport — `equate[ot]` (POT).                                                   |
 
 ### equate.matching.quadratic.DFLT_EDGE_SIGMA *= 1.0*
 
@@ -61,6 +74,45 @@ neighbors}` mappings or adjacency matrices.
 >>> dict(align(star, other).labeled_pairs())['hub']
 3
 ```
+
+### equate.matching.quadratic.final(G1, G2, , node_affinity=None, seeds=None, extract='optimal', label=None, \*\*config)
+
+Align two graphs with FINAL -> a [`Matching`](equate.base.html.md#equate.base.Matching) of node pairs.
+
+Like [`isorank()`](#equate.matching.quadratic.isorank), with node attributes (`label=` or `attribute_similarity=`)
+gating the propagation; `**config` goes to [`final_scores()`](#equate.matching.quadratic.final_scores).
+
+```pycon
+>>> G1 = {'a': ['b'], 'b': ['a', 'c'], 'c': ['b']}
+>>> G2 = {1: [2], 2: [1, 3], 3: [2]}
+>>> kinds = {'a': 'x', 'b': 'y', 'c': 'z', 1: 'z', 2: 'y', 3: 'x'}
+>>> dict(final(G1, G2, label=kinds.get).labeled_pairs())
+{'a': 3, 'b': 2, 'c': 1}
+```
+
+### equate.matching.quadratic.final_scores(G1, G2, , node_affinity=None, seeds=None, attribute_similarity=None, alpha=0.8, max_iter=100, tol=1e-09, label=None)
+
+The FINAL node-pair score matrix (Zhang & Tong, KDD 2016; the FINAL-N variant).
+
+IsoRank’s “two nodes match if their neighbors match”, with every step of the walk on
+the product graph filtered by **node-attribute agreement** `N` (from `label=`, or
+`attribute_similarity`) and symmetrically degree-normalized:
+`X <- alpha * N * D^-1/2 (A1 (N * D^-1/2 * X) A2^T) + (1 - alpha) * H`, `H` the
+normalized prior (`node_affinity`, seeds pinned as in IsoRank). Without attributes
+(`N` all ones) it reduces to IsoRank-style propagation. Returned as a
+`ScoreMatrix` (`sense='maximize'`).
+
+### equate.matching.quadratic.gw(G1, G2, , node_affinity=None, seeds=None, extract='optimal', label=None, alpha=0.5, \*\*gw_params)
+
+Align two graphs by Gromov-Wasserstein optimal transport — `equate[ot]` (POT).
+
+GW finds the coupling of the two node sets that best preserves *distances*: nodes
+far apart in `G1` should map to nodes far apart in `G2` (shortest-path lengths,
+scaled to `[0, 1]`). With a `node_affinity` (or `seeds`) it is *fused* GW: a
+node-feature cost `1 - affinity/max` weighted `1 - alpha` against the structure
+(`alpha`). `.plan` holds the transport plan, the soft correspondence; `extract`
+hardens it. `**gw_params` go to POT (`max_iter`, `tol_rel`, …); options that
+change POT’s return type (`log`) are refused.
 
 ### equate.matching.quadratic.isorank(G1, G2, , node_affinity=None, seeds=None, extract='optimal', label=None, \*\*config)
 

@@ -21,6 +21,7 @@ equate.compare.sequence
       subsequence_dtw
       subsequence_dtw_alignment
       soft_dtw
+      soft_dtw_alignment
       needleman_wunsch
       needleman_wunsch_alignment
       smith_waterman

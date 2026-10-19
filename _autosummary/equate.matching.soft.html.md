@@ -1,8 +1,11 @@
 # equate.matching.soft
 
 Soft / optimal-transport matching (stage ③): a fractional transport plan rather than a
-hard assignment — the home for graded, partial, unequal-mass and cross-modal matching
-(and, later, soft-DTW / Gromov-Wasserstein — decision register D8). Requires `equate[ot]`.
+hard assignment — the home for graded, partial, unequal-mass and cross-modal matching.
+Requires `equate[ot]`. Its structured siblings return plans too (decision register D8):
+Gromov-Wasserstein couples two *graphs* (`equate.align(G1, G2, how='gw')`, `.plan`),
+and soft-DTW couples the *elements* of two sequences
+(`equate.compare.sequence.soft_dtw_alignment`).
 
 ### Functions
 

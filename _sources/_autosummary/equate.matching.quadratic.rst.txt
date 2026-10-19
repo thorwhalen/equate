@@ -21,4 +21,7 @@ equate.matching.quadratic
       isorank
       isorank_scores
       rrwm
+      final
+      final_scores
+      gw
    

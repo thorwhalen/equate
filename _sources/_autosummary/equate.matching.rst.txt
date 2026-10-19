@@ -32,5 +32,6 @@ equate.matching
    :recursive:
 
    assign
+   embedding_align
    quadratic
    soft

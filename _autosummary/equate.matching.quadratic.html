@@ -7,7 +7,7 @@
 <link rel="alternate" type="text/markdown" href="equate.matching.quadratic.html.md">
 <link rel="describedby" href="../llms.txt" type="text/markdown">
 <link rel="alternate" type="text/markdown" href="equate.matching.quadratic.html.md">
-<link rel="describedby" href="llms.txt"><link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="equate.matching.soft" href="equate.matching.soft.html"><link rel="prev" title="equate.matching.assign" href="equate.matching.assign.html">
+<link rel="describedby" href="llms.txt"><link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="equate.matching.soft" href="equate.matching.soft.html"><link rel="prev" title="equate.matching.embedding_align" href="equate.matching.embedding_align.html">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
         <title>equate.matching.quadratic - equate</title>
@@ -260,6 +260,7 @@
 </li>
 <li class="toctree-l3 current has-children"><a class="reference internal" href="equate.matching.html">equate.matching</a><input aria-label="Toggle navigation of equate.matching" checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="equate.matching.assign.html">equate.matching.assign</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.matching.embedding_align.html">equate.matching.embedding_align</a></li>
 <li class="toctree-l4 current current-page"><a class="current reference internal" href="#">equate.matching.quadratic</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.matching.soft.html">equate.matching.soft</a></li>
 </ul>
@@ -323,9 +324,18 @@ optimal LAP) for the final 1:1 correspondence.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">'isorank'</span></code> (core) — IsoRank (Singh, Xu &amp; Berger 2008): “two nodes match if their
 neighbors match”, the stationary point of a random walk on the product graph, blended
 with an optional prior <code class="docutils literal notranslate"><span class="pre">node_affinity</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'final'</span></code> (core) — FINAL (Zhang &amp; Tong 2016): IsoRank’s propagation gated by node
+attribute agreement (<code class="docutils literal notranslate"><span class="pre">label=</span></code> / <code class="docutils literal notranslate"><span class="pre">attribute_similarity=</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'regal'</span></code>, <code class="docutils literal notranslate"><span class="pre">'cone'</span></code> (core, <a class="reference internal" href="equate.matching.embedding_align.html#module-equate.matching.embedding_align" title="equate.matching.embedding_align"><code class="xref py py-mod docutils literal notranslate"><span class="pre">equate.matching.embedding_align</span></code></a>) — embedding
+aligners: REGAL/xNetMF (joint structural embeddings) and CONE-Align (per-graph NetMF
+embeddings aligned by Procrustes + optimal transport).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'gw'</span></code> (<code class="docutils literal notranslate"><span class="pre">equate[ot]</span></code>) — Gromov-Wasserstein optimal transport on shortest-path
+distances (fused with <code class="docutils literal notranslate"><span class="pre">node_affinity</span></code> when given); <code class="docutils literal notranslate"><span class="pre">.plan</span></code> is the transport plan.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">'rrwm'</span></code> (<code class="docutils literal notranslate"><span class="pre">equate[graph-matching]</span></code>) — pygmtools’ reweighted random walk solver on
 the full quadratic affinity (edge-weight agreement + <code class="docutils literal notranslate"><span class="pre">node_affinity</span></code>).</p></li>
 </ul>
+<p>PLANETALIGN is not wrapped: it has no PyPI distribution, and the in-house aligners above
+cover its core methods (a git-sourced backend can register here later as another entry).</p>
 <p>Use <a class="reference internal" href="#equate.matching.quadratic.align" title="equate.matching.quadratic.align"><code class="xref py py-func docutils literal notranslate"><span class="pre">align()</span></code></a> (also <code class="docutils literal notranslate"><span class="pre">equate.align</span></code>), or pick a strategy from the
 <a class="reference internal" href="#equate.matching.quadratic.quadratic_matchers" title="equate.matching.quadratic.quadratic_matchers"><code class="xref py py-data docutils literal notranslate"><span class="pre">quadratic_matchers</span></code></a> registry. <code class="docutils literal notranslate"><span class="pre">seeds</span></code> are known node correspondences
 (anchors): they are kept as given and steer the rest.</p>
@@ -364,6 +374,15 @@ the full quadratic affinity (edge-weight agreement + <code class="docutils liter
 <tr class="row-odd"><td><p><a class="reference internal" href="#equate.matching.quadratic.rrwm" title="equate.matching.quadratic.rrwm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rrwm</span></code></a>(G1, G2, *[, node_affinity, seeds, ...])</p></td>
 <td><p>Align two graphs with pygmtools' RRWM — requires <code class="docutils literal notranslate"><span class="pre">equate[graph-matching]</span></code>.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.matching.quadratic.final" title="equate.matching.quadratic.final"><code class="xref py py-obj docutils literal notranslate"><span class="pre">final</span></code></a>(G1, G2, *[, node_affinity, seeds, ...])</p></td>
+<td><p>Align two graphs with FINAL -&gt; a <a class="reference internal" href="equate.base.html#equate.base.Matching" title="equate.base.Matching"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matching</span></code></a> of node pairs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.matching.quadratic.final_scores" title="equate.matching.quadratic.final_scores"><code class="xref py py-obj docutils literal notranslate"><span class="pre">final_scores</span></code></a>(G1, G2, *[, node_affinity, ...])</p></td>
+<td><p>The FINAL node-pair score matrix (Zhang &amp; Tong, KDD 2016; the FINAL-N variant).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.matching.quadratic.gw" title="equate.matching.quadratic.gw"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gw</span></code></a>(G1, G2, *[, node_affinity, seeds, ...])</p></td>
+<td><p>Align two graphs by Gromov-Wasserstein optimal transport — <code class="docutils literal notranslate"><span class="pre">equate[ot]</span></code> (POT).</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -396,6 +415,47 @@ known <code class="docutils literal notranslate"><span class="pre">(G1</span> <s
 <span class="go">3</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.matching.quadratic.final">
+<span class="sig-prename descclassname"><span class="pre">equate.matching.quadratic.</span></span><span class="sig-name descname"><span class="pre">final</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">G2</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_affinity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extract</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'optimal'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/matching/quadratic.html#final"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.matching.quadratic.final" title="Link to this definition">¶</a></dt>
+<dd><p>Align two graphs with FINAL -&gt; a <a class="reference internal" href="equate.base.html#equate.base.Matching" title="equate.base.Matching"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matching</span></code></a> of node pairs.</p>
+<p>Like <a class="reference internal" href="#equate.matching.quadratic.isorank" title="equate.matching.quadratic.isorank"><code class="xref py py-func docutils literal notranslate"><span class="pre">isorank()</span></code></a>, with node attributes (<code class="docutils literal notranslate"><span class="pre">label=</span></code> or <code class="docutils literal notranslate"><span class="pre">attribute_similarity=</span></code>)
+gating the propagation; <code class="docutils literal notranslate"><span class="pre">**config</span></code> goes to <a class="reference internal" href="#equate.matching.quadratic.final_scores" title="equate.matching.quadratic.final_scores"><code class="xref py py-func docutils literal notranslate"><span class="pre">final_scores()</span></code></a>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G1</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'a'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'b'</span><span class="p">],</span> <span class="s1">'b'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'c'</span><span class="p">],</span> <span class="s1">'c'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'b'</span><span class="p">]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G2</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">2</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="mi">3</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kinds</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'a'</span><span class="p">:</span> <span class="s1">'x'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">:</span> <span class="s1">'y'</span><span class="p">,</span> <span class="s1">'c'</span><span class="p">:</span> <span class="s1">'z'</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s1">'z'</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s1">'y'</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="s1">'x'</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">dict</span><span class="p">(</span><span class="n">final</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">kinds</span><span class="o">.</span><span class="n">get</span><span class="p">)</span><span class="o">.</span><span class="n">labeled_pairs</span><span class="p">())</span>
+<span class="go">{'a': 3, 'b': 2, 'c': 1}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.matching.quadratic.final_scores">
+<span class="sig-prename descclassname"><span class="pre">equate.matching.quadratic.</span></span><span class="sig-name descname"><span class="pre">final_scores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">G2</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_affinity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_similarity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-09</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/matching/quadratic.html#final_scores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.matching.quadratic.final_scores" title="Link to this definition">¶</a></dt>
+<dd><p>The FINAL node-pair score matrix (Zhang &amp; Tong, KDD 2016; the FINAL-N variant).</p>
+<p>IsoRank’s “two nodes match if their neighbors match”, with every step of the walk on
+the product graph filtered by <strong>node-attribute agreement</strong> <code class="docutils literal notranslate"><span class="pre">N</span></code> (from <code class="docutils literal notranslate"><span class="pre">label=</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">attribute_similarity</span></code>) and symmetrically degree-normalized:
+<code class="docutils literal notranslate"><span class="pre">X</span> <span class="pre">&lt;-</span> <span class="pre">alpha</span> <span class="pre">*</span> <span class="pre">N</span> <span class="pre">*</span> <span class="pre">D^-1/2</span> <span class="pre">(A1</span> <span class="pre">(N</span> <span class="pre">*</span> <span class="pre">D^-1/2</span> <span class="pre">*</span> <span class="pre">X)</span> <span class="pre">A2^T)</span> <span class="pre">+</span> <span class="pre">(1</span> <span class="pre">-</span> <span class="pre">alpha)</span> <span class="pre">*</span> <span class="pre">H</span></code>, <code class="docutils literal notranslate"><span class="pre">H</span></code> the
+normalized prior (<code class="docutils literal notranslate"><span class="pre">node_affinity</span></code>, seeds pinned as in IsoRank). Without attributes
+(<code class="docutils literal notranslate"><span class="pre">N</span></code> all ones) it reduces to IsoRank-style propagation. Returned as a
+<code class="docutils literal notranslate"><span class="pre">ScoreMatrix</span></code> (<code class="docutils literal notranslate"><span class="pre">sense='maximize'</span></code>).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.matching.quadratic.gw">
+<span class="sig-prename descclassname"><span class="pre">equate.matching.quadratic.</span></span><span class="sig-name descname"><span class="pre">gw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">G2</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_affinity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extract</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'optimal'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">gw_params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/matching/quadratic.html#gw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.matching.quadratic.gw" title="Link to this definition">¶</a></dt>
+<dd><p>Align two graphs by Gromov-Wasserstein optimal transport — <code class="docutils literal notranslate"><span class="pre">equate[ot]</span></code> (POT).</p>
+<p>GW finds the coupling of the two node sets that best preserves <em>distances</em>: nodes
+far apart in <code class="docutils literal notranslate"><span class="pre">G1</span></code> should map to nodes far apart in <code class="docutils literal notranslate"><span class="pre">G2</span></code> (shortest-path lengths,
+scaled to <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>). With a <code class="docutils literal notranslate"><span class="pre">node_affinity</span></code> (or <code class="docutils literal notranslate"><span class="pre">seeds</span></code>) it is <em>fused</em> GW: a
+node-feature cost <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">affinity/max</span></code> weighted <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">alpha</span></code> against the structure
+(<code class="docutils literal notranslate"><span class="pre">alpha</span></code>). <code class="docutils literal notranslate"><span class="pre">.plan</span></code> holds the transport plan, the soft correspondence; <code class="docutils literal notranslate"><span class="pre">extract</span></code>
+hardens it. <code class="docutils literal notranslate"><span class="pre">**gw_params</span></code> go to POT (<code class="docutils literal notranslate"><span class="pre">max_iter</span></code>, <code class="docutils literal notranslate"><span class="pre">tol_rel</span></code>, …); options that
+change POT’s return type (<code class="docutils literal notranslate"><span class="pre">log</span></code>) are refused.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -472,14 +532,14 @@ and never changes pygmtools’ global backend.</p>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="equate.matching.assign.html">
+          <a class="prev-page" href="equate.matching.embedding_align.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">equate.matching.assign</div>
+                <div class="title">equate.matching.embedding_align</div>
                 
               </div>
             </a>
@@ -513,6 +573,9 @@ and never changes pygmtools’ global backend.</p>
 <li><a class="reference internal" href="#equate.matching.quadratic.DFLT_EDGE_SIGMA"><code class="docutils literal notranslate"><span class="pre">DFLT_EDGE_SIGMA</span></code></a></li>
 <li><a class="reference internal" href="#equate.matching.quadratic.DFLT_ISORANK_ALPHA"><code class="docutils literal notranslate"><span class="pre">DFLT_ISORANK_ALPHA</span></code></a></li>
 <li><a class="reference internal" href="#equate.matching.quadratic.align"><code class="docutils literal notranslate"><span class="pre">align()</span></code></a></li>
+<li><a class="reference internal" href="#equate.matching.quadratic.final"><code class="docutils literal notranslate"><span class="pre">final()</span></code></a></li>
+<li><a class="reference internal" href="#equate.matching.quadratic.final_scores"><code class="docutils literal notranslate"><span class="pre">final_scores()</span></code></a></li>
+<li><a class="reference internal" href="#equate.matching.quadratic.gw"><code class="docutils literal notranslate"><span class="pre">gw()</span></code></a></li>
 <li><a class="reference internal" href="#equate.matching.quadratic.isorank"><code class="docutils literal notranslate"><span class="pre">isorank()</span></code></a></li>
 <li><a class="reference internal" href="#equate.matching.quadratic.isorank_scores"><code class="docutils literal notranslate"><span class="pre">isorank_scores()</span></code></a></li>
 <li><a class="reference internal" href="#equate.matching.quadratic.quadratic_matchers"><code class="docutils literal notranslate"><span class="pre">quadratic_matchers</span></code></a></li>
@@ -529,7 +592,7 @@ and never changes pygmtools’ global backend.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=b4d262a5"></script>
+</div><script src="../_static/documentation_options.js?v=1d9216c3"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

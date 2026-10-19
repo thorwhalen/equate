@@ -260,6 +260,7 @@
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="_autosummary/equate.matching.html">equate.matching</a><input aria-label="Toggle navigation of equate.matching" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.matching.assign.html">equate.matching.assign</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.matching.embedding_align.html">equate.matching.embedding_align</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.matching.quadratic.html">equate.matching.quadratic</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/equate.matching.soft.html">equate.matching.soft</a></li>
 </ul>
@@ -400,7 +401,7 @@
 <span class="nb">dict</span><span class="p">(</span><span class="n">align</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">)</span><span class="o">.</span><span class="n">labeled_pairs</span><span class="p">())</span>  <span class="c1"># {'a': 'x', 'b': 'y', 'c': 'z'}</span>
 </pre></div>
 </div>
-<p>The default is IsoRank, built in. <code class="docutils literal notranslate"><span class="pre">how='rrwm'</span></code> uses pygmtools (<code class="docutils literal notranslate"><span class="pre">equate[graph-matching]</span></code>). Graphs can be networkx graphs, <code class="docutils literal notranslate"><span class="pre">{node:</span> <span class="pre">neighbours}</span></code> mappings, or adjacency matrices. To match collections <em>of</em> graphs, use <code class="docutils literal notranslate"><span class="pre">featurize='wl'</span></code> (Weisfeiler-Lehman).</p>
+<p>The default is IsoRank, built in. Also built in: <code class="docutils literal notranslate"><span class="pre">how='final'</span></code> (IsoRank gated by node attributes, from <code class="docutils literal notranslate"><span class="pre">label=</span></code>), <code class="docutils literal notranslate"><span class="pre">'regal'</span></code> (REGAL/xNetMF structural embeddings) and <code class="docutils literal notranslate"><span class="pre">'cone'</span></code> (CONE-Align: per-graph embeddings aligned by Procrustes and optimal transport). <code class="docutils literal notranslate"><span class="pre">how='gw'</span></code> is Gromov-Wasserstein optimal transport (<code class="docutils literal notranslate"><span class="pre">equate[ot]</span></code>), and <code class="docutils literal notranslate"><span class="pre">'rrwm'</span></code> uses pygmtools (<code class="docutils literal notranslate"><span class="pre">equate[graph-matching]</span></code>). Graphs can be networkx graphs, <code class="docutils literal notranslate"><span class="pre">{node:</span> <span class="pre">neighbours}</span></code> mappings, or adjacency matrices. To match collections <em>of</em> graphs, use <code class="docutils literal notranslate"><span class="pre">featurize='wl'</span></code> (Weisfeiler-Lehman).</p>
 </section>
 <section id="reviewing-matches-the-http-service-and-the-review-ui">
 <h2>Reviewing matches: the HTTP service and the review UI<a class="headerlink" href="#reviewing-matches-the-http-service-and-the-review-ui" title="Link to this heading">¶</a></h2>
@@ -890,7 +891,7 @@ Let’s try two…</p>
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-19 13:01 UTC from <a href="https://github.com/thorwhalen/equate/commit/f9eb2e1cc9e83648b244b2d53990fa8163b29e82">f9eb2e1</a> (master) · equate 0.0.24 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-19 13:35 UTC from <a href="https://github.com/thorwhalen/equate/commit/ceda0d0693fe071bc499da5913f96edefc6e9944">ceda0d0</a> (master) · equate 0.0.25 · <a href="about-this-build.html">about this build</a></p>
         </article>
       </div>
       <footer>
@@ -964,7 +965,7 @@ Let’s try two…</p>
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=b4d262a5"></script>
+</div><script src="_static/documentation_options.js?v=1d9216c3"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

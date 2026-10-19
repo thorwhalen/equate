@@ -257,6 +257,7 @@
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../../_autosummary/equate.matching.html">equate.matching</a><input aria-label="Toggle navigation of equate.matching" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.matching.assign.html">equate.matching.assign</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.matching.embedding_align.html">equate.matching.embedding_align</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.matching.quadratic.html">equate.matching.quadratic</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.matching.soft.html">equate.matching.soft</a></li>
 </ul>
@@ -348,6 +349,7 @@
     <span class="s2">"subsequence_dtw"</span><span class="p">,</span>
     <span class="s2">"subsequence_dtw_alignment"</span><span class="p">,</span>
     <span class="s2">"soft_dtw"</span><span class="p">,</span>
+    <span class="s2">"soft_dtw_alignment"</span><span class="p">,</span>
     <span class="s2">"needleman_wunsch"</span><span class="p">,</span>
     <span class="s2">"needleman_wunsch_alignment"</span><span class="p">,</span>
     <span class="s2">"smith_waterman"</span><span class="p">,</span>
@@ -574,18 +576,23 @@
 
 <div class="viewcode-block" id="subsequence_dtw_alignment">
 <a class="viewcode-back" href="../../../_autosummary/equate.compare.sequence.html#equate.compare.sequence.subsequence_dtw_alignment">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">subsequence_dtw_alignment</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">series</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">local_cost</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">subsequence_dtw_alignment</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">series</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">local_cost</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">"numpy"</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Best match of ``query`` inside any sub-span of ``series`` -&gt; ``Alignment``.</span>
 
 <span class="sd">    Open-begin, open-end DTW: the query must be consumed whole, the series need not be.</span>
 <span class="sd">    The path's ``j`` range is the matched span. Directional — ``(query, series)`` order</span>
 <span class="sd">    matters. A custom ``local_cost`` must be non-negative (a negative step cost would make</span>
-<span class="sd">    "start later" ill-defined).</span>
+<span class="sd">    "start later" ill-defined). ``backend='dtaidistance'`` (``equate[timeseries]``) runs</span>
+<span class="sd">    ``dtaidistance.subsequence`` (with no step penalty, so it computes the same score and</span>
+<span class="sd">    path) for the default cost.</span>
 
 <span class="sd">    &gt;&gt;&gt; al = subsequence_dtw_alignment([5, 6, 7], [0, 0, 5, 6, 7, 0])</span>
 <span class="sd">    &gt;&gt;&gt; al.score, al.path[0], al.path[-1]</span>
 <span class="sd">    (0.0, (0, 2), (2, 4))</span>
 <span class="sd">    """</span>
+    <span class="n">_check_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">_DTW_BACKENDS</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">"subsequence_dtw"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">"dtaidistance"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_subsequence_dtaidistance</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">series</span><span class="p">,</span> <span class="n">local_cost</span><span class="o">=</span><span class="n">local_cost</span><span class="p">)</span>
     <span class="n">C</span><span class="p">,</span> <span class="n">root</span> <span class="o">=</span> <span class="n">_local_costs</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">series</span><span class="p">,</span> <span class="n">local_cost</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">"subsequence_dtw"</span><span class="p">)</span>
     <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span>
     <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">m</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -604,11 +611,38 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_subsequence_dtaidistance</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">series</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">local_cost</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">local_cost</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"subsequence_dtw: backend='dtaidistance' supports only the default local cost"</span>
+        <span class="p">)</span>
+    <span class="n">require</span><span class="p">(</span><span class="s2">"dtaidistance"</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"timeseries"</span><span class="p">,</span> <span class="n">purpose</span><span class="o">=</span><span class="s2">"fast subsequence DTW"</span><span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">dtaidistance.subsequence.dtw</span><span class="w"> </span><span class="kn">import</span> <span class="n">subsequence_alignment</span>
+
+    <span class="n">X</span> <span class="o">=</span> <span class="n">_as_series</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">"subsequence_dtw"</span><span class="p">)</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">_as_series</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">"subsequence_dtw"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"subsequence_dtw: cannot align an empty sequence"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"subsequence_dtw: backend='dtaidistance' takes univariate series"</span>
+        <span class="p">)</span>
+    <span class="c1"># penalty=0: its default adds 0.1 per non-diagonal step (a different score); and the</span>
+    <span class="c1"># argmin end point, not best_match(), whose default minlength=2 refuses a match that</span>
+    <span class="c1"># spans one series element</span>
+    <span class="n">sa</span> <span class="o">=</span> <span class="n">subsequence_alignment</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">Y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">penalty</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">best</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">get_match</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">sa</span><span class="o">.</span><span class="n">matching_function</span><span class="p">())))</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">j</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">best</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Alignment</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">best</span><span class="o">.</span><span class="n">distance</span><span class="p">),</span> <span class="n">path</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s2">"minimize"</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="subsequence_dtw">
 <a class="viewcode-back" href="../../../_autosummary/equate.compare.sequence.html#equate.compare.sequence.subsequence_dtw">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">subsequence_dtw</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">series</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">local_cost</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">subsequence_dtw</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">series</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">local_cost</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">"numpy"</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Subsequence-DTW distance of ``query`` within ``series`` (directional)."""</span>
-    <span class="k">return</span> <span class="n">subsequence_dtw_alignment</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">series</span><span class="p">,</span> <span class="n">local_cost</span><span class="o">=</span><span class="n">local_cost</span><span class="p">)</span><span class="o">.</span><span class="n">score</span></div>
+    <span class="k">return</span> <span class="n">subsequence_dtw_alignment</span><span class="p">(</span>
+        <span class="n">query</span><span class="p">,</span> <span class="n">series</span><span class="p">,</span> <span class="n">local_cost</span><span class="o">=</span><span class="n">local_cost</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">score</span></div>
 
 
 
@@ -648,6 +682,13 @@
     <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span>
     <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">m</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"soft_dtw: cannot align an empty sequence"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">_soft_dtw_forward</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)[</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">])</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_soft_dtw_forward</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">gamma</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The soft-DTW accumulated-cost matrix ``R`` (``(n+1) x (m+1)``) of step costs ``C``."""</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span>
     <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
     <span class="n">R</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
@@ -659,13 +700,70 @@
                 <span class="k">continue</span>
             <span class="n">softmin</span> <span class="o">=</span> <span class="o">-</span><span class="n">gamma</span> <span class="o">*</span> <span class="p">(</span><span class="n">zmax</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">z</span> <span class="o">-</span> <span class="n">zmax</span><span class="p">))))</span>
             <span class="n">R</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">softmin</span>
-    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">])</span></div>
+    <span class="k">return</span> <span class="n">R</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_soft_dtw_backward</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">gamma</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``E = d soft-DTW / d C``: the expected alignment (Cuturi &amp; Blondel 2017, Alg. 2)."""</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">D</span><span class="p">[</span><span class="mi">1</span> <span class="p">:</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">C</span>
+    <span class="n">Rp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">n</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">2</span><span class="p">),</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+    <span class="n">Rp</span><span class="p">[:</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">R</span>
+    <span class="n">Rp</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">Rp</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>  <span class="c1"># unreachable borders take no mass</span>
+    <span class="n">Rp</span><span class="p">[</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">R</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">]</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">E</span><span class="p">[</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">Rl</span><span class="p">,</span> <span class="n">Dl</span><span class="p">,</span> <span class="n">El</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">Rp</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+        <span class="n">D</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+        <span class="n">E</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+    <span class="p">)</span>  <span class="c1"># scalar math: far faster than numpy</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">weight</span><span class="p">(</span><span class="n">r_next</span><span class="p">,</span> <span class="n">r_here</span><span class="p">,</span> <span class="n">d_next</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">r_next</span> <span class="o">-</span> <span class="n">r_here</span> <span class="o">-</span> <span class="n">d_next</span><span class="p">)</span> <span class="o">/</span> <span class="n">gamma</span>  <span class="c1"># always &lt;= 0: no overflow</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">x</span> <span class="ow">and</span> <span class="n">x</span> <span class="o">!=</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span> <span class="k">else</span> <span class="mf">0.0</span>
+
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">here</span> <span class="o">=</span> <span class="n">Rl</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">El</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">El</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">weight</span><span class="p">(</span><span class="n">Rl</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">],</span> <span class="n">here</span><span class="p">,</span> <span class="n">Dl</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">])</span>
+                <span class="o">+</span> <span class="n">El</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">weight</span><span class="p">(</span><span class="n">Rl</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">here</span><span class="p">,</span> <span class="n">Dl</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+                <span class="o">+</span> <span class="n">El</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">weight</span><span class="p">(</span><span class="n">Rl</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">here</span><span class="p">,</span> <span class="n">Dl</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">El</span><span class="p">)[</span><span class="mi">1</span> <span class="p">:</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="soft_dtw_alignment">
+<a class="viewcode-back" href="../../../_autosummary/equate.compare.sequence.html#equate.compare.sequence.soft_dtw_alignment">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">soft_dtw_alignment</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="n">DFLT_SOFT_DTW_GAMMA</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The soft-DTW **expected alignment** of ``a`` and ``b``: an ``n x m`` soft plan.</span>
+
+<span class="sd">    ``E[i, j]`` is the probability-weighted share of warping paths through ``(i, j)``</span>
+<span class="sd">    under soft-DTW's Gibbs distribution — the gradient of :func:`soft_dtw` with respect to</span>
+<span class="sd">    the step costs (Cuturi &amp; Blondel 2017). It is the element-level soft correspondence</span>
+<span class="sd">    soft-DTW has instead of a single path: ``gamma -&gt; 0`` concentrates it on the DTW path,</span>
+<span class="sd">    larger ``gamma`` spreads it. ``E[0, 0] == E[-1, -1] == 1`` (every path starts and ends</span>
+<span class="sd">    there). Same squared-Euclidean steps as :func:`soft_dtw`.</span>
+
+<span class="sd">    &gt;&gt;&gt; E = soft_dtw_alignment([0, 1, 2], [0, 1, 1, 2], gamma=1e-3)</span>
+<span class="sd">    &gt;&gt;&gt; E.round(2).tolist()</span>
+<span class="sd">    [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Real</span><span class="p">)</span> <span class="ow">or</span> <span class="n">gamma</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"soft_dtw: gamma must be a positive number, got </span><span class="si">{</span><span class="n">gamma</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">C</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_local_costs</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">what</span><span class="o">=</span><span class="s2">"soft_dtw"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"soft_dtw: cannot align an empty sequence"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_soft_dtw_backward</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">_soft_dtw_forward</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">gamma</span><span class="p">),</span> <span class="n">gamma</span><span class="p">)</span></div>
 
 
 
 <span class="n">soft_dtw</span><span class="o">.</span><span class="n">meta</span> <span class="o">=</span> <span class="n">ComparatorMeta</span><span class="p">(</span>
     <span class="n">polarity</span><span class="o">=</span><span class="s2">"distance"</span><span class="p">,</span> <span class="n">bounded</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">is_metric</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">is_symmetric</span><span class="o">=</span><span class="kc">True</span>
 <span class="p">)</span>
+<span class="n">soft_dtw</span><span class="o">.</span><span class="n">plan</span> <span class="o">=</span> <span class="n">soft_dtw_alignment</span>
 
 
 <span class="c1"># --- symbolic alignment: Needleman-Wunsch / Smith-Waterman --------------------------</span>
@@ -854,7 +952,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=b4d262a5"></script>
+</div><script src="../../../_static/documentation_options.js?v=1d9216c3"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>

@@ -257,6 +257,7 @@
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../../_autosummary/equate.matching.html">equate.matching</a><input aria-label="Toggle navigation of equate.matching" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.matching.assign.html">equate.matching.assign</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.matching.embedding_align.html">equate.matching.embedding_align</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.matching.quadratic.html">equate.matching.quadratic</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.matching.soft.html">equate.matching.soft</a></li>
 </ul>
@@ -314,8 +315,18 @@
 <span class="sd">- ``'isorank'`` (core) — IsoRank (Singh, Xu &amp; Berger 2008): "two nodes match if their</span>
 <span class="sd">  neighbors match", the stationary point of a random walk on the product graph, blended</span>
 <span class="sd">  with an optional prior ``node_affinity``.</span>
+<span class="sd">- ``'final'`` (core) — FINAL (Zhang &amp; Tong 2016): IsoRank's propagation gated by node</span>
+<span class="sd">  attribute agreement (``label=`` / ``attribute_similarity=``).</span>
+<span class="sd">- ``'regal'``, ``'cone'`` (core, :mod:`equate.matching.embedding_align`) — embedding</span>
+<span class="sd">  aligners: REGAL/xNetMF (joint structural embeddings) and CONE-Align (per-graph NetMF</span>
+<span class="sd">  embeddings aligned by Procrustes + optimal transport).</span>
+<span class="sd">- ``'gw'`` (``equate[ot]``) — Gromov-Wasserstein optimal transport on shortest-path</span>
+<span class="sd">  distances (fused with ``node_affinity`` when given); ``.plan`` is the transport plan.</span>
 <span class="sd">- ``'rrwm'`` (``equate[graph-matching]``) — pygmtools' reweighted random walk solver on</span>
 <span class="sd">  the full quadratic affinity (edge-weight agreement + ``node_affinity``).</span>
+
+<span class="sd">PLANETALIGN is not wrapped: it has no PyPI distribution, and the in-house aligners above</span>
+<span class="sd">cover its core methods (a git-sourced backend can register here later as another entry).</span>
 
 <span class="sd">Use :func:`align` (also ``equate.align``), or pick a strategy from the</span>
 <span class="sd">:data:`quadratic_matchers` registry. ``seeds`` are known node correspondences</span>
@@ -340,6 +351,9 @@
     <span class="s2">"isorank"</span><span class="p">,</span>
     <span class="s2">"isorank_scores"</span><span class="p">,</span>
     <span class="s2">"rrwm"</span><span class="p">,</span>
+    <span class="s2">"final"</span><span class="p">,</span>
+    <span class="s2">"final_scores"</span><span class="p">,</span>
+    <span class="s2">"gw"</span><span class="p">,</span>
     <span class="s2">"DFLT_ISORANK_ALPHA"</span><span class="p">,</span>
     <span class="s2">"DFLT_MAX_ITER"</span><span class="p">,</span>
     <span class="s2">"DFLT_TOL"</span><span class="p">,</span>
@@ -352,6 +366,8 @@
 <span class="n">DFLT_TOL</span> <span class="o">=</span> <span class="mf">1e-9</span>
 <span class="c1">#: bandwidth of the Gaussian edge-weight agreement used by ``'rrwm'``.</span>
 <span class="n">DFLT_EDGE_SIGMA</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="c1">#: fused GW: weight of the structure term vs the node-feature cost (1 = structure only).</span>
+<span class="n">DFLT_FGW_ALPHA</span> <span class="o">=</span> <span class="mf">0.5</span>
 
 <span class="c1">#: the quadratic-matcher strategy registry (name -&gt; lazy factory)</span>
 <span class="n">quadratic_matchers</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s2">"quadratic matcher"</span><span class="p">)</span>
@@ -382,6 +398,21 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">E</span><span class="p">))</span> <span class="ow">or</span> <span class="p">(</span><span class="n">E</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"node_affinity must be finite and non-negative"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">E</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_pinned_prior</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">node_affinity</span><span class="p">,</span> <span class="n">seeds</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The prior, seeds pinned (a seed's row and column keep only the seed, at the</span>
+<span class="sd">    prior's top value), normalized to sum 1."""</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="n">_prior</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">node_affinity</span><span class="p">)</span>
+    <span class="n">top</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="ow">or</span> <span class="mf">1.0</span>  <span class="c1"># a seed is as strong as the strongest prior, any scale</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">_seed_indices</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">seeds</span><span class="p">):</span>
+        <span class="n">E</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">E</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">E</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">top</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">total</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"node_affinity is all zero: there is no prior to propagate"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">E</span> <span class="o">/</span> <span class="n">total</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_seed_indices</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">seeds</span><span class="p">):</span>
@@ -472,18 +503,7 @@
             <span class="n">row_labels</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">g1</span><span class="o">.</span><span class="n">nodes</span><span class="p">),</span>
             <span class="n">col_labels</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">g2</span><span class="o">.</span><span class="n">nodes</span><span class="p">),</span>
         <span class="p">)</span>
-    <span class="n">E</span> <span class="o">=</span> <span class="n">_prior</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">node_affinity</span><span class="p">)</span>
-    <span class="n">top</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="nb">float</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="ow">or</span> <span class="mf">1.0</span>
-    <span class="p">)</span>  <span class="c1"># a seed is as strong as the strongest prior, at any scale</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">_seed_indices</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">seeds</span><span class="p">):</span>
-        <span class="n">E</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">0.0</span>
-        <span class="n">E</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
-        <span class="n">E</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">top</span>
-    <span class="n">total</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">total</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"node_affinity is all zero: there is no prior to propagate"</span><span class="p">)</span>
-    <span class="n">E</span> <span class="o">=</span> <span class="n">E</span> <span class="o">/</span> <span class="n">total</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="n">_pinned_prior</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">node_affinity</span><span class="p">,</span> <span class="n">seeds</span><span class="p">)</span>
     <span class="n">W1</span><span class="p">,</span> <span class="n">W2</span> <span class="o">=</span> <span class="n">_walk_matrix</span><span class="p">(</span><span class="n">dense_adjacency</span><span class="p">(</span><span class="n">g1</span><span class="p">)),</span> <span class="n">_walk_matrix</span><span class="p">(</span><span class="n">dense_adjacency</span><span class="p">(</span><span class="n">g2</span><span class="p">))</span>
     <span class="n">R</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iter</span><span class="p">):</span>
@@ -527,6 +547,190 @@
     <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span> <span class="o">=</span> <span class="n">as_graph</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">),</span> <span class="n">as_graph</span><span class="p">(</span><span class="n">G2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
     <span class="n">S</span> <span class="o">=</span> <span class="n">isorank_scores</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">node_affinity</span><span class="o">=</span><span class="n">node_affinity</span><span class="p">,</span> <span class="n">seeds</span><span class="o">=</span><span class="n">seeds</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">)</span><span class="o">.</span><span class="n">data</span>
     <span class="k">return</span> <span class="n">_extract</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">_seed_indices</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">seeds</span><span class="p">),</span> <span class="n">extract</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># --- FINAL (core): IsoRank with node-attribute agreement ------------------------------</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_attribute_agreement</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">attribute_similarity</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``N``: how far node ``u``'s attributes agree with node ``v``'s, in ``[0, 1]``.</span>
+
+<span class="sd">    ``None`` compares the graphs' node labels (``label=``): 1 when equal, 0 otherwise —</span>
+<span class="sd">    all ones when neither graph carries labels. A callable ``(u, v) -&gt; [0, 1]`` or an</span>
+<span class="sd">    ``(n1, n2)`` array is used as given.</span>
+<span class="sd">    """</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">g1</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">g2</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">attribute_similarity</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">codes</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># labels -&gt; integer codes: a tuple label stays one label</span>
+        <span class="n">l1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">codes</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">codes</span><span class="p">))</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">g1</span><span class="o">.</span><span class="n">labels</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">l2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">codes</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">codes</span><span class="p">))</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">g2</span><span class="o">.</span><span class="n">labels</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">l1</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">==</span> <span class="n">l2</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">attribute_similarity</span><span class="p">):</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[[</span><span class="nb">float</span><span class="p">(</span><span class="n">attribute_similarity</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">g2</span><span class="o">.</span><span class="n">nodes</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">g1</span><span class="o">.</span><span class="n">nodes</span><span class="p">],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">attribute_similarity</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">N</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">shape</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"attribute_similarity must have shape </span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">N</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">N</span><span class="p">))</span> <span class="ow">or</span> <span class="p">(</span><span class="n">N</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">or</span> <span class="p">(</span><span class="n">N</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"attribute_similarity must be in [0, 1]"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">N</span>
+
+
+<div class="viewcode-block" id="final_scores">
+<a class="viewcode-back" href="../../../_autosummary/equate.matching.quadratic.html#equate.matching.final_scores">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">final_scores</span><span class="p">(</span>
+    <span class="n">G1</span><span class="p">,</span>
+    <span class="n">G2</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">node_affinity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">seeds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">attribute_similarity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="n">DFLT_ISORANK_ALPHA</span><span class="p">,</span>
+    <span class="n">max_iter</span><span class="o">=</span><span class="n">DFLT_MAX_ITER</span><span class="p">,</span>
+    <span class="n">tol</span><span class="o">=</span><span class="n">DFLT_TOL</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The FINAL node-pair score matrix (Zhang &amp; Tong, KDD 2016; the FINAL-N variant).</span>
+
+<span class="sd">    IsoRank's "two nodes match if their neighbors match", with every step of the walk on</span>
+<span class="sd">    the product graph filtered by **node-attribute agreement** ``N`` (from ``label=``, or</span>
+<span class="sd">    ``attribute_similarity``) and symmetrically degree-normalized:</span>
+<span class="sd">    ``X &lt;- alpha * N * D^-1/2 (A1 (N * D^-1/2 * X) A2^T) + (1 - alpha) * H``, ``H`` the</span>
+<span class="sd">    normalized prior (``node_affinity``, seeds pinned as in IsoRank). Without attributes</span>
+<span class="sd">    (``N`` all ones) it reduces to IsoRank-style propagation. Returned as a</span>
+<span class="sd">    ``ScoreMatrix`` (``sense='maximize'``).</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">alpha</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"alpha must be in [0, 1), got </span><span class="si">{</span><span class="n">alpha</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span> <span class="o">=</span> <span class="n">as_graph</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">),</span> <span class="n">as_graph</span><span class="p">(</span><span class="n">G2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">row_labels</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">g1</span><span class="o">.</span><span class="n">nodes</span><span class="p">),</span> <span class="n">col_labels</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">g2</span><span class="o">.</span><span class="n">nodes</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">g1</span><span class="o">.</span><span class="n">n</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">g2</span><span class="o">.</span><span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ScoreMatrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">g1</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">g2</span><span class="o">.</span><span class="n">n</span><span class="p">)),</span> <span class="n">sense</span><span class="o">=</span><span class="s2">"maximize"</span><span class="p">,</span> <span class="o">**</span><span class="n">labels</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">_pinned_prior</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">node_affinity</span><span class="p">,</span> <span class="n">seeds</span><span class="p">)</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">_attribute_agreement</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">attribute_similarity</span><span class="p">)</span>
+    <span class="n">A1</span><span class="p">,</span> <span class="n">A2</span> <span class="o">=</span> <span class="n">dense_adjacency</span><span class="p">(</span><span class="n">g1</span><span class="p">),</span> <span class="n">dense_adjacency</span><span class="p">(</span><span class="n">g2</span><span class="p">)</span>
+    <span class="n">degree</span> <span class="o">=</span> <span class="n">N</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">A1</span> <span class="o">@</span> <span class="n">N</span> <span class="o">@</span> <span class="n">A2</span><span class="o">.</span><span class="n">T</span>
+    <span class="p">)</span>  <span class="c1"># each node pair's degree in the filtered product graph</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">degree</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="n">degree</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">degree</span><span class="p">))</span>
+    <span class="n">inv_root</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">root</span><span class="p">),</span> <span class="n">where</span><span class="o">=</span><span class="n">root</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iter</span><span class="p">):</span>
+        <span class="n">nxt</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">N</span> <span class="o">*</span> <span class="n">inv_root</span> <span class="o">*</span> <span class="p">(</span><span class="n">A1</span> <span class="o">@</span> <span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">inv_root</span> <span class="o">*</span> <span class="n">X</span><span class="p">)</span> <span class="o">@</span> <span class="n">A2</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">H</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">nxt</span> <span class="o">-</span> <span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">nxt</span>
+        <span class="k">if</span> <span class="n">delta</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"FINAL did not converge in max_iter=</span><span class="si">{</span><span class="n">max_iter</span><span class="si">}</span><span class="s2"> iterations "</span>
+            <span class="sa">f</span><span class="s2">"(last change </span><span class="si">{</span><span class="n">delta</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2"> &gt; tol=</span><span class="si">{</span><span class="n">tol</span><span class="si">:</span><span class="s2">.0e</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
+            <span class="ne">RuntimeWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">ScoreMatrix</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s2">"maximize"</span><span class="p">,</span> <span class="o">**</span><span class="n">labels</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="final">
+<a class="viewcode-back" href="../../../_autosummary/equate.matching.quadratic.html#equate.matching.final">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">final</span><span class="p">(</span>
+    <span class="n">G1</span><span class="p">,</span>
+    <span class="n">G2</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">node_affinity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">seeds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">extract</span><span class="o">=</span><span class="s2">"optimal"</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">config</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Align two graphs with FINAL -&gt; a :class:`~equate.base.Matching` of node pairs.</span>
+
+<span class="sd">    Like :func:`isorank`, with node attributes (``label=`` or ``attribute_similarity=``)</span>
+<span class="sd">    gating the propagation; ``**config`` goes to :func:`final_scores`.</span>
+
+<span class="sd">    &gt;&gt;&gt; G1 = {'a': ['b'], 'b': ['a', 'c'], 'c': ['b']}</span>
+<span class="sd">    &gt;&gt;&gt; G2 = {1: [2], 2: [1, 3], 3: [2]}</span>
+<span class="sd">    &gt;&gt;&gt; kinds = {'a': 'x', 'b': 'y', 'c': 'z', 1: 'z', 2: 'y', 3: 'x'}</span>
+<span class="sd">    &gt;&gt;&gt; dict(final(G1, G2, label=kinds.get).labeled_pairs())</span>
+<span class="sd">    {'a': 3, 'b': 2, 'c': 1}</span>
+<span class="sd">    """</span>
+    <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span> <span class="o">=</span> <span class="n">as_graph</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">),</span> <span class="n">as_graph</span><span class="p">(</span><span class="n">G2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">final_scores</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">node_affinity</span><span class="o">=</span><span class="n">node_affinity</span><span class="p">,</span> <span class="n">seeds</span><span class="o">=</span><span class="n">seeds</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">)</span><span class="o">.</span><span class="n">data</span>
+    <span class="k">return</span> <span class="n">_extract</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">_seed_indices</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">seeds</span><span class="p">),</span> <span class="n">extract</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># --- Gromov-Wasserstein via POT (optional) --------------------------------------------</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_hop_distances</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""All-pairs shortest-path lengths (edge weights as lengths), unreachable = max + 1,</span>
+<span class="sd">    scaled to ``[0, 1]`` — the intra-graph structure Gromov-Wasserstein compares."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse.csgraph</span><span class="w"> </span><span class="kn">import</span> <span class="n">shortest_path</span>
+
+    <span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">adjacency</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">adjacency</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>  <span class="c1"># distances on the undirected skeleton</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">shortest_path</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">finite</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">D</span><span class="p">)]</span>
+    <span class="n">top</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">finite</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="k">if</span> <span class="n">finite</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="n">D</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">D</span><span class="p">)]</span> <span class="o">=</span> <span class="n">top</span> <span class="o">+</span> <span class="mf">1.0</span>
+    <span class="k">return</span> <span class="n">D</span> <span class="o">/</span> <span class="n">D</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="k">if</span> <span class="n">D</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">D</span>
+
+
+<div class="viewcode-block" id="gw">
+<a class="viewcode-back" href="../../../_autosummary/equate.matching.quadratic.html#equate.matching.gw">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">gw</span><span class="p">(</span>
+    <span class="n">G1</span><span class="p">,</span>
+    <span class="n">G2</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">node_affinity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">seeds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">extract</span><span class="o">=</span><span class="s2">"optimal"</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="n">DFLT_FGW_ALPHA</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">gw_params</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Align two graphs by Gromov-Wasserstein optimal transport — ``equate[ot]`` (POT).</span>
+
+<span class="sd">    GW finds the coupling of the two node sets that best preserves *distances*: nodes</span>
+<span class="sd">    far apart in ``G1`` should map to nodes far apart in ``G2`` (shortest-path lengths,</span>
+<span class="sd">    scaled to ``[0, 1]``). With a ``node_affinity`` (or ``seeds``) it is *fused* GW: a</span>
+<span class="sd">    node-feature cost ``1 - affinity/max`` weighted ``1 - alpha`` against the structure</span>
+<span class="sd">    (``alpha``). ``.plan`` holds the transport plan, the soft correspondence; ``extract``</span>
+<span class="sd">    hardens it. ``**gw_params`` go to POT (``max_iter``, ``tol_rel``, ...); options that</span>
+<span class="sd">    change POT's return type (``log``) are refused.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">gw_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"log"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"gw: log=True changes POT's return value; it is not supported"</span><span class="p">)</span>
+    <span class="n">gw_params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"log"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">ot</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="s2">"ot"</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"ot"</span><span class="p">,</span> <span class="n">purpose</span><span class="o">=</span><span class="s2">"Gromov-Wasserstein graph alignment"</span><span class="p">)</span>
+    <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span> <span class="o">=</span> <span class="n">as_graph</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">),</span> <span class="n">as_graph</span><span class="p">(</span><span class="n">G2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
+    <span class="n">seed_pairs</span> <span class="o">=</span> <span class="n">_seed_indices</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">seeds</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">g1</span><span class="o">.</span><span class="n">n</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">g2</span><span class="o">.</span><span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_extract</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">g1</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">g2</span><span class="o">.</span><span class="n">n</span><span class="p">)),</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">seed_pairs</span><span class="p">,</span> <span class="n">extract</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">alpha</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"alpha must be in [0, 1], got </span><span class="si">{</span><span class="n">alpha</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">C1</span><span class="p">,</span> <span class="n">C2</span> <span class="o">=</span> <span class="n">_hop_distances</span><span class="p">(</span><span class="n">g1</span><span class="p">),</span> <span class="n">_hop_distances</span><span class="p">(</span><span class="n">g2</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">g1</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">g1</span><span class="o">.</span><span class="n">n</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">g2</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">g2</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">node_affinity</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">seed_pairs</span><span class="p">:</span>
+        <span class="n">plan</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">gromov_wasserstein</span><span class="p">(</span><span class="n">C1</span><span class="p">,</span> <span class="n">C2</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="s2">"square_loss"</span><span class="p">,</span> <span class="o">**</span><span class="n">gw_params</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">E</span> <span class="o">=</span> <span class="n">_prior</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">node_affinity</span><span class="p">)</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">E</span> <span class="o">/</span> <span class="n">E</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="k">if</span> <span class="n">E</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">seed_pairs</span><span class="p">:</span>  <span class="c1"># a seed: free there, maximal cost to pair elsewhere</span>
+            <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="n">M</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">plan</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">fused_gromov_wasserstein</span><span class="p">(</span>
+            <span class="n">M</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">C2</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="s2">"square_loss"</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="o">**</span><span class="n">gw_params</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_extract</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">seed_pairs</span><span class="p">,</span> <span class="n">extract</span><span class="p">)</span></div>
 
 
 
@@ -615,7 +819,24 @@
 
 
 <span class="n">quadratic_matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">"isorank"</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">isorank</span><span class="p">,</span> <span class="s2">"isorank"</span><span class="p">))</span>
+<span class="n">quadratic_matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">"final"</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">final</span><span class="p">,</span> <span class="s2">"final"</span><span class="p">))</span>
 <span class="n">quadratic_matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">"rrwm"</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">rrwm</span><span class="p">,</span> <span class="s2">"rrwm"</span><span class="p">))</span>
+<span class="n">quadratic_matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">"gw"</span><span class="p">,</span> <span class="n">_const</span><span class="p">(</span><span class="n">gw</span><span class="p">,</span> <span class="s2">"gw"</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_embedding_factory</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">factory</span><span class="p">(</span><span class="o">**</span><span class="n">config</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">equate.matching</span><span class="w"> </span><span class="kn">import</span> <span class="n">embedding_align</span>
+
+        <span class="n">fn</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">embedding_align</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">)</span> <span class="k">if</span> <span class="n">config</span> <span class="k">else</span> <span class="n">fn</span>
+
+    <span class="n">factory</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_factory"</span>
+    <span class="k">return</span> <span class="n">factory</span>
+
+
+<span class="n">quadratic_matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">"regal"</span><span class="p">,</span> <span class="n">_embedding_factory</span><span class="p">(</span><span class="s2">"regal"</span><span class="p">))</span>
+<span class="n">quadratic_matchers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">"cone"</span><span class="p">,</span> <span class="n">_embedding_factory</span><span class="p">(</span><span class="s2">"cone"</span><span class="p">))</span>
 
 
 <div class="viewcode-block" id="resolve_quadratic_matcher">
@@ -682,7 +903,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=b4d262a5"></script>
+</div><script src="../../../_static/documentation_options.js?v=1d9216c3"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>

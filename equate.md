@@ -1,4 +1,4 @@
-> built 2026-10-19 13:01 UTC from f9eb2e1 (master) · equate 0.0.24. Details: build_info.json
+> built 2026-10-19 13:35 UTC from ceda0d0 (master) · equate 0.0.25. Details: build_info.json
 
 # index.html.md
 
@@ -105,7 +105,7 @@ G2 = {"x": ["y"], "y": ["x", "z"], "z": ["y"]}
 dict(align(G1, G2).labeled_pairs())  # {'a': 'x', 'b': 'y', 'c': 'z'}
 ```
 
-The default is IsoRank, built in. `how='rrwm'` uses pygmtools (`equate[graph-matching]`). Graphs can be networkx graphs, `{node: neighbours}` mappings, or adjacency matrices. To match collections *of* graphs, use `featurize='wl'` (Weisfeiler-Lehman).
+The default is IsoRank, built in. Also built in: `how='final'` (IsoRank gated by node attributes, from `label=`), `'regal'` (REGAL/xNetMF structural embeddings) and `'cone'` (CONE-Align: per-graph embeddings aligned by Procrustes and optimal transport). `how='gw'` is Gromov-Wasserstein optimal transport (`equate[ot]`), and `'rrwm'` uses pygmtools (`equate[graph-matching]`). Graphs can be networkx graphs, `{node: neighbours}` mappings, or adjacency matrices. To match collections *of* graphs, use `featurize='wl'` (Weisfeiler-Lehman).
 
 ## Reviewing matches: the HTTP service and the review UI
 
@@ -1692,9 +1692,10 @@ Each comparator returns a `float`; its `*_alignment` twin (also reachable as
 | [`dtw`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.dtw)(a, b, \*[, window, local_cost, backend])       | DTW distance (lower = more alike) — the score of [`dtw_alignment()`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.dtw_alignment).                |
 |-----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
 | [`dtw_alignment`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.dtw_alignment)(a, b, \*[, window, local_cost, ...]) | Banded exact DTW between `a` and `b` -> [`Alignment`](_autosummary/equate.base.html.md#equate.base.Alignment).         |
-| [`subsequence_dtw`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.subsequence_dtw)(query, series, \*[, local_cost])   | Subsequence-DTW distance of `query` within `series` (directional).                                                                |
+| [`subsequence_dtw`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.subsequence_dtw)(query, series, \*[, ...])          | Subsequence-DTW distance of `query` within `series` (directional).                                                                |
 | [`subsequence_dtw_alignment`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.subsequence_dtw_alignment)(query, series, \*)       | Best match of `query` inside any sub-span of `series` -> `Alignment`.                                                             |
 | [`soft_dtw`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.soft_dtw)(a, b, \*[, gamma, backend])               | Soft-DTW discrepancy (Cuturi & Blondel 2017) with temperature `gamma`.                                                            |
+| [`soft_dtw_alignment`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.soft_dtw_alignment)(a, b, \*[, gamma])              | The soft-DTW **expected alignment** of `a` and `b`: an `n x m` soft plan.                                                         |
 | [`needleman_wunsch`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.needleman_wunsch)(a, b, \*\*kwargs)                 | Global alignment score (higher = more alike) — see [`needleman_wunsch_alignment()`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.needleman_wunsch_alignment). |
 | [`needleman_wunsch_alignment`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.needleman_wunsch_alignment)(a, b, \*[, ...])        | Global (Needleman-Wunsch) alignment of two symbolic sequences -> `Alignment`.                                                     |
 | [`smith_waterman`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.smith_waterman)(a, b, \*\*kwargs)                   | Local alignment score (higher = more alike) — see [`smith_waterman_alignment()`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.smith_waterman_alignment).    |
@@ -1795,18 +1796,37 @@ recovers (squared) DTW. `backend='tslearn'` (`equate[timeseries]`) uses
 True
 ```
 
-### equate.compare.sequence.subsequence_dtw(query, series, , local_cost=None)
+### equate.compare.sequence.soft_dtw_alignment(a, b, , gamma=1.0)
+
+The soft-DTW **expected alignment** of `a` and `b`: an `n x m` soft plan.
+
+`E[i, j]` is the probability-weighted share of warping paths through `(i, j)`
+under soft-DTW’s Gibbs distribution — the gradient of [`soft_dtw()`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.soft_dtw) with respect to
+the step costs (Cuturi & Blondel 2017). It is the element-level soft correspondence
+soft-DTW has instead of a single path: `gamma -> 0` concentrates it on the DTW path,
+larger `gamma` spreads it. `E[0, 0] == E[-1, -1] == 1` (every path starts and ends
+there). Same squared-Euclidean steps as [`soft_dtw()`](_autosummary/equate.compare.sequence.html.md#equate.compare.sequence.soft_dtw).
+
+```pycon
+>>> E = soft_dtw_alignment([0, 1, 2], [0, 1, 1, 2], gamma=1e-3)
+>>> E.round(2).tolist()
+[[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
+```
+
+### equate.compare.sequence.subsequence_dtw(query, series, , local_cost=None, backend='numpy')
 
 Subsequence-DTW distance of `query` within `series` (directional).
 
-### equate.compare.sequence.subsequence_dtw_alignment(query, series, , local_cost=None)
+### equate.compare.sequence.subsequence_dtw_alignment(query, series, , local_cost=None, backend='numpy')
 
 Best match of `query` inside any sub-span of `series` -> `Alignment`.
 
 Open-begin, open-end DTW: the query must be consumed whole, the series need not be.
 The path’s `j` range is the matched span. Directional — `(query, series)` order
 matters. A custom `local_cost` must be non-negative (a negative step cost would make
-“start later” ill-defined).
+“start later” ill-defined). `backend='dtaidistance'` (`equate[timeseries]`) runs
+`dtaidistance.subsequence` (with no step penalty, so it computes the same score and
+path) for the default cost.
 
 ```pycon
 >>> al = subsequence_dtw_alignment([5, 6, 7], [0, 0, 5, 6, 7, 0])
@@ -4689,6 +4709,94 @@ See [`equate.util.stable_marriage_matching()`](_autosummary/equate.util.html.md#
 [`candidate_mask()`](_autosummary/equate.base.html.md#equate.base.ScoreMatrix.candidate_mask).
 
 
+# _autosummary/equate.matching.embedding_align.html.md
+
+# equate.matching.embedding_align
+
+Embedding-based network alignment: embed both graphs’ nodes, then match the embeddings.
+
+Two quadratic matchers (doc `12` §4) that scale past IsoRank-style propagation by
+reasoning over node *embeddings* instead of the `n1 x n2` product graph, both in-house
+numpy (no extra):
+
+- `'regal'` — REGAL / xNetMF (Heimann et al., CIKM 2018): each node is described by the
+  degree distribution of its k-hop neighbourhood (plus its label), the two graphs are
+  embedded *jointly* through a Nyström factorization of that similarity, and nodes are
+  matched by embedding similarity. Needs no correspondence to start from.
+- `'cone'` — CONE-Align (Chen et al., CIKM 2020): each graph gets its own proximity
+  embedding (NetMF), and the two embedding spaces are aligned by alternating an
+  orthogonal Procrustes rotation with an entropic optimal-transport correspondence,
+  starting from REGAL’s structural similarity (or `node_affinity`).
+
+Both return a [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching) through the same flat `extract` step as
+IsoRank, with the node-pair scores in `.plan`. Use them as `equate.align(G1, G2,
+how='regal')` or `how='cone'`.
+
+### Functions
+
+| [`regal`](_autosummary/equate.matching.embedding_align.html.md#equate.matching.embedding_align.regal)(G1, G2, \*[, node_affinity, seeds, ...])   | Align two graphs with REGAL (xNetMF embeddings) -> a [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching).   |
+|---------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| [`regal_scores`](_autosummary/equate.matching.embedding_align.html.md#equate.matching.embedding_align.regal_scores)(G1, G2, \*[, node_affinity, ...])   | The REGAL node-pair score matrix `exp(-||y_u - y_v||)` (`n1 x n2`).                                                                    |
+| [`cone`](_autosummary/equate.matching.embedding_align.html.md#equate.matching.embedding_align.cone)(G1, G2, \*[, node_affinity, seeds, ...])    | Align two graphs with CONE-Align -> a [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching) of node pairs.    |
+| [`cone_scores`](_autosummary/equate.matching.embedding_align.html.md#equate.matching.embedding_align.cone_scores)(G1, G2, \*[, node_affinity, ...])    | The CONE-Align correspondence plan (`n1 x n2`, sums to 1).                                                                             |
+| [`sinkhorn_plan`](_autosummary/equate.matching.embedding_align.html.md#equate.matching.embedding_align.sinkhorn_plan)(cost, \*[, reg, max_iter, tol])    | Entropic optimal-transport plan between uniform marginals (log-domain Sinkhorn).                                                       |
+
+### equate.matching.embedding_align.cone(G1, G2, , node_affinity=None, seeds=None, extract='optimal', label=None, \*\*config)
+
+Align two graphs with CONE-Align -> a [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching) of node pairs.
+
+`**config` goes to [`cone_scores()`](_autosummary/equate.matching.embedding_align.html.md#equate.matching.embedding_align.cone_scores); `.plan` holds the final transport plan.
+
+### equate.matching.embedding_align.cone_scores(G1, G2, , node_affinity=None, seeds=None, dim=64, window=10, n_iter=30, reg=0.05, label=None)
+
+The CONE-Align correspondence plan (`n1 x n2`, sums to 1).
+
+Embeds each graph on its own (NetMF, `dim` dimensions, `window` hops), then
+alternates `n_iter` times: a rotation `Q` aligning the spaces (orthogonal
+Procrustes on the current correspondence) and a correspondence `P` (entropic OT,
+`reg`, on the distances after rotation). It starts from `node_affinity` when given,
+else from REGAL’s structural similarity. Seed rows/columns are pinned in every step.
+The plan’s marginals are accurate to about `1e-4` (relative): enough to rank and
+extract; [`sinkhorn_plan()`](_autosummary/equate.matching.embedding_align.html.md#equate.matching.embedding_align.sinkhorn_plan) is the place for a precise plan.
+
+### equate.matching.embedding_align.regal(G1, G2, , node_affinity=None, seeds=None, extract='optimal', label=None, \*\*config)
+
+Align two graphs with REGAL (xNetMF embeddings) -> a [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching).
+
+`**config` goes to [`regal_scores()`](_autosummary/equate.matching.embedding_align.html.md#equate.matching.embedding_align.regal_scores); `seeds` are kept as given.
+
+```pycon
+>>> G1 = {'a': ['b'], 'b': ['a', 'c', 'd'], 'c': ['b'], 'd': ['b', 'e'], 'e': ['d']}
+>>> G2 = {1: [2, 4], 2: [1], 3: [4], 4: [1, 3, 5], 5: [4]}  # the same graph, renamed
+>>> dict(regal(G1, G2).labeled_pairs())['b']
+4
+```
+
+### equate.matching.embedding_align.regal_scores(G1, G2, , node_affinity=None, max_hops=2, discount=0.1, gamma_struct=1.0, gamma_attr=1.0, dim=None, seed=0, label=None)
+
+The REGAL node-pair score matrix `exp(-||y_u - y_v||)` (`n1 x n2`).
+
+Embeddings come from xNetMF over both graphs at once (so they share a space with no
+correspondence given): structural identity = degree histograms of the `max_hops`
+neighbourhood, plus a label mismatch term (`label=`). `dim` sets the number of
+landmarks (default `10 log2 n`); `seed` picks them reproducibly. A
+`node_affinity` prior multiplies the scores.
+
+### equate.matching.embedding_align.sinkhorn_plan(cost, , reg=0.05, max_iter=1000, tol=1e-06)
+
+Entropic optimal-transport plan between uniform marginals (log-domain Sinkhorn).
+
+Pure numpy (no POT): the plan `P` minimizes `<P, cost> - reg * H(P)` with rows
+summing to `1/n` and columns to `1/m`. `reg` is relative to the cost’s spread,
+so the same value works at any cost scale. Warns if `max_iter` runs out first.
+
+```pycon
+>>> P = sinkhorn_plan(np.array([[0.0, 1.0], [1.0, 0.0]]), reg=0.01)
+>>> P.round(3).tolist()
+[[0.5, 0.0], [0.0, 0.5]]
+```
+
+
 # _autosummary/equate.matching.html.md
 
 # equate.matching
@@ -4838,10 +4946,11 @@ See [`equate.util.stable_marriage_matching()`](_autosummary/equate.util.html.md#
 
 ### Modules
 
-| [`assign`](_autosummary/equate.matching.assign.html.md#module-equate.matching.assign)       | Assignment matchers (stage ③): turn a score matrix into matched `(i, j)` pairs.                                                                                                                                                                  |
-|---------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`quadratic`](_autosummary/equate.matching.quadratic.html.md#module-equate.matching.quadratic) | Quadratic matchers: align the *nodes* of two graphs (network alignment).                                                                                                                                                                         |
-| [`soft`](_autosummary/equate.matching.soft.html.md#module-equate.matching.soft)           | Soft / optimal-transport matching (stage ③): a fractional transport plan rather than a hard assignment — the home for graded, partial, unequal-mass and cross-modal matching (and, later, soft-DTW / Gromov-Wasserstein — decision register D8). |
+| [`assign`](_autosummary/equate.matching.assign.html.md#module-equate.matching.assign)                   | Assignment matchers (stage ③): turn a score matrix into matched `(i, j)` pairs.                                                                                               |
+|---------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`embedding_align`](_autosummary/equate.matching.embedding_align.html.md#module-equate.matching.embedding_align) | Embedding-based network alignment: embed both graphs' nodes, then match the embeddings.                                                                                       |
+| [`quadratic`](_autosummary/equate.matching.quadratic.html.md#module-equate.matching.quadratic)             | Quadratic matchers: align the *nodes* of two graphs (network alignment).                                                                                                      |
+| [`soft`](_autosummary/equate.matching.soft.html.md#module-equate.matching.soft)                       | Soft / optimal-transport matching (stage ③): a fractional transport plan rather than a hard assignment — the home for graded, partial, unequal-mass and cross-modal matching. |
 
 
 # _autosummary/equate.matching.quadratic.html.md
@@ -4860,8 +4969,18 @@ optimal LAP) for the final 1:1 correspondence.
 - `'isorank'` (core) — IsoRank (Singh, Xu & Berger 2008): “two nodes match if their
   neighbors match”, the stationary point of a random walk on the product graph, blended
   with an optional prior `node_affinity`.
+- `'final'` (core) — FINAL (Zhang & Tong 2016): IsoRank’s propagation gated by node
+  attribute agreement (`label=` / `attribute_similarity=`).
+- `'regal'`, `'cone'` (core, [`equate.matching.embedding_align`](_autosummary/equate.matching.embedding_align.html.md#module-equate.matching.embedding_align)) — embedding
+  aligners: REGAL/xNetMF (joint structural embeddings) and CONE-Align (per-graph NetMF
+  embeddings aligned by Procrustes + optimal transport).
+- `'gw'` (`equate[ot]`) — Gromov-Wasserstein optimal transport on shortest-path
+  distances (fused with `node_affinity` when given); `.plan` is the transport plan.
 - `'rrwm'` (`equate[graph-matching]`) — pygmtools’ reweighted random walk solver on
   the full quadratic affinity (edge-weight agreement + `node_affinity`).
+
+PLANETALIGN is not wrapped: it has no PyPI distribution, and the in-house aligners above
+cover its core methods (a git-sourced backend can register here later as another entry).
 
 Use [`align()`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.align) (also `equate.align`), or pick a strategy from the
 [`quadratic_matchers`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.quadratic_matchers) registry. `seeds` are known node correspondences
@@ -4882,6 +5001,9 @@ Use [`align()`](_autosummary/equate.matching.quadratic.html.md#equate.matching.q
 | [`isorank`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.isorank)(G1, G2, \*[, node_affinity, seeds, ...]) | Align two graphs with IsoRank -> a [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching) of node pairs. |
 | [`isorank_scores`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.isorank_scores)(G1, G2, \*[, node_affinity, ...]) | The IsoRank node-pair score matrix `R` (`n1 x n2`, sums to 1).                                                                   |
 | [`rrwm`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.rrwm)(G1, G2, \*[, node_affinity, seeds, ...])    | Align two graphs with pygmtools' RRWM — requires `equate[graph-matching]`.                                                       |
+| [`final`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.final)(G1, G2, \*[, node_affinity, seeds, ...])   | Align two graphs with FINAL -> a [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching) of node pairs.   |
+| [`final_scores`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.final_scores)(G1, G2, \*[, node_affinity, ...])   | The FINAL node-pair score matrix (Zhang & Tong, KDD 2016; the FINAL-N variant).                                                  |
+| [`gw`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.gw)(G1, G2, \*[, node_affinity, seeds, ...])      | Align two graphs by Gromov-Wasserstein optimal transport — `equate[ot]` (POT).                                                   |
 
 ### equate.matching.quadratic.DFLT_EDGE_SIGMA *= 1.0*
 
@@ -4909,6 +5031,45 @@ neighbors}` mappings or adjacency matrices.
 >>> dict(align(star, other).labeled_pairs())['hub']
 3
 ```
+
+### equate.matching.quadratic.final(G1, G2, , node_affinity=None, seeds=None, extract='optimal', label=None, \*\*config)
+
+Align two graphs with FINAL -> a [`Matching`](_autosummary/equate.base.html.md#equate.base.Matching) of node pairs.
+
+Like [`isorank()`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.isorank), with node attributes (`label=` or `attribute_similarity=`)
+gating the propagation; `**config` goes to [`final_scores()`](_autosummary/equate.matching.quadratic.html.md#equate.matching.quadratic.final_scores).
+
+```pycon
+>>> G1 = {'a': ['b'], 'b': ['a', 'c'], 'c': ['b']}
+>>> G2 = {1: [2], 2: [1, 3], 3: [2]}
+>>> kinds = {'a': 'x', 'b': 'y', 'c': 'z', 1: 'z', 2: 'y', 3: 'x'}
+>>> dict(final(G1, G2, label=kinds.get).labeled_pairs())
+{'a': 3, 'b': 2, 'c': 1}
+```
+
+### equate.matching.quadratic.final_scores(G1, G2, , node_affinity=None, seeds=None, attribute_similarity=None, alpha=0.8, max_iter=100, tol=1e-09, label=None)
+
+The FINAL node-pair score matrix (Zhang & Tong, KDD 2016; the FINAL-N variant).
+
+IsoRank’s “two nodes match if their neighbors match”, with every step of the walk on
+the product graph filtered by **node-attribute agreement** `N` (from `label=`, or
+`attribute_similarity`) and symmetrically degree-normalized:
+`X <- alpha * N * D^-1/2 (A1 (N * D^-1/2 * X) A2^T) + (1 - alpha) * H`, `H` the
+normalized prior (`node_affinity`, seeds pinned as in IsoRank). Without attributes
+(`N` all ones) it reduces to IsoRank-style propagation. Returned as a
+`ScoreMatrix` (`sense='maximize'`).
+
+### equate.matching.quadratic.gw(G1, G2, , node_affinity=None, seeds=None, extract='optimal', label=None, alpha=0.5, \*\*gw_params)
+
+Align two graphs by Gromov-Wasserstein optimal transport — `equate[ot]` (POT).
+
+GW finds the coupling of the two node sets that best preserves *distances*: nodes
+far apart in `G1` should map to nodes far apart in `G2` (shortest-path lengths,
+scaled to `[0, 1]`). With a `node_affinity` (or `seeds`) it is *fused* GW: a
+node-feature cost `1 - affinity/max` weighted `1 - alpha` against the structure
+(`alpha`). `.plan` holds the transport plan, the soft correspondence; `extract`
+hardens it. `**gw_params` go to POT (`max_iter`, `tol_rel`, …); options that
+change POT’s return type (`log`) are refused.
 
 ### equate.matching.quadratic.isorank(G1, G2, , node_affinity=None, seeds=None, extract='optimal', label=None, \*\*config)
 
@@ -4969,8 +5130,11 @@ and never changes pygmtools’ global backend.
 # equate.matching.soft
 
 Soft / optimal-transport matching (stage ③): a fractional transport plan rather than a
-hard assignment — the home for graded, partial, unequal-mass and cross-modal matching
-(and, later, soft-DTW / Gromov-Wasserstein — decision register D8). Requires `equate[ot]`.
+hard assignment — the home for graded, partial, unequal-mass and cross-modal matching.
+Requires `equate[ot]`. Its structured siblings return plans too (decision register D8):
+Gromov-Wasserstein couples two *graphs* (`equate.align(G1, G2, how='gw')`, `.plan`),
+and soft-DTW couples the *elements* of two sequences
+(`equate.compare.sequence.soft_dtw_alignment`).
 
 ### Functions
 
@@ -5653,18 +5817,18 @@ See: [https://en.wikipedia.org/wiki/Stable_marriage_problem](https://en.wikipedi
 
 # About this build
 
-This documentation was built on **2026-10-19 13:01 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/f9eb2e1cc9e83648b244b2d53990fa8163b29e82"><code>f9eb2e1</code></a> on branch <code>master</code>, for **equate 0.0.24** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-19 13:35 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/ceda0d0693fe071bc499da5913f96edefc6e9944"><code>ceda0d0</code></a> on branch <code>master</code>, for **equate 0.0.25** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.24) is behind the latest release on PyPI (0.0.25): `pip install equate` gives newer code than these docs describe.
+- The documented version (0.0.25) is behind the latest release on PyPI (0.0.26): `pip install equate` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/equate/commit/f9eb2e1cc9e83648b244b2d53990fa8163b29e82"><code>f9eb2e1cc9e83648b244b2d53990fa8163b29e82</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/equate/commit/ceda0d0693fe071bc499da5913f96edefc6e9944"><code>ceda0d0693fe071bc499da5913f96edefc6e9944</code></a> |
 | Branch              | <code>master</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -5675,9 +5839,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/equate</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/39256388694">39256388694</a>    |
+| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/39261139579">39261139579</a>    |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>f9eb2e1cc9e83648b244b2d53990fa8163b29e82</code> (in the history of the built commit) |
+| Event commit | <code>ceda0d0693fe071bc499da5913f96edefc6e9944</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -5702,13 +5866,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/equate/0.0.25/">0.0.25</a>, newer than the documented version (0.0.24).
+Latest release: <a href="https://pypi.org/project/equate/0.0.26/">0.0.26</a>, newer than the documented version (0.0.25).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/equate && cd equate
-git checkout f9eb2e1cc9e83648b244b2d53990fa8163b29e82
+git checkout ceda0d0693fe071bc499da5913f96edefc6e9944
 pip install "epythet==0.2.18"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

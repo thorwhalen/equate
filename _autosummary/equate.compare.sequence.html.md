@@ -45,9 +45,10 @@ Each comparator returns a `float`; its `*_alignment` twin (also reachable as
 | [`dtw`](#equate.compare.sequence.dtw)(a, b, \*[, window, local_cost, backend])       | DTW distance (lower = more alike) — the score of [`dtw_alignment()`](#equate.compare.sequence.dtw_alignment).                |
 |-----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
 | [`dtw_alignment`](#equate.compare.sequence.dtw_alignment)(a, b, \*[, window, local_cost, ...]) | Banded exact DTW between `a` and `b` -> [`Alignment`](equate.base.html.md#equate.base.Alignment).         |
-| [`subsequence_dtw`](#equate.compare.sequence.subsequence_dtw)(query, series, \*[, local_cost])   | Subsequence-DTW distance of `query` within `series` (directional).                                                                |
+| [`subsequence_dtw`](#equate.compare.sequence.subsequence_dtw)(query, series, \*[, ...])          | Subsequence-DTW distance of `query` within `series` (directional).                                                                |
 | [`subsequence_dtw_alignment`](#equate.compare.sequence.subsequence_dtw_alignment)(query, series, \*)       | Best match of `query` inside any sub-span of `series` -> `Alignment`.                                                             |
 | [`soft_dtw`](#equate.compare.sequence.soft_dtw)(a, b, \*[, gamma, backend])               | Soft-DTW discrepancy (Cuturi & Blondel 2017) with temperature `gamma`.                                                            |
+| [`soft_dtw_alignment`](#equate.compare.sequence.soft_dtw_alignment)(a, b, \*[, gamma])              | The soft-DTW **expected alignment** of `a` and `b`: an `n x m` soft plan.                                                         |
 | [`needleman_wunsch`](#equate.compare.sequence.needleman_wunsch)(a, b, \*\*kwargs)                 | Global alignment score (higher = more alike) — see [`needleman_wunsch_alignment()`](#equate.compare.sequence.needleman_wunsch_alignment). |
 | [`needleman_wunsch_alignment`](#equate.compare.sequence.needleman_wunsch_alignment)(a, b, \*[, ...])        | Global (Needleman-Wunsch) alignment of two symbolic sequences -> `Alignment`.                                                     |
 | [`smith_waterman`](#equate.compare.sequence.smith_waterman)(a, b, \*\*kwargs)                   | Local alignment score (higher = more alike) — see [`smith_waterman_alignment()`](#equate.compare.sequence.smith_waterman_alignment).    |
@@ -148,18 +149,37 @@ recovers (squared) DTW. `backend='tslearn'` (`equate[timeseries]`) uses
 True
 ```
 
-### equate.compare.sequence.subsequence_dtw(query, series, , local_cost=None)
+### equate.compare.sequence.soft_dtw_alignment(a, b, , gamma=1.0)
+
+The soft-DTW **expected alignment** of `a` and `b`: an `n x m` soft plan.
+
+`E[i, j]` is the probability-weighted share of warping paths through `(i, j)`
+under soft-DTW’s Gibbs distribution — the gradient of [`soft_dtw()`](#equate.compare.sequence.soft_dtw) with respect to
+the step costs (Cuturi & Blondel 2017). It is the element-level soft correspondence
+soft-DTW has instead of a single path: `gamma -> 0` concentrates it on the DTW path,
+larger `gamma` spreads it. `E[0, 0] == E[-1, -1] == 1` (every path starts and ends
+there). Same squared-Euclidean steps as [`soft_dtw()`](#equate.compare.sequence.soft_dtw).
+
+```pycon
+>>> E = soft_dtw_alignment([0, 1, 2], [0, 1, 1, 2], gamma=1e-3)
+>>> E.round(2).tolist()
+[[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
+```
+
+### equate.compare.sequence.subsequence_dtw(query, series, , local_cost=None, backend='numpy')
 
 Subsequence-DTW distance of `query` within `series` (directional).
 
-### equate.compare.sequence.subsequence_dtw_alignment(query, series, , local_cost=None)
+### equate.compare.sequence.subsequence_dtw_alignment(query, series, , local_cost=None, backend='numpy')
 
 Best match of `query` inside any sub-span of `series` -> `Alignment`.
 
 Open-begin, open-end DTW: the query must be consumed whole, the series need not be.
 The path’s `j` range is the matched span. Directional — `(query, series)` order
 matters. A custom `local_cost` must be non-negative (a negative step cost would make
-“start later” ill-defined).
+“start later” ill-defined). `backend='dtaidistance'` (`equate[timeseries]`) runs
+`dtaidistance.subsequence` (with no step penalty, so it computes the same score and
+path) for the default cost.
 
 ```pycon
 >>> al = subsequence_dtw_alignment([5, 6, 7], [0, 0, 5, 6, 7, 0])

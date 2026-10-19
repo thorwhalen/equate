@@ -257,6 +257,7 @@
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../../_autosummary/equate.matching.html">equate.matching</a><input aria-label="Toggle navigation of equate.matching" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.matching.assign.html">equate.matching.assign</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.matching.embedding_align.html">equate.matching.embedding_align</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.matching.quadratic.html">equate.matching.quadratic</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.matching.soft.html">equate.matching.soft</a></li>
 </ul>
@@ -303,8 +304,11 @@
         <article role="main" id="furo-main-content">
           <h1>Source code for equate.matching.soft</h1><div class="highlight"><pre>
 <span></span><span class="sd">"""Soft / optimal-transport matching (stage ③): a fractional transport plan rather than a</span>
-<span class="sd">hard assignment — the home for graded, partial, unequal-mass and cross-modal matching</span>
-<span class="sd">(and, later, soft-DTW / Gromov-Wasserstein — decision register D8). Requires ``equate[ot]``.</span>
+<span class="sd">hard assignment — the home for graded, partial, unequal-mass and cross-modal matching.</span>
+<span class="sd">Requires ``equate[ot]``. Its structured siblings return plans too (decision register D8):</span>
+<span class="sd">Gromov-Wasserstein couples two *graphs* (``equate.align(G1, G2, how='gw')``, ``.plan``),</span>
+<span class="sd">and soft-DTW couples the *elements* of two sequences</span>
+<span class="sd">(``equate.compare.sequence.soft_dtw_alignment``).</span>
 <span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -375,7 +379,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=b4d262a5"></script>
+</div><script src="../../../_static/documentation_options.js?v=1d9216c3"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>
