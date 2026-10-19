@@ -159,6 +159,8 @@ equate/
 ├── matching/       # registry; assign(optimal LAP + sparse routing, greedy, stable);  ← #7
 │                   #   quadratic.py = 2nd arity: align(G1,G2) — isorank (core), rrwm [graph-matching];
 │                   #     a quadratic matcher always extracts via a FLAT matcher (extract=)  ← #10
+│                   #     + final (attributed IsoRank), gw [ot]; embedding_align.py = regal,
+│                   #     cone (in-house numpy, Sinkhorn included)  ← #18
 │                   #   max_weight/kuhn_munkres [graph]; soft_match/harden [ot]; kbest(Murty) later
 ├── cluster/        # connected-components default; correlation; canonicalize (golden record);  ← #8
 │                   #   classify.py = Fellegi-Sunter 3-way decide + unsupervised EM (D5)

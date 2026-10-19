@@ -99,7 +99,7 @@ G2 = {"x": ["y"], "y": ["x", "z"], "z": ["y"]}
 dict(align(G1, G2).labeled_pairs())  # {'a': 'x', 'b': 'y', 'c': 'z'}
 ```
 
-The default is IsoRank, built in. `how='rrwm'` uses pygmtools (`equate[graph-matching]`). Graphs can be networkx graphs, `{node: neighbours}` mappings, or adjacency matrices. To match collections *of* graphs, use `featurize='wl'` (Weisfeiler-Lehman).
+The default is IsoRank, built in. Also built in: `how='final'` (IsoRank gated by node attributes, from `label=`), `'regal'` (REGAL/xNetMF structural embeddings) and `'cone'` (CONE-Align: per-graph embeddings aligned by Procrustes and optimal transport). `how='gw'` is Gromov-Wasserstein optimal transport (`equate[ot]`), and `'rrwm'` uses pygmtools (`equate[graph-matching]`). Graphs can be networkx graphs, `{node: neighbours}` mappings, or adjacency matrices. To match collections *of* graphs, use `featurize='wl'` (Weisfeiler-Lehman).
 
 ## Reviewing matches: the HTTP service and the review UI
 

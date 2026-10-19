@@ -397,3 +397,56 @@ def test_missing_backend_names_the_extra(monkeypatch, call, extra):
         monkeypatch.setitem(sys.modules, name, None)  # import -> ModuleNotFoundError
     with pytest.raises(MissingDependencyError, match=rf"equate\[{extra}\]"):
         call()
+
+
+# --- soft-DTW plan and the dtaidistance subsequence backend (equate#18) --------------
+
+import numpy as _np  # noqa: E402
+
+
+def test_soft_dtw_alignment_is_the_gradient_and_tends_to_the_dtw_path():
+    from equate.compare.sequence import (
+        _soft_dtw_backward,
+        _soft_dtw_forward,
+        dtw_alignment,
+        soft_dtw_alignment,
+    )
+
+    rng = _np.random.default_rng(0)
+    C, g = rng.random((4, 5)), 0.5
+    R = _soft_dtw_forward(C, g)
+    E = _soft_dtw_backward(C, R, g)
+    h, numeric = 1e-6, _np.zeros_like(C)
+    for i in range(4):
+        for j in range(5):
+            Cp = C.copy()
+            Cp[i, j] += h
+            numeric[i, j] = (_soft_dtw_forward(Cp, g)[4, 5] - R[4, 5]) / h
+    assert _np.abs(numeric - E).max() < 1e-4
+    a, b = rng.normal(size=6), rng.normal(size=8)
+    hard = _np.zeros((6, 8))
+    for i, j in dtw_alignment(a, b, window=None).path:
+        hard[i, j] = 1
+    assert _np.allclose(soft_dtw_alignment(a, b, gamma=1e-4).round(3), hard)
+    soft = soft_dtw_alignment(a, b, gamma=1.0)
+    assert soft[0, 0] == pytest.approx(1) and soft[-1, -1] == pytest.approx(1)
+    assert ((soft > 0.01) & (hard == 0)).any()  # mass spreads off the hard path
+    with pytest.raises(ValueError):
+        soft_dtw_alignment(a, b, gamma=0)
+
+
+def test_subsequence_dtw_dtaidistance_backend_agrees():
+    pytest.importorskip("dtaidistance")
+    from equate.compare.sequence import subsequence_dtw, subsequence_dtw_alignment
+
+    rng = _np.random.default_rng(3)
+    for _ in range(50):
+        q = rng.normal(size=rng.integers(1, 6))
+        s = rng.normal(size=rng.integers(len(q), 20))
+        ours = subsequence_dtw_alignment(q, s)
+        theirs = subsequence_dtw_alignment(q, s, backend="dtaidistance")
+        assert theirs.score == pytest.approx(ours.score)
+        assert theirs.path[-1] == ours.path[-1]
+    assert subsequence_dtw([5, 6, 7], [0, 0, 5, 6, 7, 0], backend="dtaidistance") == 0.0
+    with pytest.raises(ValueError, match="local cost"):
+        subsequence_dtw([1], [1, 2], backend="dtaidistance", local_cost=lambda x, y: 0)

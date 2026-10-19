@@ -381,3 +381,82 @@ def test_rrwm_seed_removes_contradicting_assignments_from_K(monkeypatch):
     # (i, j) -> j * n1 + i: seed (0, 1) is index 2; (0, 0)=0 and (1, 1)=3 contradict it
     assert not K[[0, 3]].any() and not K[:, [0, 3]].any()
     assert K[2, 2] == K.max()
+
+
+# --- structured matchers, round 2 (equate#18) ----------------------------------------
+
+import numpy as _np  # noqa: E402
+
+
+def _permuted_er(n=40, p=0.15, seed=2):
+    rng = _np.random.default_rng(seed)
+    A = (rng.random((n, n)) < p).astype(float)
+    A = _np.triu(A, 1)
+    A = A + A.T
+    perm = rng.permutation(n)
+    B = A[_np.ix_(perm, perm)]  # node k of B is node perm[k] of A
+    truth = {int(perm[k]): k for k in range(n)}
+    return A, B, truth
+
+
+def _accuracy(matching, truth):
+    pairs = dict(matching.labeled_pairs())
+    return _np.mean([pairs.get(u) == v for u, v in truth.items()])
+
+
+@pytest.mark.parametrize("how", ["final", "regal", "cone"])
+def test_round2_aligners_recover_a_relabeled_graph(how):
+    from equate import align
+
+    A, B, truth = _permuted_er()
+    assert _accuracy(align(A, B, how=how), truth) >= 0.95
+
+
+def test_gw_recovers_a_relabeled_graph():
+    pytest.importorskip("ot")
+    from equate import align
+
+    A, B, truth = _permuted_er()
+    m = align(A, B, how="gw")
+    assert _accuracy(m, truth) >= 0.95
+    assert m.plan.shape == (40, 40) and abs(m.plan.sum() - 1) < 1e-6  # a transport plan
+
+
+@pytest.mark.parametrize("how", ["final", "regal", "cone", "gw"])
+def test_round2_aligners_keep_seeds(how):
+    if how == "gw":
+        pytest.importorskip("ot")
+    from equate import align
+
+    A, B, truth = _permuted_er(n=20)
+    wrong = (0, (truth[0] + 1) % 20)  # a deliberately wrong anchor is kept as given
+    m = align(A, B, how=how, seeds=[wrong])
+    assert dict(m.pairs)[0] == wrong[1]
+
+
+def test_final_uses_node_attributes():
+    from equate.matching.quadratic import final
+
+    path1 = {"a": ["b"], "b": ["a", "c"], "c": ["b"]}
+    path2 = {1: ["2"], "2": [1, 3], 3: ["2"]}
+    kinds = {"a": "x", "b": "y", "c": "z", 1: "z", "2": "y", 3: "x"}
+    # a path is symmetric: only the labels say which end is which
+    assert dict(final(path1, path2, label=kinds.get).labeled_pairs()) == {"a": 3, "b": "2", "c": 1}
+    with pytest.raises(ValueError):
+        final(path1, path2, attribute_similarity=_np.full((3, 3), 2.0))
+
+
+def test_sinkhorn_plan_has_uniform_marginals():
+    from equate.matching.embedding_align import sinkhorn_plan
+
+    rng = _np.random.default_rng(0)
+    P = sinkhorn_plan(rng.random((5, 7)), reg=0.1)
+    assert _np.allclose(P.sum(axis=1), 1 / 5) and _np.allclose(P.sum(axis=0), 1 / 7)
+    with pytest.raises(ValueError):
+        sinkhorn_plan(rng.random((2, 2)), reg=0)
+
+
+def test_new_quadratic_matchers_are_registered():
+    from equate.matching import quadratic_matchers
+
+    assert {"isorank", "final", "rrwm", "gw", "regal", "cone"} <= set(quadratic_matchers.names())

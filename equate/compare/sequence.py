@@ -44,6 +44,7 @@ __all__ = [
     "subsequence_dtw",
     "subsequence_dtw_alignment",
     "soft_dtw",
+    "soft_dtw_alignment",
     "needleman_wunsch",
     "needleman_wunsch_alignment",
     "smith_waterman",
@@ -262,18 +263,23 @@ dtw.align = dtw_alignment
 # --- subsequence DTW ----------------------------------------------------------------
 
 
-def subsequence_dtw_alignment(query, series, *, local_cost=None):
+def subsequence_dtw_alignment(query, series, *, local_cost=None, backend="numpy"):
     """Best match of ``query`` inside any sub-span of ``series`` -> ``Alignment``.
 
     Open-begin, open-end DTW: the query must be consumed whole, the series need not be.
     The path's ``j`` range is the matched span. Directional — ``(query, series)`` order
     matters. A custom ``local_cost`` must be non-negative (a negative step cost would make
-    "start later" ill-defined).
+    "start later" ill-defined). ``backend='dtaidistance'`` (``equate[timeseries]``) runs
+    ``dtaidistance.subsequence`` (with no step penalty, so it computes the same score and
+    path) for the default cost.
 
     >>> al = subsequence_dtw_alignment([5, 6, 7], [0, 0, 5, 6, 7, 0])
     >>> al.score, al.path[0], al.path[-1]
     (0.0, (0, 2), (2, 4))
     """
+    _check_backend(backend, _DTW_BACKENDS, what="subsequence_dtw")
+    if backend == "dtaidistance":
+        return _subsequence_dtaidistance(query, series, local_cost=local_cost)
     C, root = _local_costs(query, series, local_cost, what="subsequence_dtw")
     n, m = C.shape
     if n == 0 or m == 0:
@@ -291,9 +297,36 @@ def subsequence_dtw_alignment(query, series, *, local_cost=None):
     return Alignment(math.sqrt(total) if root else total, path, sense="minimize")
 
 
-def subsequence_dtw(query, series, *, local_cost=None):
+def _subsequence_dtaidistance(query, series, *, local_cost):
+    if local_cost is not None:
+        raise ValueError(
+            "subsequence_dtw: backend='dtaidistance' supports only the default local cost"
+        )
+    require("dtaidistance", extra="timeseries", purpose="fast subsequence DTW")
+    from dtaidistance.subsequence.dtw import subsequence_alignment
+
+    X = _as_series(query, what="subsequence_dtw")
+    Y = _as_series(series, what="subsequence_dtw")
+    if len(X) == 0 or len(Y) == 0:
+        raise ValueError("subsequence_dtw: cannot align an empty sequence")
+    if X.shape[1] != 1:
+        raise ValueError(
+            "subsequence_dtw: backend='dtaidistance' takes univariate series"
+        )
+    # penalty=0: its default adds 0.1 per non-diagonal step (a different score); and the
+    # argmin end point, not best_match(), whose default minlength=2 refuses a match that
+    # spans one series element
+    sa = subsequence_alignment(X[:, 0], Y[:, 0], penalty=0.0)
+    best = sa.get_match(int(np.argmin(sa.matching_function())))
+    path = tuple((int(i), int(j)) for i, j in best.path)
+    return Alignment(float(best.distance), path, sense="minimize")
+
+
+def subsequence_dtw(query, series, *, local_cost=None, backend="numpy"):
     """Subsequence-DTW distance of ``query`` within ``series`` (directional)."""
-    return subsequence_dtw_alignment(query, series, local_cost=local_cost).score
+    return subsequence_dtw_alignment(
+        query, series, local_cost=local_cost, backend=backend
+    ).score
 
 
 subsequence_dtw.meta = _SUBSEQ_META
@@ -330,6 +363,12 @@ def soft_dtw(a, b, *, gamma=DFLT_SOFT_DTW_GAMMA, backend="numpy"):
     n, m = C.shape
     if n == 0 or m == 0:
         raise ValueError("soft_dtw: cannot align an empty sequence")
+    return float(_soft_dtw_forward(C, gamma)[n, m])
+
+
+def _soft_dtw_forward(C, gamma):
+    """The soft-DTW accumulated-cost matrix ``R`` (``(n+1) x (m+1)``) of step costs ``C``."""
+    n, m = C.shape
     R = np.full((n + 1, m + 1), np.inf)
     R[0, 0] = 0.0
     for i in range(n):
@@ -341,12 +380,60 @@ def soft_dtw(a, b, *, gamma=DFLT_SOFT_DTW_GAMMA, backend="numpy"):
                 continue
             softmin = -gamma * (zmax + np.log(np.sum(np.exp(z - zmax))))
             R[i + 1, j + 1] = C[i, j] + softmin
-    return float(R[n, m])
+    return R
+
+
+def _soft_dtw_backward(C, R, gamma):
+    """``E = d soft-DTW / d C``: the expected alignment (Cuturi & Blondel 2017, Alg. 2)."""
+    n, m = C.shape
+    D = np.zeros((n + 2, m + 2))
+    D[1 : n + 1, 1 : m + 1] = C
+    Rp = np.full((n + 2, m + 2), -np.inf)
+    Rp[: n + 1, : m + 1] = R
+    Rp[0, 1:] = Rp[1:, 0] = -np.inf  # unreachable borders take no mass
+    Rp[n + 1, m + 1] = R[n, m]
+    E = np.zeros((n + 2, m + 2))
+    E[n + 1, m + 1] = 1.0
+    with np.errstate(over="ignore", invalid="ignore"):
+        for j in range(m, 0, -1):
+            for i in range(n, 0, -1):
+                a = np.exp((Rp[i + 1, j] - Rp[i, j] - D[i + 1, j]) / gamma)
+                b = np.exp((Rp[i, j + 1] - Rp[i, j] - D[i, j + 1]) / gamma)
+                c = np.exp((Rp[i + 1, j + 1] - Rp[i, j] - D[i + 1, j + 1]) / gamma)
+                E[i, j] = (
+                    E[i + 1, j] * np.nan_to_num(a)
+                    + E[i, j + 1] * np.nan_to_num(b)
+                    + E[i + 1, j + 1] * np.nan_to_num(c)
+                )
+    return E[1 : n + 1, 1 : m + 1]
+
+
+def soft_dtw_alignment(a, b, *, gamma=DFLT_SOFT_DTW_GAMMA):
+    """The soft-DTW **expected alignment** of ``a`` and ``b``: an ``n x m`` soft plan.
+
+    ``E[i, j]`` is the probability-weighted share of warping paths through ``(i, j)``
+    under soft-DTW's Gibbs distribution — the gradient of :func:`soft_dtw` with respect to
+    the step costs (Cuturi & Blondel 2017). It is the element-level soft correspondence
+    soft-DTW has instead of a single path: ``gamma -> 0`` concentrates it on the DTW path,
+    larger ``gamma`` spreads it. ``E[0, 0] == E[-1, -1] == 1`` (every path starts and ends
+    there). Same squared-Euclidean steps as :func:`soft_dtw`.
+
+    >>> E = soft_dtw_alignment([0, 1, 2], [0, 1, 1, 2], gamma=1e-3)
+    >>> E.round(2).tolist()
+    [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
+    """
+    if isinstance(gamma, bool) or not isinstance(gamma, numbers.Real) or gamma <= 0:
+        raise ValueError(f"soft_dtw: gamma must be a positive number, got {gamma!r}")
+    C, _ = _local_costs(a, b, None, what="soft_dtw")
+    if C.shape[0] == 0 or C.shape[1] == 0:
+        raise ValueError("soft_dtw: cannot align an empty sequence")
+    return _soft_dtw_backward(C, _soft_dtw_forward(C, gamma), gamma)
 
 
 soft_dtw.meta = ComparatorMeta(
     polarity="distance", bounded=False, is_metric=False, is_symmetric=True
 )
+soft_dtw.plan = soft_dtw_alignment
 
 
 # --- symbolic alignment: Needleman-Wunsch / Smith-Waterman --------------------------
