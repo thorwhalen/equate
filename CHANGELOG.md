@@ -6,6 +6,8 @@ releases CI publishes to PyPI.
 
 ## Unreleased
 
+**The review UI, served and tested** (#22). `mk_app(service, ui_dir="ui/dist")` (or `python -m equate.service serve ui=ui/dist`) serves the built review UI at `/` with the API under `/api`, from one process and one origin, with no dev server. The API alone is unchanged. The wheel does not ship a prebuilt bundle (build it from a checkout). The UI's tests and build now run in hosted CI on every `ui/**` change, through the wads npm workflow (`.github/workflows/ui-ci.yml`, node 20 and 22, publishing off). `npm run ci-local` runs the same checks locally.
+
 **Tables: `equate.completion` as a facade over the stages** (#13; doc 07 §8, doc 10 §8.7).
 
 - `find_join_keys(left, right)` finds the columns to join on, with no header names needed. Each column becomes its normalized value set (the new `featurize='value_set'`). Columns are compared with the new set comparators `'containment'` (directional), `'jaccard'` and `'overlap'`, and the best are kept with the top-k `CandidateStore`. Results are `ColumnMatch(left, right, score, explanation)`.
