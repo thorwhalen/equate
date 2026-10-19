@@ -113,6 +113,7 @@ export const LabelResult = z.object({
   label: Label,
   result: EditResult,
   next: Query.nullable(),
+  applied: z.boolean(), // false when a more authoritative source's decision stands
 });
 
 /** Every boundary schema by its Python type name (checked against `fields.json`). */

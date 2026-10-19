@@ -38,7 +38,7 @@ import threading
 import uuid
 from copy import deepcopy
 from collections import defaultdict
-from functools import wraps
+from functools import partial, wraps
 from collections import OrderedDict
 from collections.abc import Mapping, MutableMapping
 from contextlib import contextmanager
@@ -54,10 +54,13 @@ from equate.facade import score_matrix
 from equate.featurize.records import record_text
 from equate.interactive import CandidateStore, ConstraintSet, reoptimize
 from equate.matching import harden, resolve_matcher, soft_match
+from equate.registry import UnknownStrategyError
 
 __all__ = [
     "MatchService",
     "SessionNotFound",
+    "SessionConflict",
+    "SessionData",
     "Accounting",
     "TierCost",
     "Edit",
@@ -83,6 +86,7 @@ __all__ = [
 DFLT_K = 5  # candidates retained per item (the CandidateStore top-k)
 DFLT_FIELD_COMPARE = "ratio"  # per-field similarity shown in a field diff
 DFLT_MATCH_CACHE_SIZE = 128  # stateless /match results kept (LRU)
+DFLT_DATA_CACHE_SIZE = 16  # sessions whose immutable data is kept in memory (LRU)
 DFLT_CORS_ORIGINS = ("http://localhost:5173", "http://127.0.0.1:5173")  # vite dev
 DFLT_API_PREFIX = "/api"  # where the API lives when the app also serves the UI
 
@@ -91,6 +95,11 @@ EditAction = Literal["confirm", "reject", "reassign", "clear"]
 
 class SessionNotFound(KeyError):
     """No session with that id (an HTTP 404)."""
+
+
+class SessionConflict(RuntimeError):
+    """The session changed in the store since it was read (an HTTP 409): another process
+    saved it first. Re-read the session and retry the edit."""
 
 
 # --- Accounting: per-tier cost / latency (doc 10 §5, doc 06 cascades) ----------------
@@ -286,20 +295,35 @@ class LabelResult:
     label: Label
     result: EditResult
     next: Optional[Query]
+    applied: bool = True  # False when a more authoritative source's decision stands
+
+
+@dataclass
+class SessionData:
+    """The immutable part of a session: both collections and their score matrix.
+
+    Written once, when the session opens; every later save writes only the small
+    :class:`Session` state — not the ``n × m`` scores (equate#23).
+    """
+
+    A: list
+    B: list
+    scores: ScoreMatrix
 
 
 @dataclass
 class Session:
     """Server-side session state. Not a boundary type: :class:`SessionView` is its view.
 
-    Everything is plain data (no open handles), so a session pickles into any ``dol``
-    store passed as ``MatchService(sessions=...)``.
+    The mutable part only — the edit log, labels, assignment and candidates — saved after
+    every change; ``A``, ``B`` and ``scores`` read through the attached
+    :class:`SessionData`. Everything is plain data, so both pickle into any ``dol`` store
+    passed as ``MatchService(sessions=...)``. ``version`` counts saves: a save that finds
+    a newer version in the store raises :class:`SessionConflict` instead of overwriting a
+    change made by another process.
     """
 
     session_id: str
-    A: list
-    B: list
-    scores: ScoreMatrix
     store: CandidateStore
     k: int
     assignment: list  # [(i, j), ...]
@@ -307,6 +331,26 @@ class Session:
     labels: list = field(default_factory=list)  # [Label, ...]
     accounting: Accounting = field(default_factory=Accounting)
     floor: Optional[float] = None  # the score floor applied at open (equate#21)
+    version: int = 0
+
+    def _data(self) -> SessionData:
+        data = self.__dict__.get("_attached")
+        if data is not None:
+            return data
+        legacy = self.__dict__  # pickled before equate#23: the data is inline
+        return SessionData(legacy["A"], legacy["B"], legacy["scores"])
+
+    A = property(lambda self: self._data().A)
+    B = property(lambda self: self._data().B)
+    scores = property(lambda self: self._data().scores)
+
+    def __getstate__(self):
+        # the data is stored once under its own key, never again with each state save
+        return {
+            k: v
+            for k, v in self.__dict__.items()
+            if k not in ("_attached", "_loaded_version")
+        }
 
 
 # --- Helpers -------------------------------------------------------------------------
@@ -422,39 +466,67 @@ class _LRU(OrderedDict):
             self.popitem(last=False)
 
 
-def _effective_constraints(edits):
+def _effective_constraints(edits, precedence=None):
     """Fold an edit log into the :class:`ConstraintSet` it currently means.
 
     The log is append-only (replayable); this resolves it: the latest decision about a
     pair wins, an item has at most one confirmed match, and a candidate is confirmed for at
     most one item (a later confirm/reassign releases the earlier holder).
+
+    ``precedence`` (e.g. ``('human', 'llm')``) ranks edit sources, most authoritative
+    first; a source it does not list ranks last. An edit never overrides a decision made
+    by a *more* authoritative source — an LLM label cannot release a human's confirm —
+    and is simply ignored (it stays in the log). Among equal ranks the latest wins.
     """
+    rank = _ranker(precedence)
     forced = {}  # item -> candidate
     forbidden = set()
+    owner = {}  # (item, candidate) -> rank of the source that made the standing decision
     for e in edits:
         pair = (e.item, e.candidate)
+        r = rank(e)
+        if e.action not in ("confirm", "reassign", "reject", "clear"):
+            raise ValueError(f"unknown edit action {e.action!r}")
         if e.action in ("confirm", "reassign"):
-            for i, j in list(forced.items()):
-                if i == e.item or j == e.candidate:
-                    del forced[i]
+            displaced = [
+                (i, j) for i, j in forced.items() if i == e.item or j == e.candidate
+            ]
+            # what this confirm would undo: other confirms it displaces, a reject of it
+            undone = [b for b in displaced if b != pair]
+            if pair in forbidden:
+                undone.append(pair)
+            if any(owner.get(b, r) < r for b in undone):
+                continue  # outranked
+            for i, j in displaced:
+                del forced[i]
+                owner.pop((i, j), None)
             forced[e.item] = e.candidate
             forbidden.discard(pair)
-        elif e.action == "reject":
+            owner[pair] = r
+        else:  # reject / clear
+            if pair in owner and owner[pair] < r:
+                continue  # outranked
             if forced.get(e.item) == e.candidate:
                 del forced[e.item]
-            forbidden.add(pair)
-        elif e.action == "clear":
-            if forced.get(e.item) == e.candidate:
-                del forced[e.item]
-            forbidden.discard(pair)
-        else:
-            raise ValueError(f"unknown edit action {e.action!r}")
+            if e.action == "reject":
+                forbidden.add(pair)
+                owner[pair] = r
+            else:
+                forbidden.discard(pair)
+                owner.pop(pair, None)
     cs = ConstraintSet()
     for i, j in forced.items():
         cs.confirm(i, j)
     for i, j in sorted(forbidden):
         cs.reject(i, j)
     return cs
+
+
+def _ranker(precedence):
+    if not precedence:
+        return lambda e: 0
+    order = {source: k for k, source in enumerate(precedence)}
+    return lambda e: order.get(getattr(e, "source", "human"), len(order))
 
 
 def _without_rejected(sm, forbidden):
@@ -509,10 +581,10 @@ def _restricted(sm, mask):
     )
 
 
-def _resolve_edits(sm, edits):
+def _resolve_edits(sm, edits, precedence=None):
     """The optimal 1:1 assignment of ``sm`` under an edit log (confirms forced, rejects
     removed). Raises ``ValueError`` if no assignment honours the confirms."""
-    cs = _effective_constraints(edits)
+    cs = _effective_constraints(edits, precedence)
     forced_only = ConstraintSet(forced=list(cs.forced))
     return reoptimize(_without_rejected(sm, cs.forbidden), forced_only, sense=sm.sense)
 
@@ -542,7 +614,10 @@ class MatchService:
       ``None`` to disable);
     - ``mk_id`` — session-id factory (default ``uuid4().hex``);
     - ``field_compare`` — the per-field comparator used in explanations;
-    - ``on_cost`` — ``(tier, seconds, items)`` hook called on every accounted tier.
+    - ``on_cost`` — ``(tier, seconds, items)`` hook called on every accounted tier;
+    - ``precedence`` — edit sources ranked most authoritative first (``('human',
+      'llm')``): a less authoritative edit never overrides a more authoritative one
+      (default ``None``: the latest edit wins, whoever made it).
     """
 
     def __init__(
@@ -553,6 +628,7 @@ class MatchService:
         mk_id: Callable[[], str] = lambda: uuid.uuid4().hex,
         field_compare=DFLT_FIELD_COMPARE,
         on_cost: Optional[Callable] = None,
+        precedence: Optional[tuple] = None,
     ):
         self.sessions = {} if sessions is None else sessions
         self.cache = _LRU() if cache == "default" else cache
@@ -563,6 +639,11 @@ class MatchService:
         self._cache_lock = threading.Lock()
         self.field_compare = field_compare
         self.on_cost = on_cost
+        self.precedence = tuple(precedence) if precedence else None
+        # session data is immutable once written: cache it per process, so a read does not
+        # unpickle the n × m scores again (bounded, least-recently-used)
+        self._data_cache = _LRU(DFLT_DATA_CACHE_SIZE)
+        self._data_lock = threading.Lock()
 
     # -- scoring ------------------------------------------------------------------
 
@@ -682,15 +763,27 @@ class MatchService:
             assignment = reoptimize(sm, sense=sm.sense) if A and B else []
         session = Session(
             session_id=self.mk_id(),
-            A=A,
-            B=B,
-            scores=sm,
             store=store,
             k=k,
             assignment=assignment,
             accounting=acc,
             floor=floor,
         )
+        sid = session.session_id
+        if (
+            not isinstance(sid, str)
+            or sid.endswith(_DATA_SUFFIX)
+            or sid in self.sessions
+        ):
+            raise SessionConflict(
+                f"session id {sid!r} is taken or reserved; mk_id must make unique ids "
+                f"not ending in {_DATA_SUFFIX!r}"
+            )
+        data = SessionData(A, B, sm)
+        self.sessions[_data_key(sid)] = data  # written once
+        with self._data_lock:
+            self._data_cache[_data_key(sid)] = data
+        session.__dict__["_attached"] = data
         self._save(session)
         return self.view(session.session_id)
 
@@ -721,11 +814,13 @@ class MatchService:
         field-diff explanations — everything a review row needs.
         """
         s = self._load(session_id)
-        forced = dict(_effective_constraints(s.edits).forced)
+        cs = self._constraints(s)
+        forced = dict(cs.forced)
         assigned = dict(s.assignment)
+        margins = {i: _margin(s, i, cs) for i in range(len(s.A))}
 
         def order(i):
-            m = _margin(s, i)
+            m = margins[i]
             return (i in forced, m if math.isfinite(m) else math.inf, i)
 
         items = sorted(range(len(s.A)), key=order)
@@ -746,7 +841,7 @@ class MatchService:
                     left=s.A[i],
                     assigned=assigned.get(i),
                     status=status,
-                    margin=_finite_or_none(_margin(s, i)),
+                    margin=_finite_or_none(margins[i]),
                     candidates=self._candidate_views(s, i),
                 )
             )
@@ -796,7 +891,7 @@ class MatchService:
         log = s.edits + new
         acc = Accounting()
         with self._timed(acc, "reoptimize", len(s.A) + len(s.B)):
-            assignment = _resolve_edits(s.scores, log)
+            assignment = _resolve_edits(s.scores, log, self.precedence)
         before = dict(s.assignment)
         after = dict(assignment)
         changed = sorted(
@@ -841,7 +936,12 @@ class MatchService:
             result = self._edit(
                 session_id, [Edit(action, item, candidate, lab.source)], label=lab
             )
-            return LabelResult(lab, result, next=self.next_query(session_id))
+            cs = self._constraints(self._load(session_id))
+            pair = (item, candidate)
+            applied = pair in set(cs.forced) if is_match else pair in set(cs.forbidden)
+            return LabelResult(
+                lab, result, next=self.next_query(session_id), applied=applied
+            )
 
     def next_query(self, session_id: str) -> Optional[Query]:
         """The next pair to label: uncertainty sampling over the not-yet-decided items.
@@ -852,7 +952,7 @@ class MatchService:
         forth. An item with no such candidate left is skipped.
         """
         s = self._load(session_id)
-        cs = _effective_constraints(s.edits)
+        cs = self._constraints(s)
         forbidden = set(cs.forbidden)
         taken = {j for _, j in cs.forced}
         for row in self.review(session_id, include_confirmed=False):
@@ -870,19 +970,85 @@ class MatchService:
 
     def close_session(self, session_id: str) -> bool:
         """Forget a session. Returns whether it existed."""
-        return self.sessions.pop(session_id, None) is not None
+        if not isinstance(session_id, str) or session_id.endswith(_DATA_SUFFIX):
+            return False  # a data key is not a session
+        # the state first: a concurrent reader then finds no session, never a state
+        # whose data has gone
+        existed = self.sessions.pop(session_id, None) is not None
+        self.sessions.pop(_data_key(session_id), None)
+        with self._data_lock:
+            # not .pop(key, None): on Python 3.10 an OrderedDict subclass's pop goes
+            # through the overridden __getitem__ and raises for a missing key
+            if _data_key(session_id) in self._data_cache:
+                del self._data_cache[_data_key(session_id)]
+        return existed
 
     # -- internals ----------------------------------------------------------------
 
+    def _constraints(self, s):
+        return _effective_constraints(s.edits, self.precedence)
+
     def _load(self, session_id) -> Session:
+        if not isinstance(session_id, str) or session_id.endswith(_DATA_SUFFIX):
+            # a data key is not a session: never load, view or close it as one
+            raise SessionNotFound(f"no session {session_id!r}")
         try:
-            return self.sessions[session_id]
+            s = self.sessions[session_id]
         except KeyError:
             raise SessionNotFound(f"no session {session_id!r}") from None
+        if not isinstance(s, Session):
+            raise SessionNotFound(f"no session {session_id!r}")
+        if s.__dict__.get("_attached") is None:
+            s.__dict__["_attached"] = self._session_data(s, session_id)
+        s.__dict__["_loaded_version"] = getattr(s, "version", 0)
+        return s
+
+    def _session_data(self, s, session_id) -> SessionData:
+        """The immutable data of a session: from the in-process cache, the store, or —
+        for a session pickled before equate#23 — its own state, migrated once."""
+        key = _data_key(session_id)
+        legacy = "scores" in s.__dict__
+        with self._data_lock:
+            cached = None if legacy else self._data_cache.get(key)
+        if cached is not None:
+            return cached
+        if legacy:  # the old one-key layout: split it, once
+            data = s._data()
+            for name in ("A", "B", "scores"):
+                s.__dict__.pop(name, None)
+            self.sessions[key] = data
+            self.sessions[session_id] = s  # same version: a migration, not an edit
+        else:
+            try:
+                data = self.sessions[key]
+            except KeyError:
+                raise SessionNotFound(
+                    f"session {session_id!r} has lost its data (closed meanwhile?)"
+                ) from None
+        with self._data_lock:
+            self._data_cache[key] = data
+        return data
 
     def _save(self, session):
-        # re-assign so a write-through store (dol) persists the mutated session
-        self.sessions[session.session_id] = session
+        """Persist the state (re-assigned, so a write-through ``dol`` store sees it).
+
+        Optimistic concurrency: if the store holds a newer version than the one this
+        session was loaded at, another process saved first — raise
+        :class:`SessionConflict` rather than silently drop its change. (The check and the
+        write are two store calls; a store with compare-and-set closes that window.)
+        """
+        sid = session.session_id
+        current = self.sessions.get(sid)
+        loaded = session.__dict__.get("_loaded_version", getattr(session, "version", 0))
+        if current is not None and current is not session:
+            if getattr(current, "version", 0) != loaded:
+                raise SessionConflict(
+                    f"session {sid!r} changed since it was read (version "
+                    f"{getattr(current, 'version', 0)}, read at {loaded}); re-read it"
+                )
+        session.version = loaded + 1
+        session.__dict__["_loaded_version"] = session.version
+        self.sessions[sid] = session
 
     @staticmethod
     def _check_index(x, n, what):
@@ -911,7 +1077,7 @@ class MatchService:
         )
 
     def _assignment_views(self, s):
-        forced = set(_effective_constraints(s.edits).forced)
+        forced = set(self._constraints(s).forced)
         return [
             self._pair_view(
                 s.scores, i, j, "confirmed" if (i, j) in forced else "proposed"
@@ -935,14 +1101,38 @@ class MatchService:
         return views
 
 
-def _margin(s, i):
-    """Item ``i``'s confidence margin: top-1 vs top-2 score gap, where a session floor
-    counts as a virtual runner-up — an item left with one candidate just past the floor
-    is a borderline call, not a certain one (it would otherwise read as ``inf``)."""
-    m = s.store.margin(i)
-    top = s.store.top(i)
-    if s.floor is not None and top and not math.isnan(top[0][1]):
-        m = min(m, abs(top[0][1] - s.floor))
+def _margin(s, i, constraints):
+    """Item ``i``'s confidence margin over its **open** candidates.
+
+    The top-1 vs top-2 score gap among every candidate still available to it — read from
+    the session's cached score row (not just the retained top-k), minus those rejected
+    for it and those confirmed for another item — so the queue follows the edits made so
+    far (equate#23). A session floor counts as a virtual runner-up: an item left with one
+    open candidate just past the floor is a borderline call, not a certain one.
+    """
+    sm = s.scores
+    if sm.is_sparse:
+        lo, hi = sm.data.indptr[i], sm.data.indptr[i + 1]
+        cols = sm.data.indices[lo:hi]
+        vals = np.asarray(sm.data.data[lo:hi], dtype=float)
+    else:
+        vals = np.asarray(sm.data[i], dtype=float)
+        cols = np.arange(vals.size)
+    closed = {j for i2, j in constraints.forced if i2 != i}
+    closed |= {j for i2, j in constraints.forbidden if i2 == i}
+    keep = ~np.isnan(vals)
+    if closed:
+        keep &= ~np.isin(cols, list(closed))
+    vals = vals[keep]
+    if sm.sense == "minimize":
+        vals = -vals  # best = largest, so one code path ranks both senses
+    if vals.size > 2:
+        vals = np.partition(vals, -2)[-2:]  # the top two, in linear time
+    best = np.sort(vals)[::-1]
+    m = float(best[0] - best[1]) if best.size >= 2 else math.inf
+    if s.floor is not None and best.size:
+        top = best[0] if sm.sense == "maximize" else -best[0]
+        m = min(m, abs(top - s.floor))
     return m
 
 
@@ -952,6 +1142,15 @@ def _is_stored(sm, i, j):
         return True
     lo, hi = sm.data.indptr[i], sm.data.indptr[i + 1]
     return j in sm.data.indices[lo:hi]
+
+
+_DATA_SUFFIX = ".data"  # reserved: no session id may end with it
+
+
+def _data_key(session_id) -> str:
+    """Where a session's immutable :class:`SessionData` lives, beside its state (in the
+    same ``sessions`` mapping; ids ending in ``.data`` are reserved for it)."""
+    return f"{session_id}{_DATA_SUFFIX}"
 
 
 def _finite_or_error(x, what):
@@ -1055,7 +1254,12 @@ def mk_app(
         POST   /sessions/{session_id}/label                 oracle label -> next query
         GET    /sessions/{session_id}/next                  the next query to label
 
-    An unknown session is a 404; an invalid or infeasible edit a 422. ``cors_origins``
+    An unknown session is a 404, a session another process changed first a 409, an
+    invalid edit or unknown strategy a 422. Handlers run in a worker thread, so a long
+    scoring call does not block other requests. The default in-memory session store is
+    per process: with several server processes (``uvicorn --workers N``) pass a shared
+    store, ``MatchService(sessions=<dol store>)``, or a request can reach a process that
+    does not hold its session. ``cors_origins``
     lets the review UI's dev server (vite, port 5173) call it; pass ``()`` to disable.
     Requires ``pip install 'equate[service]'``.
 
@@ -1080,17 +1284,29 @@ def mk_app(
     svc = service or MatchService()
     J = to_jsonable
 
+    to_thread = require("anyio", extra="service").to_thread
+
     def http_errors(adapter):
-        # qh turns any exception into a 500 but passes HTTPException through, so map
-        # the service's error contract here: unknown session -> 404, bad input -> 422
+        """An async endpoint running ``adapter`` in a worker thread, with the service's
+        error contract.
+
+        qh calls a *sync* function on the event loop, so one long scoring call would stall
+        every other request; an ``async`` endpoint that hands the work to a thread keeps
+        the server responsive (sessions are guarded by per-session locks). qh turns any
+        exception into a 500 but passes ``HTTPException`` through, so the contract is
+        mapped here: unknown session → 404; a session changed by another writer → 409;
+        an unknown strategy name or a bad value/type → 422. Anything else is a real 500.
+        """
+
         @wraps(adapter)
-        def wrapped(*args, **kwargs):
+        async def wrapped(*args, **kwargs):
             try:
-                return adapter(*args, **kwargs)
+                return await to_thread.run_sync(partial(adapter, *args, **kwargs))
             except SessionNotFound as e:
                 raise HTTPException(404, detail=str(e.args[0]))
-            except (KeyError, ValueError, TypeError) as e:
-                # an unknown strategy name (registry KeyError), a bad value or shape
+            except SessionConflict as e:
+                raise HTTPException(409, detail=str(e))
+            except (UnknownStrategyError, ValueError, TypeError) as e:
                 raise HTTPException(422, detail=str(e.args[0] if e.args else e))
 
         return wrapped

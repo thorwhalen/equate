@@ -85,6 +85,7 @@
   "LabelResult": [
     "label",
     "result",
-    "next"
+    "next",
+    "applied"
   ]
 }

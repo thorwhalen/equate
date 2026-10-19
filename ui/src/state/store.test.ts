@@ -110,6 +110,7 @@ describe('queued edits and labels', () => {
         label: { item: 0, candidate: 0, is_match: true, source: 'human' },
         result: { session_id: 's1', assignment: session.assignment, changed: [], accounting: { tiers: {} } },
         next,
+        applied: true,
       })) as Client['label'],
     });
     const store = createReviewStore(client);

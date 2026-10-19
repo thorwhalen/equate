@@ -228,7 +228,7 @@ def test_blocked_session_never_assigns_a_hole():
 
 def test_views_are_json_serializable_with_no_infinities():
     svc = MatchService()
-    v = svc.open_session(["solo"], ["a", "b"], k=1)  # k=1 -> margin is +inf
+    v = svc.open_session(["solo"], ["a"])  # one candidate: no rival, margin +inf
     payload = to_jsonable(v)
     text = json.dumps(payload, allow_nan=False)
     assert payload["review"][0]["margin"] is None
@@ -557,3 +557,207 @@ def test_served_ui_docs_point_at_the_api_prefix(tmp_path):
         assert any(p.startswith("/sessions") for p in spec["paths"])
         assert c.get("/api/docs").status_code == 200
         assert c.get("/openapi.json").status_code == 404  # no empty root spec
+
+
+# --- hardening (equate#23) -----------------------------------------------------------
+
+
+def test_margin_is_recomputed_over_open_candidates():
+    S = {("a", "x"): 0.9, ("a", "y"): 0.85, ("a", "z"): 0.2, ("b", "y"): 0.95}
+    svc = MatchService()
+    v = svc.open_session(["a", "b"], ["x", "y", "z"], compare=lambda p, q: S.get((p, q), 0.0))
+    margin = lambda: {r.item: r.margin for r in svc.review(v.session_id)}[0]  # noqa: E731
+    assert margin() == pytest.approx(0.05)  # x vs y
+    svc.edit(v.session_id, [Edit("reject", 0, 0)])
+    assert margin() == pytest.approx(0.65)  # x is gone: y vs z
+    svc.edit(v.session_id, [Edit("confirm", 1, 1)])
+    assert margin() is None  # y is taken by b: only z is left, no rival
+
+
+def test_precedence_keeps_a_human_decision_from_an_llm():
+    svc = MatchService(precedence=("human", "llm"))
+    sid = svc.open_session(A, B).session_id
+    svc.edit(sid, [Edit("confirm", 0, 1, "human")])
+    svc.label(sid, 0, 1, False, source="llm")  # an LLM disagrees: ignored
+    svc.edit(sid, [Edit("reassign", 2, 1, "llm")])  # would steal the human's candidate
+    view = svc.view(sid)
+    assert {p.item: p.candidate for p in view.assignment if p.status == "confirmed"} == {0: 1}
+    assert len(view.edits) == 3 and len(view.labels) == 1  # all logged, none applied
+    svc.edit(sid, [Edit("reject", 0, 1, "human")])  # the same rank may change its mind
+    assert 1 not in {p.candidate for p in svc.view(sid).assignment if p.item == 0}
+
+
+def test_without_precedence_the_latest_edit_wins():
+    svc = MatchService()
+    sid = svc.open_session(A, B).session_id
+    svc.edit(sid, [Edit("confirm", 0, 1, "human"), Edit("reject", 0, 1, "llm")])
+    assert _pairs(svc.view(sid).assignment).get(0) != 1
+
+
+class _PickleStore(dict):
+    """A store that keeps bytes, like a file or S3 store: every read is a fresh copy."""
+
+    import pickle as _p
+
+    writes: list
+
+    def __init__(self):
+        super().__init__()
+        self.writes = []
+
+    def __setitem__(self, k, v):
+        self.writes.append(k)
+        super().__setitem__(k, self._p.dumps(v))
+
+    def __getitem__(self, k):
+        return self._p.loads(super().__getitem__(k))
+
+    def get(self, k, default=None):
+        return self[k] if k in self else default
+
+    def pop(self, k, default=None):
+        return self._p.loads(super().pop(k)) if k in self else default
+
+
+def test_a_save_over_a_newer_version_is_a_conflict():
+    from equate.service import SessionConflict
+
+    store = _PickleStore()
+    a, b = MatchService(sessions=store), MatchService(sessions=store)  # two processes
+    sid = a.open_session(A, B).session_id
+    stale = a._load(sid)  # process A reads...
+    b.edit(sid, [Edit("confirm", 0, 1)])  # ...process B saves first
+    stale.edits.append(Edit("reject", 0, 0))
+    with pytest.raises(SessionConflict):
+        a._save(stale)
+    assert len(a.view(sid).edits) == 1  # B's change survived
+    a.edit(sid, [Edit("reject", 2, 2)])  # a fresh read-modify-write is fine
+    assert len(a.view(sid).edits) == 2
+
+
+def test_scores_are_written_once_not_on_every_edit():
+    store = _PickleStore()
+    svc = MatchService(sessions=store)
+    names = [f"item {i}" for i in range(120)]
+    sid = svc.open_session(names, names[::-1]).session_id
+    for i in range(5):
+        svc.edit(sid, [Edit("reject", i, i)])
+    assert store.writes.count(f"{sid}.data") == 1
+    state, data = dict.__getitem__(store, sid), dict.__getitem__(store, f"{sid}.data")
+    assert len(state) * 4 < len(data)  # the per-edit write is a fraction of the scores
+    assert svc.close_session(sid) and f"{sid}.data" not in store and sid not in store
+
+
+def test_sessions_pickled_before_the_split_still_load_and_migrate():
+    store = _PickleStore()
+    svc = MatchService(sessions=store)
+    sid = svc.open_session(A, B).session_id
+    legacy = svc._load(sid)
+    data = legacy._data()
+    legacy.__dict__.pop("_attached")
+    legacy.__dict__.update(A=data.A, B=data.B, scores=data.scores)  # the old layout
+    dict.__setitem__(store, sid, __import__("pickle").dumps(legacy))
+    dict.pop(store, f"{sid}.data")
+    assert _pairs(svc.view(sid).assignment) == TRUTH  # loads (and migrates)
+    svc.edit(sid, [Edit("confirm", 0, 1)])
+    assert f"{sid}.data" in store and "scores" not in store[sid].__dict__
+
+
+def test_http_errors_internal_bugs_are_500_not_422(client):
+    sid = client.post("/sessions", json={"A": ["a"], "B": ["a"]}).json()["session_id"]
+    svc = client.app.state.match_service
+
+    def broken(*a, **k):
+        raise KeyError("an internal bug")
+
+    svc.view = broken
+    assert client.get(f"/sessions/{sid}").status_code == 500
+    bad = {"A": ["x"], "B": ["y"], "compare": "nonesuch"}
+    assert client.post("/match", json=bad).status_code == 422  # a caller's unknown name
+
+
+def test_http_handlers_run_off_the_event_loop():
+    pytest.importorskip("qh")
+    import threading
+
+    from qh.testing import test_app
+
+    from equate.service import mk_app
+
+    threads = []
+    svc = MatchService(on_cost=lambda *a: threads.append(threading.current_thread().name))
+    with test_app(mk_app(svc)) as c:
+        c.post("/match", json={"A": A, "B": B})
+    assert threads and all("worker" in name.lower() for name in threads)
+
+
+# --- regressions from the adversarial review of #23 --------------------------------
+
+
+def test_rejecting_the_top_candidate_does_not_make_an_item_certain():
+    svc = MatchService()
+    sid = svc.open_session(A, B, k=2).session_id
+    top = svc.candidates(sid, 0)[0].candidate
+    svc.edit(sid, [Edit("reject", 0, top)])
+    row = {r.item: r for r in svc.review(sid)}[0]
+    assert row.margin is not None  # rivals outside the stored top-k still count
+
+
+def test_a_data_key_is_never_a_session():
+    from equate.service import SessionNotFound
+
+    store = _PickleStore()
+    svc = MatchService(sessions=store)
+    sid = svc.open_session(A, B).session_id
+    with pytest.raises(SessionNotFound):
+        svc.view(f"{sid}.data")
+    assert svc.close_session(f"{sid}.data") is False
+    fresh = MatchService(sessions=store)  # another process: nothing cached
+    assert _pairs(fresh.view(sid).assignment) == TRUTH  # the data survived
+
+
+def test_http_data_key_is_404_and_close_leaves_data_alone(client):
+    sid = client.post("/sessions", json={"A": A, "B": B}).json()["session_id"]
+    assert client.get(f"/sessions/{sid}.data").status_code == 404
+    assert client.delete(f"/sessions/{sid}.data").json() == {"closed": False}
+    assert client.get(f"/sessions/{sid}").status_code == 200
+
+
+def test_an_id_collision_is_refused_before_anything_is_written():
+    from equate.service import SessionConflict
+
+    store = _PickleStore()
+    svc = MatchService(sessions=store, mk_id=lambda: "fixed")
+    svc.open_session(A, B)
+    before = dict.__getitem__(store, "fixed.data")
+    with pytest.raises(SessionConflict):
+        svc.open_session(["x"], ["y"])
+    assert dict.__getitem__(store, "fixed.data") == before
+    with pytest.raises(SessionConflict):
+        MatchService(mk_id=lambda: "bad.data").open_session(A, B)
+
+
+def test_an_outranked_label_says_it_was_not_applied():
+    svc = MatchService(precedence=("human", "llm"))
+    sid = svc.open_session(A, B).session_id
+    svc.edit(sid, [Edit("confirm", 0, 1, "human")])
+    assert svc.label(sid, 0, 1, False, source="llm").applied is False
+    assert svc.label(sid, 2, 2, True, source="llm").applied is True
+
+
+def test_session_data_is_read_from_the_store_once_per_process():
+    class Counting(_PickleStore):
+        reads = 0
+
+        def __getitem__(self, k):
+            if k.endswith(".data"):
+                type(self).reads += 1
+            return super().__getitem__(k)
+
+    store = Counting()
+    sid = MatchService(sessions=store).open_session(A, B).session_id
+    other = MatchService(sessions=store)
+    for _ in range(4):
+        other.view(sid)
+        other.edit(sid, [Edit("reject", 0, 0)])
+    assert Counting.reads == 1
