@@ -6,6 +6,11 @@ releases CI publishes to PyPI.
 
 ## Unreleased
 
+**Confidence intervals and GMD** (#25; doc 14 §7.4).
+
+- `benchmark_matcher(..., ci='auto', n_boot=1000)` adds a bootstrap confidence interval to a single-run score. A canonical split runs once, so it has no seed spread, and a 500-pair test set leaves a few points of F1 within noise: WDC Products 80/100 reads `0.628 [0.588, 0.670]`. The bootstrap resamples test *entities*, not pairs, so one entity's pairs succeed or fail together. It is seeded, so a report is reproducible. `'auto'` gives 95 % for a single run; a level gives every row an interval; `None` turns it off. Intervals are in `BenchmarkRow.ci` and printed by `to_markdown`. `bootstrap_ci(pred, gold, left_entities)` is public.
+- `gmd(pred_labels, true_labels, *, merge_cost=unit_cost, split_cost=unit_cost)` is the generalized merge distance of Menestrina, Whang & Garcia-Molina (VLDB 2010): the cost of the splits and merges that turn one clustering into the other, in linear time. Unit costs count operations; `pair_cost` for both equals the pairwise error count (tested on random clusterings). Different costs say whether a wrong merge hurts more than a missed one.
+
 **The review UI, served and tested** (#22). `mk_app(service, ui_dir="ui/dist")` (or `python -m equate.service serve ui=ui/dist`) serves the built review UI at `/` with the API under `/api`, from one process and one origin, with no dev server. The API alone is unchanged. The wheel does not ship a prebuilt bundle (build it from a checkout). The UI's tests and build now run in hosted CI on every `ui/**` change, through the wads npm workflow (`.github/workflows/ui-ci.yml`, node 20 and 22, publishing off). `npm run ci-local` runs the same checks locally.
 
 **Tables: `equate.completion` as a facade over the stages** (#13; doc 07 §8, doc 10 §8.7).

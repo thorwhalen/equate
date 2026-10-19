@@ -155,6 +155,7 @@ class BenchmarkRow:
     n_b: int
     n_gold: int
     base_rate: float
+    ci: Optional[dict] = None  # {'precision'|'recall'|'f1': (lo, hi)} when requested
 
 
 @dataclass(frozen=True)
@@ -180,6 +181,8 @@ class BenchmarkReport:
             }
             stats["base_rate"] = float(np.mean([r.base_rate for r in rows]))
             stats["n_seeds"] = len(rows)
+            if len(rows) == 1 and rows[0].ci:
+                stats["ci"] = rows[0].ci
             out[name] = stats
         return out
 
@@ -188,14 +191,7 @@ class BenchmarkReport:
         head = "| benchmark | precision | recall | F1 | seconds | test base rate | seeds | difficulty |"
         lines = [head, "|" + "---|" * 8]
         for name, s in self.summary().items():
-            # one run (a canonical split) has no spread: print no "± 0.000" that reads
-            # as zero variance
-            cells = [
-                f"{s[m][0]:.3f}"
-                if s["n_seeds"] == 1
-                else f"{s[m][0]:.3f} ± {s[m][1]:.3f}"
-                for m in self._METRICS
-            ]
+            cells = [_cell(s, m) for m in self._METRICS]
             difficulty = self.meta.get(name, {}).get("difficulty", "")
             lines.append(
                 f"| {name} | "
@@ -203,6 +199,20 @@ class BenchmarkReport:
                 + f" | {s['base_rate']:.4f} | {s['n_seeds']} | {difficulty} |"
             )
         return "\n".join(lines)
+
+
+def _cell(stats, metric):
+    """One summary cell: ``mean ± std`` over seeds, or a single run's value with its
+    bootstrap interval when there is one (never a "± 0.000" that reads as no spread)."""
+    mean, std = stats[metric]
+    if stats["n_seeds"] > 1:
+        return f"{mean:.3f} ± {std:.3f}"
+    interval = stats.get("ci", {}).get(metric)
+    return (
+        f"{mean:.3f} [{interval[0]:.3f}, {interval[1]:.3f}]"
+        if interval
+        else f"{mean:.3f}"
+    )
 
 
 def subset_pairs(gold, rows_a, rows_b):
@@ -217,6 +227,67 @@ def subset_pairs(gold, rows_a, rows_b):
 
 
 _SPLIT_MODES = ("auto", "entity", "canonical")
+DFLT_CI_LEVEL = 0.95
+DFLT_N_BOOT = 1000
+DFLT_CI_SEED = 0
+
+
+def _ci_level(ci, *, single_run):
+    if ci is None:
+        return None
+    if ci == "auto":
+        return DFLT_CI_LEVEL if single_run else None
+    if isinstance(ci, bool) or not isinstance(ci, (int, float)) or not 0 < ci < 1:
+        raise ValueError(f"ci must be 'auto', None, or a level in (0, 1); got {ci!r}")
+    return float(ci)
+
+
+def bootstrap_ci(
+    pred,
+    gold,
+    left_entities,
+    *,
+    level: float = DFLT_CI_LEVEL,
+    n_boot: int = DFLT_N_BOOT,
+    seed: int = DFLT_CI_SEED,
+) -> dict:
+    """Percentile bootstrap interval of pairwise precision, recall and F1.
+
+    ``pred`` / ``gold`` are ``(i, j)`` pairs; ``left_entities[i]`` is the entity of left
+    record ``i``. Entities (not pairs) are resampled with replacement, each pair weighted
+    by how often its left record's entity was drawn, so the interval reflects that pairs
+    of one entity succeed or fail together. Returns ``{'precision': (lo, hi), 'recall':
+    ..., 'f1': ...}``, using :class:`~equate.evaluate.Scores`' conventions (an empty
+    prediction has precision 1.0, an empty gold set recall 1.0).
+
+    >>> ci = bootstrap_ci({(0, 0), (1, 1)}, {(0, 0), (1, 2)}, ['e0', 'e1'], n_boot=200)
+    >>> ci['precision'][0] <= 0.5 <= ci['precision'][1]
+    True
+    """
+    if not 0 < level < 1:
+        raise ValueError(f"level must be in (0, 1), got {level!r}")
+    entities = list(dict.fromkeys(left_entities))
+    if not entities:
+        return {m: (float("nan"), float("nan")) for m in ("precision", "recall", "f1")}
+    slot = {e: k for k, e in enumerate(entities)}
+    tp, n_pred, n_true = (np.zeros(len(entities)) for _ in range(3))
+    pred, gold = set(map(tuple, pred)), set(map(tuple, gold))
+    for counts, pairs in ((n_pred, pred), (n_true, gold), (tp, pred & gold)):
+        for i, _ in pairs:
+            counts[slot[left_entities[i]]] += 1
+    m = len(entities)
+    weights = np.random.default_rng(seed).multinomial(m, np.full(m, 1 / m), size=n_boot)
+    TP, NP, NT = weights @ tp, weights @ n_pred, weights @ n_true
+    with np.errstate(invalid="ignore", divide="ignore"):
+        precision = np.where(NP > 0, TP / NP, 1.0)
+        recall = np.where(NT > 0, TP / NT, 1.0)
+        denom = precision + recall
+        f1 = np.where(denom > 0, 2 * precision * recall / denom, 0.0)
+    tail = (1 - level) / 2 * 100
+    return {
+        name: tuple(float(x) for x in np.percentile(values, [tail, 100 - tail]))
+        for name, values in (("precision", precision), ("recall", recall), ("f1", f1))
+    }
 
 
 def _use_canonical(ds, split):
@@ -252,6 +323,8 @@ def benchmark_matcher(
     ratios: tuple = (0.6, 0.2, 0.2),
     fit: Optional[Callable] = None,
     split: str = "auto",
+    ci="auto",
+    n_boot: int = DFLT_N_BOOT,
 ) -> BenchmarkReport:
     """Score ``matcher`` on unseen-entity test splits of each benchmark in ``on``.
 
@@ -274,6 +347,14 @@ def benchmark_matcher(
     ``ratios`` ignored; no entity-leakage assertion, since a suite's *seen-entity*
     variants share entities across parts by design); ``'auto'`` (default) is canonical
     when the benchmark has ``splits``, else entity.
+
+    ``ci`` adds a **bootstrap confidence interval** to each row (doc 14 §7.4): the test
+    *entities* are resampled ``n_boot`` times (a cluster bootstrap: an entity's pairs move
+    together) and the percentile interval of precision, recall and F1 is kept in
+    ``BenchmarkRow.ci``. ``'auto'`` (default) computes a 95 % interval only for a
+    single-run benchmark — a canonical split has no seed spread, and a 500-pair test set
+    leaves a few points of F1 within noise; a level (``0.9``) computes it for every row;
+    ``None`` never. The resampling is seeded, so a report is reproducible.
 
     >>> report = benchmark_matcher(n_seeds=2)
     >>> s = report.summary()['toy_names']
@@ -335,6 +416,18 @@ def benchmark_matcher(
             }
             seconds = time.perf_counter() - start
             s = pairwise_prf(pred, gold)
+            level = _ci_level(ci, single_run=canonical or n_seeds == 1)
+            interval = (
+                bootstrap_ci(
+                    pred,
+                    gold,
+                    [entity[i] for i in test_a],
+                    level=level,
+                    n_boot=n_boot,
+                )
+                if level
+                else None
+            )
             n_ta, n_tb = len(test_a), len(test_b)
             rows.append(
                 BenchmarkRow(
@@ -348,6 +441,7 @@ def benchmark_matcher(
                     n_tb,
                     len(gold),
                     len(gold) / (n_ta * n_tb),
+                    interval,
                 )
             )
             scored += 1

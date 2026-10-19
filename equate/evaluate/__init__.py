@@ -21,7 +21,15 @@ from equate.evaluate.labels import (
     labels_to_pairs,
     cross_pairs_to_labels,
 )
-from equate.evaluate.metrics import pairwise_prf, bcubed, ceaf, cluster_metrics
+from equate.evaluate.metrics import (
+    pairwise_prf,
+    bcubed,
+    ceaf,
+    cluster_metrics,
+    gmd,
+    unit_cost,
+    pair_cost,
+)
 from equate.evaluate.ranking import pr_auc, select_threshold, ranking_metrics
 from equate.evaluate.split import Split, entity_split, assert_no_leakage
 from equate.evaluate.benchmark import (
@@ -32,6 +40,7 @@ from equate.evaluate.benchmark import (
     list_benchmarks,
     load_benchmark,
     benchmark_matcher,
+    bootstrap_ci,
     subset_pairs,
 )
 from equate.evaluate.difficulty import linearity, difficulty_profile
@@ -45,6 +54,10 @@ __all__ = [
     "bcubed",
     "ceaf",
     "cluster_metrics",
+    "gmd",
+    "unit_cost",
+    "pair_cost",
+    "bootstrap_ci",
     "blocking_metrics",
     "pr_auc",
     "select_threshold",
