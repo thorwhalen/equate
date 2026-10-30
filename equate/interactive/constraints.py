@@ -38,20 +38,30 @@ class ConstraintSet:
 def reoptimize(scores, constraints=None, *, sense="maximize"):
     """Re-solve the optimal 1:1 assignment honoring ``constraints`` (confirmed/rejected).
 
-    Returns the matched ``(i, j)`` pairs. Raises ``ValueError`` if the constraints are
-    infeasible (no valid assignment). This is O(one LAP): the whole point is that an edit
-    is a cheap constrained re-solve, not a from-scratch recompute.
+    Returns the matched ``(i, j)`` pairs. A rejected pair is a *hole* (a non-candidate, the
+    blocked-matching semantics of D11), not an ``inf`` cost: the re-solve matches as many
+    non-rejected pairs as possible, then the best score, so rejecting every candidate of an
+    item leaves it unmatched. Raises ``ValueError`` only if the constraints contradict each
+    other (the same pair both confirmed and rejected, or two confirms sharing a row or
+    column). This is O(one LAP): the whole point is that an edit is a cheap constrained
+    re-solve, not a from-scratch recompute.
     """
     constraints = constraints or ConstraintSet()
+    forced = list(constraints.forced)
+    if set(forced) & set(constraints.forbidden):
+        raise ValueError("the constraints are infeasible — a pair is both confirmed and rejected")
     # dense_cost worst-cases a sparse (blocked) matrix's absent cells (never densify first
     # — that loses the worst-casing, a #7-class bug); D11
     sm = ScoreMatrix.coerce(scores, sense=sense)
-    result = solve_constrained(
-        sm.dense_cost(), constraints.forced, constraints.forbidden
-    )
+    if constraints.forbidden:
+        mask = sm.candidate_mask()
+        for i, j in constraints.forbidden:
+            mask[i, j] = False
+        sm = sm.restricted(mask)
+    result = solve_constrained(sm.dense_cost(), forced, [])
     if result is None:
         raise ValueError("the constraints are infeasible — no valid assignment exists")
     assignment, _ = result
     # a full LAP can land on a non-candidate hole (worst-cased, never *preferred*, but still
     # assignable in forced-partial / all-absent cases); drop those, but keep user-forced edges
-    return sorted(sm.drop_holes(assignment.items(), keep=constraints.forced))
+    return sorted(sm.drop_holes(assignment.items(), keep=forced))

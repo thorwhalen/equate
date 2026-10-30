@@ -350,6 +350,18 @@ class ScoreMatrix:
                 for j in range(m):
                     yield i, j, float(S[i, j])
 
+    def restricted(self, mask):
+        """This matrix as a sparse one storing exactly the cells where ``mask`` is True."""
+        from scipy.sparse import coo_matrix
+
+        rows, cols = np.nonzero(mask)
+        values = np.asarray(self.data[rows, cols]).ravel()
+        # coo keeps explicitly-stored zeros, so a real 0.0 score stays a candidate
+        data = coo_matrix((values, (rows, cols)), shape=self.shape)
+        return ScoreMatrix(
+            data, sense=self.sense, row_labels=self.row_labels, col_labels=self.col_labels
+        )
+
     def drop_holes(self, pairs, *, keep=()):
         """Drop any ``(i, j)`` landing on a non-candidate (absent) cell — the D11 filter.
 

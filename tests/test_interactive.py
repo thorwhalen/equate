@@ -100,9 +100,15 @@ def test_reoptimize_respects_a_confirmed_edge():
     assert result[0] == 1
 
 
-def test_reoptimize_infeasible_raises():
+def test_reoptimize_item_left_unmatched():
     cs = ConstraintSet()
     cs.reject(0, 0).reject(0, 1).reject(0, 2)  # row 0 has no allowed column
+    result = dict(reoptimize(SCORES, cs))
+    assert 0 not in result and len(result) == len(SCORES) - 1
+
+
+def test_reoptimize_contradiction_raises():
+    cs = ConstraintSet().confirm(0, 1).reject(0, 1)
     with pytest.raises(ValueError):
         reoptimize(SCORES, cs)
 
