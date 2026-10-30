@@ -38,6 +38,10 @@ Forbid edge `(i, j)` from the assignment (a user-rejected match).
 
 Re-solve the optimal 1:1 assignment honoring `constraints` (confirmed/rejected).
 
-Returns the matched `(i, j)` pairs. Raises `ValueError` if the constraints are
-infeasible (no valid assignment). This is O(one LAP): the whole point is that an edit
-is a cheap constrained re-solve, not a from-scratch recompute.
+Returns the matched `(i, j)` pairs. A rejected pair is a *hole* (a non-candidate, the
+blocked-matching semantics of D11), not an `inf` cost: the re-solve matches as many
+non-rejected pairs as possible, then the best score, so rejecting every candidate of an
+item leaves it unmatched. Raises `ValueError` only if the constraints contradict each
+other (the same pair both confirmed and rejected, or two confirms sharing a row or
+column). This is O(one LAP): the whole point is that an edit is a cheap constrained
+re-solve, not a from-scratch recompute.

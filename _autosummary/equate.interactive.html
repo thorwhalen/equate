@@ -9,7 +9,7 @@
 <link rel="alternate" type="text/markdown" href="equate.interactive.html.md">
 <link rel="describedby" href="llms.txt"><link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="equate.interactive.candidate_store" href="equate.interactive.candidate_store.html"><link rel="prev" title="equate.featurize.tfidf" href="equate.featurize.tfidf.html">
 
-    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+    <!-- Generated with Sphinx 9.1.1 and Furo 2025.12.19 -->
         <title>equate.interactive - equate</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
@@ -437,9 +437,13 @@ not that many feasible assignments.</p>
 <dt class="sig sig-object py" id="equate.interactive.reoptimize">
 <span class="sig-prename descclassname"><span class="pre">equate.interactive.</span></span><span class="sig-name descname"><span class="pre">reoptimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maximize'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/interactive/constraints.html#reoptimize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.interactive.reoptimize" title="Link to this definition">¶</a></dt>
 <dd><p>Re-solve the optimal 1:1 assignment honoring <code class="docutils literal notranslate"><span class="pre">constraints</span></code> (confirmed/rejected).</p>
-<p>Returns the matched <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> pairs. Raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> if the constraints are
-infeasible (no valid assignment). This is O(one LAP): the whole point is that an edit
-is a cheap constrained re-solve, not a from-scratch recompute.</p>
+<p>Returns the matched <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> pairs. A rejected pair is a <em>hole</em> (a non-candidate, the
+blocked-matching semantics of D11), not an <code class="docutils literal notranslate"><span class="pre">inf</span></code> cost: the re-solve matches as many
+non-rejected pairs as possible, then the best score, so rejecting every candidate of an
+item leaves it unmatched. Raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> only if the constraints contradict each
+other (the same pair both confirmed and rejected, or two confirms sharing a row or
+column). This is O(one LAP): the whole point is that an edit is a cheap constrained
+re-solve, not a from-scratch recompute.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -567,7 +571,7 @@ margin), since those labels are the most informative for training a matcher.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=1d9216c3"></script>
+</div><script src="../_static/documentation_options.js?v=3d238c28"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

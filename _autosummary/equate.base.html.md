@@ -288,6 +288,10 @@ Routing this through `dense_similarity()` instead — i.e. `S - S.max()` — wou
 silently rescale a *hole-free* matrix to be all-nonpositive and break every legacy
 matcher that reads absolute scores.
 
+#### restricted(mask)
+
+This matrix as a sparse one storing exactly the cells where `mask` is True.
+
 #### score_at(i, j)
 
 The retained (raw) score at `(i, j)` — for reporting a matched pair.

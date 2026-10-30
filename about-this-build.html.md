@@ -2,18 +2,18 @@
 
 # About this build
 
-This documentation was built on **2026-10-19 13:35 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/ceda0d0693fe071bc499da5913f96edefc6e9944"><code>ceda0d0</code></a> on branch <code>master</code>, for **equate 0.0.25** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-30 12:55 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/803a2bf24def0bc396a67067c07651e3778e4d83"><code>803a2bf</code></a> on branch <code>master</code>, for **equate 0.0.26** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.25) is behind the latest release on PyPI (0.0.26): `pip install equate` gives newer code than these docs describe.
+- The documented version (0.0.26) is behind the latest release on PyPI (0.0.27): `pip install equate` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/equate/commit/ceda0d0693fe071bc499da5913f96edefc6e9944"><code>ceda0d0693fe071bc499da5913f96edefc6e9944</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/equate/commit/803a2bf24def0bc396a67067c07651e3778e4d83"><code>803a2bf24def0bc396a67067c07651e3778e4d83</code></a> |
 | Branch              | <code>master</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -24,16 +24,16 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/equate</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/39261139579">39261139579</a>    |
+| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/41058858226">41058858226</a>    |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>ceda0d0693fe071bc499da5913f96edefc6e9944</code> (in the history of the built commit) |
+| Event commit | <code>803a2bf24def0bc396a67067c07651e3778e4d83</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.18  |
-| Sphinx   | 9.1.0   |
+| epythet  | 0.2.22  |
+| Sphinx   | 9.1.1   |
 | docutils | 0.22.4  |
 | Python   | 3.12.15 |
 
@@ -51,14 +51,14 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/equate/0.0.26/">0.0.26</a>, newer than the documented version (0.0.25).
+Latest release: <a href="https://pypi.org/project/equate/0.0.27/">0.0.27</a>, newer than the documented version (0.0.26).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/equate && cd equate
-git checkout ceda0d0693fe071bc499da5913f96edefc6e9944
-pip install "epythet==0.2.18"
+git checkout 803a2bf24def0bc396a67067c07651e3778e4d83
+pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 

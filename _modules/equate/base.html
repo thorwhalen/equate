@@ -6,7 +6,7 @@
 <link rel="alternate" type="text/markdown" href="base.html.md">
 <link rel="describedby" href="../../llms.txt" type="text/markdown"><link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html">
 
-    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+    <!-- Generated with Sphinx 9.1.1 and Furo 2025.12.19 -->
         <title>equate.base - equate</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
@@ -684,6 +684,21 @@
                     <span class="k">yield</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">S</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span></div>
 
 
+<div class="viewcode-block" id="ScoreMatrix.restricted">
+<a class="viewcode-back" href="../../_autosummary/equate.base.html#equate.base.ScoreMatrix.restricted">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">restricted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""This matrix as a sparse one storing exactly the cells where ``mask`` is True."""</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">coo_matrix</span>
+
+        <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">])</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="c1"># coo keeps explicitly-stored zeros, so a real 0.0 score stays a candidate</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">coo_matrix</span><span class="p">((</span><span class="n">values</span><span class="p">,</span> <span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ScoreMatrix</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sense</span><span class="p">,</span> <span class="n">row_labels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">row_labels</span><span class="p">,</span> <span class="n">col_labels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">col_labels</span>
+        <span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="ScoreMatrix.drop_holes">
 <a class="viewcode-back" href="../../_autosummary/equate.base.html#equate.base.ScoreMatrix.drop_holes">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">drop_holes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pairs</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="p">()):</span>
@@ -909,7 +924,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=1d9216c3"></script>
+</div><script src="../../_static/documentation_options.js?v=3d238c28"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
