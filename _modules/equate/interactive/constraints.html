@@ -365,7 +365,9 @@
     <span class="n">constraints</span> <span class="o">=</span> <span class="n">constraints</span> <span class="ow">or</span> <span class="n">ConstraintSet</span><span class="p">()</span>
     <span class="n">forced</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">constraints</span><span class="o">.</span><span class="n">forced</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">forced</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">constraints</span><span class="o">.</span><span class="n">forbidden</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"the constraints are infeasible — a pair is both confirmed and rejected"</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"the constraints are infeasible — a pair is both confirmed and rejected"</span>
+        <span class="p">)</span>
     <span class="c1"># dense_cost worst-cases a sparse (blocked) matrix's absent cells (never densify first</span>
     <span class="c1"># — that loses the worst-casing, a #7-class bug); D11</span>
     <span class="n">sm</span> <span class="o">=</span> <span class="n">ScoreMatrix</span><span class="o">.</span><span class="n">coerce</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">)</span>
@@ -410,7 +412,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=3d238c28"></script>
+</div><script src="../../../_static/documentation_options.js?v=9463f84e"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>

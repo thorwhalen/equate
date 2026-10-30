@@ -695,7 +695,10 @@
         <span class="c1"># coo keeps explicitly-stored zeros, so a real 0.0 score stays a candidate</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">coo_matrix</span><span class="p">((</span><span class="n">values</span><span class="p">,</span> <span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ScoreMatrix</span><span class="p">(</span>
-            <span class="n">data</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sense</span><span class="p">,</span> <span class="n">row_labels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">row_labels</span><span class="p">,</span> <span class="n">col_labels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">col_labels</span>
+            <span class="n">data</span><span class="p">,</span>
+            <span class="n">sense</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sense</span><span class="p">,</span>
+            <span class="n">row_labels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">row_labels</span><span class="p">,</span>
+            <span class="n">col_labels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">col_labels</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -924,7 +927,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=3d238c28"></script>
+</div><script src="../../_static/documentation_options.js?v=9463f84e"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
