@@ -65,7 +65,8 @@ adding a structured strategy, decide which of these three seams it belongs to.
   each fail until both sides agree. Non-finite floats go out as `null` (`to_jsonable`).
 - **Sessions re-solve from cached scores; they never re-score.** A reject is a *hole* (the
   blocked-matching semantics, D11), not an `inf` — so rejecting every candidate leaves an
-  item unmatched instead of making the LAP infeasible. Edits fold latest-wins
+  item unmatched instead of making the LAP infeasible. This lives in core
+  `equate.interactive.reoptimize`, so the service and a library caller share one semantics (#20). Edits fold latest-wins
   (`_effective_constraints`).
 - **Concurrency:** edits of one session are serialized by a per-session lock in-process;
   across processes, `Session.version` is checked on save (`SessionConflict` → 409). A

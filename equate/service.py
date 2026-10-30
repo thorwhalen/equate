@@ -46,7 +46,6 @@ from dataclasses import asdict, dataclass, field, is_dataclass
 from typing import Any, Callable, Literal, Optional
 
 import numpy as np
-from scipy.sparse import coo_matrix
 
 from equate.base import Explanation, Partition, ScoreMatrix
 from equate.compare import resolve_comparator
@@ -529,24 +528,6 @@ def _ranker(precedence):
     return lambda e: order.get(getattr(e, "source", "human"), len(order))
 
 
-def _without_rejected(sm, forbidden):
-    """``sm`` with the ``forbidden`` cells removed — a rejected pair becomes a hole.
-
-    A reject is "this is not a candidate", which is exactly what blocking means, so it
-    reuses the blocked-matching semantics (D11): holes are worst-cased with a big-M and
-    dropped, making the re-solve lexicographic — as many non-rejected pairs as possible,
-    then the best score. An item whose every candidate was rejected is simply left
-    unmatched, where forbidding with ``inf`` (core :func:`~equate.interactive.reoptimize`)
-    would make a square problem infeasible.
-    """
-    if not forbidden:
-        return sm
-    mask = sm.candidate_mask()
-    for i, j in forbidden:
-        mask[i, j] = False
-    return _restricted(sm, mask)
-
-
 def _past_floor_removed(sm, floor):
     """``sm`` keeping only the cells that pass ``floor`` (at or above it for a
     ``'maximize'`` sense, at or below for ``'minimize'``; NaN never passes): the others
@@ -567,26 +548,14 @@ def _past_floor_removed(sm, floor):
     with np.errstate(invalid="ignore"):
         fails = ~(values >= floor if sm.sense == "maximize" else values <= floor)
     mask[rows[fails], cols[fails]] = False
-    return _restricted(sm, mask)
-
-
-def _restricted(sm, mask):
-    """``sm`` as a sparse matrix storing exactly the cells where ``mask`` is True."""
-    rows, cols = np.nonzero(mask)
-    values = np.asarray(sm.data[rows, cols]).ravel()
-    # coo keeps explicitly-stored zeros, so a real 0.0 score stays a candidate
-    data = coo_matrix((values, (rows, cols)), shape=sm.shape)
-    return ScoreMatrix(
-        data, sense=sm.sense, row_labels=sm.row_labels, col_labels=sm.col_labels
-    )
+    return sm.restricted(mask)
 
 
 def _resolve_edits(sm, edits, precedence=None):
     """The optimal 1:1 assignment of ``sm`` under an edit log (confirms forced, rejects
     removed). Raises ``ValueError`` if no assignment honours the confirms."""
     cs = _effective_constraints(edits, precedence)
-    forced_only = ConstraintSet(forced=list(cs.forced))
-    return reoptimize(_without_rejected(sm, cs.forbidden), forced_only, sense=sm.sense)
+    return reoptimize(sm, cs, sense=sm.sense)
 
 
 def _as_edit(e):
