@@ -359,7 +359,10 @@ class ScoreMatrix:
         # coo keeps explicitly-stored zeros, so a real 0.0 score stays a candidate
         data = coo_matrix((values, (rows, cols)), shape=self.shape)
         return ScoreMatrix(
-            data, sense=self.sense, row_labels=self.row_labels, col_labels=self.col_labels
+            data,
+            sense=self.sense,
+            row_labels=self.row_labels,
+            col_labels=self.col_labels,
         )
 
     def drop_holes(self, pairs, *, keep=()):

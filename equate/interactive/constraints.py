@@ -49,7 +49,9 @@ def reoptimize(scores, constraints=None, *, sense="maximize"):
     constraints = constraints or ConstraintSet()
     forced = list(constraints.forced)
     if set(forced) & set(constraints.forbidden):
-        raise ValueError("the constraints are infeasible — a pair is both confirmed and rejected")
+        raise ValueError(
+            "the constraints are infeasible — a pair is both confirmed and rejected"
+        )
     # dense_cost worst-cases a sparse (blocked) matrix's absent cells (never densify first
     # — that loses the worst-casing, a #7-class bug); D11
     sm = ScoreMatrix.coerce(scores, sense=sense)
