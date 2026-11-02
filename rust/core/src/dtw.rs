@@ -82,6 +82,80 @@ pub fn subsequence_accumulate(costs: MatrixView<'_>) -> Result<Matrix, Error> {
     Ok(acc)
 }
 
+/// Where a traceback stops.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Start {
+    /// At cell `(0, 0)`: both series are consumed from their first step (DTW).
+    Origin,
+    /// On the first row: the series may start anywhere (subsequence DTW).
+    FirstRow,
+}
+
+/// The warping path ending at cell `end = (i, j)`, walked back through the padded
+/// accumulated costs `acc`, in order from its first cell.
+///
+/// At each cell the candidates are, in this order, the diagonal `(i - 1, j - 1)`, up
+/// `(i - 1, j)` and left `(i, j - 1)` (left is not offered on the first row when
+/// `start` is [`Start::FirstRow`]); the reference's `min(candidates, key=cost)` keeps
+/// the **first** candidate unless a later one is strictly cheaper, so ties go to the
+/// diagonal, then up, and a NaN cost never wins over an earlier candidate.
+///
+/// # Errors
+///
+/// [`Error::OutOfBounds`] when `end` is not a cell of the unpadded matrix, i.e. when
+/// `(i + 1, j + 1)` is outside `acc`.
+pub fn traceback(
+    acc: MatrixView<'_>,
+    end: (usize, usize),
+    start: Start,
+) -> Result<Vec<(usize, usize)>, Error> {
+    let (mut i, mut j) = end;
+    let out_of_bounds = Error::OutOfBounds {
+        row: i,
+        col: j,
+        rows: acc.rows().saturating_sub(1),
+        cols: acc.cols().saturating_sub(1),
+    };
+    if i.checked_add(1).is_none_or(|r| r >= acc.rows())
+        || j.checked_add(1).is_none_or(|c| c >= acc.cols())
+    {
+        return Err(out_of_bounds);
+    }
+    // every read below is at (row <= i + 1, col <= j + 1) with i, j only decreasing,
+    // so inside acc; `cost` still returns NaN rather than panic if that were wrong
+    let cost = |row: usize, col: usize| acc.get(row, col).unwrap_or(f64::NAN);
+    let mut path = vec![(i, j)];
+    while (i, j) != (0, 0) {
+        if i == 0 && start == Start::FirstRow {
+            break;
+        }
+        let mut best: Option<(f64, usize, usize)> = None;
+        #[expect(
+            clippy::neg_cmp_op_on_partial_ord,
+            reason = "Python's min replaces only when `value < current`; NaN never does"
+        )]
+        let mut offer = |value: f64, ni: usize, nj: usize| match best {
+            Some((current, _, _)) if !(value < current) => {}
+            _ => best = Some((value, ni, nj)),
+        };
+        if i > 0 && j > 0 {
+            offer(cost(i, j), i - 1, j - 1); // D is padded: D[i][j] is cell (i - 1, j - 1)
+        }
+        if i > 0 {
+            offer(cost(i, j + 1), i - 1, j);
+        }
+        if j > 0 && !(start == Start::FirstRow && i == 0) {
+            offer(cost(i + 1, j), i, j - 1);
+        }
+        // (i, j) != (0, 0) and not (i == 0 with a first-row start): one candidate exists
+        let Some((_, ni, nj)) = best else { break };
+        (i, j) = (ni, nj);
+        path.push((i, j));
+    }
+    path.reverse();
+    Ok(path)
+}
+
 /// The DTW recurrence over the rows of `costs`, writing into the padded `acc` (row-major,
 /// `costs.cols() + 1` wide), visiting in row `i` the columns `columns(i)`, in order.
 #[expect(
@@ -172,6 +246,42 @@ mod tests {
         let c = [1.0, 0.0];
         let d = subsequence_accumulate(view(&c, 1, 2)).unwrap().into_vec();
         assert_eq!(d, vec![0.0, 0.0, 0.0, INF, 1.0, 0.0]);
+    }
+
+    #[test]
+    fn traceback_keeps_the_first_minimum() {
+        // all-zero costs, 3 x 4: every path ties; the diagonal wins, then row 0
+        let c = [0.0; 12];
+        let d = accumulate(view(&c, 3, 4), Band::Unconstrained).unwrap();
+        let path = traceback(d.view(), (2, 3), Start::Origin).unwrap();
+        assert_eq!(path, vec![(0, 0), (0, 1), (1, 2), (2, 3)]);
+        // a NaN first candidate (the diagonal) is kept: nothing compares below it
+        let d = [0.0, INF, INF, INF, f64::NAN, 5.0, INF, 1.0, 9.0];
+        let path = traceback(view(&d, 3, 3), (1, 1), Start::Origin).unwrap();
+        assert_eq!(path, vec![(0, 0), (1, 1)]);
+    }
+
+    #[test]
+    fn subsequence_traceback_stops_on_the_first_row() {
+        let c = [1.0, 0.0, 0.0, 1.0]; // a 2 x 2 cost matrix
+        let d = subsequence_accumulate(view(&c, 2, 2)).unwrap();
+        let path = traceback(d.view(), (1, 1), Start::FirstRow).unwrap();
+        assert_eq!(path.first().map(|p| p.0), Some(0));
+        assert_eq!(path.last(), Some(&(1, 1)));
+    }
+
+    #[test]
+    fn traceback_rejects_a_cell_outside_the_matrix() {
+        let d = accumulate(view(&[0.0], 1, 1), Band::Unconstrained).unwrap();
+        assert!(matches!(
+            traceback(d.view(), (1, 0), Start::Origin),
+            Err(Error::OutOfBounds { .. })
+        ));
+        assert!(traceback(d.view(), (0, usize::MAX), Start::Origin).is_err());
+        assert_eq!(
+            traceback(d.view(), (0, 0), Start::Origin).unwrap(),
+            vec![(0, 0)]
+        );
     }
 
     #[test]

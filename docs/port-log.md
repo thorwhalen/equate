@@ -225,3 +225,18 @@ handled and pinned.
 
 Thorough cross-check run of the third-party engines (5,000 examples each): dtaidistance,
 Biopython NW and SW, tslearn: **4 passed**.
+
+### 5.2 `_traceback_dtw` -> `equate_sequence_core::dtw::traceback` (done)
+
+- Core: `dtw::traceback(MatrixView, end, Start::{Origin, FirstRow}) -> Result<Vec<(usize,
+  usize)>, Error>`: candidates offered in the reference's order (diagonal, up, left; left
+  withheld on the first row for `FirstRow`), the first kept unless a later one is strictly
+  smaller (Python's `min(..., key=...)`), so ties and NaN behave as in the reference. An
+  `end` outside the matrix is `Error::OutOfBounds` -> `IndexError` (the facade never
+  passes one).
+- Facade: the rust DTW kernels now use the native accumulation **and** traceback; the
+  wrapper passes `stop_row0` explicitly (review minor P3).
+- Differential: thorough (5,000 examples) + 1,200-case grid: **1,201 passed**;
+  `tests/test_sequence.py` + `tests/test_port_surface.py`: 222 passed, 6 skipped
+  (Biopython on empty inputs). Hand mutant: last-wins ties (`<=` for `<`) -> **415
+  failures**.

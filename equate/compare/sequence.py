@@ -242,11 +242,14 @@ def _dtw_kernels(backend):
             w = min(w, max(C.shape))
         return core.dtw_accumulate(_float64(C), window=w)
 
+    def traceback(D, i, j, *, stop_row0=False):
+        return core.traceback_dtw(D, i, j, stop_row0=stop_row0)
+
     return _DTWKernels(
         accumulate=accumulate,
-        # not ported yet: the reference kernels
+        # not ported yet: the reference kernel
         subsequence_accumulate=_NUMPY_DTW.subsequence_accumulate,
-        traceback=_NUMPY_DTW.traceback,
+        traceback=traceback,
     )
 
 

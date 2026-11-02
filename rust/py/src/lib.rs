@@ -69,7 +69,7 @@ fn with_view<T>(
 // gil_used = true: see the module docs (in-place reads of caller-owned numpy buffers)
 #[pymodule(gil_used = true)]
 mod _core {
-    use equate_sequence_core::dtw::{self, Band};
+    use equate_sequence_core::dtw::{self, Band, Start};
     use numpy::{PyArray2, PyReadonlyArray1, PyReadonlyArray2};
     use pyo3::exceptions::PyNotImplementedError;
     use pyo3::prelude::*;
@@ -115,14 +115,25 @@ mod _core {
     /// Warping path from cell `(i, j)` back through the padded accumulated costs `acc`.
     #[pyfunction]
     #[pyo3(signature = (acc, i, j, /, *, stop_row0))]
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "PyO3 extracts array arguments by value"
+    )]
     fn traceback_dtw<'py>(
+        py: Python<'py>,
         acc: PyReadonlyArray2<'py, f64>,
         i: usize,
         j: usize,
         stop_row0: bool,
     ) -> PyResult<Bound<'py, PyTuple>> {
-        let _ = (acc, i, j, stop_row0);
-        Err(not_yet("traceback_dtw"))
+        let start = if stop_row0 {
+            Start::FirstRow
+        } else {
+            Start::Origin
+        };
+        let path =
+            with_view(&acc.as_array(), |d| dtw::traceback(d, (i, j), start))?.map_err(to_pyerr)?;
+        PyTuple::new(py, path)
     }
 
     /// Needleman-Wunsch (global) or Smith-Waterman (local) alignment of a score matrix.
