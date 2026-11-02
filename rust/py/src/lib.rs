@@ -76,7 +76,6 @@ mod _core {
     use equate_sequence_core::align::{self, MatchMismatch, Mode, Scoring};
     use equate_sequence_core::dtw::{self, Band, Start};
     use numpy::{PyArray2, PyReadonlyArray1, PyReadonlyArray2};
-    use pyo3::exceptions::PyNotImplementedError;
     use pyo3::prelude::*;
     use pyo3::types::PyTuple;
 
@@ -85,10 +84,6 @@ mod _core {
     /// True in debug builds, so benchmarks can refuse them.
     #[pymodule_export]
     const DEBUG_BUILD: bool = cfg!(debug_assertions);
-
-    fn not_yet(name: &str) -> PyErr {
-        PyNotImplementedError::new_err(format!("equate_rust._core.{name} is not ported yet"))
-    }
 
     /// Padded DTW accumulated-cost matrix of `costs` inside a Sakoe-Chiba band.
     #[pyfunction]
@@ -110,11 +105,16 @@ mod _core {
     /// Padded subsequence-DTW accumulated-cost matrix (free start on the first row).
     #[pyfunction]
     #[pyo3(signature = (costs, /))]
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "PyO3 extracts array arguments by value"
+    )]
     fn subsequence_dtw_accumulate<'py>(
+        py: Python<'py>,
         costs: PyReadonlyArray2<'py, f64>,
     ) -> PyResult<Bound<'py, PyArray2<f64>>> {
-        let _ = costs;
-        Err(not_yet("subsequence_dtw_accumulate"))
+        let acc = with_view(&costs.as_array(), dtw::subsequence_accumulate)?;
+        to_numpy(py, acc.map_err(to_pyerr)?)
     }
 
     /// Warping path from cell `(i, j)` back through the padded accumulated costs `acc`.

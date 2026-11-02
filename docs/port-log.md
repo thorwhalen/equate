@@ -263,3 +263,16 @@ Biopython NW and SW, tslearn: **4 passed**.
   green. Hand mutant: last-wins `argmax` (`<` for `<=`) -> **557 failures**.
 - Timing (end to end, release): NW 100² 38 ms -> 0.061 ms (623x), 1000² 2.59 s -> 6.24 ms
   (415x).
+
+### 5.4 subsequence DTW accumulation -> `equate_sequence_core::dtw::subsequence_accumulate` (done)
+
+- Core: shares the DTW fill (unbanded, whole first row zero). The end point stays
+  `np.argmin(D[n, 1:])` in the facade (numpy, O(m)), the traceback is 5.2's with
+  `Start::FirstRow`.
+- Binding `subsequence_dtw_accumulate`; the last `NotImplementedError` stub is gone, and
+  `cargo clippy --workspace --all-targets` is clean (0 warnings).
+- Differential: thorough (5,000 examples): passed; new deterministic grid (10 queries x 12
+  series x 3 local costs incl. a negative one) + seeds: 362 passed.
+- Mutants: skipping the last column -> 51 failures. Leaving `D[0][m]` at `+inf` survived
+  and is **equivalent**: that cell is only ever the "up" candidate beside a diagonal `0`
+  that wins the tie, and the traceback stops before reading row 0.

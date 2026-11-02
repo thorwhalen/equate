@@ -364,6 +364,18 @@ test_dtw_alignment_rust_grid = needs_rust_dtw(
         ],
     )
 )
+test_subsequence_dtw_alignment_rust_grid = needs_rust_dtw(
+    trap_grid(
+        Q.subsequence_dtw_alignment,
+        "rust",
+        cases=[
+            ((q, s), {"local_cost": lc})
+            for q in _GRID_SERIES
+            for s in _GRID_SERIES + [[0, 0, 0, 0, 0], [1, 2, 3, 1, 2, 3]]
+            for lc in (None, _abs_cost, _negative_cost)
+        ],
+    )
+)
 _GRID_SYMBOLS = [
     "",
     "A",

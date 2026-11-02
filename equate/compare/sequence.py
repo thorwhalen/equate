@@ -247,8 +247,7 @@ def _dtw_kernels(backend):
 
     return _DTWKernels(
         accumulate=accumulate,
-        # not ported yet: the reference kernel
-        subsequence_accumulate=_NUMPY_DTW.subsequence_accumulate,
+        subsequence_accumulate=lambda C: core.subsequence_dtw_accumulate(_float64(C)),
         traceback=traceback,
     )
 
