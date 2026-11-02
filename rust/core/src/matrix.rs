@@ -65,6 +65,17 @@ impl<'a> MatrixView<'a> {
     }
 }
 
+/// A `rows x cols` buffer of `value`, allocated fallibly: [`Error::Alloc`] instead of
+/// the process abort an infallible `vec!` would cause.
+pub(crate) fn try_filled<T: Clone>(rows: usize, cols: usize, value: T) -> Result<Vec<T>, Error> {
+    let alloc = || Error::Alloc { rows, cols };
+    let len = rows.checked_mul(cols).ok_or_else(alloc)?;
+    let mut data = Vec::new();
+    data.try_reserve_exact(len).map_err(|_| alloc())?;
+    data.resize(len, value);
+    Ok(data)
+}
+
 /// An owned, row-major, `rows x cols` matrix of `f64`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Matrix {
@@ -81,11 +92,7 @@ impl Matrix {
     /// [`Error::Alloc`] when `rows * cols` overflows `usize` or the allocation fails
     /// (an infallible `vec!` would abort the process instead).
     pub fn filled(rows: usize, cols: usize, value: f64) -> Result<Self, Error> {
-        let alloc = Error::Alloc { rows, cols };
-        let len = rows.checked_mul(cols).ok_or_else(|| alloc.clone())?;
-        let mut data = Vec::new();
-        data.try_reserve_exact(len).map_err(|_| alloc)?;
-        data.resize(len, value);
+        let data = try_filled(rows, cols, value)?;
         Ok(Self { data, rows, cols })
     }
 

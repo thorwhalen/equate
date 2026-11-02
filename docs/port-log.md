@@ -276,3 +276,19 @@ Biopython NW and SW, tslearn: **4 passed**.
 - Mutants: skipping the last column -> 51 failures. Leaving `D[0][m]` at `+inf` survived
   and is **equivalent**: that cell is only ever the "up" candidate beside a diagonal `0`
   that wins the tie, and the traceback stops before reading row 0.
+
+#### Review of 5.2-5.4 (`rust-reviewer`, fresh Opus subagent): changes requested, 1 blocker, 2 majors
+
+The reviewer's own routing probe (NW and SW x 8 sequence pairs x 31 values for gap /
+match / mismatch / substitution: ints at the float edge, `10**400`, `2**64 + 1`, numpy
+float16/32, int8/64, uint32/64, longdouble, bool, NaN, ±inf, `Fraction`, `Decimal`, `"1"`,
+`None`; 2,480 cases) found **no difference** in score, path or exception class.
+
+| finding | resolution |
+|---|---|
+| blocker B1: `align` allocated its tables with `vec!`; `needleman_wunsch_alignment('a'*2**20, 'b'*2**20, backend='rust')` aborted the process (numpy raises `MemoryError`) | fixed: `align` returns `Result`, tables via a fallible `try_filled` (shared with `Matrix::filled`), `Error::Alloc` -> `MemoryError`; the probe now raises `MemoryError: cannot allocate a 1048577 x 1048577 matrix` |
+| major B1: copying a non-contiguous array (`row_major`) could abort | fixed: `try_copy` with `try_reserve_exact` -> `MemoryError` (probe: a broadcast 2^20 x 2^20 view) |
+| major B1: the code copies in `align_codes` could abort | fixed: same `try_copy` (probe: a broadcast 2^50 array) |
+| minor B4: nothing pinned which kernel each input takes | fixed: `test_rust_alignment_routing` (10 inputs) and `test_rust_dtw_routing`, with a spy on `_rust()` |
+| minor X: kernels do not check signals | documented in the binding's module docs (Ctrl-C acts when the call returns; ~6 ms for the largest benchmarked call); a signal check would need PyO3 in the core |
+| minor O2: `copy_from_slice` could panic for a wrong-length buffer | fixed: element-wise `zip` |

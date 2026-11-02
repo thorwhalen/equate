@@ -10,6 +10,11 @@
 //! free-threaded) would make that a data race, and copying first costs about half the
 //! kernel time at 1000 x 1000. Kernels whose inputs are copied into Rust first
 //! (`align_codes`) detach. Recorded in equate's `docs/port-log.md`.
+//!
+//! Allocation: every buffer of input size is allocated fallibly, so an impossible size
+//! is a `MemoryError` (as in numpy), never a process abort. Interrupts: the kernels do
+//! not check for signals; Ctrl-C takes effect when a call returns (milliseconds at
+//! 1000 x 1000, about 6 ms for the largest benchmarked alignment).
 
 use std::borrow::Cow;
 
@@ -41,12 +46,22 @@ fn to_pyerr(err: Error) -> PyErr {
     }
 }
 
+/// The elements of an array view in logical (row-major) order, copied into a buffer
+/// allocated fallibly (`MemoryError`, never a process abort).
+fn try_copy<'a, T: Copy + 'a>(len: usize, items: impl Iterator<Item = &'a T>) -> PyResult<Vec<T>> {
+    let mut out = Vec::new();
+    out.try_reserve_exact(len)
+        .map_err(|_| PyMemoryError::new_err(format!("cannot copy an array of {len} elements")))?;
+    out.extend(items.copied());
+    Ok(out)
+}
+
 /// The values of a 2-D array in row-major order: borrowed when the array is
 /// C-contiguous (what the facade passes), copied otherwise.
-fn row_major<'a>(array: &'a ArrayView2<'_, f64>) -> Cow<'a, [f64]> {
+fn row_major<'a>(array: &'a ArrayView2<'_, f64>) -> PyResult<Cow<'a, [f64]>> {
     match array.as_slice() {
-        Some(slice) => Cow::Borrowed(slice),
-        None => Cow::Owned(array.iter().copied().collect()),
+        Some(slice) => Ok(Cow::Borrowed(slice)),
+        None => Ok(Cow::Owned(try_copy(array.len(), array.iter())?)),
     }
 }
 
@@ -64,7 +79,7 @@ fn with_view<T>(
     kernel: impl FnOnce(MatrixView<'_>) -> T,
 ) -> PyResult<T> {
     let (rows, cols) = array.dim();
-    let data = row_major(array);
+    let data = row_major(array)?;
     let view = MatrixView::new(&data, rows, cols).map_err(to_pyerr)?;
     Ok(kernel(view))
 }
@@ -79,7 +94,7 @@ mod _core {
     use pyo3::prelude::*;
     use pyo3::types::PyTuple;
 
-    use super::{to_numpy, to_pyerr, with_view};
+    use super::{to_numpy, to_pyerr, try_copy, with_view};
 
     /// True in debug builds, so benchmarks can refuse them.
     #[pymodule_export]
@@ -155,7 +170,7 @@ mod _core {
         local: bool,
     ) -> PyResult<(f64, Bound<'py, PyTuple>)> {
         let scoring = scoring(gap, local);
-        let al = with_view(&scores.as_array(), |s| align::align(&s, scoring))?;
+        let al = with_view(&scores.as_array(), |s| align::align(&s, scoring))?.map_err(to_pyerr)?;
         Ok((al.score, PyTuple::new(py, al.path)?))
     }
 
@@ -180,18 +195,21 @@ mod _core {
         local: bool,
     ) -> PyResult<(f64, Bound<'py, PyTuple>)> {
         // owned copies (O(n + m)), so the O(n m) work can run detached
-        let a: Vec<i64> = a.as_array().iter().copied().collect();
-        let b: Vec<i64> = b.as_array().iter().copied().collect();
+        let (a, b) = (a.as_array(), b.as_array());
+        let a = try_copy(a.len(), a.iter())?;
+        let b = try_copy(b.len(), b.iter())?;
         let scoring = scoring(gap, local);
-        let al = py.detach(|| {
-            let sub = MatchMismatch {
-                a: &a,
-                b: &b,
-                matched: match_score,
-                mismatched: mismatch_score,
-            };
-            align::align(&sub, scoring)
-        });
+        let al = py
+            .detach(|| {
+                let sub = MatchMismatch {
+                    a: &a,
+                    b: &b,
+                    matched: match_score,
+                    mismatched: mismatch_score,
+                };
+                align::align(&sub, scoring)
+            })
+            .map_err(to_pyerr)?;
         Ok((al.score, PyTuple::new(py, al.path)?))
     }
 

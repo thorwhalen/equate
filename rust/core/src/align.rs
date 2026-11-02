@@ -8,6 +8,8 @@
 //! of the whole matrix in row-major order. The arithmetic is the reference's, in the
 //! same order, so scores are bit-identical.
 
+use crate::Error;
+use crate::matrix::try_filled;
 use crate::pyorder::np_argmax;
 
 /// Global or local alignment.
@@ -48,7 +50,7 @@ pub trait Substitution {
     /// Number of elements of the second sequence.
     fn cols(&self) -> usize;
     /// Writes the scores of row `i` (`a[i]` against every `b[j]`) into `out`, which has
-    /// `cols()` cells.
+    /// `cols()` cells (cells beyond either length are left as they are).
     fn fill_row(&self, i: usize, out: &mut [f64]);
 }
 
@@ -63,7 +65,9 @@ impl Substitution for crate::MatrixView<'_> {
 
     fn fill_row(&self, i: usize, out: &mut [f64]) {
         if let Some(row) = self.row(i) {
-            out.copy_from_slice(row);
+            for (cell, &value) in out.iter_mut().zip(row) {
+                *cell = value;
+            }
         }
     }
 }
@@ -115,17 +119,23 @@ enum Move {
 }
 
 /// Aligns the two sequences described by `sub` under `scoring`.
+///
+/// # Errors
+///
+/// [`Error::Alloc`] when the `(n + 1) x (m + 1)` tables cannot be allocated.
 #[expect(
     clippy::indexing_slicing,
     reason = "table and moves have (n + 1) x (m + 1) cells and every index below is i * width + j with i <= n, j <= m"
 )]
-pub fn align<S: Substitution + ?Sized>(sub: &S, scoring: Scoring) -> Alignment {
+pub fn align<S: Substitution + ?Sized>(sub: &S, scoring: Scoring) -> Result<Alignment, Error> {
     let (n, m) = (sub.rows(), sub.cols());
-    let width = m + 1;
+    let alloc = || Error::Alloc { rows: n, cols: m };
+    let height = n.checked_add(1).ok_or_else(alloc)?;
+    let width = m.checked_add(1).ok_or_else(alloc)?;
     let local = scoring.mode == Mode::Local;
     let gap = scoring.gap;
-    let mut table = vec![0.0_f64; (n + 1) * width];
-    let mut moves = vec![Move::Stop; (n + 1) * width];
+    let mut table = try_filled(height, width, 0.0_f64)?;
+    let mut moves = try_filled(height, width, Move::Stop)?;
     if !local {
         for i in 1..=n {
             table[i * width] = table[(i - 1) * width] + gap;
@@ -136,7 +146,7 @@ pub fn align<S: Substitution + ?Sized>(sub: &S, scoring: Scoring) -> Alignment {
             moves[j] = Move::Left;
         }
     }
-    let mut scores = vec![0.0_f64; m];
+    let mut scores = try_filled(1, m, 0.0_f64)?;
     for i in 1..=n {
         sub.fill_row(i - 1, &mut scores);
         let (head, tail) = table.split_at_mut(i * width);
@@ -169,7 +179,7 @@ pub fn align<S: Substitution + ?Sized>(sub: &S, scoring: Scoring) -> Alignment {
         (n, m)
     };
     let score = table[i * width + j];
-    let mut path = Vec::with_capacity(n + m);
+    let mut path = Vec::new();
     loop {
         match moves[i * width + j] {
             Move::Stop => break,
@@ -188,7 +198,7 @@ pub fn align<S: Substitution + ?Sized>(sub: &S, scoring: Scoring) -> Alignment {
         }
     }
     path.reverse();
-    Alignment { score, path }
+    Ok(Alignment { score, path })
 }
 
 #[cfg(test)]
@@ -212,7 +222,7 @@ mod tests {
             matched,
             mismatched,
         };
-        align(&sub, Scoring { gap, mode })
+        align(&sub, Scoring { gap, mode }).unwrap()
     }
 
     #[test]
@@ -276,6 +286,34 @@ mod tests {
                 mismatched: -0.5,
             };
             assert_eq!(align(&view, scoring), align(&by_codes, scoring));
+        }
+    }
+
+    /// A problem too large to allocate: its size overflows `usize`.
+    struct Huge(usize, usize);
+
+    impl Substitution for Huge {
+        fn rows(&self) -> usize {
+            self.0
+        }
+        fn cols(&self) -> usize {
+            self.1
+        }
+        fn fill_row(&self, _: usize, _: &mut [f64]) {}
+    }
+
+    #[test]
+    fn an_unallocatable_table_is_an_error_not_an_abort() {
+        let scoring = Scoring {
+            gap: -1.0,
+            mode: Mode::Global,
+        };
+        for huge in [
+            Huge(usize::MAX, 1),
+            Huge(1, usize::MAX),
+            Huge(1 << 40, 1 << 30),
+        ] {
+            assert!(matches!(align(&huge, scoring), Err(Error::Alloc { .. })));
         }
     }
 

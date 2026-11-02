@@ -604,3 +604,73 @@ def test_subsequence_dtw_dtaidistance_backend_agrees():
     assert subsequence_dtw([5, 6, 7], [0, 0, 5, 6, 7, 0], backend="dtaidistance") == 0.0
     with pytest.raises(ValueError, match="local cost"):
         subsequence_dtw([1], [1, 2], backend="dtaidistance", local_cost=lambda x, y: 0)
+
+
+# --- backend='rust' routes each input to the kernel that reproduces it fastest ---------
+# The differential tests prove the results equal; this pins *which* path each input
+# takes, so a regression that silently falls back to the reference (equal results, the
+# speedup lost) fails here.
+
+
+@pytest.mark.skipif(
+    "rust" not in ALIGN or not have("equate_rust"), reason="equate-rust not installed"
+)
+@pytest.mark.parametrize(
+    "args,kwargs,route",
+    [
+        (("GATTACA", "GATACA"), {}, ["align_codes"]),
+        ((["the", "fox"], ["fox"]), {}, ["align_codes"]),
+        (([1, 2, 3], [2, 3]), {}, ["align_codes"]),
+        ((b"abc", b"bc"), {}, ["align_codes"]),
+        (("ab", "b"), {"gap": np.float32(-0.5), "match": np.int64(2)}, ["align_codes"]),
+        (([1.0, 2.0], [2.0]), {}, ["align_scores"]),
+        (([True, 1], [1]), {}, ["align_scores"]),
+        (("ab", "b"), {"substitution": lambda x, y: float(x == y)}, ["align_scores"]),
+        (("ab", "b"), {"match": 10**400, "mismatch": 0}, []),  # OverflowError in S
+        (("ab", "b"), {"gap": __import__("fractions").Fraction(-1, 3)}, None),
+    ],
+)
+def test_rust_alignment_routing(monkeypatch, args, kwargs, route):
+    import equate_rust
+
+    calls = []
+
+    class Spy:
+        def __getattr__(self, name):
+            calls.append(name)
+            return getattr(equate_rust, name)
+
+    monkeypatch.setattr(Q, "_rust", lambda: Spy())
+    reference = Q.needleman_wunsch_alignment
+    try:
+        reference(*args, backend="rust", **kwargs)
+    except OverflowError:
+        pass
+    if (
+        route is None
+    ):  # outside the native domain: the numpy reference, not even imported
+        assert calls == []
+        assert Q._as_double(kwargs["gap"]) is None
+    else:
+        assert calls == route
+
+
+@pytest.mark.skipif(
+    "rust" not in DTW or not have("equate_rust"), reason="equate-rust not installed"
+)
+def test_rust_dtw_routing(monkeypatch):
+    import equate_rust
+
+    calls = []
+
+    class Spy:
+        def __getattr__(self, name):
+            calls.append(name)
+            return getattr(equate_rust, name)
+
+    monkeypatch.setattr(Q, "_rust", lambda: Spy())
+    Q.dtw_alignment([0, 1, 2], [0, 2], window=10**30, backend="rust")
+    assert calls == ["dtw_accumulate", "traceback_dtw"]
+    calls.clear()
+    Q.subsequence_dtw_alignment([1, 2], [0, 1, 2, 0], backend="rust")
+    assert calls == ["subsequence_dtw_accumulate", "traceback_dtw"]
