@@ -53,14 +53,14 @@ def test_subsequence_dtw_dtaidistance_matches_numpy(query, series):
 
 def test_subsequence_dtw_dtaidistance_pinned_path():
     pytest.importorskip("dtaidistance")
-    al = subsequence_dtw_alignment([1, 2, 2], [3, 1, 2, 4, 2, 2, 9], backend="dtaidistance")
+    al = subsequence_dtw_alignment(
+        [1, 2, 2], [3, 1, 2, 4, 2, 2, 9], backend="dtaidistance"
+    )
     assert al.score == pytest.approx(0.0)
     assert al.path == ((0, 1), (1, 2), (2, 2))
 
 
-@pytest.mark.parametrize(
-    "query, series", [([], []), ([], [1, 2]), ([1, 2], [])]
-)
+@pytest.mark.parametrize("query, series", [([], []), ([], [1, 2]), ([1, 2], [])])
 def test_subsequence_dtw_empty_raises(query, series):
     with pytest.raises(ValueError, match="empty"):
         subsequence_dtw_alignment(query, series, backend="numpy")
@@ -86,9 +86,7 @@ def test_soft_dtw_forward_finite_costs():
     assert R.tolist() == [[0.0, INF], [INF, 0.0]]
 
 
-@pytest.mark.parametrize(
-    "a, b", [([INF, 0], [0, 0]), ([0, 0], [INF, 0])]
-)
+@pytest.mark.parametrize("a, b", [([INF, 0], [0, 0]), ([0, 0], [INF, 0])])
 def test_soft_dtw_with_inf_step_is_inf(a, b):
     assert soft_dtw(a, b) == INF
 
