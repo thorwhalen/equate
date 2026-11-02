@@ -642,12 +642,9 @@ def _align_rust(a, b, *, local, substitution, match, mismatch, gap):
 
 
 def _align(a, b, *, local, backend, **scoring):
-    if backend == "rust" and _RUST_ALIGN_PORTED:
+    if backend == "rust":
         return _align_rust(a, b, local=local, **scoring)
     return _align_dp(a, b, local=local, **scoring)
-
-
-_RUST_ALIGN_PORTED = False  # until the native fill and traceback land
 
 
 def _align_biopython(a, b, *, mode, substitution, match, mismatch, gap):

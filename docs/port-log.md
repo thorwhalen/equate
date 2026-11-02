@@ -240,3 +240,26 @@ Biopython NW and SW, tslearn: **4 passed**.
   `tests/test_sequence.py` + `tests/test_port_surface.py`: 222 passed, 6 skipped
   (Biopython on empty inputs). Hand mutant: last-wins ties (`<=` for `<`) -> **415
   failures**.
+
+### 5.3 `_align_dp` (fill + traceback) -> `equate_sequence_core::align::align` (done)
+
+- Core: `align::align(&impl Substitution, Scoring { gap, mode: Mode::{Global, Local} })
+  -> Alignment { score, path: Vec<(Option<usize>, Option<usize>)> }`. Two substitution
+  sources behind one trait: a `MatrixView` (the score matrix the facade built) and
+  `MatchMismatch` (interned codes, `matched`/`mismatched`), so the default scorer costs no
+  Python call per cell. Each cell takes `pyorder::np_argmax` of (diagonal, up, left):
+  numpy's first maximum, first NaN wins; local mode floors `<= 0` (NaN is not floored);
+  the local end cell is `np_argmax` over the whole table (row-major); the traceback follows
+  the recorded moves, never a recomputed float equality.
+- Binding: `align_scores` (stays attached: reads the caller's buffer) and `align_codes`
+  (copies the O(n + m) codes, then `py.detach` for the O(nm) work).
+- Facade: `backend="rust"` alignment routes through `_align_rust` (domain rules in 3-4).
+  Routing checked by a spy: `str`, token lists, `int` lists and `bytes` take
+  `align_codes`; float tokens and substitution callables take `align_scores`; a
+  `Fraction` gap runs the reference; `match=10**400` / `gap=10**400` raise
+  `OverflowError` exactly where the reference does.
+- Differential: fast + both 1,210-case grids: 2,422 passed; **thorough (5,000 examples
+  each, NW and SW): passed**; `tests/test_sequence.py` + `tests/test_port_surface.py`
+  green. Hand mutant: last-wins `argmax` (`<` for `<=`) -> **557 failures**.
+- Timing (end to end, release): NW 100² 38 ms -> 0.061 ms (623x), 1000² 2.59 s -> 6.24 ms
+  (415x).

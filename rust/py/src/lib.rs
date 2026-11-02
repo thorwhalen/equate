@@ -27,6 +27,10 @@ use pyo3::prelude::*;
     clippy::needless_pass_by_value,
     reason = "the shape `.map_err` takes: FnOnce(Error) -> PyErr"
 )]
+#[expect(
+    clippy::match_same_arms,
+    reason = "Shape is named on purpose; the wildcard covers variants added later"
+)]
 fn to_pyerr(err: Error) -> PyErr {
     match err {
         Error::Alloc { .. } => PyMemoryError::new_err(err.to_string()),
@@ -69,6 +73,7 @@ fn with_view<T>(
 // gil_used = true: see the module docs (in-place reads of caller-owned numpy buffers)
 #[pymodule(gil_used = true)]
 mod _core {
+    use equate_sequence_core::align::{self, MatchMismatch, Mode, Scoring};
     use equate_sequence_core::dtw::{self, Band, Start};
     use numpy::{PyArray2, PyReadonlyArray1, PyReadonlyArray2};
     use pyo3::exceptions::PyNotImplementedError;
@@ -139,19 +144,34 @@ mod _core {
     /// Needleman-Wunsch (global) or Smith-Waterman (local) alignment of a score matrix.
     #[pyfunction]
     #[pyo3(signature = (scores, /, *, gap, local))]
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "PyO3 extracts array arguments by value"
+    )]
     fn align_scores<'py>(
+        py: Python<'py>,
         scores: PyReadonlyArray2<'py, f64>,
         gap: f64,
         local: bool,
     ) -> PyResult<(f64, Bound<'py, PyTuple>)> {
-        let _ = (scores, gap, local);
-        Err(not_yet("align_scores"))
+        let scoring = scoring(gap, local);
+        let al = with_view(&scores.as_array(), |s| align::align(&s, scoring))?;
+        Ok((al.score, PyTuple::new(py, al.path)?))
     }
 
     /// The same alignment for two code sequences scored by match / mismatch.
     #[pyfunction]
     #[pyo3(signature = (a, b, /, *, match_score, mismatch_score, gap, local))]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "mirrors the facade's keyword-only call; PyO3 has no options struct for kwargs"
+    )]
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "PyO3 extracts array arguments by value"
+    )]
     fn align_codes<'py>(
+        py: Python<'py>,
         a: PyReadonlyArray1<'py, i64>,
         b: PyReadonlyArray1<'py, i64>,
         match_score: f64,
@@ -159,7 +179,24 @@ mod _core {
         gap: f64,
         local: bool,
     ) -> PyResult<(f64, Bound<'py, PyTuple>)> {
-        let _ = (a, b, match_score, mismatch_score, gap, local);
-        Err(not_yet("align_codes"))
+        // owned copies (O(n + m)), so the O(n m) work can run detached
+        let a: Vec<i64> = a.as_array().iter().copied().collect();
+        let b: Vec<i64> = b.as_array().iter().copied().collect();
+        let scoring = scoring(gap, local);
+        let al = py.detach(|| {
+            let sub = MatchMismatch {
+                a: &a,
+                b: &b,
+                matched: match_score,
+                mismatched: mismatch_score,
+            };
+            align::align(&sub, scoring)
+        });
+        Ok((al.score, PyTuple::new(py, al.path)?))
+    }
+
+    fn scoring(gap: f64, local: bool) -> Scoring {
+        let mode = if local { Mode::Local } else { Mode::Global };
+        Scoring { gap, mode }
     }
 }
