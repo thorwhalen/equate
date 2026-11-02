@@ -179,7 +179,11 @@ pub fn align<S: Substitution + ?Sized>(sub: &S, scoring: Scoring) -> Result<Alig
         (n, m)
     };
     let score = table[i * width + j];
+    // at most n + m steps; reserved fallibly (a long sequence against an empty one makes
+    // the path, not the tables, the largest allocation)
     let mut path = Vec::new();
+    path.try_reserve_exact(n.saturating_add(m))
+        .map_err(|_| alloc())?;
     loop {
         match moves[i * width + j] {
             Move::Stop => break,

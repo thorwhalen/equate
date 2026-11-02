@@ -104,6 +104,7 @@ pub enum Start {
 ///
 /// [`Error::OutOfBounds`] when `end` is not a cell of the unpadded matrix, i.e. when
 /// `(i + 1, j + 1)` is outside `acc`.
+/// [`Error::Alloc`] when the path cannot be allocated.
 pub fn traceback(
     acc: MatrixView<'_>,
     end: (usize, usize),
@@ -124,7 +125,11 @@ pub fn traceback(
     // every read below is at (row <= i + 1, col <= j + 1) with i, j only decreasing,
     // so inside acc; `cost` still returns NaN rather than panic if that were wrong
     let cost = |row: usize, col: usize| acc.get(row, col).unwrap_or(f64::NAN);
-    let mut path = vec![(i, j)];
+    // at most i + j + 1 cells; reserved fallibly
+    let mut path = Vec::new();
+    path.try_reserve_exact(i.saturating_add(j).saturating_add(1))
+        .map_err(|_| Error::Alloc { rows: i, cols: j })?;
+    path.push((i, j));
     while (i, j) != (0, 0) {
         if i == 0 && start == Start::FirstRow {
             break;

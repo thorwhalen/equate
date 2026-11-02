@@ -641,11 +641,14 @@ def test_rust_alignment_routing(monkeypatch, args, kwargs, route):
             return getattr(equate_rust, name)
 
     monkeypatch.setattr(Q, "_rust", lambda: Spy())
-    reference = Q.needleman_wunsch_alignment
-    try:
-        reference(*args, backend="rust", **kwargs)
-    except OverflowError:
-        pass
+    call = lambda: Q.needleman_wunsch_alignment(*args, backend="rust", **kwargs)  # noqa: E731
+    if (
+        kwargs.get("match") == 10**400
+    ):  # float(match) overflows in S, as in the reference
+        with pytest.raises(OverflowError):
+            call()
+    else:
+        call()
     if (
         route is None
     ):  # outside the native domain: the numpy reference, not even imported

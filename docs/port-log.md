@@ -414,3 +414,18 @@ lands it (per `landing-a-branch`):
    add the `equate[rust]` extra and regenerate `uv.lock`.
 4. Squash-merge. Merging publishes equate (wads auto-bump): the CHANGELOG entry is under
    "Unreleased".
+
+#### Final review of the fixes (`rust-reviewer`, fresh Opus subagent)
+
+All six findings of the previous review confirmed resolved (the reviewer re-ran the
+`MemoryError` probes and the routing tests). New: one major and three minors.
+
+| finding | resolution |
+|---|---|
+| major B1: the alignment path grew with infallible `push` (32 B per step), so a long sequence against an empty one could abort after the tables allocated | fixed: `try_reserve_exact(n + m)` -> `Error::Alloc` |
+| minor B1: the same in the DTW traceback | fixed: `try_reserve_exact(i + j + 1)` |
+| minor X: PyO3 0.30.1's `PyTuple::new` panics (`PanicException`) if CPython cannot allocate the tuple, where numpy would raise `MemoryError` | **accepted and recorded**: PyO3-internal, reachable only after the O(nm) tables already fit in memory; returning the path as a fallibly allocated `(L, 2)` int64 array would avoid it, at the cost of converting it back to tuples in Python |
+| minor X: `except OverflowError: pass` in the routing test hid which call raised | fixed: `pytest.raises` scoped to the overflowing input |
+
+After these fixes: clippy 0 warnings, core tests 18 passed, whole suite 4,596 passed /
+53 skipped, rust differential (fast + grids) green. No blocker or major remains open.
