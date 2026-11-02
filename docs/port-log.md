@@ -4,7 +4,7 @@ The state of the port, for the next session. Method: the `pyo3-port` skill (orac
 first, one leaf function per step, each gated on a differential test and a review);
 whether to port: the `rust-port-assess` skill.
 
-Status: **in progress** (cloud session, 2026-11-02). Landing owed: see the end of this file.
+Status: **ported (DTW, subsequence DTW, NW/SW), landing owed** (cloud session, 2026-11-02): see the end of this file.
 
 ## 1. Assessment
 
@@ -292,3 +292,125 @@ float16/32, int8/64, uint32/64, longdouble, bool, NaN, ±inf, `Fraction`, `Decim
 | minor B4: nothing pinned which kernel each input takes | fixed: `test_rust_alignment_routing` (10 inputs) and `test_rust_dtw_routing`, with a spy on `_rust()` |
 | minor X: kernels do not check signals | documented in the binding's module docs (Ctrl-C acts when the call returns; ~6 ms for the largest benchmarked call); a signal check would need PyO3 in the core |
 | minor O2: `copy_from_slice` could panic for a wrong-length buffer | fixed: element-wise `zip` |
+
+## 6. After benchmark (same machine, same run, release build)
+
+`python benchmarks/bench_port.py --backends numpy rust dtaidistance biopython`; median of
+7 auto-ranged runs, spread = min-max of the rust column; end to end through the public
+function (validation, cost matrix, kernels, boundary). Intel Xeon @ 2.10 GHz (model 207),
+4 vCPU, Linux x86_64 cloud VM; CPython 3.13.18 (GIL), numpy 2.5.4; `equate_rust` 0.1.0,
+release (`DEBUG_BUILD` false). Ratios are valid within this run; absolute times are not
+comparable with another machine.
+
+| case | size | before (numpy) | after (rust) | ratio | rust spread |
+|---|---|---|---|---|---|
+| dtw unconstrained | 100 x 100 | 3.64 ms | 52.4 µs | 69x | 44.4 - 60.4 µs |
+| dtw unconstrained | 1000 x 1000 | 462 ms | 8.72 ms | **53x** | 7.42 - 9.52 ms |
+| dtw 10% band (the default window) | 100 x 100 | 1.07 ms | 39.4 µs | 27x | 37.5 - 42 µs |
+| dtw 10% band (the default window) | 1000 x 1000 | 97.7 ms | 4.40 ms | 22x | 4.19 - 5.73 ms |
+| subsequence_dtw | 10 x 100 | 438 µs | 19.7 µs | 22x | 15.9 - 22.5 µs |
+| subsequence_dtw | 100 x 1000 | 40.6 ms | 564 µs | 72x | 488 - 630 µs |
+| needleman_wunsch | 100 x 100 | 27.3 ms | 44.1 µs | 619x | 39.1 - 68 µs |
+| needleman_wunsch | 1000 x 1000 | 2.45 s | 5.81 ms | **422x** | 5.0 - 7.16 ms |
+| smith_waterman | 100 x 100 | 28.7 ms | 55.5 µs | 517x | 44.7 - 77.8 µs |
+| smith_waterman | 1000 x 1000 | 2.72 s | 7.68 ms | 354x | 5.95 - 9.34 ms |
+| nw custom substitution | 100 x 100 | 27.7 ms | 927 µs | 30x | 657 µs - 1.2 ms |
+
+The numpy column agrees with the before run of step 2 within its spread (e.g. DTW
+1000² 417 ms then, 462 ms now; NW 1000² 2.56 s then, 2.45 s now). Same run, for
+reference: dtaidistance 0.5-0.8x numpy (its pure-Python path, see the open questions),
+Biopython 525-1,378x (score only, no path). Every ported function gains: none goes back
+to the reference.
+
+Where the remaining DTW time goes (1000², unconstrained, 8.7 ms): the kernel is 2.8 ms
+(150x on its own); the rest is the Python-side squared-Euclidean cost matrix (`einsum`)
+and returning the padded matrix to numpy for the traceback. A fused native kernel
+(costs + accumulate + traceback in one call) is the next step if that matters; the
+custom-substitution case is bound by the n*m Python callable calls, as expected.
+
+## 7. Publish rule (`rust-port-assess`) for `equate-sequence-core`
+
+```text
+Publish: no: veto (API not ready to commit to; shaped for the facade)  [the rule itself passes: a=3, b=2]
+  (a) 3/3  pure transformation: f64 matrices / i64 code slices in, a Matrix or (score, path) out;
+           finite configuration (Band, Start, Mode, Scoring); no callbacks; deterministic
+  (b) 2/3  DTW: augurs-dtw 0.10.3 (MIT OR Apache-2.0, released 2026-10-27, ~8k recent downloads)
+           is distance-only and univariate: no warping path, no subsequence DTW; dtw_rs 0.10.0 has
+           a non-standard licence. NW/SW: bio 4.2.2 (MIT, ~122k recent downloads) has pairwise
+           alignment with paths, so the gap is DTW with path / band / subsequence, not alignment.
+           Searched: crates.io q="dynamic time warping", q="needleman wunsch"; read augurs-dtw's
+           public API (Dtw::{euclidean, manhattan, with_window, distance, distance_matrix}).
+  name: equate-sequence-core  free (404 on crates.io, with '-' and '_')
+  layout: (ii) stay unpublished (publish = false)
+```
+
+Why the veto: the core's API is the facade's seam, not a Rust user's API. `accumulate`
+returns the reference's *padded* matrix and the traceback is a separate call over it, and
+the NaN handling deliberately mirrors Python's `min` and numpy's `argmax` (right for
+parity, surprising as a Rust contract). A crate worth publishing would expose
+`dtw(a, b, &Options) -> Alignment` (plus subsequence, NW and SW twins) with the padded
+kernels private. After that redesign the rule says "standard" (a >= 2, b = 2), and
+`cargo publish --dry-run -p equate-sequence-core` becomes the gate. Nothing was
+published from this session, and no `cargo publish --dry-run` was needed.
+
+## 8-9. Stubs, packaging, CI
+
+- `equate_rust/_core.pyi` (with `__all__`) and `py.typed`: `python -m mypy.stubtest
+  equate_rust._core` -> **no issues**.
+- Local release build: `maturin build --release --locked` -> `equate_rust-0.1.0-cp310-abi3-
+  manylinux_2_34_x86_64.whl` (contents: `__init__.py`, `_core.abi3.so`, `_core.pyi`,
+  `py.typed`, no bytecode); `maturin sdist` builds. The wheel installed into a fresh
+  **CPython 3.10** venv with equate (non-editable) passed the differential, sequence and
+  port-surface tests run from outside the checkout (`--import-mode=importlib`):
+  **4,150 passed, 67 skipped** (the third-party engines were not installed there).
+- `.github/workflows/rust-ci.yml` (PRs touching `rust/` or the sequence backend): fmt,
+  clippy with warnings denied, core tests, a release wheel installed with equate, the
+  differential + sequence + port-surface tests (fast; thorough on 3.13), the whole suite,
+  cargo-deny. **Ran on this PR**: lint, deny and test (3.10, 3.13) green from
+  `0563fb6` on (`lint` failed earlier on the skeleton's stub warnings, which the leaves
+  removed). equate's own wads CI is green from the same commit (it had failed at
+  collection while `tests/test_differential.py` imported hypothesis unconditionally).
+- `.github/workflows/rust-release.yml`: the abi3 wheel matrix (manylinux x86_64 and
+  aarch64, macOS arm64 and x86_64, Windows x64) + sdist, smoke-tested outside the
+  checkout, published by PyPI trusted publishing on an `equate-rust-v*` tag or a manual
+  dispatch with `publish`. **Not run**: `workflow_dispatch` works only once the workflow
+  is on the default branch, and no tag was pushed. macOS x86_64 is cross-compiled on
+  macos-14 and not smoke-tested. The trusted publisher for `equate-rust` must be
+  configured on PyPI before the first tag.
+
+## Not ported (and why)
+
+- `_soft_dtw_forward` / `_soft_dtw_backward`: the soft-minimum goes through `exp`/`log`,
+  whose libm results can differ between numpy and Rust in the last bits, so the parity
+  of the other kernels (bit-identical) would become a tolerance; `soft_dtw_alignment` has
+  no `backend=` seam; tslearn already exists as a soft-DTW backend. Candidate for a later
+  step under a 1e-12 tolerance.
+- `compare/string.py::levenshtein_distance`: no backend seam (adding a parameter changes
+  a public signature); rapidfuzz (`equate[fuzzy]`) is the natural fast path there.
+
+## Open questions
+
+1. dtaidistance backend: `use_c=True` is not passed, so it runs dtaidistance's pure-Python
+   code (0.5-0.8x numpy); and it returns 0.0 for a univariate-vs-2-D pair where numpy
+   raises. Fix in a separate change (it would change that backend's behaviour).
+2. Biopython backend raises on empty sequences and disagrees with numpy for positive gap
+   scores (local mode).
+3. The `equate[rust]` extra (deferred until `equate-rust` is on PyPI; regenerate
+   `uv.lock` then).
+4. A fused native DTW (costs + accumulate + traceback) would take DTW 1000² from 53x to
+   roughly the kernel's 150x.
+
+## Landing (owed)
+
+This branch was made in a cloud session and is **not merged**. The package's own session
+lands it (per `landing-a-branch`):
+
+1. Rebuild locally (`cd rust && maturin develop --release --uv`), then run the whole
+   suite and `HYPOTHESIS_PROFILE=thorough python -m pytest tests/test_differential.py -k
+   rust`, and `python benchmarks/bench_port.py` on the Mac (ratios only; record them).
+2. Run `rust-release.yml` by hand (after the merge, or from a temporary tag on a fork) to
+   see every platform's wheel build and smoke test; check the macOS x86_64 runner choice.
+3. Configure PyPI trusted publishing for `equate-rust`, publish it (TestPyPI first), then
+   add the `equate[rust]` extra and regenerate `uv.lock`.
+4. Squash-merge. Merging publishes equate (wads auto-bump): the CHANGELOG entry is under
+   "Unreleased".

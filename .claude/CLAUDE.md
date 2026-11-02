@@ -99,6 +99,21 @@ adding a structured strategy, decide which of these three seams it belongs to.
 - Gold must be **complete** for whole-table scoring; a source whose gold is a labelled
   subset (DeepMatcher) says so in `meta['gold']`.
 
+## The Rust backend (`rust/`, #35)
+
+- `rust/` is a **separate package**, `equate-rust` (maturin: core crate
+  `equate-sequence-core` without PyO3, binding `equate_rust._core`). equate stays pure
+  Python and imports it lazily for `backend="rust"` in `equate/compare/sequence.py`.
+  The state of the port, its decisions and benchmarks: [`docs/port-log.md`](../docs/port-log.md).
+- **The numpy kernels are the reference** (`_dtw_accumulate`, `_subsequence_accumulate`,
+  `_traceback_dtw`, `_align_dp`). Changing one is a behaviour change for both backends:
+  change the Rust kernel to match, and run `tests/test_differential.py` (with
+  `HYPOTHESIS_PROFILE=thorough`) against a release build (`cd rust && maturin develop
+  --release --uv`). Tie-breaking (first minimum / numpy's first maximum) is pinned.
+- `_align_rust` sends Rust only inputs it reproduces exactly; anything else runs
+  `_align_dp`. `tests/test_sequence.py::test_rust_*_routing` pins which kernel each input
+  reaches.
+
 ## The research corpus (`docs/research/`)
 
 Start at [`00-taxonomy-and-terminology.md`](../docs/research/00-taxonomy-and-terminology.md)
