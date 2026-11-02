@@ -36,8 +36,11 @@ from functools import partial
 
 import numpy as np
 import pytest
-from hypothesis import example, given, note, settings
-from hypothesis import strategies as st
+
+pytest.importorskip("hypothesis")  # a test-only dependency; equate's CI may lack it
+
+from hypothesis import example, given, note, settings  # noqa: E402
+from hypothesis import strategies as st  # noqa: E402
 
 from equate.base import Alignment
 from equate._dependencies import have
