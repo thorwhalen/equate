@@ -4,3 +4,4 @@ allow-expect-in-tests = true
 allow-panic-in-tests = true
 # Rust has no keyword arguments: past a handful of parameters, take an options struct.
 too-many-arguments-threshold = 5
+allow-indexing-slicing-in-tests = true

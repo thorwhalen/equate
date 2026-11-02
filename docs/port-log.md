@@ -182,3 +182,26 @@ from the deterministic grid), fixed before the stub run above.
 
 From the skeleton on, the rust tests fail locally until each kernel lands; hosted CI does
 not install `equate-rust`, so they skip there and the branch stays green.
+
+## 5. Leaves
+
+### 5.1 `_dtw_accumulate` -> `equate_sequence_core::dtw::accumulate` (done)
+
+- Core: `dtw::accumulate(MatrixView, Band) -> Matrix` with `Band::{Unconstrained,
+  HalfWidth(usize)}`; the band's columns are the reference's `range(...)` in saturating
+  arithmetic (`Band::columns`); each cell is `C + py_min3(diag, up, left)`, where
+  `pyorder::py_min3` is Python's `min` (first value kept, replaced only by a strictly
+  smaller one), so NaN propagates exactly as in the reference. Same additions in the same
+  order: the matrix is bit-identical. `dtw::subsequence_accumulate` shares the fill; its
+  binding lands in its own step.
+- Facade: the rust DTW kernels use `_core.dtw_accumulate` (window clamped to `max(n, m)`),
+  the numpy traceback and subsequence accumulation until those are ported; alignment stays
+  on the reference (`_RUST_ALIGN_PORTED = False`).
+- Differential: fast profile + grid green; **thorough (5,000 examples) + 1,200-case grid:
+  1,201 passed**. Hand mutants: `f64::min` instead of `py_min3` (ignores NaN) -> 13
+  failures; band upper edge off by one -> 95 failures.
+- Kernel timing (release, same VM): unconstrained 100² 6.42 ms -> 0.023 ms (280x),
+  1000² 415 ms -> 2.77 ms (150x); 10% band 100² 191x, 1000² 87x.
+- Accepted difference: the numpy reference emits numpy's `RuntimeWarning` ("overflow
+  encountered in scalar add") when a sum overflows to inf (e.g. steps of 1e308); the Rust
+  DP computes the same inf silently. Values are equal; only the warning differs.

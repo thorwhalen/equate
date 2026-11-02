@@ -23,6 +23,10 @@ pub fn py_min3(a: f64, b: f64, c: f64) -> f64 {
 /// numpy's `argmax` on a float array: the index of the first NaN if there is one, else
 /// of the first maximum. `None` for an empty slice (numpy raises `ValueError`).
 #[inline]
+#[expect(
+    clippy::neg_cmp_op_on_partial_ord,
+    reason = "numpy's `!(v <= best)` is true for a NaN `v`, which `v > best` is not"
+)]
 pub fn np_argmax(values: &[f64]) -> Option<usize> {
     let (&first, rest) = values.split_first()?;
     let (mut best, mut index) = (first, 0);
@@ -45,6 +49,10 @@ pub fn np_argmax(values: &[f64]) -> Option<usize> {
 /// numpy's `argmin` on a float array: the index of the first NaN if there is one, else
 /// of the first minimum. `None` for an empty slice.
 #[inline]
+#[expect(
+    clippy::neg_cmp_op_on_partial_ord,
+    reason = "numpy's `!(v >= best)` is true for a NaN `v`, which `v < best` is not"
+)]
 pub fn np_argmin(values: &[f64]) -> Option<usize> {
     let (&first, rest) = values.split_first()?;
     let (mut best, mut index) = (first, 0);

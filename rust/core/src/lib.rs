@@ -8,6 +8,7 @@
 //!
 //! This crate has no Python types; `equate-rust-py` binds it as `equate_rust._core`.
 
+pub mod dtw;
 mod error;
 mod matrix;
 pub mod pyorder;

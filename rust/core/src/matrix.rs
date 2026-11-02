@@ -18,11 +18,16 @@ impl<'a> MatrixView<'a> {
     ///
     /// [`Error::Shape`] when `data.len() != rows * cols`.
     pub fn new(data: &'a [f64], rows: usize, cols: usize) -> Result<Self, Error> {
-        let expected = rows.checked_mul(cols).unwrap_or(usize::MAX);
+        let expected = rows.saturating_mul(cols);
         if data.len() == expected {
             Ok(Self { data, rows, cols })
         } else {
-            Err(Error::Shape { rows, cols, expected, actual: data.len() })
+            Err(Error::Shape {
+                rows,
+                cols,
+                expected,
+                actual: data.len(),
+            })
         }
     }
 
@@ -78,7 +83,11 @@ impl Matrix {
         let len = rows
             .checked_mul(cols)
             .unwrap_or_else(|| panic!("a {rows} x {cols} matrix does not fit in memory"));
-        Self { data: vec![value; len], rows, cols }
+        Self {
+            data: vec![value; len],
+            rows,
+            cols,
+        }
     }
 
     /// Number of rows.
@@ -93,7 +102,16 @@ impl Matrix {
 
     /// A borrowed view of the whole matrix.
     pub fn view(&self) -> MatrixView<'_> {
-        MatrixView { data: &self.data, rows: self.rows, cols: self.cols }
+        MatrixView {
+            data: &self.data,
+            rows: self.rows,
+            cols: self.cols,
+        }
+    }
+
+    /// The values in row-major order, mutably.
+    pub fn as_mut_slice(&mut self) -> &mut [f64] {
+        &mut self.data
     }
 
     /// The values in row-major order, consuming the matrix (no copy).
@@ -114,7 +132,10 @@ mod tests {
         assert_eq!(v.get(2, 0), None);
         assert_eq!(v.get(0, 3), None);
         assert_eq!(v.row(1), Some(&data[3..]));
-        assert!(matches!(MatrixView::new(&data, 4, 2), Err(Error::Shape { expected: 8, .. })));
+        assert!(matches!(
+            MatrixView::new(&data, 4, 2),
+            Err(Error::Shape { expected: 8, .. })
+        ));
         assert!(MatrixView::new(&[], usize::MAX, 2).is_err());
         assert!(MatrixView::new(&[], 0, 7).is_ok());
     }

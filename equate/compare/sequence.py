@@ -242,13 +242,11 @@ def _dtw_kernels(backend):
             w = min(w, max(C.shape))
         return core.dtw_accumulate(_float64(C), window=w)
 
-    def traceback(D, i, j, *, stop_row0=False):
-        return core.traceback_dtw(D, i, j, stop_row0=stop_row0)
-
     return _DTWKernels(
         accumulate=accumulate,
-        subsequence_accumulate=lambda C: core.subsequence_dtw_accumulate(_float64(C)),
-        traceback=traceback,
+        # not ported yet: the reference kernels
+        subsequence_accumulate=_NUMPY_DTW.subsequence_accumulate,
+        traceback=_NUMPY_DTW.traceback,
     )
 
 
@@ -641,9 +639,12 @@ def _align_rust(a, b, *, local, substitution, match, mismatch, gap):
 
 
 def _align(a, b, *, local, backend, **scoring):
-    if backend == "rust":
+    if backend == "rust" and _RUST_ALIGN_PORTED:
         return _align_rust(a, b, local=local, **scoring)
     return _align_dp(a, b, local=local, **scoring)
+
+
+_RUST_ALIGN_PORTED = False  # until the native fill and traceback land
 
 
 def _align_biopython(a, b, *, mode, substitution, match, mismatch, gap):
