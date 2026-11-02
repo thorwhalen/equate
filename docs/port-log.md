@@ -205,3 +205,23 @@ not install `equate-rust`, so they skip there and the branch stays green.
 - Accepted difference: the numpy reference emits numpy's `RuntimeWarning` ("overflow
   encountered in scalar add") when a sum overflows to inf (e.g. steps of 1e308); the Rust
   DP computes the same inf silently. Values are equal; only the warning differs.
+
+#### Review of 5.1 (`rust-reviewer`, fresh Opus subagent): changes requested, 0 blockers, 3 majors
+
+| finding | resolution |
+|---|---|
+| major B1: `vec!` of an unallocatable padded matrix aborts the process (`_core.dtw_accumulate(np.empty((2**40, 0)), window=None)` exited 134) | fixed: `Matrix::filled` allocates with `try_reserve_exact`, `Error::Alloc` maps to `MemoryError` (the numpy reference raises `MemoryError` too); verified on the same probe |
+| major P4: the O(nm) fill runs attached, the doc said it detached | **declined, doc fixed**: the kernels read caller-owned numpy buffers in place; detached (or free-threaded), another thread could write them mid-read, a data race. Copying first costs about half the kernel at 1000². Kernels on copied inputs (`align_codes`) detach |
+| major P5: no `gil_used` decision | `#[pymodule(gil_used = true)]`, for the same reason; abi3-py310 wheels do not load on 3.14t anyway, so free-threaded support is untested and unclaimed |
+| minor P3: facade calls the traceback without `stop_row0` | fixed in 5.2: the facade wrapper passes it |
+| minor D2: `align_codes` has 6 arguments | `#[expect(clippy::too_many_arguments)]` with the reason, in 5.3 |
+| minor A5: `Error::Shape` folded into `_` | explicit arm; `_` kept for `#[non_exhaustive]` |
+| minor X: `filter_map` hid the "row exists" invariant | explicit loop with the invariant in a comment |
+
+Also from the reviewer: stale-form search clean; `extension-module` and `panic = "abort"`
+absent; `Cargo.lock` and `deny.toml` committed; the trap rows for `Band::columns` and the
+fill (argument order of `min`, first-kept ties, NaN, -0.0, inf + -inf, overflow) all
+handled and pinned.
+
+Thorough cross-check run of the third-party engines (5,000 examples each): dtaidistance,
+Biopython NW and SW, tslearn: **4 passed**.

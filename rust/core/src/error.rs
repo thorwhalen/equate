@@ -19,6 +19,14 @@ pub enum Error {
         /// Length of the buffer given.
         actual: usize,
     },
+    /// A matrix is too large to allocate (or its size overflows `usize`).
+    #[error("cannot allocate a {rows} x {cols} matrix")]
+    Alloc {
+        /// Number of rows asked for.
+        rows: usize,
+        /// Number of columns asked for.
+        cols: usize,
+    },
     /// A cell index lies outside the matrix.
     #[error("cell ({row}, {col}) is outside a {rows} x {cols} matrix")]
     OutOfBounds {

@@ -76,18 +76,17 @@ pub struct Matrix {
 impl Matrix {
     /// A `rows x cols` matrix with every cell equal to `value`.
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// When `rows * cols` overflows `usize` (the allocation would fail anyway).
-    pub fn filled(rows: usize, cols: usize, value: f64) -> Self {
-        let len = rows
-            .checked_mul(cols)
-            .unwrap_or_else(|| panic!("a {rows} x {cols} matrix does not fit in memory"));
-        Self {
-            data: vec![value; len],
-            rows,
-            cols,
-        }
+    /// [`Error::Alloc`] when `rows * cols` overflows `usize` or the allocation fails
+    /// (an infallible `vec!` would abort the process instead).
+    pub fn filled(rows: usize, cols: usize, value: f64) -> Result<Self, Error> {
+        let alloc = Error::Alloc { rows, cols };
+        let len = rows.checked_mul(cols).ok_or_else(|| alloc.clone())?;
+        let mut data = Vec::new();
+        data.try_reserve_exact(len).map_err(|_| alloc)?;
+        data.resize(len, value);
+        Ok(Self { data, rows, cols })
     }
 
     /// Number of rows.
@@ -138,5 +137,21 @@ mod tests {
         ));
         assert!(MatrixView::new(&[], usize::MAX, 2).is_err());
         assert!(MatrixView::new(&[], 0, 7).is_ok());
+    }
+
+    #[test]
+    fn an_impossible_matrix_is_an_error_not_an_abort() {
+        assert!(matches!(
+            Matrix::filled(usize::MAX, 2, 0.0),
+            Err(Error::Alloc { .. })
+        ));
+        assert!(matches!(
+            Matrix::filled(1 << 40, 1 << 10, 0.0),
+            Err(Error::Alloc { .. })
+        ));
+        assert_eq!(
+            Matrix::filled(2, 1, 1.5).unwrap().into_vec(),
+            vec![1.5, 1.5]
+        );
     }
 }

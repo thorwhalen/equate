@@ -1,16 +1,22 @@
 //! Binding crate: the private `equate_rust._core` extension module.
 //!
 //! Thin shell over `equate-sequence-core`: converts numpy arrays to and from the core's
-//! matrices, maps its errors onto Python exceptions, and releases the interpreter
-//! (`py.detach`) around the O(n m) work. Defaults and validation belong to equate's
-//! facade (`equate.compare.sequence`); every argument here is required.
+//! matrices and maps its errors onto Python exceptions. Defaults and validation belong
+//! to equate's facade (`equate.compare.sequence`); every argument here is required.
+//!
+//! Interpreter and threads: the kernels read the caller's numpy buffers in place (no
+//! copy). They stay attached while they do, and the module declares `gil_used = true`,
+//! so no other Python thread can write those buffers mid-read; detaching (or running
+//! free-threaded) would make that a data race, and copying first costs about half the
+//! kernel time at 1000 x 1000. Kernels whose inputs are copied into Rust first
+//! (`align_codes`) detach. Recorded in equate's `docs/port-log.md`.
 
 use std::borrow::Cow;
 
 use equate_sequence_core::{Error, Matrix, MatrixView};
 use numpy::ndarray::{Array2, ArrayView2};
 use numpy::{IntoPyArray, PyArray2};
-use pyo3::exceptions::{PyIndexError, PyValueError};
+use pyo3::exceptions::{PyIndexError, PyMemoryError, PyValueError};
 use pyo3::prelude::*;
 
 /// The one place core errors become Python exceptions (used as `.map_err(to_pyerr)`).
@@ -23,8 +29,10 @@ use pyo3::prelude::*;
 )]
 fn to_pyerr(err: Error) -> PyErr {
     match err {
+        Error::Alloc { .. } => PyMemoryError::new_err(err.to_string()),
         Error::OutOfBounds { .. } => PyIndexError::new_err(err.to_string()),
-        // Error::Shape, and any later variant: an inconsistent argument
+        Error::Shape { .. } => PyValueError::new_err(err.to_string()),
+        // `Error` is non_exhaustive: a variant added later is an inconsistent argument
         _ => PyValueError::new_err(err.to_string()),
     }
 }
@@ -58,7 +66,8 @@ fn with_view<T>(
 }
 
 /// Native kernels of `equate.compare.sequence`; not part of any public API.
-#[pymodule]
+// gil_used = true: see the module docs (in-place reads of caller-owned numpy buffers)
+#[pymodule(gil_used = true)]
 mod _core {
     use equate_sequence_core::dtw::{self, Band};
     use numpy::{PyArray2, PyReadonlyArray1, PyReadonlyArray2};
@@ -66,7 +75,7 @@ mod _core {
     use pyo3::prelude::*;
     use pyo3::types::PyTuple;
 
-    use super::{to_numpy, with_view};
+    use super::{to_numpy, to_pyerr, with_view};
 
     /// True in debug builds, so benchmarks can refuse them.
     #[pymodule_export]
@@ -90,7 +99,7 @@ mod _core {
     ) -> PyResult<Bound<'py, PyArray2<f64>>> {
         let band = window.map_or(Band::Unconstrained, Band::HalfWidth);
         let acc = with_view(&costs.as_array(), |c| dtw::accumulate(c, band))?;
-        to_numpy(py, acc)
+        to_numpy(py, acc.map_err(to_pyerr)?)
     }
 
     /// Padded subsequence-DTW accumulated-cost matrix (free start on the first row).
