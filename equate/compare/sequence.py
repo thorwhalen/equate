@@ -22,6 +22,12 @@ Each comparator returns a ``float``; its ``*_alignment`` twin (also reachable as
 (``backend='dtaidistance'`` / ``'tslearn'`` / ``'biopython'``, behind the
 ``equate[timeseries]`` / ``equate[bio]`` extras, imported only on use).
 
+``backend='rust'`` (DTW, subsequence DTW, Needleman-Wunsch, Smith-Waterman) runs the same
+dynamic programs in compiled code from the separate ``equate-rust`` package, imported only
+on use. Unlike the third-party engines it is a drop-in for the numpy backend: same
+validation, same scores (to the last bit in practice; ``1e-12`` relative is the contract),
+the same ``path`` (ties broken identically), every input the numpy backend accepts.
+
 >>> dtw([0, 1, 2, 3], [0, 0, 1, 2, 3])  # a warped copy is at distance 0
 0.0
 >>> needleman_wunsch('GATTACA', 'GATACA')  # 6 matches, 1 gap
@@ -32,6 +38,7 @@ Each comparator returns a ``float``; its ``*_alignment`` twin (also reachable as
 
 import math
 import numbers
+from typing import Callable, NamedTuple
 
 import numpy as np
 
@@ -79,9 +86,9 @@ _ALIGN_SCORE_META = ComparatorMeta(
     polarity="similarity", bounded=False, is_metric=False, is_symmetric=True
 )
 
-_DTW_BACKENDS = ("numpy", "dtaidistance")
+_DTW_BACKENDS = ("numpy", "dtaidistance", "rust")
 _SOFT_DTW_BACKENDS = ("numpy", "tslearn")
-_ALIGN_BACKENDS = ("numpy", "biopython")
+_ALIGN_BACKENDS = ("numpy", "biopython", "rust")
 
 
 # --- shared helpers -----------------------------------------------------------------
@@ -90,6 +97,13 @@ _ALIGN_BACKENDS = ("numpy", "biopython")
 def _check_backend(backend, allowed, *, what):
     if backend not in allowed:
         raise ValueError(f"{what}: backend must be one of {allowed}, got {backend!r}")
+
+
+def _rust():
+    """The native kernels (``equate_rust``), imported on first use of ``backend='rust'``."""
+    return require(
+        "equate_rust", purpose="the native sequence kernels (backend='rust')"
+    )
 
 
 def _as_series(x, *, what):
@@ -194,6 +208,54 @@ def _dtw_accumulate(C, w):
     return D
 
 
+def _subsequence_accumulate(C):
+    """Padded subsequence-DTW accumulated costs: like ``_dtw_accumulate``, unbanded, with a
+    free start anywhere on the first row."""
+    n, m = C.shape
+    D = np.full((n + 1, m + 1), np.inf)
+    D[0, :] = 0.0  # free start anywhere in the series
+    for i in range(n):
+        for j in range(m):
+            D[i + 1, j + 1] = C[i, j] + min(D[i, j], D[i, j + 1], D[i + 1, j])
+    return D
+
+
+class _DTWKernels(NamedTuple):
+    """The DTW dynamic programs of one backend: the numpy ones are the reference."""
+
+    accumulate: Callable  # (C, w) -> padded D
+    subsequence_accumulate: Callable  # (C) -> padded D
+    traceback: Callable  # (D, i, j, *, stop_row0) -> path
+
+
+_NUMPY_DTW = _DTWKernels(_dtw_accumulate, _subsequence_accumulate, _traceback_dtw)
+
+
+def _dtw_kernels(backend):
+    """The DTW kernels for a path-reporting ``backend`` (``'numpy'`` or ``'rust'``)."""
+    if backend != "rust":
+        return _NUMPY_DTW
+    core = _rust()
+
+    def accumulate(C, w):
+        if w is not None:  # exact: a half-width >= max(n, m) already spans every row
+            w = min(w, max(C.shape))
+        return core.dtw_accumulate(_float64(C), window=w)
+
+    def traceback(D, i, j, *, stop_row0=False):
+        return core.traceback_dtw(D, i, j, stop_row0=stop_row0)
+
+    return _DTWKernels(
+        accumulate=accumulate,
+        subsequence_accumulate=lambda C: core.subsequence_dtw_accumulate(_float64(C)),
+        traceback=traceback,
+    )
+
+
+def _float64(C):
+    return np.ascontiguousarray(C, dtype=np.float64)
+
+
 # --- DTW ----------------------------------------------------------------------------
 
 
@@ -218,9 +280,10 @@ def dtw_alignment(a, b, *, window=DFLT_DTW_WINDOW, local_cost=None, backend="num
     n, m = C.shape
     if n == 0 or m == 0:
         raise ValueError("dtw: cannot align an empty sequence")
-    D = _dtw_accumulate(C, _band(n, m, window))
+    kernels = _dtw_kernels(backend)
+    D = kernels.accumulate(C, _band(n, m, window))
     total = float(D[n, m])
-    path = _traceback_dtw(D, n - 1, m - 1)
+    path = kernels.traceback(D, n - 1, m - 1)
     return Alignment(math.sqrt(total) if root else total, path, sense="minimize")
 
 
@@ -286,14 +349,11 @@ def subsequence_dtw_alignment(query, series, *, local_cost=None, backend="numpy"
         raise ValueError("subsequence_dtw: cannot align an empty sequence")
     if (C < 0).any():
         raise ValueError("subsequence_dtw: local_cost must be non-negative")
-    D = np.full((n + 1, m + 1), np.inf)
-    D[0, :] = 0.0  # free start anywhere in the series
-    for i in range(n):
-        for j in range(m):
-            D[i + 1, j + 1] = C[i, j] + min(D[i, j], D[i, j + 1], D[i + 1, j])
+    kernels = _dtw_kernels(backend)
+    D = kernels.subsequence_accumulate(C)
     end = int(np.argmin(D[n, 1:]))
     total = float(D[n, end + 1])
-    path = _traceback_dtw(D, n - 1, end, stop_row0=True)
+    path = kernels.traceback(D, n - 1, end, stop_row0=True)
     return Alignment(math.sqrt(total) if root else total, path, sense="minimize")
 
 
@@ -452,6 +512,14 @@ def _scorer(substitution, match, mismatch):
     return lambda x, y: match if x == y else mismatch
 
 
+def _substitution_scores(a, b, sub):
+    """The ``(n, m)`` float matrix ``sub(a[i], b[j])``, row by row (calls in that order)."""
+    n, m = len(a), len(b)
+    return np.array([[float(sub(x, y)) for y in b] for x in a], dtype=float).reshape(
+        n, m
+    )
+
+
 _DIAG, _UP, _LEFT, _STOP = 0, 1, 2, 3
 
 
@@ -463,8 +531,7 @@ def _align_dp(a, b, *, local, substitution, match, mismatch, gap):
     """
     a, b = list(a), list(b)
     n, m = len(a), len(b)
-    sub = _scorer(substitution, match, mismatch)
-    S = np.array([[float(sub(x, y)) for y in b] for x in a], dtype=float).reshape(n, m)
+    S = _substitution_scores(a, b, _scorer(substitution, match, mismatch))
     H = np.zeros((n + 1, m + 1))
     ptr = np.full((n + 1, m + 1), _STOP, dtype=np.int8)
     if not local:
@@ -503,6 +570,80 @@ def _align_dp(a, b, *, local, substitution, match, mismatch, gap):
             path.append((None, j - 1))
             j -= 1
     return Alignment(score, tuple(reversed(path)), sense="maximize")
+
+
+# Scores whose arithmetic in the numpy reference is exactly ``float(x)`` in float64:
+# ``np.float64 + x`` and ``float(sub(...))`` both give the double ``float(x)``. Any other
+# type (Fraction, Decimal, longdouble, a float subclass) runs the reference unchanged.
+_PLAIN_SCORES = (int, float, bool, np.float64, np.float32, np.float16)
+for _t in (np.int8, np.int16, np.int32, np.int64, np.uint8, np.uint16, np.uint32):
+    _PLAIN_SCORES += (_t,)
+del _t
+# Elements whose ``==`` is exactly dict-key equality, so they can be interned to codes.
+_CODABLE = (str, int)
+
+
+def _as_double(x):
+    """``float(x)`` for a plain score, else ``None`` (the caller then runs the reference)."""
+    if type(x) not in _PLAIN_SCORES:
+        return None
+    try:
+        return float(x)
+    except OverflowError:  # an int beyond float range: the reference decides
+        return None
+
+
+def _codes(a, b):
+    """Intern the elements of ``a`` and ``b`` to int64 codes (equal iff ``==``), or
+    ``None`` when an element is not an exact ``str`` or ``int``."""
+    table = {}
+    out = []
+    for seq in (a, b):
+        if not all(type(x) in _CODABLE for x in seq):
+            return None
+        codes = [table.setdefault(x, len(table)) for x in seq]
+        out.append(np.array(codes, dtype=np.int64))
+    return out
+
+
+def _align_rust(a, b, *, local, substitution, match, mismatch, gap):
+    """``_align_dp`` on the native kernels, for every input it can take exactly.
+
+    The fill and the traceback run in Rust; the substitution matrix is built here, by the
+    same code as the reference, unless the default match/mismatch scorer applies to
+    interned codes (then Rust scores the cells). Inputs outside that domain (a gap whose
+    arithmetic is not plain float64) run the numpy reference itself.
+    """
+    gap_ = _as_double(gap)
+    if gap_ is None:
+        return _align_dp(
+            a, b, local=local, substitution=substitution, match=match,
+            mismatch=mismatch, gap=gap,
+        )  # fmt: skip
+    core = _rust()
+    a, b = list(a), list(b)
+    match_, mismatch_ = _as_double(match), _as_double(mismatch)
+    codes = None
+    if substitution is None and match_ is not None and mismatch_ is not None:
+        codes = _codes(a, b)
+    if codes is not None:
+        score, path = core.align_codes(
+            *codes,
+            match_score=match_,
+            mismatch_score=mismatch_,
+            gap=gap_,
+            local=local,
+        )
+    else:
+        S = _substitution_scores(a, b, _scorer(substitution, match, mismatch))
+        score, path = core.align_scores(S, gap=gap_, local=local)
+    return Alignment(float(score) + 0.0, path, sense="maximize")
+
+
+def _align(a, b, *, local, backend, **scoring):
+    if backend == "rust":
+        return _align_rust(a, b, local=local, **scoring)
+    return _align_dp(a, b, local=local, **scoring)
 
 
 def _align_biopython(a, b, *, mode, substitution, match, mismatch, gap):
@@ -544,7 +685,7 @@ def needleman_wunsch_alignment(
     kw = dict(substitution=substitution, match=match, mismatch=mismatch, gap=gap)
     if backend == "biopython":
         return _align_biopython(a, b, mode="global", **kw)
-    return _align_dp(a, b, local=False, **kw)
+    return _align(a, b, local=False, backend=backend, **kw)
 
 
 def needleman_wunsch(a, b, **kwargs):
@@ -579,7 +720,7 @@ def smith_waterman_alignment(
     kw = dict(substitution=substitution, match=match, mismatch=mismatch, gap=gap)
     if backend == "biopython":
         return _align_biopython(a, b, mode="local", **kw)
-    return _align_dp(a, b, local=True, **kw)
+    return _align(a, b, local=True, backend=backend, **kw)
 
 
 def smith_waterman(a, b, **kwargs):

@@ -1,0 +1,38 @@
+# cargo-deny policy: `cargo deny check` (advisories, bans, licenses, sources).
+# The licence allow-list is the fleet rule "permissive licences only" (rust-crate-api owns the
+# policy and the per-crate exceptions; keep this copy in step with it). An MPL-2.0 crate needs an
+# explicit [[licenses.exceptions]] entry with a reason; copyleft crates only behind an
+# off-by-default feature.
+
+[licenses]
+allow = [
+  "MIT", "MIT-0", "Apache-2.0", "Apache-2.0 WITH LLVM-exception",
+  "BSD-2-Clause", "BSD-3-Clause", "ISC", "Zlib", "BSL-1.0",
+  "Unicode-3.0", "Unlicense", "CC0-1.0", "NCSA",
+]
+confidence-threshold = 0.9
+# The list is a policy for every project, so most entries go unused in any one of them.
+unused-allowed-license = "allow"
+
+[advisories]
+unmaintained = "all"   # cargo-deny's default; values: all, workspace, transitive, none
+unsound = "all"        # default is "workspace"; widen it so dependencies count too
+yanked = "deny"
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+# Workspace path dependencies (no version) count as wildcards; allow them for unpublished crates.
+allow-wildcard-paths = true
+# Dead crates that have no RustSec advisory; the list is rust-crate-api's references/deny.toml.
+deny = [
+  { crate = "serde_yaml", reason = "archived, unmaintained", use-instead = "serde-saphyr" },
+  { crate = "sled", reason = "no release since 2021", use-instead = "redb" },
+  { crate = "arrow2", reason = "abandoned", use-instead = "arrow" },
+  { crate = "pyo3-asyncio", reason = "superseded", use-instead = "pyo3-async-runtimes" },
+  { crate = "instant-distance", reason = "repository archived", use-instead = "hnsw_rs" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

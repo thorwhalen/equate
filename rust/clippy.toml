@@ -1,0 +1,6 @@
+# Lint configuration (thresholds, test allowances). Lint *levels* live in Cargo.toml [lints].
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+# Rust has no keyword arguments: past a handful of parameters, take an options struct.
+too-many-arguments-threshold = 5

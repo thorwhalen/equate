@@ -124,3 +124,61 @@ Machine: Intel Xeon @ 2.10 GHz (model 207), 4 vCPU, Linux x86_64 cloud VM; CPyth
 
 The brief's "about 0.7 s" for 1,000 x 1,000 DTW was an estimate: measured, 0.42 s
 unconstrained, 0.09 s in the default 10% band.
+
+## 3-4. Layout and skeleton
+
+**Layout: a separate package inside this repository** (`pyo3-port`'s "separate kernels
+package" shape), because a merge of equate publishes it and wads builds only pure-Python
+wheels until i2mint/wads#166 lands:
+
+```text
+rust/                       the equate-rust package (its own maturin build; not in equate's sdist)
+├── Cargo.toml, Cargo.lock  workspace: core + py; crates at 0.0.0, publish = false
+├── pyproject.toml          maturin; name equate-rust; module-name equate_rust._core; abi3-py310
+├── core/                   equate-sequence-core: pure Rust, no PyO3
+├── py/                     equate-rust-py: cdylib `_core`, PyO3 0.30.1 + numpy 0.30.0
+└── python/equate_rust/     __init__.py (re-exports), _core.pyi, py.typed
+```
+
+equate's own wheel stays pure Python. `equate/compare/sequence.py` imports `equate_rust`
+lazily (`require`, on the first `backend="rust"` call) and keeps every public signature,
+default, validation message and docstring; `"rust"` joins `_DTW_BACKENDS` and
+`_ALIGN_BACKENDS`, and the module docstring gains one paragraph about it. Soft-DTW keeps
+numpy/tslearn only (not ported: see the end).
+
+Decisions:
+
+- **No `equate[rust]` extra yet.** `equate-rust` is not on PyPI, and an extra naming it
+  would break `uv lock` and `pip install equate[rust]`; the missing-package message says
+  `pip install equate_rust`. The landing session adds the extra once the wheel is
+  published (and regenerates `uv.lock`).
+- **The kernel seam.** DTW: `_dtw_kernels(backend)` returns the three kernels
+  (accumulate, subsequence accumulate, traceback) as a `NamedTuple`; the numpy tuple is the
+  reference, the rust one wraps `_core`. Alignment: `_align(..., backend)` routes to
+  `_align_dp` (reference) or `_align_rust`. Two pure refactors of the reference, both
+  covered by the characterization tests: `_subsequence_accumulate` (the loop formerly inline
+  in `subsequence_dtw_alignment`) and `_substitution_scores` (the S matrix, now shared).
+- **Domain routing (`_align_rust`).** Rust receives only what it reproduces exactly:
+  - a gap is passed as a double only when its type's arithmetic with `np.float64` is exactly
+    `float(gap)` (`int`, `float`, `bool`, numpy float16/32/64 and fixed-size ints) and
+    `float(gap)` does not overflow; any other gap runs the numpy reference unchanged;
+  - with the default scorer and plain match/mismatch scores, elements that are exact `str`
+    or `int` are interned to int64 codes (dict equality is `==` for those types) and Rust
+    scores the cells (`align_codes`);
+  - otherwise the substitution matrix is built in Python by the reference's own code (so
+    substitution callables run in the same order, raise the same exceptions) and Rust does
+    the fill and traceback (`align_scores`).
+- **DTW window**: `_core` takes `Option<usize>`; the facade clamps a half-width to
+  `max(n, m)` before the call (exact: such a band already spans every row), so
+  `window=10**30` cannot raise `OverflowError`.
+
+Skeleton run (`_core` with every kernel raising `NotImplementedError`, the facade pointing
+at it): **every `backend="rust"` differential test fails** (2,990 of 3,624 cases; the 634
+passing are grid cases rejected by validation before any kernel runs), and every
+`backend="rust"` case of `tests/test_sequence.py` that reaches a kernel fails.
+Reference-against-reference (`EQUATE_RUST_SHIM=1`, the numpy kernels behind `_core`'s
+interface): **3,624 passed**. That run found a harness bug (Hypothesis `note()` called
+from the deterministic grid), fixed before the stub run above.
+
+From the skeleton on, the rust tests fail locally until each kernel lands; hosted CI does
+not install `equate-rust`, so they skip there and the branch stays green.

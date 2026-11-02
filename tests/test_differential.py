@@ -19,10 +19,10 @@ Profiles: ``fast`` (default, derandomized, for every PR) and ``thorough``::
 
     HYPOTHESIS_PROFILE=thorough python -m pytest tests/test_differential.py
 
-``EQUATE_RUST_SHIM=1`` installs a pure-Python stand-in for ``equate_rust`` (the numpy
-kernels behind the native module's interface) when the wheel is absent: the
-reference-against-reference run that proves the harness and the facade routing, and
-the way to check the test fails against a stub (point the shim at a stub).
+``EQUATE_RUST_SHIM=1`` installs a pure-Python stand-in for ``equate_rust``
+(``tests/_rust_shim.py``: the numpy kernels behind the native module's interface) in
+place of any installed build: the reference-against-reference run that proves the
+harness and the facade's routing.
 """
 
 from __future__ import annotations
@@ -47,7 +47,7 @@ settings.register_profile("fast", max_examples=300, derandomize=True, deadline=N
 settings.register_profile("thorough", max_examples=5000, deadline=None)
 settings.load_profile(os.environ.get("HYPOTHESIS_PROFILE", "fast"))
 
-if os.environ.get("EQUATE_RUST_SHIM") and not have("equate_rust"):
+if os.environ.get("EQUATE_RUST_SHIM"):
     import importlib.util
 
     _spec = importlib.util.spec_from_file_location(
@@ -61,8 +61,9 @@ def _available(backend, family, package):
     return backend in family and have(package)
 
 
-HAVE_RUST_DTW = _available("rust", Q._DTW_BACKENDS, "equate_rust")
-HAVE_RUST_ALIGN = _available("rust", Q._ALIGN_BACKENDS, "equate_rust")
+_SHIMMED = bool(os.environ.get("EQUATE_RUST_SHIM"))
+HAVE_RUST_DTW = _available("rust", Q._DTW_BACKENDS, "equate_rust") or _SHIMMED
+HAVE_RUST_ALIGN = _available("rust", Q._ALIGN_BACKENDS, "equate_rust") or _SHIMMED
 needs_rust_dtw = pytest.mark.skipif(
     not HAVE_RUST_DTW, reason="backend='rust' (equate-rust) is not installed"
 )
@@ -111,10 +112,11 @@ def outcome(fn, args, kwargs):
         return ("err", type(exc))
 
 
-def check(ref_fn, port_fn, args, kwargs, *, compare=partial(same, rel=REL)):
+def check(ref_fn, port_fn, args, kwargs, *, compare=partial(same, rel=REL), notes=True):
     expected, actual = outcome(ref_fn, args, kwargs), outcome(port_fn, args, kwargs)
-    note(f"reference: {expected!r}")
-    note(f"port:      {actual!r}")
+    if notes:  # inside a Hypothesis test only; the assertion messages carry both anyway
+        note(f"reference: {expected!r}")
+        note(f"port:      {actual!r}")
     if expected[0] == actual[0] == "ok":
         assert compare(actual[1], expected[1]), (actual, expected)
     else:
@@ -148,7 +150,7 @@ def trap_grid(fn, backend, *, cases, compare=None):
 
     @pytest.mark.parametrize(("case_args", "case_kwargs"), cases)
     def test(case_args, case_kwargs):
-        check(ref_fn, port_fn, case_args, case_kwargs, **kw)
+        check(ref_fn, port_fn, case_args, case_kwargs, notes=False, **kw)
 
     test.__name__ = f"test_{fn.__name__}_{backend}_trap_grid"
     return test
