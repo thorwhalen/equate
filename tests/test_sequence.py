@@ -677,3 +677,50 @@ def test_rust_dtw_routing(monkeypatch):
     calls.clear()
     Q.subsequence_dtw_alignment([1, 2], [0, 1, 2, 0], backend="rust")
     assert calls == ["subsequence_dtw_accumulate", "traceback_dtw"]
+
+
+# --- native backend under numpy's floating-point error state ---------------------------
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        lambda b: Q.dtw_alignment(
+            [1e308, 1e308],
+            [0.0, 0.0],
+            window=None,
+            local_cost=lambda x, y: abs(x - y),
+            backend=b,
+        ),
+        lambda b: Q.needleman_wunsch_alignment(
+            "ab", "b", gap=-1.7e308, match=-1.7e308, backend=b
+        ),
+        lambda b: Q.smith_waterman_alignment(
+            "ab", "b", gap=float("-inf"), match=float("inf"), backend=b
+        ),
+    ],
+)
+def test_rust_follows_numpys_float_error_state(call):
+    """Under ``np.seterr(all='raise')`` an overflow raises ``FloatingPointError`` in the
+    reference; the rust backend must run the reference there, not add silently."""
+    pytest.importorskip("equate_rust")
+    with np.errstate(all="raise"):
+        try:
+            expected = call("numpy")
+        except FloatingPointError:
+            with pytest.raises(FloatingPointError):
+                call("rust")
+        else:  # the input did not trip the error state: both agree
+            assert call("rust") == expected
+
+
+def test_rust_without_the_package_raises_even_for_a_reference_only_gap(monkeypatch):
+    """A gap that routes to the numpy reference still needs ``equate_rust`` installed."""
+    from fractions import Fraction
+
+    def missing():
+        raise ModuleNotFoundError("equate_rust")
+
+    monkeypatch.setattr(Q, "_rust", missing)
+    with pytest.raises(ModuleNotFoundError):
+        Q.needleman_wunsch_alignment("ab", "b", gap=Fraction(-1, 3), backend="rust")

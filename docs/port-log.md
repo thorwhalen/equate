@@ -202,6 +202,10 @@ not install `equate-rust`, so they skip there and the branch stays green.
   failures; band upper edge off by one -> 95 failures.
 - Kernel timing (release, same VM): unconstrained 100² 6.42 ms -> 0.023 ms (280x),
   1000² 415 ms -> 2.77 ms (150x); 10% band 100² 191x, 1000² 87x.
+- Landing session: under `np.seterr(all='raise')` (or any state other than ignore/warn) the
+  rust backend now runs the numpy kernels, so overflow raises the same `FloatingPointError`
+  (`_float_state_is_quiet`; test `test_rust_follows_numpys_float_error_state`). A warning
+  filter that turns `RuntimeWarning` into an error is not detected: see the next item.
 - Accepted difference: the numpy reference emits numpy's `RuntimeWarning` ("overflow
   encountered in scalar add") when a sum overflows to inf (e.g. steps of 1e308); the Rust
   DP computes the same inf silently. Values are equal; only the warning differs.

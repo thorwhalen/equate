@@ -236,6 +236,8 @@ def _dtw_kernels(backend):
     if backend != "rust":
         return _NUMPY_DTW
     core = _rust()
+    if not _float_state_is_quiet():
+        return _NUMPY_DTW
 
     def accumulate(C, w):
         if w is not None:  # exact: a half-width >= max(n, m) already spans every row
@@ -250,6 +252,16 @@ def _dtw_kernels(backend):
         subsequence_accumulate=lambda C: core.subsequence_dtw_accumulate(_float64(C)),
         traceback=traceback,
     )
+
+
+def _float_state_is_quiet():
+    """Whether numpy's floating-point error state only ignores or warns.
+
+    The reference adds ``np.float64`` scalars, so ``np.seterr(all='raise')`` makes an
+    overflow or an invalid sum raise ``FloatingPointError``; the native kernels add
+    silently. Under any other state the numpy kernels run, so the exception is the same.
+    """
+    return all(v in ("ignore", "warn") for v in np.geterr().values())
 
 
 def _float64(C):
@@ -614,13 +626,13 @@ def _align_rust(a, b, *, local, substitution, match, mismatch, gap):
     interned codes (then Rust scores the cells). Inputs outside that domain (a gap whose
     arithmetic is not plain float64) run the numpy reference itself.
     """
+    core = _rust()
     gap_ = _as_double(gap)
-    if gap_ is None:
+    if gap_ is None or not _float_state_is_quiet():
         return _align_dp(
             a, b, local=local, substitution=substitution, match=match,
             mismatch=mismatch, gap=gap,
         )  # fmt: skip
-    core = _rust()
     a, b = list(a), list(b)
     match_, mismatch_ = _as_double(match), _as_double(mismatch)
     codes = None

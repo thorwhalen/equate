@@ -5,11 +5,14 @@
 //! to equate's facade (`equate.compare.sequence`); every argument here is required.
 //!
 //! Interpreter and threads: the kernels read the caller's numpy buffers in place (no
-//! copy). They stay attached while they do, and the module declares `gil_used = true`,
-//! so no other Python thread can write those buffers mid-read; detaching (or running
-//! free-threaded) would make that a data race, and copying first costs about half the
-//! kernel time at 1000 x 1000. Kernels whose inputs are copied into Rust first
-//! (`align_codes`) detach. Recorded in equate's `docs/port-log.md`.
+//! copy). They stay attached while they do, and the module declares `gil_used = true`.
+//! That narrows the window for a data race rather than closing it: a thread inside a
+//! numpy loop that released the GIL could still write a buffer a caller shares. The
+//! facade's inputs are temporaries no other thread can reach, so only a direct caller of
+//! this private module is exposed. Detaching (or running free-threaded) would widen the
+//! window, and copying first costs about half the kernel time at 1000 x 1000. Kernels
+//! whose inputs are copied into Rust first (`align_codes`) detach. Recorded in equate's
+//! `docs/port-log.md`.
 //!
 //! Allocation: every buffer of input size is allocated fallibly, so an impossible size
 //! is a `MemoryError` (as in numpy), never a process abort. Interrupts: the kernels do
