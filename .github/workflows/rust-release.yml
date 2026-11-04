@@ -1,0 +1,113 @@
+# Release workflow for the equate-rust wheels (rust/): abi3 wheels for Linux, macOS and
+# Windows, an sdist, then a PyPI upload. Never runs on ordinary pushes.
+#
+# To release: bump [project].version in rust/pyproject.toml, merge, then push a tag
+# equate-rust-vX.Y.Z equal to it. Run by hand with `publish` unticked to build and
+# smoke-test the matrix without uploading.
+#
+# Publishing uses PyPI trusted publishing (OIDC); no secrets are referenced. Before the
+# first tag, configure a trusted publisher for the PyPI project `equate-rust`: this
+# repository, workflow file rust-release.yml, environment `pypi`.
+name: rust-release
+on:
+  push:
+    tags: ["equate-rust-v*"]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Upload to PyPI"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: The tag must equal rust/pyproject.toml's version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          v=$(python -c "import tomllib; print(tomllib.load(open('rust/pyproject.toml','rb'))['project']['version'])")
+          test "equate-rust-v$v" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME != rust/pyproject.toml version $v"; exit 1; }
+
+  wheels:
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: ubuntu-latest,    target: x86_64,  manylinux: auto, smoke: true }
+          - { runner: ubuntu-24.04-arm, target: aarch64, manylinux: auto, smoke: true }
+          - { runner: macos-14,         target: aarch64, smoke: true }
+          # Cross-compiled on the arm64 runner (the macos-13 Intel image is retired); not smoke-tested.
+          - { runner: macos-14,         target: x86_64,  smoke: false }
+          - { runner: windows-latest,   target: x64,     python_arch: x64, smoke: true }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          architecture: ${{ matrix.python_arch }}
+      - name: Build abi3 wheel
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: rust
+          target: ${{ matrix.target }}
+          manylinux: ${{ matrix.manylinux }} # Linux builds run in a manylinux container
+          args: --release --locked --out dist
+          sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
+      - name: Smoke-test the wheel from outside the repo
+        if: matrix.smoke
+        shell: bash
+        # Run from the runner temp dir so the source tree cannot shadow the installed wheel.
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -m venv smoke-venv
+          if [ -x smoke-venv/bin/python ]; then py=smoke-venv/bin/python; else py=smoke-venv/Scripts/python; fi
+          "$py" -m pip install numpy "$GITHUB_WORKSPACE"/rust/dist/*.whl
+          "$py" -c "import equate_rust, numpy as np; assert not equate_rust.DEBUG_BUILD; D = equate_rust.dtw_accumulate(np.zeros((2, 2)), window=None); assert D.shape == (3, 3)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.runner }}-${{ matrix.target }}
+          path: rust/dist
+
+  sdist:
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: PyO3/maturin-action@v1
+        with:
+          working-directory: rust
+          command: sdist
+          args: --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: rust/dist
+
+  publish:
+    needs: [wheels, sdist]
+    if: startsWith(github.ref, 'refs/tags/') || inputs.publish
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write # trusted publishing; the only permission this job needs
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist

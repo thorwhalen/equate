@@ -1,0 +1,6 @@
+# Extension repos pin the toolchain so local builds, CI wheels and rust-analyzer agree.
+# Bump deliberately (see rust-coding's references/baseline.md).
+[toolchain]
+channel = "1.99"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

@@ -2,6 +2,8 @@ docs/*
 # ...but keep the hand-written research corpus tracked (generated Sphinx/mkdocs
 # output still lives elsewhere under docs/ and stays ignored by the line above).
 !docs/research/
+# the Rust port's log (issue #35 and the equate-rust backend) is tracked too
+!docs/port-log.md
 # Local-only Claude Code files (keep CLAUDE.md and skills/ symlinks tracked)
 .claude/settings.local.json
 .claude/handoffs/

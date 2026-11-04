@@ -1,0 +1,43 @@
+[build-system]
+requires = ["maturin>=1.16,<2"]
+build-backend = "maturin"
+
+[project]
+name = "equate-rust"
+version = "0.1.0"                     # SSOT for this wheel's version (the crates stay 0.0.0)
+description = "Native (Rust) kernels for equate.compare.sequence, selected with backend='rust'"
+readme = "README.md"
+requires-python = ">=3.10"            # matches the abi3-py310 floor in Cargo.toml
+license = "MIT"
+authors = [{ name = "thorwhalen" }]
+dependencies = ["numpy"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Rust",
+    "Topic :: Scientific/Engineering",
+]
+
+[project.urls]
+Homepage = "https://github.com/thorwhalen/equate"
+
+[tool.maturin]
+manifest-path = "py/Cargo.toml"       # the binding crate
+module-name = "equate_rust._core"     # the extension lands inside the equate_rust package
+python-source = "python"
+bindings = "pyo3"
+locked = true                         # fail if Cargo.lock is stale (CI and sdist builds)
+strip = true
+exclude = [
+  "**/__pycache__",                   # not a default for a hand-written [tool.maturin]
+  "**/*.pyc",
+]
+
+[tool.uv]
+# Without these, `uv run` / `uv sync` never rebuild after a Rust edit and silently test a stale binary.
+cache-keys = [
+  { file = "pyproject.toml" },
+  { file = "Cargo.toml" },
+  { file = "Cargo.lock" },
+  { file = "**/Cargo.toml" },
+  { file = "**/*.rs" },
+]

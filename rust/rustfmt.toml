@@ -1,0 +1,5 @@
+# Stable options only: nightly-only ones (imports_granularity, group_imports, ...) would force
+# `cargo +nightly fmt` on every contributor and agent.
+style_edition = "2024"
+use_field_init_shorthand = true
+use_try_shorthand = true

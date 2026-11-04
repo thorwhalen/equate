@@ -1,0 +1,20 @@
+[package]
+name = "equate-rust-py"
+description = "Python bindings of equate-sequence-core, built by maturin as equate_rust._core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[lib]
+name = "_core"            # must match the last part of [tool.maturin] module-name
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { workspace = true }
+numpy = { workspace = true }
+equate-sequence-core = { path = "../core" }
+
+[lints]
+workspace = true

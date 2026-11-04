@@ -13,6 +13,55 @@ import pytest
 from equate import match, Alignment, MissingDependencyError
 from equate.compare import comparators, resolve_comparator, polarity_sense
 from equate.compare import sequence as Q
+from equate._dependencies import have
+
+
+# --- backends (equate#35): every test runs against every installed backend that can
+# answer it. A backend joins the parametrisation once the facade accepts it (it is in
+# the module's ``_*_BACKENDS``) and its package is importable; score-only backends skip
+# the tests that need what they lack (a path, a custom cost, a substitution callable).
+
+_BACKEND_PACKAGE = {
+    "numpy": None,
+    "dtaidistance": "dtaidistance",
+    "tslearn": "tslearn",
+    "biopython": "Bio",
+    "rust": "equate_rust",
+}
+# "messages": equate validates the input itself (third-party engines raise their own
+# message, with the same exception class)
+_FULL = frozenset(
+    {"path", "local_cost", "multivariate", "substitution", "empty", "messages"}
+)
+_CAPABILITIES = {
+    "numpy": _FULL,
+    "rust": _FULL,
+    "dtaidistance": frozenset({"multivariate"}),
+    "tslearn": frozenset({"multivariate"}),
+    "biopython": frozenset(),  # scalar scores only; raises on an empty sequence
+}
+
+
+def _backends(family, *needs):
+    """``pytest.param`` per backend of ``family`` (a ``Q._*_BACKENDS`` tuple) that has
+    every capability in ``needs``; skipped when its package is not installed."""
+    params = []
+    for name in family:
+        if not set(needs) <= _CAPABILITIES.get(name, frozenset()):
+            continue
+        package = _BACKEND_PACKAGE.get(name)
+        missing = package is not None and not have(package)
+        mark = pytest.mark.skipif(missing, reason=f"{package} is not installed")
+        params.append(pytest.param(name, id=name, marks=mark))
+    return params
+
+
+DTW = Q._DTW_BACKENDS
+ALIGN = Q._ALIGN_BACKENDS
+
+
+def _has(backend, capability):
+    return capability in _CAPABILITIES[backend]
 
 
 # --- independent references -----------------------------------------------------
@@ -73,69 +122,88 @@ _SERIES = [
 ]
 
 
+@pytest.mark.parametrize("backend", _backends(DTW))
 @pytest.mark.parametrize("a,b", _SERIES)
-def test_unconstrained_dtw_matches_reference(a, b):
-    al = Q.dtw_alignment(a, b, window=None)
+def test_unconstrained_dtw_matches_reference(a, b, backend):
+    al = Q.dtw_alignment(a, b, window=None, backend=backend)
     assert al.score == pytest.approx(_ref_dtw(a, b))
-    _assert_warping_path(al.path, len(a), len(b))
-    # the reported path really achieves the reported score
-    assert _path_cost(a, b, al.path) == pytest.approx(al.score)
+    if _has(backend, "path"):
+        _assert_warping_path(al.path, len(a), len(b))
+        # the reported path really achieves the reported score
+        assert _path_cost(a, b, al.path) == pytest.approx(al.score)
 
 
+@pytest.mark.parametrize("backend", _backends(DTW))
 @pytest.mark.parametrize("a,b", _SERIES)
 @pytest.mark.parametrize("w", [0, 1, 2, 3])
-def test_banded_dtw_matches_reference(a, b, w):
+def test_banded_dtw_matches_reference(a, b, w, backend):
     n, m = len(a), len(b)
 
     def allowed(i, j):  # an inclusive half-width band, widened by |n - m|
         return i - max(0, n - m) - w <= j <= i + max(0, m - n) + w
 
-    al = Q.dtw_alignment(a, b, window=w)
+    al = Q.dtw_alignment(a, b, window=w, backend=backend)
     assert al.score == pytest.approx(_ref_dtw(a, b, allowed))
-    assert all(allowed(i, j) for i, j in al.path)
+    if _has(backend, "path"):
+        assert all(allowed(i, j) for i, j in al.path)
     # a band can only ever cost more than (or the same as) unconstrained DTW
-    assert al.score >= Q.dtw(a, b, window=None) - 1e-12
+    assert al.score >= Q.dtw(a, b, window=None, backend=backend) - 1e-12
 
 
-def test_float_window_is_a_fraction_of_the_longer_series():
+@pytest.mark.parametrize("backend", _backends(DTW))
+def test_float_window_is_a_fraction_of_the_longer_series(backend):
     a, b = list(range(20)), list(range(20))[::-1]
-    assert Q.dtw(a, b, window=0.1) == Q.dtw(a, b, window=2)
+    dtw = lambda *args, **kw: Q.dtw(*args, backend=backend, **kw)  # noqa: E731
+    assert dtw(a, b, window=0.1) == dtw(a, b, window=2)
     with pytest.raises(ValueError):
-        Q.dtw(a, b, window=-1)
+        dtw(a, b, window=-1)
     with pytest.raises(TypeError):
-        Q.dtw(a, b, window="wide")
+        dtw(a, b, window="wide")
     # numpy scalars are fine
-    assert Q.dtw(a, b, window=np.int64(2)) == Q.dtw(a, b, window=2)
-    assert Q.dtw(a, b, window=np.float32(0.1)) == Q.dtw(a, b, window=2)
+    assert dtw(a, b, window=np.int64(2)) == dtw(a, b, window=2)
+    assert dtw(a, b, window=np.float32(0.1)) == dtw(a, b, window=2)
+    # a band wider than both series is unconstrained, however wide
+    assert dtw(a, b, window=10**30) == dtw(a, b, window=None)
 
 
-def test_window_zero_is_euclidean_and_the_default_still_warps_short_series():
+@pytest.mark.parametrize("backend", _backends(DTW))
+def test_window_zero_is_euclidean_and_the_default_still_warps_short_series(backend):
     a, b = [0, 1, 0, 1, 0], [1, 0, 1, 0, 1]
-    assert Q.dtw(a, b, window=0) == pytest.approx(math.sqrt(5))  # no warping
+    dtw = lambda *args, **kw: Q.dtw(*args, backend=backend, **kw)  # noqa: E731
+    assert dtw(a, b, window=0) == pytest.approx(math.sqrt(5))  # no warping
     # the default band (0.1 of a short series -> one cell) still allows a shift
-    assert Q.dtw(a, b) == pytest.approx(Q.dtw(a, b, window=None))
-    assert Q.dtw(a, b) < Q.dtw(a, b, window=0)
+    assert dtw(a, b) == pytest.approx(dtw(a, b, window=None))
+    assert dtw(a, b) < dtw(a, b, window=0)
 
 
-def test_dtw_accepts_iterators():
-    assert Q.dtw(iter([1, 2, 3]), (x for x in [1, 2, 3])) == 0.0
+@pytest.mark.parametrize("backend", _backends(DTW))
+def test_dtw_accepts_iterators(backend):
+    assert Q.dtw(iter([1, 2, 3]), (x for x in [1, 2, 3]), backend=backend) == 0.0
 
 
-def test_dtw_is_symmetric_and_zero_on_warped_copies():
+@pytest.mark.parametrize("backend", _backends(DTW))
+def test_dtw_is_symmetric_and_zero_on_warped_copies(backend):
     a, b = [0, 1, 2, 3, 2, 1], [0, 0, 1, 2, 3, 3, 2, 1]
-    assert Q.dtw(a, b, window=None) == 0.0
+    assert Q.dtw(a, b, window=None, backend=backend) == 0.0
     x, y = _SERIES[1]
-    assert Q.dtw(x, y) == pytest.approx(Q.dtw(y, x))
+    assert Q.dtw(x, y, backend=backend) == pytest.approx(Q.dtw(y, x, backend=backend))
 
 
-def test_dtw_multivariate_and_custom_local_cost():
+@pytest.mark.parametrize("backend", _backends(DTW, "multivariate"))
+def test_dtw_multivariate(backend):
     a = [[0, 0], [1, 1], [2, 2]]
     b = [[0, 0], [1, 1], [1, 1], [2, 2]]
-    assert Q.dtw(a, b, window=None) == 0.0
-    with pytest.raises(ValueError, match="dimensions"):
-        Q.dtw([[0, 0]], [[0, 0, 0]])
+    assert Q.dtw(a, b, window=None, backend=backend) == 0.0
+    message = "dimensions" if _has(backend, "messages") else None
+    with pytest.raises(ValueError, match=message):
+        Q.dtw([[0, 0]], [[0, 0, 0]], backend=backend)
+
+
+@pytest.mark.parametrize("backend", _backends(DTW, "local_cost"))
+def test_dtw_custom_local_cost(backend):
     # a custom local cost is accumulated without a square root (L1 DTW)
-    assert Q.dtw([0, 0, 0], [1, 1, 1], local_cost=lambda x, y: abs(x - y)) == 3.0
+    l1 = lambda x, y: abs(x - y)  # noqa: E731
+    assert Q.dtw([0, 0, 0], [1, 1, 1], local_cost=l1, backend=backend) == 3.0
     # ... and lets DTW align arbitrary objects (here: strings by length)
     assert (
         Q.dtw(
@@ -143,41 +211,51 @@ def test_dtw_multivariate_and_custom_local_cost():
             ["a", "bb", "bb"],
             local_cost=lambda x, y: abs(len(x) - len(y)),
             window=None,
+            backend=backend,
         )
         == 0
     )
 
 
-def test_dtw_rejects_empty_and_unknown_backend():
+@pytest.mark.parametrize("backend", _backends(DTW, "empty"))
+def test_dtw_rejects_empty_and_unknown_backend(backend):
     with pytest.raises(ValueError, match="empty"):
-        Q.dtw([], [1, 2])
+        Q.dtw([], [1, 2], backend=backend)
     with pytest.raises(ValueError, match="backend"):
         Q.dtw([1], [1], backend="fastdtw")
 
 
-def test_subsequence_dtw_finds_the_span_and_is_directional():
+# dtaidistance's subsequence backend (univariate, default cost) is cross-checked at the
+# end of this module
+@pytest.mark.parametrize("backend", _backends(DTW, "local_cost"))
+def test_subsequence_dtw_finds_the_span_and_is_directional(backend):
     series = [9, 9, 1, 2, 3, 9, 9]
-    al = Q.subsequence_dtw_alignment([1, 2, 3], series)
+    al = Q.subsequence_dtw_alignment([1, 2, 3], series, backend=backend)
     assert al.score == 0.0
     assert [j for _, j in al.path] == [2, 3, 4]
     # the query is consumed whole: every query index appears, in order
     assert sorted({i for i, _ in al.path}) == [0, 1, 2]
-    assert Q.subsequence_dtw([1, 2, 3], series) < Q.dtw([1, 2, 3], series, window=None)
+    subseq = Q.subsequence_dtw([1, 2, 3], series, backend=backend)
+    assert subseq < Q.dtw([1, 2, 3], series, window=None, backend=backend)
     assert Q.subsequence_dtw.meta.is_symmetric is False
     with pytest.raises(ValueError, match="non-negative"):
-        Q.subsequence_dtw([0, 0], [0, 0, 0], local_cost=lambda x, y: -1.0)
+        Q.subsequence_dtw(
+            [0, 0], [0, 0, 0], local_cost=lambda x, y: -1.0, backend=backend
+        )
 
 
-def test_soft_dtw_limits():
+@pytest.mark.parametrize("backend", _backends(Q._SOFT_DTW_BACKENDS))
+def test_soft_dtw_limits(backend):
     a, b = _SERIES[0]
     hard_squared = Q.dtw(a, b, window=None) ** 2
-    assert Q.soft_dtw(a, b, gamma=1e-4) == pytest.approx(hard_squared, abs=1e-3)
+    soft = lambda *args, **kw: Q.soft_dtw(*args, backend=backend, **kw)  # noqa: E731
+    assert soft(a, b, gamma=1e-4) == pytest.approx(hard_squared, abs=1e-3)
     # the soft-min is below the hard min, so soft-DTW lower-bounds squared DTW
-    assert Q.soft_dtw(a, b, gamma=1.0) <= hard_squared
-    assert Q.soft_dtw(a, a) < 0  # not a distance
+    assert soft(a, b, gamma=1.0) <= hard_squared
+    assert soft(a, a) < 0  # not a distance
     for bad in (0, -1, True):
         with pytest.raises(ValueError):
-            Q.soft_dtw(a, b, gamma=bad)
+            soft(a, b, gamma=bad)
 
 
 # --- Needleman-Wunsch / Smith-Waterman ------------------------------------------
@@ -191,10 +269,19 @@ _PAIRS = [
 ]
 
 
+def _skip_unless_answerable(backend, *seqs):
+    if not _has(backend, "empty") and not all(seqs):
+        pytest.skip(f"backend={backend!r} raises on an empty sequence")
+
+
+@pytest.mark.parametrize("backend", _backends(ALIGN))
 @pytest.mark.parametrize("a,b", _PAIRS)
-def test_needleman_wunsch_matches_reference(a, b):
-    al = Q.needleman_wunsch_alignment(a, b)
+def test_needleman_wunsch_matches_reference(a, b, backend):
+    _skip_unless_answerable(backend, a, b)
+    al = Q.needleman_wunsch_alignment(a, b, backend=backend)
     assert al.score == _ref_nw(a, b)
+    if not _has(backend, "path"):
+        return
     # the global path covers every element of both sides exactly once, in order
     assert [i for i, _ in al.path if i is not None] == list(range(len(a)))
     assert [j for _, j in al.path if j is not None] == list(range(len(b)))
@@ -206,14 +293,18 @@ def test_needleman_wunsch_matches_reference(a, b):
     assert rescored == al.score
 
 
+@pytest.mark.parametrize("backend", _backends(ALIGN))
 @pytest.mark.parametrize("gap", [-0.7, -0.4, -0.1, -1 / 3])
 @pytest.mark.parametrize(
     "a,b",
     [("ACGT" * 5, "A"), ("bbaabaa", ""), ("A" * 30, "AB"), ("GATTACA", "GCATGCU")],
 )
-def test_needleman_wunsch_fractional_scores(a, b, gap):
-    al = Q.needleman_wunsch_alignment(a, b, gap=gap, mismatch=-0.3)
+def test_needleman_wunsch_fractional_scores(a, b, gap, backend):
+    _skip_unless_answerable(backend, a, b)
+    al = Q.needleman_wunsch_alignment(a, b, gap=gap, mismatch=-0.3, backend=backend)
     assert al.score == pytest.approx(_ref_nw(a, b, mismatch=-0.3, gap=gap))
+    if not _has(backend, "path"):
+        return
     assert [i for i, _ in al.path if i is not None] == list(range(len(a)))
     assert [j for _, j in al.path if j is not None] == list(range(len(b)))
     rescored = sum(
@@ -221,36 +312,99 @@ def test_needleman_wunsch_fractional_scores(a, b, gap):
         for i, j in al.path
     )
     assert rescored == pytest.approx(al.score)
-    local = Q.smith_waterman_alignment(a, b, gap=gap, mismatch=-0.3)
+    local = Q.smith_waterman_alignment(a, b, gap=gap, mismatch=-0.3, backend=backend)
     assert all(i is None or 0 <= i < len(a) for i, _ in local.path)
     assert all(j is None or 0 <= j < len(b) for _, j in local.path)
 
 
-def test_empty_alignment_score_is_plain_zero():
-    assert str(Q.needleman_wunsch("", "")) == "0.0"
+@pytest.mark.parametrize("backend", _backends(ALIGN, "empty"))
+def test_empty_alignment_score_is_plain_zero(backend):
+    assert str(Q.needleman_wunsch("", "", backend=backend)) == "0.0"
+    assert str(Q.smith_waterman("", "", backend=backend)) == "0.0"
 
 
-def test_smith_waterman_is_local_and_nonnegative():
-    al = Q.smith_waterman_alignment("TTTTACGTTTT", "GGACGGG")
+@pytest.mark.parametrize("backend", _backends(ALIGN))
+def test_smith_waterman_is_local_and_nonnegative(backend):
+    al = Q.smith_waterman_alignment("TTTTACGTTTT", "GGACGGG", backend=backend)
     assert al.score == 3.0
-    assert al.path == ((4, 2), (5, 3), (6, 4))
-    assert Q.smith_waterman("abc", "xyz") == 0.0
-    assert Q.smith_waterman("abc", "xyz") >= Q.needleman_wunsch("abc", "xyz")
+    if _has(backend, "path"):
+        assert al.path == ((4, 2), (5, 3), (6, 4))
+    sw = Q.smith_waterman("abc", "xyz", backend=backend)
+    assert sw == 0.0
+    assert sw >= Q.needleman_wunsch("abc", "xyz", backend=backend)
 
 
-def test_symbolic_alignment_on_token_lists_with_custom_substitution():
+@pytest.mark.parametrize("backend", _backends(ALIGN))
+def test_symbolic_alignment_on_token_lists_with_custom_substitution(backend):
     a = ["the", "quick", "brown", "fox"]
     b = ["the", "quik", "brown", "fox"]
-    sub = lambda x, y: 2.0 if x == y else (1.0 if x[:3] == y[:3] else -2.0)  # noqa: E731
-    assert Q.needleman_wunsch(a, b, substitution=sub) == 7.0
-    assert Q.needleman_wunsch(a, b, gap=-5) == 2.0
+    if _has(backend, "substitution"):
+        sub = lambda x, y: 2.0 if x == y else (1.0 if x[:3] == y[:3] else -2.0)  # noqa: E731
+        assert Q.needleman_wunsch(a, b, substitution=sub, backend=backend) == 7.0
+    assert Q.needleman_wunsch(a, b, gap=-5, backend=backend) == 2.0
 
 
-def test_alignment_is_float_like():
-    al = Q.dtw_alignment([0, 1], [0, 2])
+@pytest.mark.parametrize("dtw_backend", _backends(DTW))
+@pytest.mark.parametrize("align_backend", _backends(ALIGN))
+def test_alignment_is_float_like(dtw_backend, align_backend):
+    al = Q.dtw_alignment([0, 1], [0, 2], backend=dtw_backend)
     assert isinstance(al, Alignment) and float(al) == al.score
-    assert Q.needleman_wunsch_alignment("a", "a").sense == "maximize"
     assert al.sense == "minimize"
+    nw = Q.needleman_wunsch_alignment("a", "a", backend=align_backend)
+    assert isinstance(nw, Alignment) and nw.sense == "maximize"
+
+
+# --- tie-breaking is part of the contract (equate#35) -------------------------------
+# Several paths often share the optimal score; which one is reported is behaviour users
+# see. DTW's traceback keeps the FIRST minimum among (diagonal, up, left); the NW/SW fill
+# keeps the FIRST maximum among (diagonal, up, left) -- numpy's argmax -- and SW reports
+# the FIRST maximal cell in row-major order. A backend that breaks ties any other way
+# (last wins, another candidate order) reports a different path and must fail here.
+
+
+@pytest.mark.parametrize("backend", _backends(DTW, "path"))
+def test_dtw_traceback_keeps_the_first_minimum(backend):
+    # all costs zero: every warping path ties, so the path is decided by tie-breaking
+    al = Q.dtw_alignment([0, 0, 0], [0, 0, 0, 0], window=None, backend=backend)
+    assert al.score == 0.0
+    assert al.path == ((0, 0), (0, 1), (1, 2), (2, 3))  # diagonal first, then row 0
+    al = Q.dtw_alignment([0, 0, 0, 0], [0, 0, 0], window=None, backend=backend)
+    assert al.path == ((0, 0), (1, 0), (2, 1), (3, 2))  # diagonal first, then column 0
+    # ties between the diagonal and a side step, away from the borders
+    al = Q.dtw_alignment([1, 0, 0], [0, 0, 1], window=None, backend=backend)
+    assert al.path == ((0, 0), (1, 1), (2, 2))
+    al = Q.dtw_alignment([0, 1, 1, 0], [0, 1, 0], window=None, backend=backend)
+    assert al.path == ((0, 0), (1, 1), (2, 1), (3, 2))
+    al = Q.subsequence_dtw_alignment([0, 0], [0, 0, 0], backend=backend)
+    assert al.path == ((0, 0), (1, 0))  # the first of the tied end points
+
+
+@pytest.mark.parametrize("backend", _backends(ALIGN, "path"))
+def test_alignment_fill_keeps_the_first_maximum(backend):
+    nw = lambda *a, **k: Q.needleman_wunsch_alignment(*a, backend=backend, **k)  # noqa: E731
+    sw = lambda *a, **k: Q.smith_waterman_alignment(*a, backend=backend, **k)  # noqa: E731
+    # which 'A' of 'AA' the single 'A' matches is a tie: diagonal beats up
+    assert nw("AA", "A").path == ((0, None), (1, 0))
+    assert nw("A", "AA").path == ((None, 0), (0, 1))
+    # free gaps and mismatches: everything ties, so the path is the tie-breaker's alone
+    assert nw("ab", "ba", gap=0, mismatch=0).path == ((None, 0), (0, 1), (1, None))
+    assert nw("abc", "xyz", gap=0, mismatch=0, match=0).path == (
+        (0, 0),
+        (1, 1),
+        (2, 2),
+    )
+    # when the diagonal loses, up beats left at every tied cell of the traceback
+    assert nw("ab", "cd", mismatch=-5, gap=-1).path == (
+        (None, 0),
+        (None, 1),
+        (0, None),
+        (1, None),
+    )
+    assert nw("aba", "bab").path == ((None, 0), (0, 1), (1, 2), (2, None))
+    # SW: the first maximal cell (row-major) ends the reported fragment
+    assert sw("abXab", "ab").path == ((0, 0), (1, 1))
+    assert sw("ab", "abXab").path == ((0, 0), (1, 1))
+    assert sw("aXa", "a").path == ((0, 0),)
 
 
 # --- registry + facade ----------------------------------------------------------
@@ -450,3 +604,123 @@ def test_subsequence_dtw_dtaidistance_backend_agrees():
     assert subsequence_dtw([5, 6, 7], [0, 0, 5, 6, 7, 0], backend="dtaidistance") == 0.0
     with pytest.raises(ValueError, match="local cost"):
         subsequence_dtw([1], [1, 2], backend="dtaidistance", local_cost=lambda x, y: 0)
+
+
+# --- backend='rust' routes each input to the kernel that reproduces it fastest ---------
+# The differential tests prove the results equal; this pins *which* path each input
+# takes, so a regression that silently falls back to the reference (equal results, the
+# speedup lost) fails here.
+
+
+@pytest.mark.skipif(
+    "rust" not in ALIGN or not have("equate_rust"), reason="equate-rust not installed"
+)
+@pytest.mark.parametrize(
+    "args,kwargs,route",
+    [
+        (("GATTACA", "GATACA"), {}, ["align_codes"]),
+        ((["the", "fox"], ["fox"]), {}, ["align_codes"]),
+        (([1, 2, 3], [2, 3]), {}, ["align_codes"]),
+        ((b"abc", b"bc"), {}, ["align_codes"]),
+        (("ab", "b"), {"gap": np.float32(-0.5), "match": np.int64(2)}, ["align_codes"]),
+        (([1.0, 2.0], [2.0]), {}, ["align_scores"]),
+        (([True, 1], [1]), {}, ["align_scores"]),
+        (("ab", "b"), {"substitution": lambda x, y: float(x == y)}, ["align_scores"]),
+        (("ab", "b"), {"match": 10**400, "mismatch": 0}, []),  # OverflowError in S
+        (("ab", "b"), {"gap": __import__("fractions").Fraction(-1, 3)}, None),
+    ],
+)
+def test_rust_alignment_routing(monkeypatch, args, kwargs, route):
+    import equate_rust
+
+    calls = []
+
+    class Spy:
+        def __getattr__(self, name):
+            calls.append(name)
+            return getattr(equate_rust, name)
+
+    monkeypatch.setattr(Q, "_rust", lambda: Spy())
+    call = lambda: Q.needleman_wunsch_alignment(*args, backend="rust", **kwargs)  # noqa: E731
+    if (
+        kwargs.get("match") == 10**400
+    ):  # float(match) overflows in S, as in the reference
+        with pytest.raises(OverflowError):
+            call()
+    else:
+        call()
+    if (
+        route is None
+    ):  # outside the native domain: the numpy reference, not even imported
+        assert calls == []
+        assert Q._as_double(kwargs["gap"]) is None
+    else:
+        assert calls == route
+
+
+@pytest.mark.skipif(
+    "rust" not in DTW or not have("equate_rust"), reason="equate-rust not installed"
+)
+def test_rust_dtw_routing(monkeypatch):
+    import equate_rust
+
+    calls = []
+
+    class Spy:
+        def __getattr__(self, name):
+            calls.append(name)
+            return getattr(equate_rust, name)
+
+    monkeypatch.setattr(Q, "_rust", lambda: Spy())
+    Q.dtw_alignment([0, 1, 2], [0, 2], window=10**30, backend="rust")
+    assert calls == ["dtw_accumulate", "traceback_dtw"]
+    calls.clear()
+    Q.subsequence_dtw_alignment([1, 2], [0, 1, 2, 0], backend="rust")
+    assert calls == ["subsequence_dtw_accumulate", "traceback_dtw"]
+
+
+# --- native backend under numpy's floating-point error state ---------------------------
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        lambda b: Q.dtw_alignment(
+            [1e308, 1e308],
+            [0.0, 0.0],
+            window=None,
+            local_cost=lambda x, y: abs(x - y),
+            backend=b,
+        ),
+        lambda b: Q.needleman_wunsch_alignment(
+            "ab", "b", gap=-1.7e308, match=-1.7e308, backend=b
+        ),
+        lambda b: Q.smith_waterman_alignment(
+            "ab", "b", gap=float("-inf"), match=float("inf"), backend=b
+        ),
+    ],
+)
+def test_rust_follows_numpys_float_error_state(call):
+    """Under ``np.seterr(all='raise')`` an overflow raises ``FloatingPointError`` in the
+    reference; the rust backend must run the reference there, not add silently."""
+    pytest.importorskip("equate_rust")
+    with np.errstate(all="raise"):
+        try:
+            expected = call("numpy")
+        except FloatingPointError:
+            with pytest.raises(FloatingPointError):
+                call("rust")
+        else:  # the input did not trip the error state: both agree
+            assert call("rust") == expected
+
+
+def test_rust_without_the_package_raises_even_for_a_reference_only_gap(monkeypatch):
+    """A gap that routes to the numpy reference still needs ``equate_rust`` installed."""
+    from fractions import Fraction
+
+    def missing():
+        raise ModuleNotFoundError("equate_rust")
+
+    monkeypatch.setattr(Q, "_rust", missing)
+    with pytest.raises(ModuleNotFoundError):
+        Q.needleman_wunsch_alignment("ab", "b", gap=Fraction(-1, 3), backend="rust")

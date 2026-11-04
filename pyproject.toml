@@ -87,9 +87,11 @@ packages = [
 ]
 
 [tool.hatch.build.targets.sdist]
-# the review UI is a separate npm project; it ships from the repo, not in the Python sdist
+# the review UI is a separate npm project, and rust/ is the separate equate-rust package
+# (its own maturin build): both ship from the repo, not in equate's pure-Python sdist
 exclude = [
     "ui/",
+    "rust/",
 ]
 
 [tool.ruff]

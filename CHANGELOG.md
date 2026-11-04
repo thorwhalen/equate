@@ -4,6 +4,14 @@ All notable changes to `equate` are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions match the
 releases CI publishes to PyPI.
 
+## Unreleased
+
+**Optional Rust backend for the sequence comparators** (#35, the pilot port).
+
+- `backend='rust'` for `dtw`, `subsequence_dtw`, `needleman_wunsch` and `smith_waterman` (and their `*_alignment` twins), from the separate `equate-rust` package (built from `rust/`, imported only on use; equate's own wheel stays pure Python). It is a drop-in for the numpy backend: same validation and errors (under `np.seterr(all='raise')` it runs the numpy kernels, so overflow raises the same `FloatingPointError`; the one difference is that numpy's overflow `RuntimeWarning` is not emitted), the same paths with ties broken identically, scores equal to the last bit in tests (the contract is 1e-12 relative). End to end on 1000 x 1000: DTW 53x (unconstrained) and 22x (10% band), Needleman-Wunsch 422x, Smith-Waterman 354x faster than numpy. `equate-rust` is not on PyPI yet; build it with `maturin` from `rust/`.
+- Tests: the sequence tests now run against every installed backend; Hypothesis differential tests (`tests/test_differential.py`) compare each backend with numpy, and tie-breaking is pinned.
+- No behaviour change for `backend='numpy'` (the default) or the other backends. Two pure refactors inside the numpy backend: `_subsequence_accumulate` and `_substitution_scores`.
+
 ## 0.1.0 — 2026-10-30
 
 **Structured matchers, round 2** (#18; doc 12 §4, D8). All are new entries at existing seams.
