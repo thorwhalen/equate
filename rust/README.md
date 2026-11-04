@@ -6,7 +6,7 @@ comparators. Install it next to equate and pass `backend="rust"`:
 ```python
 from equate.compare.sequence import dtw_alignment, needleman_wunsch
 
-dtw_alignment(a, b, backend="rust")          # banded exact DTW, with its warping path
+dtw_alignment(a, b, backend="rust")  # banded exact DTW, with its warping path
 needleman_wunsch("GATTACA", "GATACA", backend="rust")
 ```
 
