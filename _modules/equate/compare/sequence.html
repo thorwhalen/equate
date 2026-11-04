@@ -327,6 +327,12 @@
 <span class="sd">(``backend='dtaidistance'`` / ``'tslearn'`` / ``'biopython'``, behind the</span>
 <span class="sd">``equate[timeseries]`` / ``equate[bio]`` extras, imported only on use).</span>
 
+<span class="sd">``backend='rust'`` (DTW, subsequence DTW, Needleman-Wunsch, Smith-Waterman) runs the same</span>
+<span class="sd">dynamic programs in compiled code from the separate ``equate-rust`` package, imported only</span>
+<span class="sd">on use. Unlike the third-party engines it is a drop-in for the numpy backend: same</span>
+<span class="sd">validation, same scores (to the last bit in practice; ``1e-12`` relative is the contract),</span>
+<span class="sd">the same ``path`` (ties broken identically), every input the numpy backend accepts.</span>
+
 <span class="sd">&gt;&gt;&gt; dtw([0, 1, 2, 3], [0, 0, 1, 2, 3])  # a warped copy is at distance 0</span>
 <span class="sd">0.0</span>
 <span class="sd">&gt;&gt;&gt; needleman_wunsch('GATTACA', 'GATACA')  # 6 matches, 1 gap</span>
@@ -337,6 +343,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numbers</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">NamedTuple</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
@@ -384,9 +391,9 @@
     <span class="n">polarity</span><span class="o">=</span><span class="s2">"similarity"</span><span class="p">,</span> <span class="n">bounded</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">is_metric</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">is_symmetric</span><span class="o">=</span><span class="kc">True</span>
 <span class="p">)</span>
 
-<span class="n">_DTW_BACKENDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"numpy"</span><span class="p">,</span> <span class="s2">"dtaidistance"</span><span class="p">)</span>
+<span class="n">_DTW_BACKENDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"numpy"</span><span class="p">,</span> <span class="s2">"dtaidistance"</span><span class="p">,</span> <span class="s2">"rust"</span><span class="p">)</span>
 <span class="n">_SOFT_DTW_BACKENDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"numpy"</span><span class="p">,</span> <span class="s2">"tslearn"</span><span class="p">)</span>
-<span class="n">_ALIGN_BACKENDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"numpy"</span><span class="p">,</span> <span class="s2">"biopython"</span><span class="p">)</span>
+<span class="n">_ALIGN_BACKENDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"numpy"</span><span class="p">,</span> <span class="s2">"biopython"</span><span class="p">,</span> <span class="s2">"rust"</span><span class="p">)</span>
 
 
 <span class="c1"># --- shared helpers -----------------------------------------------------------------</span>
@@ -395,6 +402,13 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">allowed</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">what</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">backend</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2">: backend must be one of </span><span class="si">{</span><span class="n">allowed</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">backend</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rust</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""The native kernels (``equate_rust``), imported on first use of ``backend='rust'``."""</span>
+    <span class="k">return</span> <span class="n">require</span><span class="p">(</span>
+        <span class="s2">"equate_rust"</span><span class="p">,</span> <span class="n">purpose</span><span class="o">=</span><span class="s2">"the native sequence kernels (backend='rust')"</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_as_series</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">what</span><span class="p">):</span>
@@ -499,6 +513,66 @@
     <span class="k">return</span> <span class="n">D</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_subsequence_accumulate</span><span class="p">(</span><span class="n">C</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Padded subsequence-DTW accumulated costs: like ``_dtw_accumulate``, unbanded, with a</span>
+<span class="sd">    free start anywhere on the first row."""</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+    <span class="n">D</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># free start anywhere in the series</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+            <span class="n">D</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="nb">min</span><span class="p">(</span><span class="n">D</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">D</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">D</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">D</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_DTWKernels</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The DTW dynamic programs of one backend: the numpy ones are the reference."""</span>
+
+    <span class="n">accumulate</span><span class="p">:</span> <span class="n">Callable</span>  <span class="c1"># (C, w) -&gt; padded D</span>
+    <span class="n">subsequence_accumulate</span><span class="p">:</span> <span class="n">Callable</span>  <span class="c1"># (C) -&gt; padded D</span>
+    <span class="n">traceback</span><span class="p">:</span> <span class="n">Callable</span>  <span class="c1"># (D, i, j, *, stop_row0) -&gt; path</span>
+
+
+<span class="n">_NUMPY_DTW</span> <span class="o">=</span> <span class="n">_DTWKernels</span><span class="p">(</span><span class="n">_dtw_accumulate</span><span class="p">,</span> <span class="n">_subsequence_accumulate</span><span class="p">,</span> <span class="n">_traceback_dtw</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_dtw_kernels</span><span class="p">(</span><span class="n">backend</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The DTW kernels for a path-reporting ``backend`` (``'numpy'`` or ``'rust'``)."""</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="o">!=</span> <span class="s2">"rust"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_NUMPY_DTW</span>
+    <span class="n">core</span> <span class="o">=</span> <span class="n">_rust</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_float_state_is_quiet</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">_NUMPY_DTW</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">accumulate</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">w</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># exact: a half-width &gt;= max(n, m) already spans every row</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">core</span><span class="o">.</span><span class="n">dtw_accumulate</span><span class="p">(</span><span class="n">_float64</span><span class="p">(</span><span class="n">C</span><span class="p">),</span> <span class="n">window</span><span class="o">=</span><span class="n">w</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">traceback</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">stop_row0</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">core</span><span class="o">.</span><span class="n">traceback_dtw</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">stop_row0</span><span class="o">=</span><span class="n">stop_row0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_DTWKernels</span><span class="p">(</span>
+        <span class="n">accumulate</span><span class="o">=</span><span class="n">accumulate</span><span class="p">,</span>
+        <span class="n">subsequence_accumulate</span><span class="o">=</span><span class="k">lambda</span> <span class="n">C</span><span class="p">:</span> <span class="n">core</span><span class="o">.</span><span class="n">subsequence_dtw_accumulate</span><span class="p">(</span><span class="n">_float64</span><span class="p">(</span><span class="n">C</span><span class="p">)),</span>
+        <span class="n">traceback</span><span class="o">=</span><span class="n">traceback</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_float_state_is_quiet</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""Whether numpy's floating-point error state only ignores or warns.</span>
+
+<span class="sd">    The reference adds ``np.float64`` scalars, so ``np.seterr(all='raise')`` makes an</span>
+<span class="sd">    overflow or an invalid sum raise ``FloatingPointError``; the native kernels add</span>
+<span class="sd">    silently. Under any other state the numpy kernels run, so the exception is the same.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="s2">"warn"</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">geterr</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_float64</span><span class="p">(</span><span class="n">C</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+
 <span class="c1"># --- DTW ----------------------------------------------------------------------------</span>
 
 
@@ -525,9 +599,10 @@
     <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span>
     <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">m</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"dtw: cannot align an empty sequence"</span><span class="p">)</span>
-    <span class="n">D</span> <span class="o">=</span> <span class="n">_dtw_accumulate</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">_band</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">window</span><span class="p">))</span>
+    <span class="n">kernels</span> <span class="o">=</span> <span class="n">_dtw_kernels</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">kernels</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">_band</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">window</span><span class="p">))</span>
     <span class="n">total</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">D</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">])</span>
-    <span class="n">path</span> <span class="o">=</span> <span class="n">_traceback_dtw</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">kernels</span><span class="o">.</span><span class="n">traceback</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">Alignment</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">total</span><span class="p">)</span> <span class="k">if</span> <span class="n">root</span> <span class="k">else</span> <span class="n">total</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s2">"minimize"</span><span class="p">)</span></div>
 
 
@@ -599,14 +674,11 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"subsequence_dtw: cannot align an empty sequence"</span><span class="p">)</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">C</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"subsequence_dtw: local_cost must be non-negative"</span><span class="p">)</span>
-    <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
-    <span class="n">D</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># free start anywhere in the series</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
-            <span class="n">D</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="nb">min</span><span class="p">(</span><span class="n">D</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">D</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">D</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
+    <span class="n">kernels</span> <span class="o">=</span> <span class="n">_dtw_kernels</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">kernels</span><span class="o">.</span><span class="n">subsequence_accumulate</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
     <span class="n">end</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">D</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]))</span>
     <span class="n">total</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">D</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
-    <span class="n">path</span> <span class="o">=</span> <span class="n">_traceback_dtw</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">stop_row0</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">kernels</span><span class="o">.</span><span class="n">traceback</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">stop_row0</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">Alignment</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">total</span><span class="p">)</span> <span class="k">if</span> <span class="n">root</span> <span class="k">else</span> <span class="n">total</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s2">"minimize"</span><span class="p">)</span></div>
 
 
@@ -775,6 +847,14 @@
     <span class="k">return</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">match</span> <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">y</span> <span class="k">else</span> <span class="n">mismatch</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_substitution_scores</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">sub</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The ``(n, m)`` float matrix ``sub(a[i], b[j])``, row by row (calls in that order)."""</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="nb">float</span><span class="p">(</span><span class="n">sub</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">a</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">m</span>
+    <span class="p">)</span>
+
+
 <span class="n">_DIAG</span><span class="p">,</span> <span class="n">_UP</span><span class="p">,</span> <span class="n">_LEFT</span><span class="p">,</span> <span class="n">_STOP</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span>
 
 
@@ -786,8 +866,7 @@
 <span class="sd">    """</span>
     <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
     <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
-    <span class="n">sub</span> <span class="o">=</span> <span class="n">_scorer</span><span class="p">(</span><span class="n">substitution</span><span class="p">,</span> <span class="n">match</span><span class="p">,</span> <span class="n">mismatch</span><span class="p">)</span>
-    <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="nb">float</span><span class="p">(</span><span class="n">sub</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">a</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">_substitution_scores</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">_scorer</span><span class="p">(</span><span class="n">substitution</span><span class="p">,</span> <span class="n">match</span><span class="p">,</span> <span class="n">mismatch</span><span class="p">))</span>
     <span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
     <span class="n">ptr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">_STOP</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">local</span><span class="p">:</span>
@@ -826,6 +905,80 @@
             <span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="kc">None</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
             <span class="n">j</span> <span class="o">-=</span> <span class="mi">1</span>
     <span class="k">return</span> <span class="n">Alignment</span><span class="p">(</span><span class="n">score</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">path</span><span class="p">)),</span> <span class="n">sense</span><span class="o">=</span><span class="s2">"maximize"</span><span class="p">)</span>
+
+
+<span class="c1"># Scores whose arithmetic in the numpy reference is exactly ``float(x)`` in float64:</span>
+<span class="c1"># ``np.float64 + x`` and ``float(sub(...))`` both give the double ``float(x)``. Any other</span>
+<span class="c1"># type (Fraction, Decimal, longdouble, a float subclass) runs the reference unchanged.</span>
+<span class="n">_PLAIN_SCORES</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">_t</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">):</span>
+    <span class="n">_PLAIN_SCORES</span> <span class="o">+=</span> <span class="p">(</span><span class="n">_t</span><span class="p">,)</span>
+<span class="k">del</span> <span class="n">_t</span>
+<span class="c1"># Elements whose ``==`` is exactly dict-key equality, so they can be interned to codes.</span>
+<span class="n">_CODABLE</span> <span class="o">=</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_as_double</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``float(x)`` for a plain score, else ``None`` (the caller then runs the reference)."""</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_PLAIN_SCORES</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OverflowError</span><span class="p">:</span>  <span class="c1"># an int beyond float range: the reference decides</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_codes</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Intern the elements of ``a`` and ``b`` to int64 codes (equal iff ``==``), or</span>
+<span class="sd">    ``None`` when an element is not an exact ``str`` or ``int``."""</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">seq</span> <span class="ow">in</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_CODABLE</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">seq</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">codes</span> <span class="o">=</span> <span class="p">[</span><span class="n">table</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">table</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">seq</span><span class="p">]</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">codes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_align_rust</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">local</span><span class="p">,</span> <span class="n">substitution</span><span class="p">,</span> <span class="n">match</span><span class="p">,</span> <span class="n">mismatch</span><span class="p">,</span> <span class="n">gap</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``_align_dp`` on the native kernels, for every input it can take exactly.</span>
+
+<span class="sd">    The fill and the traceback run in Rust; the substitution matrix is built here, by the</span>
+<span class="sd">    same code as the reference, unless the default match/mismatch scorer applies to</span>
+<span class="sd">    interned codes (then Rust scores the cells). Inputs outside that domain (a gap whose</span>
+<span class="sd">    arithmetic is not plain float64) run the numpy reference itself.</span>
+<span class="sd">    """</span>
+    <span class="n">core</span> <span class="o">=</span> <span class="n">_rust</span><span class="p">()</span>
+    <span class="n">gap_</span> <span class="o">=</span> <span class="n">_as_double</span><span class="p">(</span><span class="n">gap</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">gap_</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">_float_state_is_quiet</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">_align_dp</span><span class="p">(</span>
+            <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">local</span><span class="o">=</span><span class="n">local</span><span class="p">,</span> <span class="n">substitution</span><span class="o">=</span><span class="n">substitution</span><span class="p">,</span> <span class="n">match</span><span class="o">=</span><span class="n">match</span><span class="p">,</span>
+            <span class="n">mismatch</span><span class="o">=</span><span class="n">mismatch</span><span class="p">,</span> <span class="n">gap</span><span class="o">=</span><span class="n">gap</span><span class="p">,</span>
+        <span class="p">)</span>  <span class="c1"># fmt: skip</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+    <span class="n">match_</span><span class="p">,</span> <span class="n">mismatch_</span> <span class="o">=</span> <span class="n">_as_double</span><span class="p">(</span><span class="n">match</span><span class="p">),</span> <span class="n">_as_double</span><span class="p">(</span><span class="n">mismatch</span><span class="p">)</span>
+    <span class="n">codes</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">substitution</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">match_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">mismatch_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">codes</span> <span class="o">=</span> <span class="n">_codes</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">codes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">score</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">align_codes</span><span class="p">(</span>
+            <span class="o">*</span><span class="n">codes</span><span class="p">,</span>
+            <span class="n">match_score</span><span class="o">=</span><span class="n">match_</span><span class="p">,</span>
+            <span class="n">mismatch_score</span><span class="o">=</span><span class="n">mismatch_</span><span class="p">,</span>
+            <span class="n">gap</span><span class="o">=</span><span class="n">gap_</span><span class="p">,</span>
+            <span class="n">local</span><span class="o">=</span><span class="n">local</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">_substitution_scores</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">_scorer</span><span class="p">(</span><span class="n">substitution</span><span class="p">,</span> <span class="n">match</span><span class="p">,</span> <span class="n">mismatch</span><span class="p">))</span>
+        <span class="n">score</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">align_scores</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">gap</span><span class="o">=</span><span class="n">gap_</span><span class="p">,</span> <span class="n">local</span><span class="o">=</span><span class="n">local</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Alignment</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">score</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="s2">"maximize"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_align</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">local</span><span class="p">,</span> <span class="n">backend</span><span class="p">,</span> <span class="o">**</span><span class="n">scoring</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">"rust"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_align_rust</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">local</span><span class="o">=</span><span class="n">local</span><span class="p">,</span> <span class="o">**</span><span class="n">scoring</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_align_dp</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">local</span><span class="o">=</span><span class="n">local</span><span class="p">,</span> <span class="o">**</span><span class="n">scoring</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_align_biopython</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">substitution</span><span class="p">,</span> <span class="n">match</span><span class="p">,</span> <span class="n">mismatch</span><span class="p">,</span> <span class="n">gap</span><span class="p">):</span>
@@ -869,7 +1022,7 @@
     <span class="n">kw</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">substitution</span><span class="o">=</span><span class="n">substitution</span><span class="p">,</span> <span class="n">match</span><span class="o">=</span><span class="n">match</span><span class="p">,</span> <span class="n">mismatch</span><span class="o">=</span><span class="n">mismatch</span><span class="p">,</span> <span class="n">gap</span><span class="o">=</span><span class="n">gap</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">"biopython"</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_align_biopython</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"global"</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">_align_dp</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">local</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">_align</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">local</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span></div>
 
 
 
@@ -910,7 +1063,7 @@
     <span class="n">kw</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">substitution</span><span class="o">=</span><span class="n">substitution</span><span class="p">,</span> <span class="n">match</span><span class="o">=</span><span class="n">match</span><span class="p">,</span> <span class="n">mismatch</span><span class="o">=</span><span class="n">mismatch</span><span class="p">,</span> <span class="n">gap</span><span class="o">=</span><span class="n">gap</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">"biopython"</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_align_biopython</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"local"</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">_align_dp</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">local</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">_align</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">local</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span></div>
 
 
 
@@ -952,7 +1105,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=9463f84e"></script>
+</div><script src="../../../_static/documentation_options.js?v=38b66d78"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>

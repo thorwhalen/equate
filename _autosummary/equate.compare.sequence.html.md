@@ -24,6 +24,12 @@ Each comparator returns a `float`; its `*_alignment` twin (also reachable as
 (`backend='dtaidistance'` / `'tslearn'` / `'biopython'`, behind the
 `equate[timeseries]` / `equate[bio]` extras, imported only on use).
 
+`backend='rust'` (DTW, subsequence DTW, Needleman-Wunsch, Smith-Waterman) runs the same
+dynamic programs in compiled code from the separate `equate-rust` package, imported only
+on use. Unlike the third-party engines it is a drop-in for the numpy backend: same
+validation, same scores (to the last bit in practice; `1e-12` relative is the contract),
+the same `path` (ties broken identically), every input the numpy backend accepts.
+
 ```pycon
 >>> dtw([0, 1, 2, 3], [0, 0, 1, 2, 3])  # a warped copy is at distance 0
 0.0

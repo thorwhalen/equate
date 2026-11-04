@@ -1,4 +1,4 @@
-> built 2026-10-30 12:57 UTC from cce466a (master) · equate 0.0.27. Details: build_info.json
+> built 2026-11-04 09:42 UTC from 55a7e02 (master) · equate 0.1.0. Details: build_info.json
 
 # index.html.md
 
@@ -1674,6 +1674,12 @@ Each comparator returns a `float`; its `*_alignment` twin (also reachable as
 `path`. The core implementations are pure numpy; a faster engine is one keyword away
 (`backend='dtaidistance'` / `'tslearn'` / `'biopython'`, behind the
 `equate[timeseries]` / `equate[bio]` extras, imported only on use).
+
+`backend='rust'` (DTW, subsequence DTW, Needleman-Wunsch, Smith-Waterman) runs the same
+dynamic programs in compiled code from the separate `equate-rust` package, imported only
+on use. Unlike the third-party engines it is a drop-in for the numpy backend: same
+validation, same scores (to the last bit in practice; `1e-12` relative is the contract),
+the same `path` (ties broken identically), every input the numpy backend accepts.
 
 ```pycon
 >>> dtw([0, 1, 2, 3], [0, 0, 1, 2, 3])  # a warped copy is at distance 0
@@ -5829,18 +5835,18 @@ See: [https://en.wikipedia.org/wiki/Stable_marriage_problem](https://en.wikipedi
 
 # About this build
 
-This documentation was built on **2026-10-30 12:57 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/cce466a194f75b54e4f26511bfe8315f4e4565c8"><code>cce466a</code></a> on branch <code>master</code>, for **equate 0.0.27** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-04 09:42 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/55a7e0274712802a950e562bd48af83d24e09a58"><code>55a7e02</code></a> on branch <code>master</code>, for **equate 0.1.0** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.27) is behind the latest release on PyPI (0.1.0): `pip install equate` gives newer code than these docs describe.
+- The documented version (0.1.0) is behind the latest release on PyPI (0.1.1): `pip install equate` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/equate/commit/cce466a194f75b54e4f26511bfe8315f4e4565c8"><code>cce466a194f75b54e4f26511bfe8315f4e4565c8</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/equate/commit/55a7e0274712802a950e562bd48af83d24e09a58"><code>55a7e0274712802a950e562bd48af83d24e09a58</code></a> |
 | Branch              | <code>master</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -5851,9 +5857,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/equate</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/41059153493">41059153493</a>    |
+| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/41809267155">41809267155</a>    |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>cce466a194f75b54e4f26511bfe8315f4e4565c8</code> (in the history of the built commit) |
+| Event commit | <code>55a7e0274712802a950e562bd48af83d24e09a58</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -5878,13 +5884,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/equate/0.1.0/">0.1.0</a>, newer than the documented version (0.0.27).
+Latest release: <a href="https://pypi.org/project/equate/0.1.1/">0.1.1</a>, newer than the documented version (0.1.0).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/equate && cd equate
-git checkout cce466a194f75b54e4f26511bfe8315f4e4565c8
+git checkout 55a7e0274712802a950e562bd48af83d24e09a58
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

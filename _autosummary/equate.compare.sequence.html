@@ -335,6 +335,11 @@ token lists, DNA). Alignment <em>scores</em>: higher = better.</p></li>
 <code class="docutils literal notranslate"><span class="pre">path</span></code>. The core implementations are pure numpy; a faster engine is one keyword away
 (<code class="docutils literal notranslate"><span class="pre">backend='dtaidistance'</span></code> / <code class="docutils literal notranslate"><span class="pre">'tslearn'</span></code> / <code class="docutils literal notranslate"><span class="pre">'biopython'</span></code>, behind the
 <code class="docutils literal notranslate"><span class="pre">equate[timeseries]</span></code> / <code class="docutils literal notranslate"><span class="pre">equate[bio]</span></code> extras, imported only on use).</p>
+<p><code class="docutils literal notranslate"><span class="pre">backend='rust'</span></code> (DTW, subsequence DTW, Needleman-Wunsch, Smith-Waterman) runs the same
+dynamic programs in compiled code from the separate <code class="docutils literal notranslate"><span class="pre">equate-rust</span></code> package, imported only
+on use. Unlike the third-party engines it is a drop-in for the numpy backend: same
+validation, same scores (to the last bit in practice; <code class="docutils literal notranslate"><span class="pre">1e-12</span></code> relative is the contract),
+the same <code class="docutils literal notranslate"><span class="pre">path</span></code> (ties broken identically), every input the numpy backend accepts.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dtw</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>  <span class="c1"># a warped copy is at distance 0</span>
 <span class="go">0.0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">needleman_wunsch</span><span class="p">(</span><span class="s1">'GATTACA'</span><span class="p">,</span> <span class="s1">'GATACA'</span><span class="p">)</span>  <span class="c1"># 6 matches, 1 gap</span>
@@ -620,7 +625,7 @@ path) for the default cost.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=9463f84e"></script>
+</div><script src="../_static/documentation_options.js?v=38b66d78"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
