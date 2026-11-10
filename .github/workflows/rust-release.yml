@@ -47,9 +47,9 @@ jobs:
         include:
           - { runner: ubuntu-latest,    target: x86_64,  manylinux: auto, smoke: true }
           - { runner: ubuntu-24.04-arm, target: aarch64, manylinux: auto, smoke: true }
-          - { runner: macos-14,         target: aarch64, smoke: true }
+          - { runner: macos-latest,        target: aarch64, smoke: true }
           # Cross-compiled on the arm64 runner (the macos-13 Intel image is retired); not smoke-tested.
-          - { runner: macos-14,         target: x86_64,  smoke: false }
+          - { runner: macos-latest,        target: x86_64,  smoke: false }
           - { runner: windows-latest,   target: x64,     python_arch: x64, smoke: true }
     runs-on: ${{ matrix.runner }}
     steps:
