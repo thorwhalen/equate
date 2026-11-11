@@ -23,7 +23,7 @@ Each comparator returns a ``float``; its ``*_alignment`` twin (also reachable as
 ``equate[timeseries]`` / ``equate[bio]`` extras, imported only on use).
 
 ``backend='rust'`` (DTW, subsequence DTW, Needleman-Wunsch, Smith-Waterman) runs the same
-dynamic programs in compiled code from the separate ``equate-rust`` package, imported only
+dynamic programs in compiled code from the separate ``equate-rust`` package (``equate[rust]``), imported only
 on use. Unlike the third-party engines it is a drop-in for the numpy backend: same
 validation, same scores (to the last bit in practice; ``1e-12`` relative is the contract),
 the same ``path`` (ties broken identically), every input the numpy backend accepts.
@@ -102,7 +102,9 @@ def _check_backend(backend, allowed, *, what):
 def _rust():
     """The native kernels (``equate_rust``), imported on first use of ``backend='rust'``."""
     return require(
-        "equate_rust", purpose="the native sequence kernels (backend='rust')"
+        "equate_rust",
+        extra="rust",
+        purpose="the native sequence kernels (backend='rust')",
     )
 
 

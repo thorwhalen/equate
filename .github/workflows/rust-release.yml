@@ -2,7 +2,8 @@
 # Windows, an sdist, then a PyPI upload. Never runs on ordinary pushes.
 #
 # To release: bump [project].version in rust/pyproject.toml, merge, then push a tag
-# equate-rust-vX.Y.Z equal to it. Run by hand with `publish` unticked to build and
+# equate-rust-vX.Y.Z equal to it. Publishing happens ONLY from such a tag (the version job
+# fails the run when the tag differs from rust/pyproject.toml). Run by hand to build and
 # smoke-test the matrix without uploading.
 #
 # Publishing uses PyPI trusted publishing (OIDC); no secrets are referenced. Before the
@@ -13,11 +14,6 @@ on:
   push:
     tags: ["equate-rust-v*"]
   workflow_dispatch:
-    inputs:
-      publish:
-        description: "Upload to PyPI"
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -98,7 +94,7 @@ jobs:
 
   publish:
     needs: [wheels, sdist]
-    if: startsWith(github.ref, 'refs/tags/') || inputs.publish
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     environment: pypi
     permissions:

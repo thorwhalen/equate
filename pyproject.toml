@@ -48,6 +48,7 @@ phonetic = ["jellyfish"]
 # --- comparison: sequence alignment engines (numpy core is the default) ---
 timeseries = ["dtaidistance", "tslearn"]
 bio = ["biopython"]
+rust = ["equate-rust"]  # native kernels for backend="rust" (separate wheel, see rust/)
 # --- featurization: embeddings (featurize stage) ---
 embeddings = ["sentence-transformers"]
 api = ["openai", "cohere"]
