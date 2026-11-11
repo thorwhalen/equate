@@ -433,3 +433,24 @@ All six findings of the previous review confirmed resolved (the reviewer re-ran 
 
 After these fixes: clippy 0 warnings, core tests 18 passed, whole suite 4,596 passed /
 53 skipped, rust differential (fast + grids) green. No blocker or major remains open.
+
+## Mac benchmark and workflow tightening (2026-11-11)
+
+Re-run on the user's Mac (Apple M1 Max, arm64, CPython 3.12.1 GIL build, numpy 2.5.4), using the released `equate-rust` 0.1.0 macOS arm64 wheel from PyPI, `python benchmarks/bench_port.py --backends numpy rust`, median of 7. Ratios only; absolute times are not comparable with the cloud VM above.
+
+| case | size | numpy | rust | ratio |
+|---|---|---|---|---|
+| dtw unconstrained | 100 x 100 | 5.72 ms | 48.8 µs | 117x |
+| dtw unconstrained | 1000 x 1000 | 579 ms | 5.75 ms | 101x |
+| dtw 10% band | 100 x 100 | 1.33 ms | 42.5 µs | 31x |
+| dtw 10% band | 1000 x 1000 | 116 ms | 3.42 ms | 34x |
+| subsequence_dtw | 10 x 100 | 581 µs | 17.7 µs | 33x |
+| subsequence_dtw | 100 x 1000 | 57.3 ms | 492 µs | 116x |
+| needleman_wunsch | 100 x 100 | 22.6 ms | 57.2 µs | 395x |
+| needleman_wunsch | 1000 x 1000 | 2.3 s | 6.44 ms | 356x |
+| smith_waterman | 100 x 100 | 22.9 ms | 53.8 µs | 425x |
+| smith_waterman | 1000 x 1000 | 2.32 s | 7.28 ms | 319x |
+| nw custom substitution | 100 x 100 | 22.4 ms | 864 µs | 26x |
+
+The Mac ratios are the same order as the cloud VM's (21-619x); DTW is higher here because numpy is slower relative to the native kernel on this machine. `rust-release.yml` now publishes only from an `equate-rust-v*` tag (the `publish` input on manual dispatch is gone, so a manual run only builds and smoke-tests); the `version` job already fails a tag that differs from `rust/pyproject.toml`. `equate-rust` 0.1.0 was published to PyPI on 2026-11-10 (tag `equate-rust-v0.1.0`), so open question 3 (the `equate[rust]` extra) is addressed in the change that adds it.
+
