@@ -1,4 +1,4 @@
-> built 2026-11-10 17:18 UTC from d3de3fb (master) · equate 0.1.1. Details: build_info.json
+> built 2026-11-11 12:19 UTC from 1ccfb60 (master) · equate 0.1.2. Details: build_info.json
 
 # index.html.md
 
@@ -1676,7 +1676,7 @@ Each comparator returns a `float`; its `*_alignment` twin (also reachable as
 `equate[timeseries]` / `equate[bio]` extras, imported only on use).
 
 `backend='rust'` (DTW, subsequence DTW, Needleman-Wunsch, Smith-Waterman) runs the same
-dynamic programs in compiled code from the separate `equate-rust` package, imported only
+dynamic programs in compiled code from the separate `equate-rust` package (`equate[rust]`), imported only
 on use. Unlike the third-party engines it is a drop-in for the numpy backend: same
 validation, same scores (to the last bit in practice; `1e-12` relative is the contract),
 the same `path` (ties broken identically), every input the numpy backend accepts.
@@ -5835,20 +5835,20 @@ See: [https://en.wikipedia.org/wiki/Stable_marriage_problem](https://en.wikipedi
 
 # About this build
 
-This documentation was built on **2026-11-10 17:18 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/d3de3fb2c1cae6b79a270c3be8105c67518fd671"><code>d3de3fb</code></a> on branch <code>master</code>, for **equate 0.1.1** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-11 12:19 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/1ccfb60c14a3b3c49253a096beb2969db05363b3"><code>1ccfb60</code></a> on branch <code>master</code>, for **equate 0.1.2** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.1.1) is behind the latest release on PyPI (0.1.2): `pip install equate` gives newer code than these docs describe.
+- The documented version (0.1.2) is behind the latest release on PyPI (0.1.3): `pip install equate` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/equate/commit/d3de3fb2c1cae6b79a270c3be8105c67518fd671"><code>d3de3fb2c1cae6b79a270c3be8105c67518fd671</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/equate/commit/1ccfb60c14a3b3c49253a096beb2969db05363b3"><code>1ccfb60c14a3b3c49253a096beb2969db05363b3</code></a> |
 | Branch              | <code>master</code>                                                                                                                                      |
-| Tags at this commit | <code>equate-rust-v0.1.0</code>                                                                                                                          |
+| Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
 | Remote              | <code>https://github.com/thorwhalen/equate</code>                                                                                                        |
 
@@ -5857,9 +5857,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/equate</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/42863183183">42863183183</a>    |
+| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/43019111095">43019111095</a>    |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>d3de3fb2c1cae6b79a270c3be8105c67518fd671</code> (in the history of the built commit) |
+| Event commit | <code>1ccfb60c14a3b3c49253a096beb2969db05363b3</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -5884,13 +5884,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/equate/0.1.2/">0.1.2</a>, newer than the documented version (0.1.1).
+Latest release: <a href="https://pypi.org/project/equate/0.1.3/">0.1.3</a>, newer than the documented version (0.1.2).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/equate && cd equate
-git checkout d3de3fb2c1cae6b79a270c3be8105c67518fd671
+git checkout 1ccfb60c14a3b3c49253a096beb2969db05363b3
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

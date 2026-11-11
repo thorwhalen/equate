@@ -336,7 +336,7 @@ token lists, DNA). Alignment <em>scores</em>: higher = better.</p></li>
 (<code class="docutils literal notranslate"><span class="pre">backend='dtaidistance'</span></code> / <code class="docutils literal notranslate"><span class="pre">'tslearn'</span></code> / <code class="docutils literal notranslate"><span class="pre">'biopython'</span></code>, behind the
 <code class="docutils literal notranslate"><span class="pre">equate[timeseries]</span></code> / <code class="docutils literal notranslate"><span class="pre">equate[bio]</span></code> extras, imported only on use).</p>
 <p><code class="docutils literal notranslate"><span class="pre">backend='rust'</span></code> (DTW, subsequence DTW, Needleman-Wunsch, Smith-Waterman) runs the same
-dynamic programs in compiled code from the separate <code class="docutils literal notranslate"><span class="pre">equate-rust</span></code> package, imported only
+dynamic programs in compiled code from the separate <code class="docutils literal notranslate"><span class="pre">equate-rust</span></code> package (<code class="docutils literal notranslate"><span class="pre">equate[rust]</span></code>), imported only
 on use. Unlike the third-party engines it is a drop-in for the numpy backend: same
 validation, same scores (to the last bit in practice; <code class="docutils literal notranslate"><span class="pre">1e-12</span></code> relative is the contract),
 the same <code class="docutils literal notranslate"><span class="pre">path</span></code> (ties broken identically), every input the numpy backend accepts.</p>
@@ -625,7 +625,7 @@ path) for the default cost.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=91f6191e"></script>
+</div><script src="../_static/documentation_options.js?v=b14783f5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

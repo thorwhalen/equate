@@ -380,7 +380,7 @@
 <p><code class="docutils literal notranslate"><span class="pre">complete_table</span></code> discovers the key (directional <em>containment</em>: how much of the target column lies in the source’s), aligns rows by fuzzy key matching (so <code class="docutils literal notranslate"><span class="pre">'c001'</span></code> meets <code class="docutils literal notranslate"><span class="pre">'C-001'</span></code>), and fills only the missing cells. <code class="docutils literal notranslate"><span class="pre">find_near_duplicate_columns(table)</span></code> finds redundant columns. Tables are column dicts, lists of row dicts, or anything DataFrame-like.</p>
 </section>
 <section id="matching-sequences-compare-dtw-and-friends">
-<h2>Matching sequences: <code class="docutils literal notranslate"><span class="pre">compare='dtw'</span></code> and friends<a class="headerlink" href="#matching-sequences-compare-dtw-and-friends" title="Link to this heading">¶</a></h2>
+<span id="matching-sequences-comparedtw-and-friends"></span><h2>Matching sequences: <code class="docutils literal notranslate"><span class="pre">compare='dtw'</span></code> and friends<a class="headerlink" href="#matching-sequences-compare-dtw-and-friends" title="Link to this heading">¶</a></h2>
 <p>To match a collection of <em>sequences</em> (time series, token lists, DNA), compare each pair by aligning its elements, then match the collections as usual.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">equate</span><span class="w"> </span><span class="kn">import</span> <span class="n">match</span>
 
@@ -392,7 +392,7 @@
 <p>The comparators are <code class="docutils literal notranslate"><span class="pre">'dtw'</span></code> (exact DTW in a Sakoe-Chiba band), <code class="docutils literal notranslate"><span class="pre">'subsequence_dtw'</span></code>, <code class="docutils literal notranslate"><span class="pre">'soft_dtw'</span></code>, <code class="docutils literal notranslate"><span class="pre">'needleman_wunsch'</span></code> and <code class="docutils literal notranslate"><span class="pre">'smith_waterman'</span></code>. A <em>distance</em> comparator such as <code class="docutils literal notranslate"><span class="pre">'dtw'</span></code> is minimized automatically, and <code class="docutils literal notranslate"><span class="pre">sense=</span></code> overrides that. <code class="docutils literal notranslate"><span class="pre">equate.compare.sequence.dtw.align(a,</span> <span class="pre">b)</span></code> returns an <code class="docutils literal notranslate"><span class="pre">Alignment(score,</span> <span class="pre">path)</span></code> with the element-level correspondence. Faster engines are optional: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'equate[timeseries]'</span></code> / <code class="docutils literal notranslate"><span class="pre">'equate[bio]'</span></code>, then pass <code class="docutils literal notranslate"><span class="pre">backend=</span></code>.</p>
 </section>
 <section id="matching-graphs-equate-align">
-<h2>Matching graphs: <code class="docutils literal notranslate"><span class="pre">equate.align</span></code><a class="headerlink" href="#matching-graphs-equate-align" title="Link to this heading">¶</a></h2>
+<span id="matching-graphs-equatealign"></span><h2>Matching graphs: <code class="docutils literal notranslate"><span class="pre">equate.align</span></code><a class="headerlink" href="#matching-graphs-equate-align" title="Link to this heading">¶</a></h2>
 <p>To align the <em>nodes</em> of two graphs, use <code class="docutils literal notranslate"><span class="pre">align</span></code>. A node’s match depends on how its neighbours match, so this is a quadratic problem, not a flat one.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">equate</span><span class="w"> </span><span class="kn">import</span> <span class="n">align</span>
 
@@ -418,7 +418,7 @@
 <p>The review UI (React, <a class="reference external" href="https://github.com/i2mint/zodal">zodal</a> + shadcn) is in <a class="reference internal" href="#ui/README.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ui/</span></code></span></a>: a review queue ordered by uncertainty, side-by-side field diffs, confirm / reject / reassign with optimistic updates, and a labelling widget.</p>
 </section>
 <section id="measuring-a-matcher-equate-evaluate">
-<h2>Measuring a matcher: <code class="docutils literal notranslate"><span class="pre">equate.evaluate</span></code><a class="headerlink" href="#measuring-a-matcher-equate-evaluate" title="Link to this heading">¶</a></h2>
+<span id="measuring-a-matcher-equateevaluate"></span><h2>Measuring a matcher: <code class="docutils literal notranslate"><span class="pre">equate.evaluate</span></code><a class="headerlink" href="#measuring-a-matcher-equate-evaluate" title="Link to this heading">¶</a></h2>
 <p>Dependency-light metrics that return precision <strong>and</strong> recall (a <code class="docutils literal notranslate"><span class="pre">Scores</span></code>), never F1 alone, plus a harness that scores a matcher (pairwise) on unseen-entity splits and reports the cost and base rate next to every number. The standard suites (Abt-Buy, Amazon-Google, DBLP-ACM, WDC Products) are a <code class="docutils literal notranslate"><span class="pre">load_benchmark</span></code> away, below.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">equate.evaluate</span><span class="w"> </span><span class="kn">import</span> <span class="n">pairwise_prf</span><span class="p">,</span> <span class="n">bcubed</span><span class="p">,</span> <span class="n">pairs_to_labels</span><span class="p">,</span> <span class="n">benchmark_matcher</span>
 
@@ -515,7 +515,7 @@
 <h2>The original API<a class="headerlink" href="#the-original-api" title="Link to this heading">¶</a></h2>
 <p>The first versions of <code class="docutils literal notranslate"><span class="pre">equate</span></code> exposed the functions below, and they are all still importable, with the same signatures. One thing changed underneath: the default featurizer is now <code class="docutils literal notranslate"><span class="pre">equate</span></code>’s own character n-gram TF-IDF instead of <code class="docutils literal notranslate"><span class="pre">grub</span></code>’s word TF-IDF (#4), so similarity <em>scores</em> differ from older releases, while the matchings in these examples are the same. The redesigned stages are built from the same pieces: <code class="docutils literal notranslate"><span class="pre">similarity_matrix</span></code> is <code class="docutils literal notranslate"><span class="pre">score_matrix</span></code> with the TF-IDF default, and the <code class="docutils literal notranslate"><span class="pre">equate.util</span></code> matchers are now in the <code class="docutils literal notranslate"><span class="pre">matchers</span></code> registry. New code should prefer <code class="docutils literal notranslate"><span class="pre">match</span></code> / <code class="docutils literal notranslate"><span class="pre">score_matrix</span></code>. The old <code class="docutils literal notranslate"><span class="pre">grub</span></code>-based <code class="docutils literal notranslate"><span class="pre">equate.completion.similarity_matrix</span></code> still needs <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'equate[grub]'</span></code>.</p>
 <section id="greedy-matching-with-a-score-function-match-greedily">
-<h3>Greedy matching with a score function: <code class="docutils literal notranslate"><span class="pre">match_greedily</span></code><a class="headerlink" href="#greedy-matching-with-a-score-function-match-greedily" title="Link to this heading">¶</a></h3>
+<span id="greedy-matching-with-a-score-function-match_greedily"></span><h3>Greedy matching with a score function: <code class="docutils literal notranslate"><span class="pre">match_greedily</span></code><a class="headerlink" href="#greedy-matching-with-a-score-function-match-greedily" title="Link to this heading">¶</a></h3>
 <p>Say you have two sets of strings, and all you do is want to is match each element of
 the “keys” set to an element of the “values” set (never reusing the same value for a
 different key), and say you know that a matching value string will differ from its
@@ -535,7 +535,7 @@ Some times this is not ideal (typically, your matches validity will decline alon
 the number of keys matched).</p>
 </section>
 <section id="a-similarity-matrix-and-a-matcher-match-keys-to-values-similarity-matrix">
-<h3>A similarity matrix and a matcher: <code class="docutils literal notranslate"><span class="pre">match_keys_to_values</span></code>, <code class="docutils literal notranslate"><span class="pre">similarity_matrix</span></code><a class="headerlink" href="#a-similarity-matrix-and-a-matcher-match-keys-to-values-similarity-matrix" title="Link to this heading">¶</a></h3>
+<span id="a-similarity-matrix-and-a-matcher-match_keys_to_values-similarity_matrix"></span><h3>A similarity matrix and a matcher: <code class="docutils literal notranslate"><span class="pre">match_keys_to_values</span></code>, <code class="docutils literal notranslate"><span class="pre">similarity_matrix</span></code><a class="headerlink" href="#a-similarity-matrix-and-a-matcher-match-keys-to-values-similarity-matrix" title="Link to this heading">¶</a></h3>
 <p>Here’s a more involved entry point:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">equate</span><span class="w"> </span><span class="kn">import</span> <span class="n">match_keys_to_values</span>
 
@@ -891,7 +891,7 @@ Let’s try two…</p>
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-10 17:18 UTC from <a href="https://github.com/thorwhalen/equate/commit/d3de3fb2c1cae6b79a270c3be8105c67518fd671">d3de3fb</a> (master) · equate 0.1.1 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-11 12:19 UTC from <a href="https://github.com/thorwhalen/equate/commit/1ccfb60c14a3b3c49253a096beb2969db05363b3">1ccfb60</a> (master) · equate 0.1.2 · <a href="about-this-build.html">about this build</a></p>
         </article>
       </div>
       <footer>
@@ -965,7 +965,7 @@ Let’s try two…</p>
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=91f6191e"></script>
+</div><script src="_static/documentation_options.js?v=b14783f5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

@@ -328,7 +328,7 @@
 <span class="sd">``equate[timeseries]`` / ``equate[bio]`` extras, imported only on use).</span>
 
 <span class="sd">``backend='rust'`` (DTW, subsequence DTW, Needleman-Wunsch, Smith-Waterman) runs the same</span>
-<span class="sd">dynamic programs in compiled code from the separate ``equate-rust`` package, imported only</span>
+<span class="sd">dynamic programs in compiled code from the separate ``equate-rust`` package (``equate[rust]``), imported only</span>
 <span class="sd">on use. Unlike the third-party engines it is a drop-in for the numpy backend: same</span>
 <span class="sd">validation, same scores (to the last bit in practice; ``1e-12`` relative is the contract),</span>
 <span class="sd">the same ``path`` (ties broken identically), every input the numpy backend accepts.</span>
@@ -407,7 +407,9 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_rust</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">"""The native kernels (``equate_rust``), imported on first use of ``backend='rust'``."""</span>
     <span class="k">return</span> <span class="n">require</span><span class="p">(</span>
-        <span class="s2">"equate_rust"</span><span class="p">,</span> <span class="n">purpose</span><span class="o">=</span><span class="s2">"the native sequence kernels (backend='rust')"</span>
+        <span class="s2">"equate_rust"</span><span class="p">,</span>
+        <span class="n">extra</span><span class="o">=</span><span class="s2">"rust"</span><span class="p">,</span>
+        <span class="n">purpose</span><span class="o">=</span><span class="s2">"the native sequence kernels (backend='rust')"</span><span class="p">,</span>
     <span class="p">)</span>
 
 
@@ -1105,7 +1107,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=91f6191e"></script>
+</div><script src="../../../_static/documentation_options.js?v=b14783f5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>
