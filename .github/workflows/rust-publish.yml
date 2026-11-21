@@ -1,0 +1,20 @@
+# Manual publish of the equate-sequence-core crate to crates.io (the equate-rust PyPI wheel is released by rust-release.yml).
+# Run: gh workflow run rust-publish.yml -R thorwhalen/equate
+name: rust-publish
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Publish equate-sequence-core
+        working-directory: rust
+        run: cargo publish -p equate-sequence-core --locked
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

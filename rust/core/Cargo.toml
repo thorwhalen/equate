@@ -1,11 +1,16 @@
 [package]
 name = "equate-sequence-core"
 description = "Sequence-alignment kernels of equate (banded DTW, subsequence DTW, Needleman-Wunsch / Smith-Waterman) with Python's tie-breaking; no Python types"
-version.workspace = true
+version = "0.1.0"                      # the crate's own semver, independent of equate-rust
 edition.workspace = true
 rust-version.workspace = true
-publish.workspace = true
+publish = true                         # overrides the workspace's publish = false
 license.workspace = true
+repository = "https://github.com/thorwhalen/equate"
+readme = "README.md"
+keywords = ["dtw", "alignment", "needleman-wunsch", "smith-waterman", "sequence"]
+categories = ["algorithms", "science"]
+include = ["src/**/*.rs", "README.md", "LICENSE"]
 
 [dependencies]
 thiserror = { workspace = true }
