@@ -26,6 +26,7 @@ m.scores  # [0.76, 1.0, 0.84]
 
 Matching factors into three stages: **featurize → compare → match**. Each takes a registered name or any callable.
 
+<!-- wads-docs: skip depends on reader state or machine-specific output -->
 ```python
 match(A, B, compare="jaro_winkler")  # score raw pairs with a string comparator instead
 match(A, B, featurize="sbert")  # dense embeddings (pip install 'equate[embeddings]')
@@ -124,6 +125,7 @@ The review UI (React, [zodal](https://github.com/i2mint/zodal) + shadcn) is in [
 
 Dependency-light metrics that return precision **and** recall (a `Scores`), never F1 alone, plus a harness that scores a matcher (pairwise) on unseen-entity splits and reports the cost and base rate next to every number. The standard suites (Abt-Buy, Amazon-Google, DBLP-ACM, WDC Products) are a `load_benchmark` away, below.
 
+<!-- wads-docs: skip depends on reader state or machine-specific output -->
 ```python
 from equate.evaluate import pairwise_prf, bcubed, pairs_to_labels, benchmark_matcher
 
@@ -180,10 +182,7 @@ The first versions of `equate` exposed the functions below, and they are all sti
 
 ### Greedy matching with a score function: `match_greedily`
 
-Say you have two sets of strings, and all you do is want to is match each element of
-the “keys” set to an element of the “values” set (never reusing the same value for a
-different key), and say you know that a matching value string will differ from its
-key only by a few characters. In that case just do this:
+Say you have two sets of strings, and all you do is want to is match each element of the “keys” set to an element of the “values” set (never reusing the same value for a different key), and say you know that a matching value string will differ from its key only by a few characters. In that case just do this:
 
 ```python
 from equate import match_greedily
@@ -194,11 +193,7 @@ dict(match_greedily(keys, values))
 # == {'apple': 'app', 'banana': 'cabana', 'carrot': 'carob'}
 ```
 
-Note that by default, `match_greedily` uses the edit-distance as its `score_func`,
-and you can specify your own custom `score_func`. But the matching is done “greedily”.
-This means that at every step, the highest-score value will be taken as the match.
-Some times this is not ideal (typically, your matches validity will decline along with
-the number of keys matched).
+Note that by default, `match_greedily` uses the edit-distance as its `score_func`, and you can specify your own custom `score_func`. But the matching is done “greedily”. This means that at every step, the highest-score value will be taken as the match. Some times this is not ideal (typically, your matches validity will decline along with the number of keys matched).
 
 ### A similarity matrix and a matcher: `match_keys_to_values`, `similarity_matrix`
 
@@ -215,27 +210,13 @@ dict(match_keys_to_values(keys, values))
 # 'banana split': 'banana republic'}
 ```
 
-The algorithm that gets you these matches is a bit more involved, and parametrizable.
-This is how it works.
+The algorithm that gets you these matches is a bit more involved, and parametrizable. This is how it works.
 
-First, it computes a similarity matrix, and then applies a “matcher” that will
-search through this similarity matrix for an optimal matching, using any
-optimal search function you want (and of course, we provide a few standard ones).
+First, it computes a similarity matrix, and then applies a “matcher” that will search through this similarity matrix for an optimal matching, using any optimal search function you want (and of course, we provide a few standard ones).
 
-The similarity matrix, if full, contains scores for every possible combination of
-keys and values.
-You can specify how to compute this similarity matrix, which means that if you
-don’t want to compute the similarity for every combination, you don’t need to.
-Usually, your similarity matrix will be a “sparse matrix”, that is, only specify a
-few non-zero entries.
+The similarity matrix, if full, contains scores for every possible combination of keys and values. You can specify how to compute this similarity matrix, which means that if you don’t want to compute the similarity for every combination, you don’t need to. Usually, your similarity matrix will be a “sparse matrix”, that is, only specify a few non-zero entries.
 
-The default similarity matrix function uses a `obj_to_vect` function along with a
-vector similarity function `similarty_func` to compute what the `score_func`
-did in our first `match_greedily` function.
-By default here, though, `similarity_matrix` will use methods that are more powerful
-than just an edit-distance. It will learn and use a “TfIdf” vectorization
-(a.k.a. embedding) and a cosine similarity function.
-As a result, you should get finer matchings.
+The default similarity matrix function uses a `obj_to_vect` function along with a vector similarity function `similarty_func` to compute what the `score_func` did in our first `match_greedily` function. By default here, though, `similarity_matrix` will use methods that are more powerful than just an edit-distance. It will learn and use a “TfIdf” vectorization (a.k.a. embedding) and a cosine similarity function. As a result, you should get finer matchings.
 
 ```python
 from equate import similarity_matrix
@@ -247,23 +228,13 @@ m.round(2).tolist()
 # == [[0.32, 0.42, 0.01, 0.0], [0.04, 0.35, 0.01, 0.02], [0.03, 0.04, 0.02, 0.44]]
 ```
 
-The `equate.util` module has a few optimal matching function you can use from
-there to extract the matching pairs from the matrix.
-At the time of writing this, we’ve implemented:
-`greedy_matching`,
-`hungarian_matching`,
-`maximal_matching`,
-`stable_marriage_matching`, and
-`kuhn_munkres_matching`.
+The `equate.util` module has a few optimal matching function you can use from there to extract the matching pairs from the matrix. At the time of writing this, we’ve implemented: `greedy_matching`, `hungarian_matching`, `maximal_matching`, `stable_marriage_matching`, and `kuhn_munkres_matching`.
 
-At the time of writing this, the default `matcher` used by `match_keys_to_values` is
-[hungarian_matching](https://en.wikipedia.org/wiki/Hungarian_algorithm).
+At the time of writing this, the default `matcher` used by `match_keys_to_values` is [hungarian_matching](https://en.wikipedia.org/wiki/Hungarian_algorithm).
 
 ## Worked example: in search of an import-to-package name matcher
 
-Here, we’ll go through an actual practical example of when you might want to match
-things: “Guessing” the pip install name from a pip package name,
-and other related analyses.
+Here, we’ll go through an actual practical example of when you might want to match things: “Guessing” the pip install name from a pip package name, and other related analyses.
 
 ### The problem
 
@@ -275,8 +246,7 @@ Say…
 ImportError: No module named skimage
 ```
 
-But it ain’t `pip install skimage` is it (well, it USED to not to, but you get the point…).
-What you actually need to do to install (with `pip`) is:
+But it ain’t `pip install skimage` is it (well, it USED to not to, but you get the point…). What you actually need to do to install (with `pip`) is:
 
 ```default
 pip install scikit-image
@@ -290,8 +260,7 @@ So no, it’s annoying. It shouldn’t be allowed. And since it is, there should
 pip install --just-find-it-for-me skimage
 ```
 
-Instead of just complaining, I thought I’d throw some code at it.
-(I’ll still complain though.)
+Instead of just complaining, I thought I’d throw some code at it. (I’ll still complain though.)
 
 Here’s a solution: Ask the world (of semantic clouds – otherwise known as “Google”) about it…
 
@@ -321,6 +290,7 @@ def best_guess(query):
         return t[0][0]
 ```
 
+<!-- wads-docs: skip depends on reader state or machine-specific output -->
 ```python
 >>> pkg_name_options('skimage')
 [('scikit-image', 5),
@@ -331,15 +301,15 @@ def best_guess(query):
  ('pillow', 1)]
 ```
 
+<!-- wads-docs: skip depends on reader state or machine-specific output -->
 ```python
 >>> best_guess('skimage')
 'scikit-image'
 ```
 
-Yay, it works!
-With a sample of one!
-Let’s try two…
+Yay, it works! With a sample of one! Let’s try two…
 
+<!-- wads-docs: skip depends on reader state or machine-specific output -->
 ```python
 >>> pkg_name_options('sklearn')
 [('numpy', 3), ('scikit-learn', 2), ('-U', 2), ('scikit-', 1), ('scipy', 1)]
@@ -369,11 +339,13 @@ from equate.examples.site_names import (
 )
 ```
 
+<!-- wads-docs: skip depends on reader state or machine-specific output -->
 ```python
 >>> DFLT_SITE_PKG_DIR
 '~/.virtualenvs/382/lib/python3.8/site-packages'
 ```
 
+<!-- wads-docs: skip depends on reader state or machine-specific output -->
 ```python
 >>> data = site_packages_info_df()
 >>> print(f"{data.shape}")
@@ -537,6 +509,7 @@ from equate.examples.site_names import (
 </table>
 <p>303 rows × 8 columns</p>
 </div>
+<!-- wads-docs: skip depends on reader state or machine-specific output -->
 ```python
 >>> print_n_null_elements_in_each_column_containing_at_least_one(data)
 most_frequent_record_dirname:	1 null values
@@ -546,6 +519,7 @@ metadata_name:	1 null values
 pypi_url_name:	255 null values
 ```
 
+<!-- wads-docs: skip depends on reader state or machine-specific output -->
 ```python
 >>> lidx = Lidx(data)
 >>> df = data[lidx.no_nans]
@@ -556,6 +530,7 @@ dash_underscore_eq: 220
 ('equal', 'dash_underscore_eq'): 186
 ```
 
+<!-- wads-docs: skip depends on reader state or machine-specific output -->
 ```python
 >>> lidx = Lidx(df)
 >>> lidx.print_diagnosis()
@@ -565,6 +540,7 @@ dash_underscore_eq: 220
 ('equal', 'dash_underscore_eq'): 186
 ```
 
+<!-- wads-docs: skip depends on reader state or machine-specific output -->
 ```python
 >>> lidx = Lidx(df, 'first_line_of_top_level_txt')
 >>> lidx.print_diagnosis()
@@ -574,6 +550,7 @@ dash_underscore_eq: 214
 ('equal', 'dash_underscore_eq'): 181
 ```
 
+<!-- wads-docs: skip depends on reader state or machine-specific output -->
 ```python
 >>> t = Lidx(df, 'most_frequent_record_dirname')
 >>> tt = Lidx(df, 'first_line_of_top_level_txt')
@@ -581,6 +558,7 @@ dash_underscore_eq: 214
 199
 ```
 
+<!-- wads-docs: skip depends on reader state or machine-specific output -->
 ```python
 >> sum(t.dash_underscore_eq | tt.dash_underscore_eq)
 233
