@@ -7,9 +7,12 @@ the "key" architectural move of decision register D5.
 """
 
 import math
+from dataclasses import fields as dataclass_fields, is_dataclass
 from collections.abc import Mapping
 
 __all__ = [
+    "record_value",
+    "record_fields",
     "comparison_vector",
     "weighted_sum",
     "mean",
@@ -18,10 +21,32 @@ __all__ = [
 ]
 
 
-def _get(record, field):
+def record_value(record, field):
+    """A record's ``field``: a mapping's item or an object's attribute (``None`` if absent)."""
     if isinstance(record, Mapping):
         return record.get(field)
     return getattr(record, field, None)
+
+
+_get = record_value  # back-compat alias
+
+
+def record_fields(record):
+    """A record's field names: a mapping's keys, a namedtuple's fields, or an object's
+    attributes (``vars``); ``[]`` for anything else.
+
+    >>> record_fields({'a': 1, 'b': 2})
+    ['a', 'b']
+    """
+    if isinstance(record, Mapping):
+        return list(record)
+    if hasattr(record, "_fields"):  # a namedtuple
+        return list(record._fields)
+    if is_dataclass(record):  # including slots=True dataclasses
+        return [f.name for f in dataclass_fields(record)]
+    if hasattr(record, "__dict__"):
+        return list(vars(record))
+    return [f for f in getattr(type(record), "__slots__", ()) if hasattr(record, f)]
 
 
 def comparison_vector(a, b, field_comparators, *, missing=0.0):
@@ -30,7 +55,8 @@ def comparison_vector(a, b, field_comparators, *, missing=0.0):
     ``field_comparators`` maps a field name to a pairwise comparator; records may be
     mappings or objects (attribute access). A field whose value is *missing* (``None``)
     in either record scores ``missing`` (default 0.0) rather than being passed to the
-    comparator — many comparators (edit distance, ratio) raise on ``None``.
+    comparator — many comparators (edit distance, ratio) raise on ``None``. With
+    ``missing=None`` such a field is reported as ``None``, so a caller can leave it out.
 
     >>> from equate.compare.string import levenshtein
     >>> cv = comparison_vector({'name': 'jon'}, {'name': 'john'}, {'name': levenshtein})
@@ -39,7 +65,7 @@ def comparison_vector(a, b, field_comparators, *, missing=0.0):
     """
     out = {}
     for f, cmp in field_comparators.items():
-        va, vb = _get(a, f), _get(b, f)
+        va, vb = record_value(a, f), record_value(b, f)
         out[f] = missing if (va is None or vb is None) else cmp(va, vb)
     return out
 

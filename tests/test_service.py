@@ -455,7 +455,9 @@ def test_floor_keeps_a_reject_from_forcing_a_bad_pair():
 
 def test_floor_is_a_ceiling_for_a_distance():
     svc = MatchService()
-    v = svc.open_session(["abc", "xyz"], ["abd", "qqqq"], compare="levenshtein_distance", floor=1)
+    v = svc.open_session(
+        ["abc", "xyz"], ["abd", "qqqq"], compare="levenshtein_distance", floor=1
+    )
     assert v.sense == "minimize"
     assert _pairs(v.assignment) == {0: 0}  # xyz->qqqq (distance 4) is past the ceiling
 
@@ -464,7 +466,9 @@ def test_floor_with_blocking_and_unbounded_scores():
     blocker = lambda A, B: [(0, 0), (0, 1), (1, 1)]  # noqa: E731
     big = lambda a, b: 100.0 * len(set(a) & set(b))  # noqa: E731
     svc = MatchService()
-    v = svc.open_session(["ab", "cd"], ["ab", "cx"], compare=big, block=blocker, floor=150)
+    v = svc.open_session(
+        ["ab", "cd"], ["ab", "cx"], compare=big, block=blocker, floor=150
+    )
     assert _pairs(v.assignment) == {0: 0}  # (1, 1) scores 100: below the floor
     assert svc.candidates(v.session_id, 1) == []
 
@@ -489,7 +493,9 @@ def test_floor_makes_a_borderline_item_uncertain_not_certain():
     # a -> x 0.51, a -> y 0.49; b -> y 0.95, b -> x 0.60 (exact scores, via a callable)
     S = {("a", "x"): 0.51, ("a", "y"): 0.49, ("b", "y"): 0.95, ("b", "x"): 0.60}
     svc = MatchService()
-    v = svc.open_session(["a", "b"], ["x", "y"], compare=lambda p, q: S[(p, q)], floor=0.5)
+    v = svc.open_session(
+        ["a", "b"], ["x", "y"], compare=lambda p, q: S[(p, q)], floor=0.5
+    )
     first = v.review[0]
     assert first.item == 0 and first.margin == pytest.approx(0.01)  # 0.51 vs the floor
     assert svc.next_query(v.session_id).item == 0
@@ -504,7 +510,9 @@ def test_floor_assignment_is_lexicographic_unlike_match_threshold():
     cmp = lambda p, q: S[(p, q)]  # noqa: E731
     svc = MatchService(cache=None)
     filtered = svc.match(["a", "b"], ["x", "y"], compare=cmp, threshold=0.5)
-    assert _pairs(filtered.pairs) == {1: 0}  # best total first (a-y, b-x), then a-y dropped
+    assert _pairs(filtered.pairs) == {
+        1: 0
+    }  # best total first (a-y, b-x), then a-y dropped
     v = svc.open_session(["a", "b"], ["x", "y"], compare=cmp, floor=0.5)
     assert _pairs(v.assignment) == {0: 0, 1: 1}  # both acceptable pairs kept
 
@@ -514,7 +522,9 @@ def test_floor_assignment_is_lexicographic_unlike_match_threshold():
 
 def _fake_bundle(tmp_path):
     (tmp_path / "assets").mkdir()
-    (tmp_path / "index.html").write_text('<div id="root"></div><script src="/assets/app.js"></script>')
+    (tmp_path / "index.html").write_text(
+        '<div id="root"></div><script src="/assets/app.js"></script>'
+    )
     (tmp_path / "assets" / "app.js").write_text("console.log(1)")
     return tmp_path
 
@@ -532,7 +542,10 @@ def test_mk_app_serves_the_ui_and_moves_the_api_under_api(tmp_path):
         v = c.post("/api/sessions", json={"A": A, "B": B}).json()
         assert {p["item"]: p["candidate"] for p in v["assignment"]} == TRUTH
         assert c.get("/api/sessions/nope").status_code == 404
-        assert c.post("/sessions", json={"A": A, "B": B}).status_code in (404, 405)  # not at /
+        assert c.post("/sessions", json={"A": A, "B": B}).status_code in (
+            404,
+            405,
+        )  # not at /
 
 
 def test_mk_app_ui_dir_errors(tmp_path):
@@ -565,7 +578,9 @@ def test_served_ui_docs_point_at_the_api_prefix(tmp_path):
 def test_margin_is_recomputed_over_open_candidates():
     S = {("a", "x"): 0.9, ("a", "y"): 0.85, ("a", "z"): 0.2, ("b", "y"): 0.95}
     svc = MatchService()
-    v = svc.open_session(["a", "b"], ["x", "y", "z"], compare=lambda p, q: S.get((p, q), 0.0))
+    v = svc.open_session(
+        ["a", "b"], ["x", "y", "z"], compare=lambda p, q: S.get((p, q), 0.0)
+    )
     margin = lambda: {r.item: r.margin for r in svc.review(v.session_id)}[0]  # noqa: E731
     assert margin() == pytest.approx(0.05)  # x vs y
     svc.edit(v.session_id, [Edit("reject", 0, 0)])
@@ -581,7 +596,9 @@ def test_precedence_keeps_a_human_decision_from_an_llm():
     svc.label(sid, 0, 1, False, source="llm")  # an LLM disagrees: ignored
     svc.edit(sid, [Edit("reassign", 2, 1, "llm")])  # would steal the human's candidate
     view = svc.view(sid)
-    assert {p.item: p.candidate for p in view.assignment if p.status == "confirmed"} == {0: 1}
+    assert {
+        p.item: p.candidate for p in view.assignment if p.status == "confirmed"
+    } == {0: 1}
     assert len(view.edits) == 3 and len(view.labels) == 1  # all logged, none applied
     svc.edit(sid, [Edit("reject", 0, 1, "human")])  # the same rank may change its mind
     assert 1 not in {p.candidate for p in svc.view(sid).assignment if p.item == 0}
@@ -685,7 +702,9 @@ def test_http_handlers_run_off_the_event_loop():
     from equate.service import mk_app
 
     threads = []
-    svc = MatchService(on_cost=lambda *a: threads.append(threading.current_thread().name))
+    svc = MatchService(
+        on_cost=lambda *a: threads.append(threading.current_thread().name)
+    )
     with test_app(mk_app(svc)) as c:
         c.post("/match", json={"A": A, "B": B})
     assert threads and all("worker" in name.lower() for name in threads)

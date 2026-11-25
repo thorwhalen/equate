@@ -4,7 +4,14 @@ structured result types — plus that the cost-based matchers now agree."""
 import numpy as np
 import pytest
 
-from equate.base import to_cost, ScoreMatrix, Matching, Partition, Candidate, Explanation
+from equate.base import (
+    to_cost,
+    ScoreMatrix,
+    Matching,
+    Partition,
+    Candidate,
+    Explanation,
+)
 from equate.util import (
     hungarian_matching,
     stable_marriage_matching,
@@ -13,6 +20,7 @@ from equate.util import (
 
 
 # --- to_cost SSOT -----------------------------------------------------------------
+
 
 def test_to_cost_maximize_is_nonnegative_complement():
     S = np.array([[0.9, 0.1], [0.2, 0.8]])
@@ -44,9 +52,7 @@ def test_to_cost_handles_sparse_maximize():
 
 # --- matchers now agree (the fixed latent inconsistency) --------------------------
 
-DIAG_DOMINANT = np.array(
-    [[0.9, 0.1, 0.0], [0.1, 0.8, 0.2], [0.0, 0.2, 0.7]]
-)
+DIAG_DOMINANT = np.array([[0.9, 0.1, 0.0], [0.1, 0.8, 0.2], [0.0, 0.2, 0.7]])
 IDENTITY = {0: 0, 1: 1, 2: 2}
 
 
@@ -78,6 +84,7 @@ def test_hungarian_minimize_sense_matches_maximize_on_negated_scores():
 
 # --- ScoreMatrix ------------------------------------------------------------------
 
+
 def test_score_matrix_to_cost_honors_sense():
     S = np.array([[0.9, 0.1], [0.2, 0.8]])
     sm = ScoreMatrix(S, sense="maximize", row_labels=["a", "b"], col_labels=["x", "y"])
@@ -86,6 +93,7 @@ def test_score_matrix_to_cost_honors_sense():
 
 
 # --- structured result types ------------------------------------------------------
+
 
 def test_matching_iterates_as_pairs():
     m = Matching(pairs=[(0, 2), (1, 0)], scores=[0.9, 0.7])
@@ -116,7 +124,9 @@ def test_partition_groups_and_iterates_as_within_cluster_pairs():
 
 
 def test_candidate_and_explanation_are_structured():
-    c = Candidate(left="apple", right="app", score=0.8, explanation=Explanation("edit-close"))
+    c = Candidate(
+        left="apple", right="app", score=0.8, explanation=Explanation("edit-close")
+    )
     assert c.left == "apple" and c.score == 0.8
     assert c.explanation.summary == "edit-close"
 
@@ -127,6 +137,7 @@ def test_candidate_iterates_as_pair():
 
 
 # --- review-driven fixes: empty inputs, sparse edge cases -------------------------
+
 
 @pytest.mark.parametrize("shape", [(0, 0), (0, 3), (2, 0)])
 def test_to_cost_empty_does_not_crash(shape):
@@ -169,6 +180,7 @@ def test_comparator_meta_defaults_and_directionality():
 
 
 # --- ScoreMatrix sanctioned densify views (the deep hole-worst-casing contract) ----
+
 
 def test_scorematrix_coerce_passthrough_wrap_and_conflict():
     sm = ScoreMatrix(np.eye(2), sense="minimize")

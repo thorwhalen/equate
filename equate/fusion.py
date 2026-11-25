@@ -7,7 +7,9 @@ behind it, and the heaviest vote wins. The value kept is the one from the most t
 source in the winning vote, and its source is recorded as the field's provenance.
 
 A field is a **conflict** when a losing vote weighs at least ``conflict_ratio`` of the
-winning one: trusted sources disagree. A noisy, low-trust source contradicting a trusted
+winning one: trusted sources disagree (a field no source is trusted for never is).
+Numbers agree only when equal by default: give timing fields a tolerance, e.g.
+``agree={'start': lambda a, b: abs(a - b) < 0.1}``. A noisy, low-trust source contradicting a trusted
 one is expected and not reported; two trusted sources disagreeing is exactly what a
 person should check.
 
@@ -28,8 +30,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
-from equate.compare.vectorize import _get
-from equate.sources import _fields
+from equate.compare.vectorize import record_fields, record_value
 
 __all__ = [
     "fuse",
@@ -57,6 +58,8 @@ def default_agree(a, b):
     """
     if isinstance(a, str) and isinstance(b, str):
         return " ".join(a.split()).casefold() == " ".join(b.split()).casefold()
+    if isinstance(a, float) and isinstance(b, float) and a != a and b != b:
+        return True  # NaN agrees with NaN
     try:
         return bool(a == b)
     except Exception:  # e.g. numpy arrays: ambiguous truth value
@@ -93,6 +96,8 @@ class FusedItem:
     - ``values``: ``{field: value}``;
     - ``provenance``: ``{field: source}``, the source each value was taken from;
     - ``conflicts``: the :class:`FieldConflict` fields;
+    - ``votes``: ``{field: [FieldVote, ...]}`` for every field, heaviest first (what a
+      trust estimator or a review screen reads);
     - ``members``: ``{source: index}`` of the records fused (from the alignment);
     - ``missing``: the sources that have no record for this item;
     - ``margin`` / ``reordered``: carried over from the alignment (low margin = unsure).
@@ -101,6 +106,7 @@ class FusedItem:
     values: dict
     provenance: dict
     conflicts: list = field(default_factory=list)
+    votes: dict = field(default_factory=dict)
     members: dict = field(default_factory=dict)
     missing: list = field(default_factory=list)
     margin: Optional[float] = None
@@ -228,29 +234,29 @@ def fuse(
         if names is None:
             names = []
             for record in g.records.values():
-                names.extend(f for f in _fields(record) if f not in names)
-        values, provenance, conflicts = {}, {}, []
+                names.extend(f for f in record_fields(record) if f not in names)
+        values, provenance, conflicts, all_votes = {}, {}, [], {}
         for f in names:
             candidates = [
                 (s, v, _trust_of(trust, s, f))
                 for s, record in g.records.items()
-                if (v := _get(record, f)) is not None
+                if (v := record_value(record, f)) is not None
             ]
             if not candidates:
                 continue
             votes = _votes(candidates, _agree_of(agree, f))
+            all_votes[f] = votes
             values[f] = votes[0].value
             provenance[f] = _value_source(votes[0], candidates)
             top = votes[0].weight
-            if len(votes) > 1 and (
-                votes[1].weight >= conflict_ratio * top if top > 0 else True
-            ):
+            if len(votes) > 1 and top > 0 and votes[1].weight >= conflict_ratio * top:
                 conflicts.append(FieldConflict(f, votes))
         items.append(
             FusedItem(
                 values=values,
                 provenance=provenance,
                 conflicts=conflicts,
+                votes=all_votes,
                 members=dict(g.members),
                 missing=[s for s in sources if s not in g.members],
                 margin=g.margin,

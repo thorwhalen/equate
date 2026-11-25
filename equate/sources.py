@@ -10,8 +10,8 @@ where the sources disagree.
 The alignment is **progressive** (the classic multiple-sequence-alignment strategy): the
 first source is the backbone, and each further source is aligned against the groups built
 so far. One step is a two-collection matching problem over a *gain* matrix,
-``gain[g, j] = similarity(group g, record j) - threshold``, solved by the ``order``
-strategy:
+``gain[g, j] = similarity(group g, record j) - threshold`` (a record's similarity to a
+group is its best similarity to any member), solved by the ``order`` strategy:
 
 - ``'monotone'`` (default): the sources list the items in the same order, gaps allowed.
   Solved by equate's :func:`~equate.compare.sequence.needleman_wunsch_alignment` with the
@@ -20,8 +20,9 @@ strategy:
   ``window`` positions of each other are then paired by assignment when they match, which
   is how a **local order swap** (two items read in the opposite order) is recovered rather
   than cascading; such groups are marked ``reordered``.
-- ``'free'``: no order; an optimal assignment (equate's ``'assign'`` matcher).
-- any callable ``gain -> iterable of (g, j)``: your own strategy.
+- ``'free'``: no order; an optimal assignment (equate's ``'assign'`` matcher). Any other
+  matcher name from ``equate.matchers`` (``'greedy'``, ``'stable'``) works the same way.
+- any callable ``gain ScoreMatrix -> iterable of (g, j)``: your own strategy.
 
 Records are compared on the fields they share (``compare``), with equate's comparators or
 any callable, so domain knowledge (a phonetic reading, a unit normaliser) is injected, not
@@ -41,12 +42,20 @@ from dataclasses import dataclass, field
 from functools import partial
 from typing import Any, Optional
 
+import math
+import warnings
+
 import numpy as np
 
 from equate.base import ComparatorMeta, ScoreMatrix
 from equate.compare import polarity_sense, resolve_comparator
 from equate.compare.sequence import needleman_wunsch_alignment
-from equate.compare.vectorize import _get
+from equate.compare.vectorize import (
+    comparison_vector,
+    mean,
+    record_fields,
+    record_value,
+)
 from equate.matching import resolve_matcher
 
 __all__ = [
@@ -76,14 +85,6 @@ _SIM_META = ComparatorMeta(
 # --- record comparison ----------------------------------------------------------------
 
 
-def _fields(record):
-    if isinstance(record, Mapping):
-        return list(record)
-    if hasattr(record, "_fields"):  # a namedtuple
-        return list(record._fields)
-    return list(vars(record)) if hasattr(record, "__dict__") else []
-
-
 def _field_comparator(spec, field_name):
     cmp = resolve_comparator(spec)
     if polarity_sense(cmp) == "minimize":
@@ -95,19 +96,22 @@ def _field_comparator(spec, field_name):
     return cmp
 
 
-def record_similarity(compare=None, *, missing=0.0):
+def record_similarity(compare=None, *, combine=mean, missing=0.0):
     """Build a record comparator ``(a, b) -> float`` from per-field comparators.
 
     ``compare`` is:
 
     - ``None`` (default): every field both records hold as a string, scored with
-      :data:`DFLT_FIELD_COMPARATOR`;
+      :data:`DFLT_FIELD_COMPARATOR` (two plain strings are compared directly);
     - a mapping ``{field: comparator}`` (a registered name or a callable): those fields;
     - a callable ``(a, b) -> float``: returned as it is.
 
-    The score is the **mean over the fields both records actually have** (a field missing
-    or ``None`` on either side is skipped, not scored zero), so a source with extra fields
-    is compared on what it shares. Records sharing no compared field score ``missing``.
+    The per-field scores are a :func:`~equate.compare.vectorize.comparison_vector` over
+    the fields **both records actually have** (a field missing or ``None`` on either side
+    is left out, not scored zero), reduced by ``combine`` (default the mean; any combiner
+    of :mod:`equate.compare.vectorize`, e.g. ``weighted_sum``, works). So a source with
+    extra fields is compared on what it shares. Records sharing no compared field score
+    ``missing``.
 
     >>> sim = record_similarity({'text': 'ratio'})
     >>> sim({'text': 'merci'}, {'text': 'merci', 'pinyin': 'xiexie'})
@@ -130,37 +134,68 @@ def record_similarity(compare=None, *, missing=0.0):
     default = None if named is not None else resolve_comparator(DFLT_FIELD_COMPARATOR)
 
     def similarity(a, b):
+        if named is None and isinstance(a, str) and isinstance(b, str):
+            return float(default(a, b))  # plain strings are their own value
         if named is not None:
-            pairs = [(f, cmp) for f, cmp in named.items()]
+            field_comparators = named
         else:
-            b_fields = set(_fields(b))
-            shared = [f for f in _fields(a) if f in b_fields]
-            pairs = [
-                (f, default)
-                for f in shared
-                if isinstance(_get(a, f), str) and isinstance(_get(b, f), str)
-            ]
-        scores = []
-        for f, cmp in pairs:
-            va, vb = _get(a, f), _get(b, f)
-            if va is not None and vb is not None:
-                scores.append(float(cmp(va, vb)))
-        return sum(scores) / len(scores) if scores else missing
+            b_fields = set(record_fields(b))
+            field_comparators = {
+                f: default
+                for f in record_fields(a)
+                if f in b_fields
+                and isinstance(record_value(a, f), str)
+                and isinstance(record_value(b, f), str)
+            }
+        cv = comparison_vector(a, b, field_comparators, missing=None)
+        cv = {f: float(v) for f, v in cv.items() if v is not None}
+        return float(combine(cv)) if cv else missing
 
     similarity.meta = _SIM_META
     return similarity
 
 
-# --- ordering strategies (gain matrix -> pairs) -----------------------------------------
+# --- ordering strategies (gain ScoreMatrix -> pairs) -----------------------------------
+
+
+def _gains(gain):
+    """The gains as a dense array, cells a sparse (blocked) matrix lacks at ``-inf``."""
+    sm = ScoreMatrix.coerce(gain, sense="maximize")
+    if not sm.is_sparse:
+        G = np.asarray(sm.data, dtype=float)
+        return np.where(np.isnan(G), -np.inf, G)
+    out = np.full(sm.shape, -np.inf)
+    for i, j, v in sm.stored_entries():
+        out[i, j] = -np.inf if math.isnan(v) else v
+    return out
+
+
+def _matcher_order(spec, **config):
+    """An order strategy from an equate matcher: it solves the positive part of the
+    gains, and only pairs with positive gain are kept."""
+    run = resolve_matcher(spec, **config)
+
+    def order(gain):
+        G = _gains(gain)
+        if not G.size:
+            return []
+        positive = np.where(G > 0, G, 0.0)
+        sm = ScoreMatrix(positive, sense="maximize")
+        return [(i, j) for i, j in run(sm) if G[i, j] > 0]
+
+    order.__name__ = (
+        spec if isinstance(spec, str) else getattr(spec, "__name__", "order")
+    )
+    return order
 
 
 def free_order(gain):
-    """Pair rows and columns of ``gain`` by optimal assignment, keeping positive gains."""
-    gain = np.asarray(gain, dtype=float)
-    if not gain.size:
-        return []
-    sm = ScoreMatrix(np.maximum(gain, 0.0), sense="maximize")
-    return [(i, j) for i, j in resolve_matcher("assign")(sm) if gain[i, j] > 0]
+    """Pair rows and columns of ``gain`` by optimal assignment, keeping positive gains.
+
+    >>> free_order([[-1, 1], [1, -1]])
+    [(0, 1), (1, 0)]
+    """
+    return _matcher_order("assign")(gain)
 
 
 def _window_bounds(rows, matched, n_cols, window):
@@ -172,7 +207,11 @@ def _window_bounds(rows, matched, n_cols, window):
         k = bisect_left(keys, i)
         before = max((j for _, j in anchors[:k]), default=-1)
         after = min((j for _, j in anchors[k:]), default=n_cols)
-        bounds[i] = (before + 1 - window, after - 1 + window)
+        if window is None:
+            bounds[i] = (0, n_cols - 1)
+        else:
+            slot = (before + 1, after - 1)  # the columns of the gap (may be empty)
+            bounds[i] = (min(slot) - window, max(slot) + window)
     return bounds
 
 
@@ -182,24 +221,25 @@ def monotone_order(gain, *, window=DFLT_ORDER_WINDOW):
     A Needleman-Wunsch global alignment with ``gain`` as substitution score and zero gap
     cost: the maximum-gain set of non-crossing pairs. Rows and columns it leaves unpaired
     are then paired by assignment when they have positive gain and lie within ``window``
-    positions of each other (a local order swap); those pairs cross the others.
+    positions of the gap they sit in (a local order swap); those pairs cross the others.
+    ``window=0`` keeps the alignment strictly monotone; ``None`` repairs at any distance.
 
     >>> monotone_order([[1, -1], [-1, 1]])
     [(0, 0), (1, 1)]
     >>> sorted(monotone_order([[-1, 1], [1, -1]]))  # a swap, recovered
     [(0, 1), (1, 0)]
+    >>> monotone_order([[-1, 1], [1, -1]], window=0)
+    [(0, 1)]
     """
-    gain = np.asarray(gain, dtype=float)
-    n, m = gain.shape
-    if not (n and m):
+    G = _gains(gain)
+    if not G.size:
         return []
+    n, m = G.shape
     path = needleman_wunsch_alignment(
-        range(n), range(m), substitution=lambda i, j: gain[i, j], gap=0.0
+        range(n), range(m), substitution=lambda i, j: G[i, j], gap=0.0
     ).path
     matched = [(i, j) for i, j in path if i is not None and j is not None]
-    matched = [(i, j) for i, j in matched if gain[i, j] > 0]
-    if window is None or window < 0:
-        return matched
+    matched = [(i, j) for i, j in matched if G[i, j] > 0]
     rows = sorted(set(range(n)) - {i for i, _ in matched})
     cols = sorted(set(range(m)) - {j for _, j in matched})
     if not (rows and cols):
@@ -207,7 +247,7 @@ def monotone_order(gain, *, window=DFLT_ORDER_WINDOW):
     bounds = _window_bounds(rows, matched, m, window)
     sub = np.array(
         [
-            [gain[i, j] if bounds[i][0] <= j <= bounds[i][1] else 0.0 for j in cols]
+            [G[i, j] if bounds[i][0] <= j <= bounds[i][1] else -np.inf for j in cols]
             for i in rows
         ]
     ).reshape(len(rows), len(cols))
@@ -215,19 +255,25 @@ def monotone_order(gain, *, window=DFLT_ORDER_WINDOW):
     return matched + extra
 
 
-_ORDERS = {"monotone": monotone_order, "free": free_order}
-
-
 def _resolve_order(order, window):
+    """``(strategy, name)``: 'monotone', 'free' (= 'assign'), any registered matcher
+    name, or a callable ``gain ScoreMatrix -> pairs``."""
     if callable(order):
-        return order
+        return order, getattr(order, "__name__", type(order).__name__)
+    if not isinstance(order, str):
+        raise ValueError(
+            f"unknown order {order!r}; use 'monotone', 'free', a matcher name, or a "
+            f"callable gain -> pairs"
+        )
     if order == "monotone":
-        return partial(monotone_order, window=window)
-    if order in _ORDERS:
-        return _ORDERS[order]
-    raise ValueError(
-        f"unknown order {order!r}; use 'monotone', 'free', or a callable gain -> pairs"
-    )
+        return partial(monotone_order, window=window), order
+    try:
+        return _matcher_order("assign" if order == "free" else order), order
+    except KeyError as e:  # an unknown registry name
+        raise ValueError(
+            f"unknown order {order!r}; use 'monotone', 'free', a matcher name from "
+            f"equate.matchers, or a callable gain -> pairs"
+        ) from e
 
 
 # --- results ------------------------------------------------------------------------------
@@ -272,7 +318,7 @@ class SourceAlignment:
 
     groups: list
     sources: list
-    order: Any = "monotone"
+    order: str = "monotone"
     threshold: float = DFLT_ALIGN_THRESHOLD
 
     def __iter__(self):
@@ -292,6 +338,13 @@ class SourceAlignment:
 # --- the progressive alignment ---------------------------------------------------------
 
 
+def _link(values):
+    """How well a record joins a group: its best similarity to any member, so one noisy
+    member (an ASR transcript next to an exact list) does not keep a clean match out."""
+    values = [v for v in values if v is not None]
+    return max(values) if values else None
+
+
 def _mean(values):
     values = [v for v in values if v is not None]
     return sum(values) / len(values) if values else None
@@ -308,23 +361,31 @@ def _crossing(pairs):
 
 
 def _insert_unmatched(groups, new, pairs, *, source):
-    """New single-record groups for the columns no pair took, placed after the group
-    holding the nearest preceding column (so a 'monotone' run keeps its order)."""
+    """New single-record groups for the columns no pair took, placed right after the group
+    holding the last of the earlier matched columns (else right before the first group
+    holding a later one, else at the end), so a 'monotone' run keeps its order and a
+    record never lands inside a swapped pair."""
     row_of = {j: i for i, j in pairs}
-    head = []  # unmatched columns before every matched one
-    after = {i: [] for i in range(len(groups))}  # per group: columns to insert after it
+    before = {i: [] for i in range(len(groups))}
+    after = {i: [] for i in range(len(groups))}
+    tail = []
     for j in range(len(new)):
         if j in row_of:
             continue
-        preceding = [jj for jj in row_of if jj < j]
-        if preceding:
-            after[row_of[max(preceding)]].append(j)
+        preceding = [row_of[jj] for jj in row_of if jj < j]
+        following = [row_of[jj] for jj in row_of if jj > j]
+        if preceding:  # after the last group holding an earlier record (swaps included)
+            after[max(preceding)].append(j)
+        elif following:
+            before[min(following)].append(j)
         else:
-            head.append(j)
-    ordered = [[(source, j)] for j in head]
+            tail.append(j)
+    ordered = []
     for i, g in enumerate(groups):
+        ordered.extend([(source, j)] for j in before[i])
         ordered.append(g)
         ordered.extend([(source, j)] for j in after[i])
+    ordered.extend([(source, j)] for j in tail)
     return ordered
 
 
@@ -347,14 +408,25 @@ def align_sources(
       names or any callables, or one record callable ``(a, b) -> float``. Similarities,
       higher = more alike, roughly in ``[0, 1]``.
     - ``order``: ``'monotone'`` (same order, gaps allowed; default), ``'free'``
-      (assignment), or a callable ``gain -> pairs`` (see the module docstring).
+      (optimal assignment), any matcher name from ``equate.matchers`` (``'greedy'``,
+      ``'stable'``, ...), or a callable taking the gains as a
+      :class:`~equate.base.ScoreMatrix` (``-inf`` where two records share no compared
+      field) and returning ``(group, record)`` pairs; pairs without a positive gain are
+      dropped.
     - ``threshold``: two records are aligned only if their similarity is strictly above it.
-      A record is compared with a group by its mean similarity to the group's members.
+      A record joins a group through its best similarity to the group's members, so one
+      noisy member does not keep it out.
     - ``window``: for ``'monotone'``, how many positions away a swapped item is looked for;
-      for every order, how many positions away rival records are looked for when computing
-      ``margin`` (``None``: everywhere).
+      for ``'monotone'`` also how many positions away rival records are looked for when
+      computing ``margin`` (other orders look everywhere). ``None``: everywhere; ``0``: no
+      swap repair.
 
     Returns a :class:`SourceAlignment` (iterate it for :class:`SourceGroup` items).
+
+    A group holds **at most one record per source**: segmentation is the caller's job. When
+    one source merges two items into a record (an utterance covering two lines) or splits
+    one over two, split or merge those records before aligning, or the extra one is left
+    as its own group.
 
     With two sources and the items in the same order, this is :func:`equate.match` on the
     shared fields, keeping pairs above ``threshold``.
@@ -366,19 +438,23 @@ def align_sources(
     names = list(sources)
     data = {s: list(sources[s]) for s in names}
     sim = record_similarity(compare, missing=None)
-    solve = _resolve_order(order, window)
+    solve, order_name = _resolve_order(order, window)
 
     cache = {}
 
+    position = {s: k for k, s in enumerate(names)}
+
     def pair_sim(s, i, t, j):
-        key = (s, i, t, j) if (s, i) <= (t, j) else (t, j, s, i)
+        a, b = (position[s], i), (position[t], j)
+        key = (a, b) if a <= b else (b, a)
         if key not in cache:
             v = sim(data[s][i], data[t][j])
-            cache[key] = None if v is None else float(v)
+            v = None if v is None else float(v)
+            cache[key] = None if v is None or math.isnan(v) else v  # NaN: no score
         return cache[key]
 
     def group_sim(group, t, j):
-        return _mean(pair_sim(s, i, t, j) for s, i in group)
+        return _link(pair_sim(s, i, t, j) for s, i in group)
 
     groups = [[(names[0], i)] for i in range(len(data[names[0]]))]
     reordered = set()  # (source, index) of records added out of order
@@ -387,15 +463,26 @@ def align_sources(
         gain = np.array(
             [
                 [
-                    -threshold if (v := group_sim(g, t, j)) is None else v - threshold
+                    -np.inf if (v := group_sim(g, t, j)) is None else v - threshold
                     for j in range(len(new))
                 ]
                 for g in groups
             ],
             dtype=float,
         ).reshape(len(groups), len(new))
-        pairs = sorted((int(i), int(j)) for i, j in solve(gain))
-        _check_pairs(pairs)
+        proposed = [
+            (int(i), int(j)) for i, j in solve(ScoreMatrix(gain, sense="maximize"))
+        ]
+        _check_pairs(proposed, gain.shape)
+        # a strategy may propose pairs; only those with a positive gain are kept
+        pairs = sorted((i, j) for i, j in proposed if gain[i, j] > 0)
+        if gain.size and not np.isfinite(gain).any():
+            warnings.warn(
+                f"no record of source {t!r} shares a compared field with the sources "
+                f"before it, so none of it can align; check `compare` (field names must "
+                f"match on both sides, or pass a record callable)",
+                stacklevel=2,
+            )
         for i, j in _crossing(pairs):
             reordered.add((t, j))
         for i, j in pairs:
@@ -404,18 +491,28 @@ def align_sources(
 
     return SourceAlignment(
         groups=[
-            _finish(g, data, pair_sim, reordered=reordered, window=window)
+            _finish(
+                g,
+                data,
+                pair_sim,
+                reordered=reordered,
+                window=window if order_name == "monotone" else None,  # order-free: all
+            )
             for g in groups
         ],
         sources=names,
-        order=order,
+        order=order_name,
         threshold=threshold,
     )
 
 
-def _check_pairs(pairs):
+def _check_pairs(pairs, shape):
     rows = [i for i, _ in pairs]
     cols = [j for _, j in pairs]
+    if any(not (0 <= i < shape[0] and 0 <= j < shape[1]) for i, j in pairs):
+        raise ValueError(
+            f"the order strategy returned a pair outside the {shape[0]}x{shape[1]} gains"
+        )
     if len(set(rows)) != len(rows) or len(set(cols)) != len(cols):
         raise ValueError(
             "the order strategy returned a row or a column twice; it must return a "
@@ -439,7 +536,7 @@ def _finish(group, data, pair_sim, *, reordered, window):
         margins = []
         for s, i in group:
             rest = [(t, j) for t, j in group if t != s]
-            own = _mean(pair_sim(s, i, t, j) for t, j in rest)
+            own = _link(pair_sim(s, i, t, j) for t, j in rest)
             if own is None:
                 continue
             lo, hi = (
@@ -448,7 +545,7 @@ def _finish(group, data, pair_sim, *, reordered, window):
                 else (max(0, i - window), min(len(data[s]), i + window + 1))
             )
             rivals = [
-                _mean(pair_sim(s, k, t, j) for t, j in rest)
+                _link(pair_sim(s, k, t, j) for t, j in rest)
                 for k in range(lo, hi)
                 if k != i
             ]

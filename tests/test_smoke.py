@@ -16,7 +16,9 @@ def test_public_api_is_importable():
         "similarity_matrix",
         "hungarian_matching",
     ):
-        assert hasattr(equate, name), f"equate.{name} should be importable from the root"
+        assert hasattr(equate, name), (
+            f"equate.{name} should be importable from the root"
+        )
 
 
 def test_match_greedily_basic():

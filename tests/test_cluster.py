@@ -17,6 +17,7 @@ from equate import dedupe, resolve, match
 
 # --- clustering -------------------------------------------------------------------
 
+
 def test_connected_components_transitive_closure():
     # 0-1 and 1-2 chain into one component (transitivity)
     p = connected_components([(0, 1), (1, 2), (3, 4)], 6)
@@ -41,6 +42,7 @@ def test_resolve_clusterer_uniform_signature():
 
 # --- canonicalization -------------------------------------------------------------
 
+
 def test_canonicalize_policies():
     records = [
         {"name": "Jon", "age": None},
@@ -57,6 +59,7 @@ def test_canonicalize_policies():
 
 
 # --- Fellegi-Sunter classify + EM -------------------------------------------------
+
 
 def test_classify_three_way_decision():
     assert [classify(w, lower=-1.0, upper=1.0) for w in (2.0, 0.0, -3.0)] == [
@@ -81,6 +84,7 @@ def test_estimate_mu_em_separates_matches():
 
 
 # --- dedupe / resolve facades -----------------------------------------------------
+
 
 def test_dedupe_groups_near_duplicates():
     p = dedupe(["Jon Smith", "Jon Smyth", "Kate Doe"], threshold=0.8)
@@ -109,6 +113,7 @@ def test_match_how_cluster_returns_partition():
 
 
 # --- review-driven fixes ----------------------------------------------------------
+
 
 def test_clusterers_reject_out_of_range_and_negative_indices():
     with pytest.raises(ValueError):

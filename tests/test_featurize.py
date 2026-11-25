@@ -98,6 +98,7 @@ def test_default_match_path_still_matches_bananas():
 
 # --- review-driven fixes ----------------------------------------------------------
 
+
 def test_resolve_featurizer_without_corpus_fails_fast():
     # a fittable featurizer resolved without a corpus must raise at the call site,
     # not hand back a half-built object that only explodes later inside transform

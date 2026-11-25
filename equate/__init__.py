@@ -54,7 +54,12 @@ from equate.interactive import (
     uncertainty_sampling,
 )
 from equate.facade import match, score_matrix, dedupe, resolve
-from equate.sources import align_sources, record_similarity, SourceAlignment, SourceGroup
+from equate.sources import (
+    align_sources,
+    record_similarity,
+    SourceAlignment,
+    SourceGroup,
+)
 from equate.fusion import fuse, Fusion, FusedItem, FieldConflict
 from equate.completion import (
     find_join_keys,

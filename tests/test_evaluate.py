@@ -181,7 +181,9 @@ def test_harness_fit_gets_train_and_val_only():
 def test_benchmark_is_a_plain_container():
     ds = Benchmark("x", ["a"], ["a"], frozenset({(0, 0)}))
     assert ds.base_rate == 1.0
-    r = benchmark_matcher(lambda a, b: [(0, 0)] if a and b else [], on=[ds], n_seeds=1, ratios=(0, 0, 1))
+    r = benchmark_matcher(
+        lambda a, b: [(0, 0)] if a and b else [], on=[ds], n_seeds=1, ratios=(0, 0, 1)
+    )
     assert r.rows[0].f1 == 1.0
 
 
@@ -340,7 +342,15 @@ def test_bootstrap_memory_is_chunked():
 def test_linear_cost_is_the_order_independent_family():
     from equate.evaluate import linear_cost
 
-    assert gmd([0, 0, 1, 1], [0, 0, 0, 1], merge_cost=linear_cost(0, 1), split_cost=linear_cost(0, 1)) == 3.0
+    assert (
+        gmd(
+            [0, 0, 1, 1],
+            [0, 0, 0, 1],
+            merge_cost=linear_cost(0, 1),
+            split_cost=linear_cost(0, 1),
+        )
+        == 3.0
+    )
     # label names do not matter for this family
     p = [0] * 6
     assert gmd(p, [0, 1, 1, 2, 2, 2], split_cost=linear_cost(1, 2)) == gmd(

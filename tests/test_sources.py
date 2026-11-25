@@ -7,7 +7,7 @@ from dataclasses import asdict
 import numpy as np
 import pytest
 
-from equate import align_sources, fuse, match, record_similarity
+from equate import ScoreMatrix, align_sources, fuse, match, record_similarity
 from equate.sources import free_order, monotone_order
 
 WORDS = [
@@ -77,7 +77,9 @@ def test_swap_beyond_the_window_is_left_as_gaps():
     al = align_sources({"sheet": sheet, "audio": audio}, window=1)
     assert all(not g.reordered for g in al)
     assert {"audio": 0} in _members(al)  # stayed a gap: never linked across the list
-    assert align_sources({"sheet": sheet, "audio": audio}, window=None)  # no cap: fine
+    unbounded = align_sources({"sheet": sheet, "audio": audio}, window=None)
+    assert len(unbounded) == len(WORDS)  # repaired at any distance
+    assert all(g.records["sheet"] == g.records["audio"] for g in unbounded)
 
 
 def test_interleaved_kinds_read_in_the_other_order():
@@ -160,7 +162,7 @@ def test_free_order_aligns_a_shuffled_source():
 
 def test_monotone_never_crosses_without_the_repair():
     gain = np.array([[-1.0, 1.0], [1.0, -1.0]])
-    assert len(monotone_order(gain, window=None)) == 1
+    assert len(monotone_order(gain, window=0)) == 1
     assert sorted(monotone_order(gain)) == [(0, 1), (1, 0)]
     assert free_order(gain) == [(0, 1), (1, 0)]
     assert monotone_order(np.empty((0, 3))) == [] and free_order(np.empty((2, 0))) == []
@@ -168,13 +170,40 @@ def test_monotone_never_crosses_without_the_repair():
 
 def test_order_callable_and_its_contract():
     sources = {"a": _recs(WORDS[:3]), "b": _recs(WORDS[:3])}
-    al = align_sources(sources, order=lambda gain: [(0, 0)])
+    seen = []
+
+    def first_only(gain):
+        seen.append(gain)
+        return [(0, 0), (1, 2)]  # (1, 2) has no positive gain: dropped
+
+    al = align_sources(sources, order=first_only)
+    assert isinstance(seen[0], ScoreMatrix) and seen[0].sense == "maximize"
     assert _members(al)[0] == {"a": 0, "b": 0}
-    assert len(al) == 5
+    assert len(al) == 5 and al.order == "first_only"
+    twice = {"a": _recs(WORDS[:1]), "b": _recs([WORDS[0], WORDS[0]])}
     with pytest.raises(ValueError, match="one-to-one"):
-        align_sources(sources, order=lambda gain: [(0, 0), (0, 1)])
+        align_sources(twice, order=lambda gain: [(0, 0), (0, 1)])
     with pytest.raises(ValueError, match="unknown order"):
         align_sources(sources, order="sideways")
+
+
+@pytest.mark.parametrize("order", ["greedy", "stable", "assign"])
+def test_any_registered_matcher_is_an_order(order):
+    rng = np.random.default_rng(1)
+    perm = rng.permutation(len(WORDS))
+    al = align_sources(
+        {"a": _recs(WORDS), "b": _recs([WORDS[k] for k in perm])}, order=order
+    )
+    assert al.order == order
+    assert all(g.records["a"] == g.records["b"] for g in al)
+
+
+def test_records_sharing_no_field_never_align_even_at_threshold_zero():
+    with pytest.warns(UserWarning, match="shares a compared field"):
+        al = align_sources(
+            {"a": [{"zh": "nihao"}], "b": [{"fr": "bonjour"}]}, threshold=-1.0
+        )
+    assert _members(al) == [{"a": 0}, {"b": 0}]
 
 
 # --- comparison, margins, inputs ---------------------------------------------------------
@@ -276,7 +305,7 @@ def test_fuse_agree_predicates_fields_and_unmatched():
 def test_results_are_json_able():
     al = align_sources({"a": _recs(WORDS[:3]), "b": _recs(WORDS[:3])})
     fused = fuse(al)
-    json.dumps([asdict(g) for g in al])
+    json.dumps(asdict(al))
     json.dumps([asdict(item) for item in fused])
 
 
@@ -338,3 +367,106 @@ def test_fusion_beats_every_single_source():
     assert [k for k, _ in fused.conflicts] == [2, 3]  # the sheet typo, the OCR error
     assert [item.reordered for item in fused] == [False] * 3 + [True, True, False]
     assert fused[5].missing == ["audio"]
+
+
+# --- regressions from the adversarial review ----------------------------------------------
+
+
+def test_unmatched_record_never_lands_inside_a_swapped_pair():
+    pies = ["apple pie", "banana split", "cherry tart"]
+    audio = ["banana split", "apple pie", "xylophone", "xylophone", "cherry tart"]
+    al = align_sources(
+        {"sheet": _recs(pies), "audio": _recs(audio), "ocr": _recs(pies)}
+    )
+    full = [g for g in al if len(g.members) == 3]
+    assert len(full) == 3  # no item split across two groups
+    texts = [next(iter(g.records.values()))["text"] for g in al]
+    assert texts[:2] == ["apple pie", "banana split"]  # the swapped pair stays together
+    assert texts[-1] == "cherry tart"
+
+
+def test_one_noisy_member_does_not_keep_a_clean_match_out():
+    table = {("s", "a"): 0.6, ("s", "o"): 0.9, ("a", "o"): 0.05}
+
+    def sim(x, y):
+        return table.get((x["src"], y["src"]), table.get((y["src"], x["src"]), 0.0))
+
+    def recs(src, n):
+        return [{"src": src, "k": k} for k in range(n)]
+
+    def keyed(x, y):  # the table above, only for records of the same item
+        return sim(x, y) if x["k"] == y["k"] else 0.0
+
+    al = align_sources(
+        {"s": recs("s", 3), "a": recs("a", 3), "o": recs("o", 3)}, compare=keyed
+    )
+    assert [g.members for g in al] == [{"s": k, "a": k, "o": k} for k in range(3)]
+
+
+@pytest.mark.parametrize("window", [1, 2, 3])
+def test_an_item_moved_exactly_window_places_is_recovered(window):
+    moved = WORDS[1 : window + 1] + [WORDS[0]] + WORDS[window + 1 :]
+    al = align_sources({"sheet": _recs(WORDS), "audio": _recs(moved)}, window=window)
+    assert len(al) == len(WORDS)
+    assert all(g.records["sheet"] == g.records["audio"] for g in al)
+    too_far = align_sources(
+        {"sheet": _recs(WORDS), "audio": _recs(moved)}, window=window - 1
+    )
+    assert len(too_far) == len(WORDS) + 1  # one item left as two singletons
+
+
+def test_free_order_margins_see_rivals_anywhere():
+    a = _recs(["alpha beta", "c", "d", "e", "f", "g", "alpha betta"])
+    b = _recs(["alpha beta"])
+    al = align_sources({"a": a, "b": b}, order="free")
+    (pair,) = [g for g in al if len(g.members) == 2]
+    assert pair.margin < 0.1  # the near-duplicate six places away is a rival
+
+
+def test_nan_similarity_is_no_score_not_a_crash():
+    def sim(x, y):
+        return float("nan") if x["text"] == WORDS[0] else float(x["text"] == y["text"])
+
+    for order in ("monotone", "free"):
+        al = align_sources(
+            {"a": _recs(WORDS[:4]), "b": _recs(WORDS[:4])}, compare=sim, order=order
+        )
+        assert sum(len(g.members) == 2 for g in al) == 3
+    g = np.eye(5) - 0.5
+    g[0, 4] = np.nan
+    assert len(monotone_order(g)) == 5
+
+
+def test_string_and_slotted_records_and_mixed_source_names():
+    from dataclasses import dataclass
+
+    @dataclass(slots=True)
+    class Line:
+        text: str
+
+    strings = align_sources({0: ["bonjour", "merci"], "b": ["bonjour", "merci"]})
+    assert [g.members for g in strings] == [{0: 0, "b": 0}, {0: 1, "b": 1}]
+    slotted = align_sources({"a": [Line("bonjour")], "b": [Line("bonjour")]})
+    assert slotted[0].members == {"a": 0, "b": 0}
+
+
+def test_order_pairs_out_of_bounds_raise():
+    with pytest.raises(ValueError, match="outside"):
+        align_sources(
+            {"a": _recs(WORDS[:2]), "b": _recs(WORDS[:2])},
+            order=lambda gain: [(-1, 0)],
+        )
+
+
+def test_fuse_zero_trust_is_never_a_conflict_and_nan_agrees():
+    al = align_sources(
+        {
+            "a": [{"text": "x", "v": float("nan")}],
+            "b": [{"text": "x", "v": float("nan")}],
+        }
+    )
+    assert not fuse(al)[0].conflicts
+    al = align_sources({"a": [{"text": "x", "n": 1}], "b": [{"text": "x", "n": 2}]})
+    assert fuse(al)[0].conflicts
+    zero = fuse(al, trust={"a": {"n": 0}, "b": {"n": 0}})
+    assert not zero[0].conflicts and zero[0].values["n"] == 1
