@@ -176,6 +176,12 @@ equate/
 ├── completion.py   # tables as objects: find_join_keys (value_set featurizer + containment  ← #13
 │                   #   comparator + CandidateStore top-k), find_near_duplicate_columns,
 │                   #   complete_table (key discovery -> fuzzy row alignment -> fill)
+├── sources.py      # align_sources: N sources of records -> SourceGroups (≤1 record/source),  ← #42
+│                   #   progressive MSA; each step solves a gain matrix (similarity - threshold)
+│                   #   with an `order` strategy: monotone = needleman_wunsch + windowed swap
+│                   #   repair, free = the 'assign' matcher; record_similarity over shared fields
+├── fusion.py       # fuse: field-by-field votes weighted by per-source/field trust ->  ← #42
+│                   #   FusedItem (values, provenance, conflicts, missing); truth discovery seam
 └── util.py         # the pre-redesign API, kept working (back-compat)
 ```
 
