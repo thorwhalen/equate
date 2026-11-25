@@ -251,6 +251,7 @@
 <li class="toctree-l4"><a class="reference internal" href="equate.featurize.tfidf.html">equate.featurize.tfidf</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="equate.fusion.html">equate.fusion</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="equate.interactive.html">equate.interactive</a><input aria-label="Toggle navigation of equate.interactive" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="equate.interactive.candidate_store.html">equate.interactive.candidate_store</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.interactive.constraints.html">equate.interactive.constraints</a></li>
@@ -267,6 +268,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="equate.registry.html">equate.registry</a></li>
 <li class="toctree-l3"><a class="reference internal" href="equate.service.html">equate.service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="equate.sources.html">equate.sources</a></li>
 <li class="toctree-l3"><a class="reference internal" href="equate.util.html">equate.util</a></li>
 </ul>
 </li>
@@ -346,17 +348,23 @@ foundation contracts live in <a class="reference internal" href="equate.base.htm
 <tr class="row-even"><td><p><a class="reference internal" href="equate.featurize.html#module-equate.featurize" title="equate.featurize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">featurize</span></code></a></p></td>
 <td><p>The featurize stage (①): map objects to comparable representations.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="equate.interactive.html#module-equate.interactive" title="equate.interactive"><code class="xref py py-obj docutils literal notranslate"><span class="pre">interactive</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="equate.fusion.html#module-equate.fusion" title="equate.fusion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fusion</span></code></a></p></td>
+<td><p>Fuse aligned records field by field, weighting sources by trust, and report conflicts.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="equate.interactive.html#module-equate.interactive" title="equate.interactive"><code class="xref py py-obj docutils literal notranslate"><span class="pre">interactive</span></code></a></p></td>
 <td><p>The interactive stage: human-in-the-loop review and re-optimization.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="equate.matching.html#module-equate.matching" title="equate.matching"><code class="xref py py-obj docutils literal notranslate"><span class="pre">matching</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="equate.matching.html#module-equate.matching" title="equate.matching"><code class="xref py py-obj docutils literal notranslate"><span class="pre">matching</span></code></a></p></td>
 <td><p>The match stage (③): turn a score matrix into a correspondence.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="equate.registry.html#module-equate.registry" title="equate.registry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">registry</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="equate.registry.html#module-equate.registry" title="equate.registry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">registry</span></code></a></p></td>
 <td><p>A tiny name-keyed strategy registry with lazy factories (open-closed dispatch).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="equate.service.html#module-equate.service" title="equate.service"><code class="xref py py-obj docutils literal notranslate"><span class="pre">service</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="equate.service.html#module-equate.service" title="equate.service"><code class="xref py py-obj docutils literal notranslate"><span class="pre">service</span></code></a></p></td>
 <td><p>The service layer: equate's matching core as JSON-in/JSON-out operations.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="equate.sources.html#module-equate.sources" title="equate.sources"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sources</span></code></a></p></td>
+<td><p>Align several sources of the same items: one group per item, at most one record per source.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="equate.util.html#module-equate.util" title="equate.util"><code class="xref py py-obj docutils literal notranslate"><span class="pre">util</span></code></a></p></td>
 <td><p>Utils for equate.</p></td>
@@ -411,7 +419,7 @@ foundation contracts live in <a class="reference internal" href="equate.base.htm
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=f024b623"></script>
+</div><script src="../_static/documentation_options.js?v=5964c245"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

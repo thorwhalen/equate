@@ -9,12 +9,14 @@ the “key” architectural move of decision register D5.
 
 ### Functions
 
-| [`comparison_vector`](#equate.compare.vectorize.comparison_vector)(a, b, field_comparators, \*)   | Return `{field: comparator(a[field], b[field])}` for each field comparator.     |
-|---------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
-| [`weighted_sum`](#equate.compare.vectorize.weighted_sum)([weights])                          | Combiner: weighted sum of a comparison vector (default weight 1.0 per field).   |
-| [`mean`](#equate.compare.vectorize.mean)(cv)                                         | Combiner: arithmetic mean of a comparison vector.                               |
-| [`max_combiner`](#equate.compare.vectorize.max_combiner)(cv)                                 | Combiner: maximum field score in a comparison vector.                           |
-| [`fellegi_sunter`](#equate.compare.vectorize.fellegi_sunter)(m_probs, u_probs, \*[, eps])      | Fellegi-Sunter combiner (decision register D5): sum of per-field match weights. |
+| [`record_value`](#equate.compare.vectorize.record_value)(record, field)                    | A record's `field`: a mapping's item or an object's attribute (`None` if absent).                                            |
+|-------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| [`record_fields`](#equate.compare.vectorize.record_fields)(record)                          | A record's field names: a mapping's keys, a namedtuple's fields, or an object's attributes (`vars`); `[]` for anything else. |
+| [`comparison_vector`](#equate.compare.vectorize.comparison_vector)(a, b, field_comparators, \*) | Return `{field: comparator(a[field], b[field])}` for each field comparator.                                                  |
+| [`weighted_sum`](#equate.compare.vectorize.weighted_sum)([weights])                        | Combiner: weighted sum of a comparison vector (default weight 1.0 per field).                                                |
+| [`mean`](#equate.compare.vectorize.mean)(cv)                                       | Combiner: arithmetic mean of a comparison vector.                                                                            |
+| [`max_combiner`](#equate.compare.vectorize.max_combiner)(cv)                               | Combiner: maximum field score in a comparison vector.                                                                        |
+| [`fellegi_sunter`](#equate.compare.vectorize.fellegi_sunter)(m_probs, u_probs, \*[, eps])    | Fellegi-Sunter combiner (decision register D5): sum of per-field match weights.                                              |
 
 ### equate.compare.vectorize.comparison_vector(a, b, field_comparators, , missing=0.0)
 
@@ -23,7 +25,8 @@ Return `{field: comparator(a[field], b[field])}` for each field comparator.
 `field_comparators` maps a field name to a pairwise comparator; records may be
 mappings or objects (attribute access). A field whose value is *missing* (`None`)
 in either record scores `missing` (default 0.0) rather than being passed to the
-comparator — many comparators (edit distance, ratio) raise on `None`.
+comparator — many comparators (edit distance, ratio) raise on `None`. With
+`missing=None` such a field is reported as `None`, so a caller can leave it out.
 
 ```pycon
 >>> from equate.compare.string import levenshtein
@@ -50,6 +53,20 @@ Combiner: maximum field score in a comparison vector.
 ### equate.compare.vectorize.mean(cv)
 
 Combiner: arithmetic mean of a comparison vector.
+
+### equate.compare.vectorize.record_fields(record)
+
+A record’s field names: a mapping’s keys, a namedtuple’s fields, or an object’s
+attributes (`vars`); `[]` for anything else.
+
+```pycon
+>>> record_fields({'a': 1, 'b': 2})
+['a', 'b']
+```
+
+### equate.compare.vectorize.record_value(record, field)
+
+A record’s `field`: a mapping’s item or an object’s attribute (`None` if absent).
 
 ### equate.compare.vectorize.weighted_sum(weights=None)
 

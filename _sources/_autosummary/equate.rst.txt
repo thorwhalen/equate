@@ -18,8 +18,10 @@
    evaluate
    facade
    featurize
+   fusion
    interactive
    matching
    registry
    service
+   sources
    util

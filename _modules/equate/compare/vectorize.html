@@ -248,6 +248,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.featurize.tfidf.html">equate.featurize.tfidf</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/equate.fusion.html">equate.fusion</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../../_autosummary/equate.interactive.html">equate.interactive</a><input aria-label="Toggle navigation of equate.interactive" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.interactive.candidate_store.html">equate.interactive.candidate_store</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/equate.interactive.constraints.html">equate.interactive.constraints</a></li>
@@ -264,6 +265,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/equate.registry.html">equate.registry</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/equate.service.html">equate.service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/equate.sources.html">equate.sources</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/equate.util.html">equate.util</a></li>
 </ul>
 </li>
@@ -312,9 +314,12 @@
 <span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">fields</span> <span class="k">as</span> <span class="n">dataclass_fields</span><span class="p">,</span> <span class="n">is_dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"record_value"</span><span class="p">,</span>
+    <span class="s2">"record_fields"</span><span class="p">,</span>
     <span class="s2">"comparison_vector"</span><span class="p">,</span>
     <span class="s2">"weighted_sum"</span><span class="p">,</span>
     <span class="s2">"mean"</span><span class="p">,</span>
@@ -323,10 +328,38 @@
 <span class="p">]</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_get</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">field</span><span class="p">):</span>
+<div class="viewcode-block" id="record_value">
+<a class="viewcode-back" href="../../../_autosummary/equate.compare.vectorize.html#equate.compare.record_value">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">record_value</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">field</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A record's ``field``: a mapping's item or an object's attribute (``None`` if absent)."""</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+
+
+<span class="n">_get</span> <span class="o">=</span> <span class="n">record_value</span>  <span class="c1"># back-compat alias</span>
+
+
+<div class="viewcode-block" id="record_fields">
+<a class="viewcode-back" href="../../../_autosummary/equate.compare.vectorize.html#equate.compare.record_fields">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">record_fields</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A record's field names: a mapping's keys, a namedtuple's fields, or an object's</span>
+<span class="sd">    attributes (``vars``); ``[]`` for anything else.</span>
+
+<span class="sd">    &gt;&gt;&gt; record_fields({'a': 1, 'b': 2})</span>
+<span class="sd">    ['a', 'b']</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="s2">"_fields"</span><span class="p">):</span>  <span class="c1"># a namedtuple</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">_fields</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">is_dataclass</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>  <span class="c1"># including slots=True dataclasses</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">dataclass_fields</span><span class="p">(</span><span class="n">record</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="s2">"__dict__"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">vars</span><span class="p">(</span><span class="n">record</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">record</span><span class="p">),</span> <span class="s2">"__slots__"</span><span class="p">,</span> <span class="p">())</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">f</span><span class="p">)]</span></div>
+
 
 
 <div class="viewcode-block" id="comparison_vector">
@@ -337,7 +370,8 @@
 <span class="sd">    ``field_comparators`` maps a field name to a pairwise comparator; records may be</span>
 <span class="sd">    mappings or objects (attribute access). A field whose value is *missing* (``None``)</span>
 <span class="sd">    in either record scores ``missing`` (default 0.0) rather than being passed to the</span>
-<span class="sd">    comparator — many comparators (edit distance, ratio) raise on ``None``.</span>
+<span class="sd">    comparator — many comparators (edit distance, ratio) raise on ``None``. With</span>
+<span class="sd">    ``missing=None`` such a field is reported as ``None``, so a caller can leave it out.</span>
 
 <span class="sd">    &gt;&gt;&gt; from equate.compare.string import levenshtein</span>
 <span class="sd">    &gt;&gt;&gt; cv = comparison_vector({'name': 'jon'}, {'name': 'john'}, {'name': levenshtein})</span>
@@ -346,7 +380,7 @@
 <span class="sd">    """</span>
     <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">cmp</span> <span class="ow">in</span> <span class="n">field_comparators</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">va</span><span class="p">,</span> <span class="n">vb</span> <span class="o">=</span> <span class="n">_get</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">f</span><span class="p">),</span> <span class="n">_get</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+        <span class="n">va</span><span class="p">,</span> <span class="n">vb</span> <span class="o">=</span> <span class="n">record_value</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">f</span><span class="p">),</span> <span class="n">record_value</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
         <span class="n">out</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="o">=</span> <span class="n">missing</span> <span class="k">if</span> <span class="p">(</span><span class="n">va</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">vb</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="k">else</span> <span class="n">cmp</span><span class="p">(</span><span class="n">va</span><span class="p">,</span> <span class="n">vb</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">out</span></div>
 
@@ -440,7 +474,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=f024b623"></script>
+</div><script src="../../../_static/documentation_options.js?v=5964c245"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>

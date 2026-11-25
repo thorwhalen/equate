@@ -251,6 +251,7 @@
 <li class="toctree-l4"><a class="reference internal" href="equate.featurize.tfidf.html">equate.featurize.tfidf</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="equate.fusion.html">equate.fusion</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="equate.interactive.html">equate.interactive</a><input aria-label="Toggle navigation of equate.interactive" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="equate.interactive.candidate_store.html">equate.interactive.candidate_store</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.interactive.constraints.html">equate.interactive.constraints</a></li>
@@ -267,6 +268,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="equate.registry.html">equate.registry</a></li>
 <li class="toctree-l3"><a class="reference internal" href="equate.service.html">equate.service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="equate.sources.html">equate.sources</a></li>
 <li class="toctree-l3"><a class="reference internal" href="equate.util.html">equate.util</a></li>
 </ul>
 </li>
@@ -322,6 +324,12 @@ the “key” architectural move of decision register D5.</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.compare.vectorize.record_value" title="equate.compare.vectorize.record_value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_value</span></code></a>(record, field)</p></td>
+<td><p>A record's <code class="docutils literal notranslate"><span class="pre">field</span></code>: a mapping's item or an object's attribute (<code class="docutils literal notranslate"><span class="pre">None</span></code> if absent).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.compare.vectorize.record_fields" title="equate.compare.vectorize.record_fields"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_fields</span></code></a>(record)</p></td>
+<td><p>A record's field names: a mapping's keys, a namedtuple's fields, or an object's attributes (<code class="docutils literal notranslate"><span class="pre">vars</span></code>); <code class="docutils literal notranslate"><span class="pre">[]</span></code> for anything else.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#equate.compare.vectorize.comparison_vector" title="equate.compare.vectorize.comparison_vector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">comparison_vector</span></code></a>(a, b, field_comparators, *)</p></td>
 <td><p>Return <code class="docutils literal notranslate"><span class="pre">{field:</span> <span class="pre">comparator(a[field],</span> <span class="pre">b[field])}</span></code> for each field comparator.</p></td>
 </tr>
@@ -347,7 +355,8 @@ the “key” architectural move of decision register D5.</p>
 <p><code class="docutils literal notranslate"><span class="pre">field_comparators</span></code> maps a field name to a pairwise comparator; records may be
 mappings or objects (attribute access). A field whose value is <em>missing</em> (<code class="docutils literal notranslate"><span class="pre">None</span></code>)
 in either record scores <code class="docutils literal notranslate"><span class="pre">missing</span></code> (default 0.0) rather than being passed to the
-comparator — many comparators (edit distance, ratio) raise on <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+comparator — many comparators (edit distance, ratio) raise on <code class="docutils literal notranslate"><span class="pre">None</span></code>. With
+<code class="docutils literal notranslate"><span class="pre">missing=None</span></code> such a field is reported as <code class="docutils literal notranslate"><span class="pre">None</span></code>, so a caller can leave it out.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare.string</span><span class="w"> </span><span class="kn">import</span> <span class="n">levenshtein</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cv</span> <span class="o">=</span> <span class="n">comparison_vector</span><span class="p">({</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'jon'</span><span class="p">},</span> <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'john'</span><span class="p">},</span> <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="n">levenshtein</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">cv</span><span class="p">[</span><span class="s1">'name'</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
@@ -378,6 +387,23 @@ so <code class="docutils literal notranslate"><span class="pre">m</span></code>/
 <dt class="sig sig-object py" id="equate.compare.vectorize.mean">
 <span class="sig-prename descclassname"><span class="pre">equate.compare.vectorize.</span></span><span class="sig-name descname"><span class="pre">mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cv</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/compare/vectorize.html#mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.compare.vectorize.mean" title="Link to this definition">¶</a></dt>
 <dd><p>Combiner: arithmetic mean of a comparison vector.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.compare.vectorize.record_fields">
+<span class="sig-prename descclassname"><span class="pre">equate.compare.vectorize.</span></span><span class="sig-name descname"><span class="pre">record_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/compare/vectorize.html#record_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.compare.vectorize.record_fields" title="Link to this definition">¶</a></dt>
+<dd><p>A record’s field names: a mapping’s keys, a namedtuple’s fields, or an object’s
+attributes (<code class="docutils literal notranslate"><span class="pre">vars</span></code>); <code class="docutils literal notranslate"><span class="pre">[]</span></code> for anything else.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">record_fields</span><span class="p">({</span><span class="s1">'a'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+<span class="go">['a', 'b']</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.compare.vectorize.record_value">
+<span class="sig-prename descclassname"><span class="pre">equate.compare.vectorize.</span></span><span class="sig-name descname"><span class="pre">record_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/compare/vectorize.html#record_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.compare.vectorize.record_value" title="Link to this definition">¶</a></dt>
+<dd><p>A record’s <code class="docutils literal notranslate"><span class="pre">field</span></code>: a mapping’s item or an object’s attribute (<code class="docutils literal notranslate"><span class="pre">None</span></code> if absent).</p>
 </dd></dl>
 
 <dl class="py function">
@@ -444,6 +470,8 @@ so <code class="docutils literal notranslate"><span class="pre">m</span></code>/
 <li><a class="reference internal" href="#equate.compare.vectorize.fellegi_sunter"><code class="docutils literal notranslate"><span class="pre">fellegi_sunter()</span></code></a></li>
 <li><a class="reference internal" href="#equate.compare.vectorize.max_combiner"><code class="docutils literal notranslate"><span class="pre">max_combiner()</span></code></a></li>
 <li><a class="reference internal" href="#equate.compare.vectorize.mean"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></a></li>
+<li><a class="reference internal" href="#equate.compare.vectorize.record_fields"><code class="docutils literal notranslate"><span class="pre">record_fields()</span></code></a></li>
+<li><a class="reference internal" href="#equate.compare.vectorize.record_value"><code class="docutils literal notranslate"><span class="pre">record_value()</span></code></a></li>
 <li><a class="reference internal" href="#equate.compare.vectorize.weighted_sum"><code class="docutils literal notranslate"><span class="pre">weighted_sum()</span></code></a></li>
 </ul>
 </li>
@@ -456,7 +484,7 @@ so <code class="docutils literal notranslate"><span class="pre">m</span></code>/
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=f024b623"></script>
+</div><script src="../_static/documentation_options.js?v=5964c245"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

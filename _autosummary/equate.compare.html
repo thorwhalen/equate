@@ -251,6 +251,7 @@
 <li class="toctree-l4"><a class="reference internal" href="equate.featurize.tfidf.html">equate.featurize.tfidf</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="equate.fusion.html">equate.fusion</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="equate.interactive.html">equate.interactive</a><input aria-label="Toggle navigation of equate.interactive" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="equate.interactive.candidate_store.html">equate.interactive.candidate_store</a></li>
 <li class="toctree-l4"><a class="reference internal" href="equate.interactive.constraints.html">equate.interactive.constraints</a></li>
@@ -267,6 +268,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="equate.registry.html">equate.registry</a></li>
 <li class="toctree-l3"><a class="reference internal" href="equate.service.html">equate.service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="equate.sources.html">equate.sources</a></li>
 <li class="toctree-l3"><a class="reference internal" href="equate.util.html">equate.util</a></li>
 </ul>
 </li>
@@ -393,7 +395,8 @@ comparators (Monge-Elkan, containment) directional until the matcher boundary (D
 <p><code class="docutils literal notranslate"><span class="pre">field_comparators</span></code> maps a field name to a pairwise comparator; records may be
 mappings or objects (attribute access). A field whose value is <em>missing</em> (<code class="docutils literal notranslate"><span class="pre">None</span></code>)
 in either record scores <code class="docutils literal notranslate"><span class="pre">missing</span></code> (default 0.0) rather than being passed to the
-comparator — many comparators (edit distance, ratio) raise on <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+comparator — many comparators (edit distance, ratio) raise on <code class="docutils literal notranslate"><span class="pre">None</span></code>. With
+<code class="docutils literal notranslate"><span class="pre">missing=None</span></code> such a field is reported as <code class="docutils literal notranslate"><span class="pre">None</span></code>, so a caller can leave it out.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">equate.compare.string</span><span class="w"> </span><span class="kn">import</span> <span class="n">levenshtein</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cv</span> <span class="o">=</span> <span class="n">comparison_vector</span><span class="p">({</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'jon'</span><span class="p">},</span> <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'john'</span><span class="p">},</span> <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="n">levenshtein</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">cv</span><span class="p">[</span><span class="s1">'name'</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
@@ -598,7 +601,7 @@ maximized; a comparator with no declared metadata gets <code class="docutils lit
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=f024b623"></script>
+</div><script src="../_static/documentation_options.js?v=5964c245"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

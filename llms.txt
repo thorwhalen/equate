@@ -44,6 +44,7 @@
 - [equate.featurize.records](_autosummary/equate.featurize.records.html.md): The text of an object, for text featurizers: a record (mapping) is its joined values.
 - [equate.featurize.text](_autosummary/equate.featurize.text.html.md): Dense text-embedding featurizers, behind optional extras.
 - [equate.featurize.tfidf](_autosummary/equate.featurize.tfidf.html.md): Pure-numpy/scipy character-n-gram TF-IDF — equate’s zero-heavy-dependency default
+- [equate.fusion](_autosummary/equate.fusion.html.md): Fuse aligned records field by field, weighting sources by trust, and report conflicts.
 - [equate.interactive](_autosummary/equate.interactive.html.md): The interactive stage: human-in-the-loop review and re-optimization.
 - [equate.interactive.candidate_store](_autosummary/equate.interactive.candidate_store.html.md): The CandidateStore: per left-item top-k candidates with scores — the SSOT for review
 - [equate.interactive.constraints](_autosummary/equate.interactive.constraints.html.md): Interactive constraints and re-optimization: every user edit is a constraint, not a
@@ -56,9 +57,10 @@
 - [equate.matching.soft](_autosummary/equate.matching.soft.html.md): Soft / optimal-transport matching (stage ③): a fractional transport plan rather than a
 - [equate.registry](_autosummary/equate.registry.html.md): A tiny name-keyed strategy registry with lazy factories (open-closed dispatch).
 - [equate.service](_autosummary/equate.service.html.md): The service layer: equate’s matching core as JSON-in/JSON-out operations.
+- [equate.sources](_autosummary/equate.sources.html.md): Align several sources of the same items: one group per item, at most one record per source.
 - [equate.util](_autosummary/equate.util.html.md): Utils for equate.
 - [For AI agents](ai-agents.html.md): &#96;equate&#96; ships artifacts for coding agents alongside its code. This page lists
-- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-11-23 07:43 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
+- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-11-25 14:49 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
 
 ## Optional
 

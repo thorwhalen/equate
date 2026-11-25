@@ -42,6 +42,7 @@
 - [equate.featurize.records](equate.featurize.records.html.md): The text of an object, for text featurizers: a record (mapping) is its joined values.
 - [equate.featurize.text](equate.featurize.text.html.md): Dense text-embedding featurizers, behind optional extras.
 - [equate.featurize.tfidf](equate.featurize.tfidf.html.md): Pure-numpy/scipy character-n-gram TF-IDF — equate’s zero-heavy-dependency default
+- [equate.fusion](equate.fusion.html.md): Fuse aligned records field by field, weighting sources by trust, and report conflicts.
 - [equate.interactive](equate.interactive.html.md): The interactive stage: human-in-the-loop review and re-optimization.
 - [equate.interactive.candidate_store](equate.interactive.candidate_store.html.md): The CandidateStore: per left-item top-k candidates with scores — the SSOT for review
 - [equate.interactive.constraints](equate.interactive.constraints.html.md): Interactive constraints and re-optimization: every user edit is a constraint, not a
@@ -54,6 +55,7 @@
 - [equate.matching.soft](equate.matching.soft.html.md): Soft / optimal-transport matching (stage ③): a fractional transport plan rather than a
 - [equate.registry](equate.registry.html.md): A tiny name-keyed strategy registry with lazy factories (open-closed dispatch).
 - [equate.service](equate.service.html.md): The service layer: equate’s matching core as JSON-in/JSON-out operations.
+- [equate.sources](equate.sources.html.md): Align several sources of the same items: one group per item, at most one record per source.
 - [equate.util](equate.util.html.md): Utils for equate.
 
 ## Optional

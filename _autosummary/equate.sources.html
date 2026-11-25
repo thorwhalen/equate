@@ -1,0 +1,642 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="alternate" type="text/markdown" href="equate.sources.html.md">
+<link rel="describedby" href="../llms.txt" type="text/markdown">
+<link rel="alternate" type="text/markdown" href="equate.sources.html.md">
+<link rel="describedby" href="llms.txt"><link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="equate.util" href="equate.util.html"><link rel="prev" title="equate.service" href="equate.service.html">
+
+    <!-- Generated with Sphinx 9.1.1 and Furo 2025.12.19 -->
+        <title>equate.sources - equate</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  --color-brand-primary: #56489b;
+  --color-brand-content: #56489b;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #b3a9ff;
+  --color-brand-content: #b3a9ff;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #b3a9ff;
+  --color-brand-content: #b3a9ff;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">equate</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <span class="sidebar-brand-text">equate</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../api.html">API reference</a><input aria-label="Toggle navigation of API reference" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="equate.html">equate</a><input aria-label="Toggle navigation of equate" checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="equate.base.html">equate.base</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="equate.block.html">equate.block</a><input aria-label="Toggle navigation of equate.block" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="equate.block.metablock.html">equate.block.metablock</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.block.ann.html">equate.block.ann</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.block.keyed.html">equate.block.keyed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.block.lsh.html">equate.block.lsh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.block.metrics.html">equate.block.metrics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.block.score.html">equate.block.score</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="equate.cluster.html">equate.cluster</a><input aria-label="Toggle navigation of equate.cluster" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="equate.cluster.classify.html">equate.cluster.classify</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="equate.compare.html">equate.compare</a><input aria-label="Toggle navigation of equate.compare" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="equate.compare.calibrate.html">equate.compare.calibrate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.compare.numeric_geo.html">equate.compare.numeric_geo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.compare.sequence.html">equate.compare.sequence</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.compare.sets.html">equate.compare.sets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.compare.string.html">equate.compare.string</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.compare.vector.html">equate.compare.vector</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.compare.vectorize.html">equate.compare.vectorize</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="equate.completion.html">equate.completion</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="equate.evaluate.html">equate.evaluate</a><input aria-label="Toggle navigation of equate.evaluate" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="equate.evaluate.suites.html">equate.evaluate.suites</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.evaluate.benchmark.html">equate.evaluate.benchmark</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.evaluate.difficulty.html">equate.evaluate.difficulty</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.evaluate.labels.html">equate.evaluate.labels</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.evaluate.metrics.html">equate.evaluate.metrics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.evaluate.ranking.html">equate.evaluate.ranking</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.evaluate.scores.html">equate.evaluate.scores</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.evaluate.split.html">equate.evaluate.split</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.evaluate.store.html">equate.evaluate.store</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="equate.facade.html">equate.facade</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="equate.featurize.html">equate.featurize</a><input aria-label="Toggle navigation of equate.featurize" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="equate.featurize.columns.html">equate.featurize.columns</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.featurize.graph.html">equate.featurize.graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.featurize.records.html">equate.featurize.records</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.featurize.text.html">equate.featurize.text</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.featurize.tfidf.html">equate.featurize.tfidf</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="equate.fusion.html">equate.fusion</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="equate.interactive.html">equate.interactive</a><input aria-label="Toggle navigation of equate.interactive" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="equate.interactive.candidate_store.html">equate.interactive.candidate_store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.interactive.constraints.html">equate.interactive.constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.interactive.kbest.html">equate.interactive.kbest</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.interactive.review.html">equate.interactive.review</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="equate.matching.html">equate.matching</a><input aria-label="Toggle navigation of equate.matching" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="equate.matching.assign.html">equate.matching.assign</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.matching.embedding_align.html">equate.matching.embedding_align</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.matching.quadratic.html">equate.matching.quadratic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="equate.matching.soft.html">equate.matching.soft</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="equate.registry.html">equate.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="equate.service.html">equate.service</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">equate.sources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="equate.util.html">equate.util</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ai-agents.html">For AI agents</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/_autosummary/equate.sources.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="module-equate.sources">
+<span id="equate-sources"></span><h1>equate.sources<a class="headerlink" href="#module-equate.sources" title="Link to this heading">¶</a></h1>
+<p>Align several sources of the same items: one group per item, at most one record per source.</p>
+<p>Several sources often describe the same items, each partially and each with its own kind
+of error, and no shared identifier: a recording split into utterances (good timing, noisy
+transcript), a printed sheet (exact text, no timing), an OCR or PDF extraction (exact
+text, broken layout). <a class="reference internal" href="#equate.sources.align_sources" title="equate.sources.align_sources"><code class="xref py py-func docutils literal notranslate"><span class="pre">align_sources()</span></code></a> decides which records of the sources are the
+same item; <a class="reference internal" href="equate.fusion.html#equate.fusion.fuse" title="equate.fusion.fuse"><code class="xref py py-func docutils literal notranslate"><span class="pre">equate.fusion.fuse()</span></code></a> then merges each item field by field and reports
+where the sources disagree.</p>
+<p>The alignment is <strong>progressive</strong> (the classic multiple-sequence-alignment strategy): the
+first source is the backbone, and each further source is aligned against the groups built
+so far. One step is a two-collection matching problem over a <em>gain</em> matrix,
+<code class="docutils literal notranslate"><span class="pre">gain[g,</span> <span class="pre">j]</span> <span class="pre">=</span> <span class="pre">similarity(group</span> <span class="pre">g,</span> <span class="pre">record</span> <span class="pre">j)</span> <span class="pre">-</span> <span class="pre">threshold</span></code> (a record’s similarity to a
+group is its best similarity to any member), solved by the <code class="docutils literal notranslate"><span class="pre">order</span></code> strategy:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">'monotone'</span></code> (default): the sources list the items in the same order, gaps allowed.
+Solved by equate’s <a class="reference internal" href="equate.compare.sequence.html#equate.compare.sequence.needleman_wunsch_alignment" title="equate.compare.sequence.needleman_wunsch_alignment"><code class="xref py py-func docutils literal notranslate"><span class="pre">needleman_wunsch_alignment()</span></code></a> with the
+gain as substitution score and free gaps, so a record missing from one source becomes a
+gap instead of shifting everything after it. Records left over on both sides within
+<code class="docutils literal notranslate"><span class="pre">window</span></code> positions of each other are then paired by assignment when they match, which
+is how a <strong>local order swap</strong> (two items read in the opposite order) is recovered rather
+than cascading; such groups are marked <code class="docutils literal notranslate"><span class="pre">reordered</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'free'</span></code>: no order; an optimal assignment (equate’s <code class="docutils literal notranslate"><span class="pre">'assign'</span></code> matcher). Any other
+matcher name from <code class="docutils literal notranslate"><span class="pre">equate.matchers</span></code> (<code class="docutils literal notranslate"><span class="pre">'greedy'</span></code>, <code class="docutils literal notranslate"><span class="pre">'stable'</span></code>) works the same way.</p></li>
+<li><p>any callable <code class="docutils literal notranslate"><span class="pre">gain</span> <span class="pre">ScoreMatrix</span> <span class="pre">-&gt;</span> <span class="pre">iterable</span> <span class="pre">of</span> <span class="pre">(g,</span> <span class="pre">j)</span></code>: your own strategy.</p></li>
+</ul>
+<p>Records are compared on the fields they share (<code class="docutils literal notranslate"><span class="pre">compare</span></code>), with equate’s comparators or
+any callable, so domain knowledge (a phonetic reading, a unit normaliser) is injected, not
+built in. A group’s <code class="docutils literal notranslate"><span class="pre">margin</span></code> is its score minus the best score a nearby rival record
+would get in its place: low (or negative) where the alignment is unsure.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sheet</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">'text'</span><span class="p">:</span> <span class="s1">'bonjour'</span><span class="p">},</span> <span class="p">{</span><span class="s1">'text'</span><span class="p">:</span> <span class="s1">'merci'</span><span class="p">},</span> <span class="p">{</span><span class="s1">'text'</span><span class="p">:</span> <span class="s1">'au revoir'</span><span class="p">}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">audio</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">'text'</span><span class="p">:</span> <span class="s1">'bonjou'</span><span class="p">,</span> <span class="s1">'start'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">},</span> <span class="p">{</span><span class="s1">'text'</span><span class="p">:</span> <span class="s1">'au revoar'</span><span class="p">,</span> <span class="s1">'start'</span><span class="p">:</span> <span class="mf">2.1</span><span class="p">}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">al</span> <span class="o">=</span> <span class="n">align_sources</span><span class="p">({</span><span class="s1">'sheet'</span><span class="p">:</span> <span class="n">sheet</span><span class="p">,</span> <span class="s1">'audio'</span><span class="p">:</span> <span class="n">audio</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">g</span><span class="o">.</span><span class="n">members</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">al</span><span class="p">]</span>
+<span class="go">[{'sheet': 0, 'audio': 0}, {'sheet': 1}, {'sheet': 2, 'audio': 1}]</span>
+</pre></div>
+</div>
+<p class="rubric">Module Attributes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.sources.DFLT_ALIGN_THRESHOLD" title="equate.sources.DFLT_ALIGN_THRESHOLD"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFLT_ALIGN_THRESHOLD</span></code></a></p></td>
+<td><p>minimum record similarity for two records to be the same item (strictly above it)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.sources.DFLT_ORDER_WINDOW" title="equate.sources.DFLT_ORDER_WINDOW"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFLT_ORDER_WINDOW</span></code></a></p></td>
+<td><p>how far (in positions) a <code class="docutils literal notranslate"><span class="pre">'monotone'</span></code> alignment looks for swapped items and rivals</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.sources.DFLT_FIELD_COMPARATOR" title="equate.sources.DFLT_FIELD_COMPARATOR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFLT_FIELD_COMPARATOR</span></code></a></p></td>
+<td><p>the comparator used for a shared string field when <code class="docutils literal notranslate"><span class="pre">compare</span></code> names no comparator</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Functions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.sources.align_sources" title="equate.sources.align_sources"><code class="xref py py-obj docutils literal notranslate"><span class="pre">align_sources</span></code></a>(sources, *[, compare, order, ...])</p></td>
+<td><p>Align N sources of records into groups, one per item, at most one record per source.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.sources.record_similarity" title="equate.sources.record_similarity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_similarity</span></code></a>([compare, combine, missing])</p></td>
+<td><p>Build a record comparator <code class="docutils literal notranslate"><span class="pre">(a,</span> <span class="pre">b)</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code> from per-field comparators.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.sources.monotone_order" title="equate.sources.monotone_order"><code class="xref py py-obj docutils literal notranslate"><span class="pre">monotone_order</span></code></a>(gain, *[, window])</p></td>
+<td><p>Order-preserving pairing of <code class="docutils literal notranslate"><span class="pre">gain</span></code>'s rows and columns, gaps free.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.sources.free_order" title="equate.sources.free_order"><code class="xref py py-obj docutils literal notranslate"><span class="pre">free_order</span></code></a>(gain)</p></td>
+<td><p>Pair rows and columns of <code class="docutils literal notranslate"><span class="pre">gain</span></code> by optimal assignment, keeping positive gains.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Classes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#equate.sources.SourceGroup" title="equate.sources.SourceGroup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SourceGroup</span></code></a>(members, records[, scores, ...])</p></td>
+<td><p>One item: the records the sources hold for it, at most one per source.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#equate.sources.SourceAlignment" title="equate.sources.SourceAlignment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SourceAlignment</span></code></a>(groups, sources[, order, ...])</p></td>
+<td><p>The result of <a class="reference internal" href="#equate.sources.align_sources" title="equate.sources.align_sources"><code class="xref py py-func docutils literal notranslate"><span class="pre">align_sources()</span></code></a>: groups in alignment order.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py data">
+<dt class="sig sig-object py" id="equate.sources.DFLT_ALIGN_THRESHOLD">
+<span class="sig-prename descclassname"><span class="pre">equate.sources.</span></span><span class="sig-name descname"><span class="pre">DFLT_ALIGN_THRESHOLD</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.5</span></span><a class="headerlink" href="#equate.sources.DFLT_ALIGN_THRESHOLD" title="Link to this definition">¶</a></dt>
+<dd><p>minimum record similarity for two records to be the same item (strictly above it)</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="equate.sources.DFLT_FIELD_COMPARATOR">
+<span class="sig-prename descclassname"><span class="pre">equate.sources.</span></span><span class="sig-name descname"><span class="pre">DFLT_FIELD_COMPARATOR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ratio'</span></span><a class="headerlink" href="#equate.sources.DFLT_FIELD_COMPARATOR" title="Link to this definition">¶</a></dt>
+<dd><p>the comparator used for a shared string field when <code class="docutils literal notranslate"><span class="pre">compare</span></code> names no comparator</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="equate.sources.DFLT_ORDER_WINDOW">
+<span class="sig-prename descclassname"><span class="pre">equate.sources.</span></span><span class="sig-name descname"><span class="pre">DFLT_ORDER_WINDOW</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></span><a class="headerlink" href="#equate.sources.DFLT_ORDER_WINDOW" title="Link to this definition">¶</a></dt>
+<dd><p>how far (in positions) a <code class="docutils literal notranslate"><span class="pre">'monotone'</span></code> alignment looks for swapped items and rivals</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="equate.sources.SourceAlignment">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.sources.</span></span><span class="sig-name descname"><span class="pre">SourceAlignment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">groups</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sources</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'monotone'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/sources.html#SourceAlignment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.sources.SourceAlignment" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>The result of <a class="reference internal" href="#equate.sources.align_sources" title="equate.sources.align_sources"><code class="xref py py-func docutils literal notranslate"><span class="pre">align_sources()</span></code></a>: groups in alignment order.</p>
+<p>Iterates as its <a class="reference internal" href="#equate.sources.SourceGroup" title="equate.sources.SourceGroup"><code class="xref py py-class docutils literal notranslate"><span class="pre">SourceGroup</span></code></a> items; <code class="docutils literal notranslate"><span class="pre">sources</span></code> names every input source, in
+order (so a consumer can tell which sources a group lacks).</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="equate.sources.SourceAlignment.missing">
+<span class="sig-name descname"><span class="pre">missing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/sources.html#SourceAlignment.missing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.sources.SourceAlignment.missing" title="Link to this definition">¶</a></dt>
+<dd><p>The sources that have no record for <code class="docutils literal notranslate"><span class="pre">group</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="equate.sources.SourceGroup">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">equate.sources.</span></span><span class="sig-name descname"><span class="pre">SourceGroup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">members</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">records</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">list()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reordered</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/sources.html#SourceGroup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.sources.SourceGroup" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>One item: the records the sources hold for it, at most one per source.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">members</span></code>: <code class="docutils literal notranslate"><span class="pre">{source:</span> <span class="pre">index}</span></code> into that source’s sequence, in source order;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">records</span></code>: <code class="docutils literal notranslate"><span class="pre">{source:</span> <span class="pre">record}</span></code>, the records themselves;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scores</span></code>: the pairwise record similarities, as <code class="docutils literal notranslate"><span class="pre">(source_a,</span> <span class="pre">source_b,</span> <span class="pre">score)</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">score</span></code>: their mean (<code class="docutils literal notranslate"><span class="pre">None</span></code> for a single-source group);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">margin</span></code>: <code class="docutils literal notranslate"><span class="pre">score</span></code> minus the best a nearby rival record would score in a member’s
+place, over all members (low or negative = unsure; <code class="docutils literal notranslate"><span class="pre">None</span></code> for a single record);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reordered</span></code>: the group crosses another one, i.e. some source lists this item out of
+the order the others do (a local swap).</p></li>
+</ul>
+<p>JSON-able when the records are.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="equate.sources.SourceGroup.sources">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">sources</span></span><a class="headerlink" href="#equate.sources.SourceGroup.sources" title="Link to this definition">¶</a></dt>
+<dd><p>The sources holding this item.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.sources.align_sources">
+<span class="sig-prename descclassname"><span class="pre">equate.sources.</span></span><span class="sig-name descname"><span class="pre">align_sources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sources</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">compare</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'monotone'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/sources.html#align_sources"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.sources.align_sources" title="Link to this definition">¶</a></dt>
+<dd><p>Align N sources of records into groups, one per item, at most one record per source.</p>
+<p><code class="docutils literal notranslate"><span class="pre">sources</span></code> maps a source name to a sequence of records (dicts, or objects with
+attributes). The first source is the backbone of the progressive alignment: put the
+most complete one first.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">compare</span></code>: how two records are scored (see <a class="reference internal" href="#equate.sources.record_similarity" title="equate.sources.record_similarity"><code class="xref py py-func docutils literal notranslate"><span class="pre">record_similarity()</span></code></a>): <code class="docutils literal notranslate"><span class="pre">None</span></code>
+(shared string fields, <code class="docutils literal notranslate"><span class="pre">ratio</span></code>), <code class="docutils literal notranslate"><span class="pre">{field:</span> <span class="pre">comparator}</span></code> with equate’s comparator
+names or any callables, or one record callable <code class="docutils literal notranslate"><span class="pre">(a,</span> <span class="pre">b)</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code>. Similarities,
+higher = more alike, roughly in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">order</span></code>: <code class="docutils literal notranslate"><span class="pre">'monotone'</span></code> (same order, gaps allowed; default), <code class="docutils literal notranslate"><span class="pre">'free'</span></code>
+(optimal assignment), any matcher name from <code class="docutils literal notranslate"><span class="pre">equate.matchers</span></code> (<code class="docutils literal notranslate"><span class="pre">'greedy'</span></code>,
+<code class="docutils literal notranslate"><span class="pre">'stable'</span></code>, …), or a callable taking the gains as a
+<a class="reference internal" href="equate.base.html#equate.base.ScoreMatrix" title="equate.base.ScoreMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreMatrix</span></code></a> (<code class="docutils literal notranslate"><span class="pre">-inf</span></code> where two records share no compared</p>
+<blockquote>
+<div><p>field) and returning <code class="docutils literal notranslate"><span class="pre">(group,</span> <span class="pre">record)</span></code> pairs; pairs without a positive gain are
+dropped.</p>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">threshold</span></code>: two records are aligned only if their similarity is strictly above it.
+A record joins a group through its best similarity to the group’s members, so one
+noisy member does not keep it out.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">window</span></code>: for <code class="docutils literal notranslate"><span class="pre">'monotone'</span></code>, how many positions away a swapped item is looked for;
+for <code class="docutils literal notranslate"><span class="pre">'monotone'</span></code> also how many positions away rival records are looked for when
+computing <code class="docutils literal notranslate"><span class="pre">margin</span></code> (other orders look everywhere). <code class="docutils literal notranslate"><span class="pre">None</span></code>: everywhere; <code class="docutils literal notranslate"><span class="pre">0</span></code>: no
+swap repair.</p></li>
+</ul>
+<p>Returns a <a class="reference internal" href="#equate.sources.SourceAlignment" title="equate.sources.SourceAlignment"><code class="xref py py-class docutils literal notranslate"><span class="pre">SourceAlignment</span></code></a> (iterate it for <a class="reference internal" href="#equate.sources.SourceGroup" title="equate.sources.SourceGroup"><code class="xref py py-class docutils literal notranslate"><span class="pre">SourceGroup</span></code></a> items).</p>
+<p>A group holds <strong>at most one record per source</strong>: segmentation is the caller’s job. When
+one source merges two items into a record (an utterance covering two lines) or splits
+one over two, split or merge those records before aligning, or the extra one is left
+as its own group.</p>
+<p>With two sources and the items in the same order, this is <code class="xref py py-func docutils literal notranslate"><span class="pre">equate.match()</span></code> on the
+shared fields, keeping pairs above <code class="docutils literal notranslate"><span class="pre">threshold</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.sources.free_order">
+<span class="sig-prename descclassname"><span class="pre">equate.sources.</span></span><span class="sig-name descname"><span class="pre">free_order</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gain</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/sources.html#free_order"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.sources.free_order" title="Link to this definition">¶</a></dt>
+<dd><p>Pair rows and columns of <code class="docutils literal notranslate"><span class="pre">gain</span></code> by optimal assignment, keeping positive gains.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">free_order</span><span class="p">([[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+<span class="go">[(0, 1), (1, 0)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.sources.monotone_order">
+<span class="sig-prename descclassname"><span class="pre">equate.sources.</span></span><span class="sig-name descname"><span class="pre">monotone_order</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gain</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/sources.html#monotone_order"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.sources.monotone_order" title="Link to this definition">¶</a></dt>
+<dd><p>Order-preserving pairing of <code class="docutils literal notranslate"><span class="pre">gain</span></code>’s rows and columns, gaps free.</p>
+<p>A Needleman-Wunsch global alignment with <code class="docutils literal notranslate"><span class="pre">gain</span></code> as substitution score and zero gap
+cost: the maximum-gain set of non-crossing pairs. Rows and columns it leaves unpaired
+are then paired by assignment when they have positive gain and lie within <code class="docutils literal notranslate"><span class="pre">window</span></code>
+positions of the gap they sit in (a local order swap); those pairs cross the others.
+<code class="docutils literal notranslate"><span class="pre">window=0</span></code> keeps the alignment strictly monotone; <code class="docutils literal notranslate"><span class="pre">None</span></code> repairs at any distance.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">monotone_order</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+<span class="go">[(0, 0), (1, 1)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">monotone_order</span><span class="p">([[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]]))</span>  <span class="c1"># a swap, recovered</span>
+<span class="go">[(0, 1), (1, 0)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">monotone_order</span><span class="p">([[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="n">window</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">[(0, 1)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="equate.sources.record_similarity">
+<span class="sig-prename descclassname"><span class="pre">equate.sources.</span></span><span class="sig-name descname"><span class="pre">record_similarity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">compare</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">combine</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">mean&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/equate/sources.html#record_similarity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#equate.sources.record_similarity" title="Link to this definition">¶</a></dt>
+<dd><p>Build a record comparator <code class="docutils literal notranslate"><span class="pre">(a,</span> <span class="pre">b)</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code> from per-field comparators.</p>
+<p><code class="docutils literal notranslate"><span class="pre">compare</span></code> is:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code> (default): every field both records hold as a string, scored with
+<a class="reference internal" href="#equate.sources.DFLT_FIELD_COMPARATOR" title="equate.sources.DFLT_FIELD_COMPARATOR"><code class="xref py py-data docutils literal notranslate"><span class="pre">DFLT_FIELD_COMPARATOR</span></code></a> (two plain strings are compared directly);</p></li>
+<li><p>a mapping <code class="docutils literal notranslate"><span class="pre">{field:</span> <span class="pre">comparator}</span></code> (a registered name or a callable): those fields;</p></li>
+<li><p>a callable <code class="docutils literal notranslate"><span class="pre">(a,</span> <span class="pre">b)</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code>: returned as it is.</p></li>
+</ul>
+<p>The per-field scores are a <a class="reference internal" href="equate.compare.vectorize.html#equate.compare.vectorize.comparison_vector" title="equate.compare.vectorize.comparison_vector"><code class="xref py py-func docutils literal notranslate"><span class="pre">comparison_vector()</span></code></a> over
+the fields <strong>both records actually have</strong> (a field missing or <code class="docutils literal notranslate"><span class="pre">None</span></code> on either side
+is left out, not scored zero), reduced by <code class="docutils literal notranslate"><span class="pre">combine</span></code> (default the mean; any combiner
+of <a class="reference internal" href="equate.compare.vectorize.html#module-equate.compare.vectorize" title="equate.compare.vectorize"><code class="xref py py-mod docutils literal notranslate"><span class="pre">equate.compare.vectorize</span></code></a>, e.g. <code class="docutils literal notranslate"><span class="pre">weighted_sum</span></code>, works). So a source with
+extra fields is compared on what it shares. Records sharing no compared field score
+<code class="docutils literal notranslate"><span class="pre">missing</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sim</span> <span class="o">=</span> <span class="n">record_similarity</span><span class="p">({</span><span class="s1">'text'</span><span class="p">:</span> <span class="s1">'ratio'</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sim</span><span class="p">({</span><span class="s1">'text'</span><span class="p">:</span> <span class="s1">'merci'</span><span class="p">},</span> <span class="p">{</span><span class="s1">'text'</span><span class="p">:</span> <span class="s1">'merci'</span><span class="p">,</span> <span class="s1">'pinyin'</span><span class="p">:</span> <span class="s1">'xiexie'</span><span class="p">})</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sim</span><span class="p">({</span><span class="s1">'start'</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">},</span> <span class="p">{</span><span class="s1">'text'</span><span class="p">:</span> <span class="s1">'merci'</span><span class="p">})</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="equate.util.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">equate.util</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="equate.service.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">equate.service</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            Made with 
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">equate.sources</a><ul>
+<li><a class="reference internal" href="#equate.sources.DFLT_ALIGN_THRESHOLD"><code class="docutils literal notranslate"><span class="pre">DFLT_ALIGN_THRESHOLD</span></code></a></li>
+<li><a class="reference internal" href="#equate.sources.DFLT_FIELD_COMPARATOR"><code class="docutils literal notranslate"><span class="pre">DFLT_FIELD_COMPARATOR</span></code></a></li>
+<li><a class="reference internal" href="#equate.sources.DFLT_ORDER_WINDOW"><code class="docutils literal notranslate"><span class="pre">DFLT_ORDER_WINDOW</span></code></a></li>
+<li><a class="reference internal" href="#equate.sources.SourceAlignment"><code class="docutils literal notranslate"><span class="pre">SourceAlignment</span></code></a><ul>
+<li><a class="reference internal" href="#equate.sources.SourceAlignment.missing"><code class="docutils literal notranslate"><span class="pre">SourceAlignment.missing()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#equate.sources.SourceGroup"><code class="docutils literal notranslate"><span class="pre">SourceGroup</span></code></a><ul>
+<li><a class="reference internal" href="#equate.sources.SourceGroup.sources"><code class="docutils literal notranslate"><span class="pre">SourceGroup.sources</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#equate.sources.align_sources"><code class="docutils literal notranslate"><span class="pre">align_sources()</span></code></a></li>
+<li><a class="reference internal" href="#equate.sources.free_order"><code class="docutils literal notranslate"><span class="pre">free_order()</span></code></a></li>
+<li><a class="reference internal" href="#equate.sources.monotone_order"><code class="docutils literal notranslate"><span class="pre">monotone_order()</span></code></a></li>
+<li><a class="reference internal" href="#equate.sources.record_similarity"><code class="docutils literal notranslate"><span class="pre">record_similarity()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=5964c245"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=fd10adb8"></script>
+    </body>
+</html>

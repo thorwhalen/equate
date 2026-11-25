@@ -1,0 +1,30 @@
+equate.sources
+==============
+
+.. automodule:: equate.sources
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DFLT_ALIGN_THRESHOLD
+      DFLT_ORDER_WINDOW
+      DFLT_FIELD_COMPARATOR
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      align_sources
+      record_similarity
+      monotone_order
+      free_order
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      SourceGroup
+      SourceAlignment
+   

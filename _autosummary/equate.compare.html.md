@@ -48,7 +48,8 @@ Return `{field: comparator(a[field], b[field])}` for each field comparator.
 `field_comparators` maps a field name to a pairwise comparator; records may be
 mappings or objects (attribute access). A field whose value is *missing* (`None`)
 in either record scores `missing` (default 0.0) rather than being passed to the
-comparator — many comparators (edit distance, ratio) raise on `None`.
+comparator — many comparators (edit distance, ratio) raise on `None`. With
+`missing=None` such a field is reported as `None`, so a caller can leave it out.
 
 ```pycon
 >>> from equate.compare.string import levenshtein

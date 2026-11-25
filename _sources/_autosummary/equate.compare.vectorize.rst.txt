@@ -8,6 +8,8 @@ equate.compare.vectorize
 
    .. autosummary::
    
+      record_value
+      record_fields
       comparison_vector
       weighted_sum
       mean

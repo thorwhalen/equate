@@ -1,0 +1,29 @@
+equate.fusion
+=============
+
+.. automodule:: equate.fusion
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DFLT_CONFLICT_RATIO
+      DFLT_TRUST
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      fuse
+      default_agree
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Fusion
+      FusedItem
+      FieldVote
+      FieldConflict
+   
