@@ -29,8 +29,13 @@ CUSTOMERS = {
 def test_set_comparators():
     assert jaccard({1, 2, 3}, {2, 3, 4}) == 0.5
     assert overlap({1, 2}, {1, 2, 3, 4}) == 1.0
-    assert (containment({1, 2}, {1, 2, 3, 4}), containment({1, 2, 3, 4}, {1, 2})) == (1.0, 0.5)
-    assert jaccard(set(), set()) == overlap(set(), set()) == containment(set(), {1}) == 0.0
+    assert (containment({1, 2}, {1, 2, 3, 4}), containment({1, 2, 3, 4}, {1, 2})) == (
+        1.0,
+        0.5,
+    )
+    assert (
+        jaccard(set(), set()) == overlap(set(), set()) == containment(set(), {1}) == 0.0
+    )
 
 
 def test_as_columns_accepts_column_maps_rows_and_dataframes():
@@ -55,7 +60,11 @@ def test_find_join_keys_by_containment():
     assert best.explanation.details["shared"] == 3
     # directional: orders.customer is fully inside customers.cid, not the reverse
     reverse = find_join_keys(CUSTOMERS, ORDERS)
-    assert (reverse[0].left, reverse[0].right, reverse[0].score) == ("cid", "customer", 0.75)
+    assert (reverse[0].left, reverse[0].right, reverse[0].score) == (
+        "cid",
+        "customer",
+        0.75,
+    )
 
 
 def test_find_join_keys_normalizes_values():
@@ -66,7 +75,9 @@ def test_find_join_keys_normalizes_values():
 
 def test_find_join_keys_min_score_and_k():
     assert find_join_keys({"a": ["x"]}, {"b": ["y"]}) == []
-    many = find_join_keys({"a": ["x", "y"]}, {"b": ["x", "y"], "c": ["x"], "d": ["y", "z"]}, k=2)
+    many = find_join_keys(
+        {"a": ["x", "y"]}, {"b": ["x", "y"], "c": ["x"], "d": ["y", "z"]}, k=2
+    )
     assert [(m.right, m.score) for m in many] == [("b", 1.0), ("c", 0.5)]
 
 
@@ -78,7 +89,10 @@ def test_near_duplicate_columns():
         "label_mostly": ["a", "b", "c", "e"],
     }
     dups = find_near_duplicate_columns(table, threshold=0.5)
-    assert [(m.left, m.right) for m in dups] == [("id", "id_copy"), ("label", "label_mostly")]
+    assert [(m.left, m.right) for m in dups] == [
+        ("id", "id_copy"),
+        ("label", "label_mostly"),
+    ]
     assert dups[0].score == 1.0 and math.isclose(dups[1].score, 3 / 5)
     assert find_near_duplicate_columns(table) == [dups[0]]  # default threshold 0.9
 
@@ -89,8 +103,15 @@ def test_complete_table_discovers_key_and_fills_only_missing_cells():
     assert done.table["city"] == ["Paris", "Lyon", "Paris", "Nice"]  # 'Lyon' kept as is
     assert done.filled == {"city": 3}
     assert done.columns == {"city": "city"}
-    assert done.table["qty"] == ORDERS["qty"] and ORDERS["city"][0] is None  # input untouched
-    assert done.as_rows()[3] == {"order": "o4", "customer": "C-003", "city": "Nice", "qty": 4}
+    assert (
+        done.table["qty"] == ORDERS["qty"] and ORDERS["city"][0] is None
+    )  # input untouched
+    assert done.as_rows()[3] == {
+        "order": "o4",
+        "customer": "C-003",
+        "city": "Nice",
+        "qty": 4,
+    }
 
 
 def test_complete_table_adds_named_columns_and_matches_fuzzy_keys():
@@ -102,12 +123,18 @@ def test_complete_table_adds_named_columns_and_matches_fuzzy_keys():
     # the default 0.9 floor; a missing key fills nothing
     assert done.table["customer_name"] == [None, "Ann", None]
     loose = complete_table(
-        target, CUSTOMERS, on=("cust", "cid"), columns={"customer_name": "name"},
+        target,
+        CUSTOMERS,
+        on=("cust", "cid"),
+        columns={"customer_name": "name"},
         min_row_score=0.85,
     )
     assert loose.table["customer_name"] == ["Jon", "Ann", None]
     assert loose.filled == {"customer_name": 2}
-    assert [score is None for _, _, score in loose.rows] == [False, True]  # fuzzy, exact
+    assert [score is None for _, _, score in loose.rows] == [
+        False,
+        True,
+    ]  # fuzzy, exact
 
 
 def test_complete_table_row_floor_and_one_to_one():
@@ -120,7 +147,9 @@ def test_complete_table_row_floor_and_one_to_one():
     assert loose.table["name"][1] is None
     # one-to-one: two target rows cannot both take source row C-001
     twins = {"k": ["C-001", "C-001"], "name": [None, None]}
-    one = complete_table(twins, CUSTOMERS, on=("k", "cid"), how="optimal", min_row_score=None)
+    one = complete_table(
+        twins, CUSTOMERS, on=("k", "cid"), how="optimal", min_row_score=None
+    )
     assert len({j for _, j, _ in one.rows}) == 2
 
 
@@ -149,21 +178,30 @@ def test_an_unknown_key_never_borrows_another_rows_values():
         {"sku": ["A100", "A200", "A301"], "p": [1, 2, 3]},
     )
     assert done.table["p"] == [1, 2, None]  # A300 is not A100 (nor, at 0.75, A301)
-    ids = complete_table({"id": [1, 2, 12], "v": [None] * 3}, {"id": [1, 2, 13], "v": list("abc")})
+    ids = complete_table(
+        {"id": [1, 2, 12], "v": [None] * 3}, {"id": [1, 2, 13], "v": list("abc")}
+    )
     assert ids.table["v"] == ["a", "b", None]
 
 
 def test_key_election_prefers_the_column_with_more_shared_values():
     left = {"city": [None, "Lyon", None], "cust": ["c1", "c2", "c3"]}
     right = {"id": ["c3", "c1", "c2", "c9"], "city": ["Nice", "Paris", "Lyon", "Lille"]}
-    assert (find_join_keys(left, right)[0].left, find_join_keys(left, right)[0].right) == ("cust", "id")
+    assert (
+        find_join_keys(left, right)[0].left,
+        find_join_keys(left, right)[0].right,
+    ) == ("cust", "id")
     assert complete_table(left, right).table["city"] == ["Paris", "Lyon", "Nice"]
 
 
 def test_keys_are_normalized_the_same_way_for_rows():
-    done = complete_table({"k": ["ABC", "DEF"], "v": [None, None]}, {"k": ["abc", "def"], "v": [1, 2]})
+    done = complete_table(
+        {"k": ["ABC", "DEF"], "v": [None, None]}, {"k": ["abc", "def"], "v": [1, 2]}
+    )
     assert done.table["v"] == [1, 2] and all(score is None for *_, score in done.rows)
-    nums = complete_table({"k": [1, 2], "v": [None, None]}, {"k": [1.0, 2.0], "v": ["x", "y"]})
+    nums = complete_table(
+        {"k": [1, 2], "v": [None, None]}, {"k": [1.0, 2.0], "v": ["x", "y"]}
+    )
     assert nums.table["v"] == ["x", "y"]
 
 
@@ -173,19 +211,25 @@ def test_exact_join_is_linear_not_quadratic():
     n = 20_000
     keys = [f"K{i:06d}" for i in range(n)]
     t0 = time.perf_counter()
-    done = complete_table({"k": keys, "v": [None] * n}, {"k": keys[::-1], "v": list(range(n))[::-1]})
+    done = complete_table(
+        {"k": keys, "v": [None] * n}, {"k": keys[::-1], "v": list(range(n))[::-1]}
+    )
     assert done.filled == {"v": n} and done.table["v"][:3] == [0, 1, 2]
     assert time.perf_counter() - t0 < 10  # the old all-pairs alignment took minutes
 
 
 def test_duplicate_source_keys_contribute_their_first_value():
-    done = complete_table({"k": ["x1"], "v": [None]}, {"k": ["x1", "x1"], "v": [None, "B"]})
+    done = complete_table(
+        {"k": ["x1"], "v": [None]}, {"k": ["x1", "x1"], "v": [None, "B"]}
+    )
     assert done.table["v"] == ["B"]
 
 
 def test_pandas_missing_values():
     pd = pytest.importorskip("pandas")
-    target = pd.DataFrame({"k": ["a", "b"], "v": pd.array([pd.NA, "x"], dtype="string")})
+    target = pd.DataFrame(
+        {"k": ["a", "b"], "v": pd.array([pd.NA, "x"], dtype="string")}
+    )
     done = complete_table(target, pd.DataFrame({"k": ["a", "b"], "v": ["A", "B"]}))
     assert done.table["v"] == ["A", "x"]
 
@@ -207,4 +251,9 @@ def test_directional_near_duplicates_keep_both_directions():
 def test_legacy_names_survive_star_import():
     namespace = {}
     exec("from equate.completion import *", namespace)
-    assert {"similarity_matrix", "mk_text_to_vect", "hungarian_matching", "complete_table"} <= set(namespace)
+    assert {
+        "similarity_matrix",
+        "mk_text_to_vect",
+        "hungarian_matching",
+        "complete_table",
+    } <= set(namespace)

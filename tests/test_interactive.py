@@ -19,6 +19,7 @@ from equate.base import to_cost
 
 # --- Murty k-best -----------------------------------------------------------------
 
+
 def test_k_best_two_by_two():
     result = k_best_assignments([[1, 2], [2, 1]], 2)
     assert [a for a, _ in result] == [{0: 0, 1: 1}, {0: 1, 1: 0}]
@@ -44,6 +45,7 @@ def test_k_best_more_than_available():
 
 
 # --- constrained solve ------------------------------------------------------------
+
 
 def test_solve_constrained_forces_and_forbids():
     cost = np.array([[1.0, 2.0], [2.0, 1.0]])
@@ -83,6 +85,7 @@ def test_candidate_store_margin_and_sparse():
 
 # --- ConstraintSet + reoptimize (edit-and-re-solve) -------------------------------
 
+
 def test_reoptimize_baseline_is_optimal():
     assert reoptimize(SCORES) == [(0, 0), (1, 1), (2, 2)]
 
@@ -115,6 +118,7 @@ def test_reoptimize_contradiction_raises():
 
 # --- review / active learning -----------------------------------------------------
 
+
 def test_review_queue_surfaces_most_uncertain_first():
     # row 1 has the smallest top1-top2 margin (0.85 vs 0.3 = 0.55; row 0: 0.1; row 2: 0.75)
     store = CandidateStore.from_scores(SCORES, k=3)
@@ -129,6 +133,7 @@ def test_uncertainty_sampling_returns_n_most_uncertain():
 
 # --- review-driven fixes ----------------------------------------------------------
 
+
 def test_k_best_tall_matrix_enumerates_all():
     # n > m: the old per-row feasibility pre-check pruned these; must enumerate all 4
     result = k_best_assignments([[3], [2], [5], [1]], 4)
@@ -142,10 +147,16 @@ def test_k_best_rectangular_two_by_one():
 
 def test_solve_constrained_rejects_invalid_forced_edges():
     inf_cost = np.array([[np.inf, 5.0], [5.0, 1.0]])
-    assert solve_constrained(inf_cost, forced=[(0, 0)]) is None  # impossible forced edge
+    assert (
+        solve_constrained(inf_cost, forced=[(0, 0)]) is None
+    )  # impossible forced edge
     cost = np.array([[1.0, 2.0], [2.0, 1.0]])
-    assert solve_constrained(cost, forced=[(0, 0)], forbidden=[(0, 0)]) is None  # contradiction
-    assert solve_constrained(cost, forced=[(0, 0), (1, 0)]) is None  # two forced share col 0
+    assert (
+        solve_constrained(cost, forced=[(0, 0)], forbidden=[(0, 0)]) is None
+    )  # contradiction
+    assert (
+        solve_constrained(cost, forced=[(0, 0), (1, 0)]) is None
+    )  # two forced share col 0
 
 
 def test_reoptimize_sparse_worst_cases_absent_cells():
@@ -160,7 +171,9 @@ def test_reoptimize_drops_hole_assignments():
     # unmatched rather than assign the absent (1,1) hole (D11 — the review-flagged leak)
     S = csr_matrix(([0.9, 0.8], ([0, 1], [0, 0])), shape=(2, 2))
     assert dict(reoptimize(S, sense="maximize")) == {0: 0}
-    assert reoptimize(csr_matrix((2, 2)), sense="maximize") == []  # all-absent -> no matches
+    assert (
+        reoptimize(csr_matrix((2, 2)), sense="maximize") == []
+    )  # all-absent -> no matches
 
 
 def test_reoptimize_keeps_user_forced_edge_even_if_absent():

@@ -441,7 +441,11 @@ def test_final_uses_node_attributes():
     path2 = {1: ["2"], "2": [1, 3], 3: ["2"]}
     kinds = {"a": "x", "b": "y", "c": "z", 1: "z", "2": "y", 3: "x"}
     # a path is symmetric: only the labels say which end is which
-    assert dict(final(path1, path2, label=kinds.get).labeled_pairs()) == {"a": 3, "b": "2", "c": 1}
+    assert dict(final(path1, path2, label=kinds.get).labeled_pairs()) == {
+        "a": 3,
+        "b": "2",
+        "c": 1,
+    }
     with pytest.raises(ValueError):
         final(path1, path2, attribute_similarity=_np.full((3, 3), 2.0))
 
@@ -459,7 +463,9 @@ def test_sinkhorn_plan_has_uniform_marginals():
 def test_new_quadratic_matchers_are_registered():
     from equate.matching import quadratic_matchers
 
-    assert {"isorank", "final", "rrwm", "gw", "regal", "cone"} <= set(quadratic_matchers.names())
+    assert {"isorank", "final", "rrwm", "gw", "regal", "cone"} <= set(
+        quadratic_matchers.names()
+    )
 
 
 # --- regressions from the adversarial review of #18 ----------------------------------

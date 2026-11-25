@@ -12,7 +12,7 @@ def make_registry():
     def _double_factory():
         return lambda x: x * 2
 
-    reg.register("triple", lambda: (lambda x: x * 3))
+    reg.register("triple", lambda: lambda x: x * 3)
     return reg
 
 

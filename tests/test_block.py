@@ -24,6 +24,7 @@ from equate.base import ScoreMatrix
 
 # --- all_pairs & resolve ----------------------------------------------------------
 
+
 def test_all_pairs_cross_and_self_join():
     assert list(all_pairs(["a", "b"], ["x", "y"])) == [(0, 0), (0, 1), (1, 0), (1, 1)]
     assert list(all_pairs(["a", "b", "c"])) == [(0, 1), (0, 2), (1, 2)]
@@ -36,11 +37,19 @@ def test_resolve_blocker_none_name_callable():
 
 
 def test_registry_has_blockers():
-    for name in ("all_pairs", "key", "sorted_neighborhood", "brute_knn", "ann", "minhash_lsh"):
+    for name in (
+        "all_pairs",
+        "key",
+        "sorted_neighborhood",
+        "brute_knn",
+        "ann",
+        "minhash_lsh",
+    ):
         assert name in blockers
 
 
 # --- keyed blocking ---------------------------------------------------------------
+
 
 def test_key_blocking_first_char():
     A = ["apple", "banana", "avocado"]
@@ -77,6 +86,7 @@ def test_sorted_neighborhood_self_join_window():
 
 # --- blocking metrics -------------------------------------------------------------
 
+
 def test_blocking_metrics():
     cand = [(0, 0), (1, 1), (0, 1)]
     true = [(0, 0), (1, 1), (2, 2)]
@@ -88,6 +98,7 @@ def test_blocking_metrics():
 
 
 # --- score_candidates (sparse ScoreMatrix seam) -----------------------------------
+
 
 def test_score_candidates_builds_sparse_score_matrix():
     A = ["apple", "banana"]
@@ -120,6 +131,7 @@ def test_blocked_scoring_feeds_a_matcher():
 
 # --- meta-blocking ----------------------------------------------------------------
 
+
 def test_metablock_dedupe_and_prune():
     assert list(metablock.dedupe_pairs([(0, 0), (0, 0), (1, 1)])) == [(0, 0), (1, 1)]
     # item a0 appears in 3 candidates; prune with max_degree=2 removes its pairs
@@ -128,6 +140,7 @@ def test_metablock_dedupe_and_prune():
 
 
 # --- brute-force kNN blocker (pure numpy, core) -----------------------------------
+
 
 def test_brute_knn_blocking_returns_top_k():
     A = ["apple pie", "banana bread"]
@@ -140,6 +153,7 @@ def test_brute_knn_blocking_returns_top_k():
 
 
 # --- optional-dep blockers are registered but lazy --------------------------------
+
 
 def test_ann_and_lsh_blockers_registered():
     assert "ann" in blockers and "minhash_lsh" in blockers
@@ -156,6 +170,7 @@ def test_minhash_lsh_if_available():
 
 
 # --- review-driven fixes ----------------------------------------------------------
+
 
 def test_brute_knn_self_join_emits_exact_k_no_overproduce():
     # three identical items (all tie at max similarity): each row must emit exactly k=1,

@@ -25,6 +25,7 @@ from equate.compare import vector as V
 
 # --- string comparators -----------------------------------------------------------
 
+
 def test_ratio_and_levenshtein():
     assert S.ratio("abc", "abc") == 1.0
     assert S.levenshtein_distance("kitten", "sitting") == 3
@@ -48,6 +49,7 @@ def test_comparator_metas_declare_metricness():
 
 # --- numeric / geo ----------------------------------------------------------------
 
+
 def test_decay_functions():
     assert NG.exp_decay(1.0)(0, 0) == 1.0
     assert NG.linear_decay(10.0)(0, 5) == 0.5
@@ -64,6 +66,7 @@ def test_haversine_and_geo_similarity():
 
 # --- vector -----------------------------------------------------------------------
 
+
 def test_vector_comparators():
     u, v = [1.0, 0.0], [1.0, 1.0]
     assert V.cosine(u, u) == 1.0
@@ -74,8 +77,16 @@ def test_vector_comparators():
 
 # --- registry ---------------------------------------------------------------------
 
+
 def test_registry_has_core_comparators():
-    for name in ("ratio", "levenshtein", "monge_elkan", "cosine", "haversine", "exp_decay"):
+    for name in (
+        "ratio",
+        "levenshtein",
+        "monge_elkan",
+        "cosine",
+        "haversine",
+        "exp_decay",
+    ):
         assert name in comparators
 
 
@@ -92,6 +103,7 @@ def test_resolve_comparator_unknown_option_raises():
 
 
 # --- direct() / featurized() constructors -----------------------------------------
+
 
 def test_direct_builds_matrix_not_indexable():
     build = direct(S.ratio)
@@ -113,6 +125,7 @@ def test_featurized_builds_indexable_matrix_like_similarity_matrix():
 
 
 # --- comparison vectors & combiners -----------------------------------------------
+
 
 def test_comparison_vector_and_combiners():
     fields = {"name": S.levenshtein, "city": S.ratio}
@@ -147,6 +160,7 @@ def test_threshold_calibrator():
 
 # --- optional-dep comparators are registered but lazy -----------------------------
 
+
 def test_optional_string_comparators_registered():
     assert "jaro_winkler" in comparators and "phonetic" in comparators
 
@@ -158,6 +172,7 @@ def test_jaro_winkler_if_available():
 
 
 # --- review-driven fixes ----------------------------------------------------------
+
 
 def test_cosine_numerically_stable_for_huge_vectors():
     # identical huge vectors must be similarity 1.0 (no overflow -> NaN)

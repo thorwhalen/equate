@@ -37,7 +37,16 @@ def test_file_store_roundtrip_and_containment(tmp_path):
     assert list(s) == ["suite/a.csv"] and s["suite/a.csv"] == b"x" and len(s) == 1
     assert "suite/a.csv" in s and "nope" not in s
     assert not list(tmp_path.rglob("*.part"))  # atomic write leaves no temp file
-    for bad in ("../escape", "/abs/path", "", ".", "a//b", "..\\..\\evil", "c:/x", "f.part"):
+    for bad in (
+        "../escape",
+        "/abs/path",
+        "",
+        ".",
+        "a//b",
+        "..\\..\\evil",
+        "c:/x",
+        "f.part",
+    ):
         with pytest.raises(KeyError):
             s[bad] = b"x"
     del s["suite/a.csv"]
@@ -89,14 +98,47 @@ def _zip(files):
 
 
 ABT = [
-    {"id": "552", "name": "Sony Turntable PSLX350H", "description": "belt drive", "price": ""},
-    {"id": "580", "name": "Bose Acoustimass 5 ® speaker", "description": "", "price": "399"},
-    {"id": "604", "name": "Linksys EtherFast switch", "description": "8 port", "price": "29"},
+    {
+        "id": "552",
+        "name": "Sony Turntable PSLX350H",
+        "description": "belt drive",
+        "price": "",
+    },
+    {
+        "id": "580",
+        "name": "Bose Acoustimass 5 ® speaker",
+        "description": "",
+        "price": "399",
+    },
+    {
+        "id": "604",
+        "name": "Linksys EtherFast switch",
+        "description": "8 port",
+        "price": "29",
+    },
 ]
 BUY = [
-    {"id": "10011646", "name": "Linksys EtherFast 8-port switch", "description": "", "manufacturer": "LINKSYS", "price": ""},
-    {"id": "10140760", "name": "Sony PSLX350H turntable", "description": "", "manufacturer": "Sony", "price": ""},
-    {"id": "10221960", "name": "Bose Acoustimass 5 speakers", "description": "", "manufacturer": "Bose", "price": ""},
+    {
+        "id": "10011646",
+        "name": "Linksys EtherFast 8-port switch",
+        "description": "",
+        "manufacturer": "LINKSYS",
+        "price": "",
+    },
+    {
+        "id": "10140760",
+        "name": "Sony PSLX350H turntable",
+        "description": "",
+        "manufacturer": "Sony",
+        "price": "",
+    },
+    {
+        "id": "10221960",
+        "name": "Bose Acoustimass 5 speakers",
+        "description": "",
+        "manufacturer": "Bose",
+        "price": "",
+    },
 ]
 MAP = [
     {"idAbt": "552", "idBuy": "10140760"},
@@ -117,33 +159,73 @@ def leipzig_store():
 
 
 def deepmatcher_store():
-    table = lambda rows: _csv([{"id": str(i), **{k: v for k, v in r.items() if k != "id"}} for i, r in enumerate(rows)])  # noqa: E731
-    labelled = lambda rows: _csv([{"ltable_id": str(i), "rtable_id": str(j), "label": str(y)} for i, j, y in rows])  # noqa: E731
+    table = lambda rows: _csv(
+        [
+            {"id": str(i), **{k: v for k, v in r.items() if k != "id"}}
+            for i, r in enumerate(rows)
+        ]
+    )  # noqa: E731
+    labelled = lambda rows: _csv(
+        [
+            {"ltable_id": str(i), "rtable_id": str(j), "label": str(y)}
+            for i, j, y in rows
+        ]
+    )  # noqa: E731
     return {
         "abt_buy/deepmatcher/tableA.csv": table(ABT),
         "abt_buy/deepmatcher/tableB.csv": table(BUY),
         "abt_buy/deepmatcher/train.csv": labelled([(0, 1, 1), (0, 0, 0)]),
         "abt_buy/deepmatcher/valid.csv": labelled([(1, 2, 1)]),
-        "abt_buy/deepmatcher/test.csv": labelled([(2, 1, 0)]),  # (2, 0) is a match nobody labelled
+        "abt_buy/deepmatcher/test.csv": labelled(
+            [(2, 1, 0)]
+        ),  # (2, 0) is a match nobody labelled
     }
 
 
 def _offer(id_, cluster, title):
-    return {"id": id_, "brand": "None", "title": title, "description": "None", "price": "9", "priceCurrency": "USD", "cluster_id": cluster, "label": cluster, "unseen": "True"}
+    return {
+        "id": id_,
+        "brand": "None",
+        "title": title,
+        "description": "None",
+        "price": "9",
+        "priceCurrency": "USD",
+        "cluster_id": cluster,
+        "label": cluster,
+        "unseen": "True",
+    }
 
 
 def wdc_store(*, leak=False, n_test_clusters=2):
-    train = [_offer("1", "c1", "red shoe"), _offer("2", "c1", "red shoes"), _offer("3", "c2", "blue hat"), _offer("4", "c2", "hat blue")]
+    train = [
+        _offer("1", "c1", "red shoe"),
+        _offer("2", "c1", "red shoes"),
+        _offer("3", "c2", "blue hat"),
+        _offer("4", "c2", "hat blue"),
+    ]
     valid = [_offer("5", "c3", "green cup"), _offer("6", "c3", "cup green")]
-    test = [_offer("7", "c4", "black phone x1"), _offer("8", "c4", "phone x1 black"), _offer("9", "c5", "white phone x2"), _offer("10", "c5", "phone x2 white")]
+    test = [
+        _offer("7", "c4", "black phone x1"),
+        _offer("8", "c4", "phone x1 black"),
+        _offer("9", "c5", "white phone x2"),
+        _offer("10", "c5", "phone x2 white"),
+    ]
     for k in range(2, n_test_clusters):
-        test += [_offer(f"t{k}a", f"z{k}", f"model {k} gadget"), _offer(f"t{k}b", f"z{k}", f"gadget model {k}")]
+        test += [
+            _offer(f"t{k}a", f"z{k}", f"model {k} gadget"),
+            _offer(f"t{k}b", f"z{k}", f"gadget model {k}"),
+        ]
     if leak:
-        test[0] = dict(train[0], cluster_id="c4")  # a test offer that is also a train offer
+        test[0] = dict(
+            train[0], cluster_id="c4"
+        )  # a test offer that is also a train offer
         test[0]["id"] = "1"
     gz = lambda offers: gzip.compress("\n".join(json.dumps(o) for o in offers).encode())  # noqa: E731
     stem = "wdcproductsmulti80cc20rnd"
-    files = {f"{stem}000un_train_large.json.gz": gz(train), f"{stem}000un_valid_large.json.gz": gz(valid)}
+    files = {
+        f"{stem}000un_train_large.json.gz": gz(train),
+        f"{stem}000un_valid_large.json.gz": gz(valid),
+    }
     for un in ("000", "050", "100"):
         files[f"{stem}{un}un_gs.json.gz"] = gz(test)
     return {"wdc_products/80multi.zip": _zip(files)}
@@ -153,7 +235,9 @@ def wdc_store(*, leak=False, n_test_clusters=2):
 
 
 def test_registry_lists_the_standard_suites():
-    assert {"abt_buy", "amazon_google", "dblp_acm", "wdc_products", "toy_names"} <= set(list_benchmarks())
+    assert {"abt_buy", "amazon_google", "dblp_acm", "wdc_products", "toy_names"} <= set(
+        list_benchmarks()
+    )
 
 
 def test_leipzig_loader_complete_gold_records_and_meta():
@@ -161,21 +245,37 @@ def test_leipzig_loader_complete_gold_records_and_meta():
     ds = load_benchmark("abt_buy", store=store, download=False, verify=False)
     assert (len(ds.a), len(ds.b)) == (3, 3)
     assert ds.gold == frozenset({(0, 1), (1, 2), (2, 0)})
-    assert "id" not in ds.a[0] and ds.a[0]["price"] is None  # ids out of the record; '' -> None
+    assert (
+        "id" not in ds.a[0] and ds.a[0]["price"] is None
+    )  # ids out of the record; '' -> None
     assert "®" in ds.a[1]["name"]  # decoded from Windows-1252
     assert ds.ids["a"] == ["552", "580", "604"] and "record_ids" not in ds.meta
     assert "CC BY 4.0" in ds.meta["license"] and "complete" in ds.meta["gold"]
     prof = ds.meta["difficulty_profile"]
-    assert prof["n_gold"] == 3 and 0 <= prof["linearity"] <= 1 and prof["level"] in ("easy", "moderate", "hard")
+    assert (
+        prof["n_gold"] == 3
+        and 0 <= prof["linearity"] <= 1
+        and prof["level"] in ("easy", "moderate", "hard")
+    )
     assert "linearity" in ds.meta["difficulty"]
-    assert any(k.startswith("abt_buy/profile-v") for k in store)  # measured once, cached
+    assert any(
+        k.startswith("abt_buy/profile-v") for k in store
+    )  # measured once, cached
     assert ds.pairs is None and ds.splits is None
 
 
 def test_deepmatcher_source_keeps_canonical_pairs_and_flags_incomplete_gold():
-    ds = load_benchmark("abt_buy", source="deepmatcher", store=deepmatcher_store(), download=False, verify=False)
+    ds = load_benchmark(
+        "abt_buy",
+        source="deepmatcher",
+        store=deepmatcher_store(),
+        download=False,
+        verify=False,
+    )
     assert ds.name == "abt_buy_deepmatcher"  # never merged with the Leipzig rows
-    assert ds.pairs["train"] == ((0, 1, 1), (0, 0, 0)) and ds.pairs["test"] == ((2, 1, 0),)
+    assert ds.pairs["train"] == ((0, 1, 1), (0, 0, 0)) and ds.pairs["test"] == (
+        (2, 1, 0),
+    )
     assert ds.gold == frozenset({(0, 1), (1, 2)})  # labelled positives only
     assert ds.meta["gold"].startswith("incomplete")
 
@@ -192,20 +292,37 @@ def test_unknown_source_or_variant_is_an_error():
 def test_wdc_loader_canonical_split_and_gold():
     ds = load_benchmark("wdc_products", store=wdc_store(), download=False, verify=False)
     assert ds.name == "wdc_products_80cc_100un_large"
-    assert {k: (len(a), len(b)) for k, (a, b) in ds.splits.items()} == {"train": (2, 2), "val": (1, 1), "test": (2, 2)}
+    assert {k: (len(a), len(b)) for k, (a, b) in ds.splits.items()} == {
+        "train": (2, 2),
+        "val": (1, 1),
+        "test": (2, 2),
+    }
     test_a, test_b = ds.splits["test"]
     test_gold = {(i, j) for i, j in ds.gold if i in test_a and j in test_b}
     assert len(test_gold) == 2  # each two-offer test cluster is one a/b match
     assert all(ds.a[i]["title"].split()[1] in ds.b[j]["title"] for i, j in test_gold)
-    assert all(set(r) == {"brand", "title", "description", "price", "priceCurrency"} for r in ds.a)
+    assert all(
+        set(r) == {"brand", "title", "description", "price", "priceCurrency"}
+        for r in ds.a
+    )
     assert ds.a[0]["brand"] is None  # the string 'None' is missing
     assert ds.meta["leakage"] == {"train_test": 0, "val_test": 0}
-    assert ds.meta["variant"] == {"corner_cases": 80, "unseen": 100, "dev_size": "large"}
+    assert ds.meta["variant"] == {
+        "corner_cases": 80,
+        "unseen": 100,
+        "dev_size": "large",
+    }
 
 
 def test_wdc_loader_reports_publisher_leakage():
     with pytest.warns(UserWarning, match="also appear in train"):
-        ds = load_benchmark("wdc_products", unseen=50, store=wdc_store(leak=True), download=False, verify=False)
+        ds = load_benchmark(
+            "wdc_products",
+            unseen=50,
+            store=wdc_store(leak=True),
+            download=False,
+            verify=False,
+        )
     assert ds.meta["leakage"]["train_test"] == 1
 
 
@@ -227,7 +344,9 @@ def test_harness_uses_the_canonical_split_by_default():
 
 
 def test_harness_split_modes():
-    wdc = load_benchmark("wdc_products", store=wdc_store(), download=False, verify=False)
+    wdc = load_benchmark(
+        "wdc_products", store=wdc_store(), download=False, verify=False
+    )
     toy = load_benchmark("toy_names", n_entities=40)
     with pytest.raises(ValueError, match="no canonical split"):
         benchmark_matcher(on=[toy], split="canonical")
@@ -243,7 +362,10 @@ def test_canonical_fit_gets_train_and_val_parts():
     got = {}
 
     def fit(tr_a, tr_b, tr_pairs, va_a, va_b, va_pairs):
-        got.update(train=(len(tr_a), len(tr_b), len(tr_pairs)), val=(len(va_a), len(va_b), len(va_pairs)))
+        got.update(
+            train=(len(tr_a), len(tr_b), len(tr_pairs)),
+            val=(len(va_a), len(va_b), len(va_pairs)),
+        )
         return match
 
     benchmark_matcher(on=[ds], fit=fit)
@@ -254,7 +376,9 @@ def test_canonical_fit_gets_train_and_val_parts():
 
 
 def test_linearity_bounds_and_ties():
-    assert linearity(["apple pie", "kiwi"], ["kiwi", "apple pie"], {(0, 1), (1, 0)}) == 1.0
+    assert (
+        linearity(["apple pie", "kiwi"], ["kiwi", "apple pie"], {(0, 1), (1, 0)}) == 1.0
+    )
     assert linearity(["a"], ["b"], set()) == 0.0
     # identical texts tie at one score: the only cut keeps all 4 pairs -> F1 = 2*2/(4+2)
     assert linearity(["x", "x"], ["x", "x"], {(0, 0), (1, 1)}) == pytest.approx(2 / 3)
@@ -281,12 +405,18 @@ def test_benchmark_container_stays_positional():
 )
 def test_real_downloads_match_pinned_hashes(tmp_path):
     store = FileStore(tmp_path)
-    expected = {"abt_buy": (1081, 1092, 1097), "amazon_google": (1363, 3226, 1300), "dblp_acm": (2616, 2294, 2224)}
+    expected = {
+        "abt_buy": (1081, 1092, 1097),
+        "amazon_google": (1363, 3226, 1300),
+        "dblp_acm": (2616, 2294, 2224),
+    }
     for name, sizes in expected.items():
         ds = load_benchmark(name, store=store, profile=False)
         assert (len(ds.a), len(ds.b), len(ds.gold)) == sizes
         dm = load_benchmark(name, source="deepmatcher", store=store, profile=False)
-        assert len(dm.gold) < len(ds.gold)  # DeepMatcher's labelled positives are a subset
+        assert len(dm.gold) < len(
+            ds.gold
+        )  # DeepMatcher's labelled positives are a subset
     wdc = load_benchmark("wdc_products", store=store, profile=False)
     assert {k: len(v[0]) for k, v in wdc.splits.items()}["test"] == 500
 
@@ -295,7 +425,12 @@ def test_real_downloads_match_pinned_hashes(tmp_path):
 
 
 def test_wdc_test_gold_is_not_the_diagonal():
-    ds = load_benchmark("wdc_products", store=wdc_store(n_test_clusters=30), download=False, verify=False)
+    ds = load_benchmark(
+        "wdc_products",
+        store=wdc_store(n_test_clusters=30),
+        download=False,
+        verify=False,
+    )
     identity = lambda a, b: [(i, i) for i in range(min(len(a), len(b)))]  # noqa: E731
     assert benchmark_matcher(identity, on=[ds]).rows[0].f1 < 0.3
 

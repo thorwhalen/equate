@@ -55,6 +55,57 @@ resolve(["Jon Smith", "Kate Doe"], ["John Smith"], ["Kate Do"], threshold=0.8).g
 
 `equate.cluster.classify` adds a Fellegi-Sunter three-way decision (match / possible / non-match) with unsupervised EM.
 
+## Several sources of the same items: `align_sources` and `fuse`
+
+Several sources often describe the same items, each partially and each with its own errors: a recording's transcript (good timing, noisy text), the printed list it was read from (exact text, no timing), a scan of that list (exact layout, character errors). `align_sources` decides which records are the same item, and `fuse` merges each item field by field, so each source corrects the others and the places where they disagree are listed for a person to check.
+
+```python
+from equate import align_sources, fuse
+
+sheet = [  # the printed list: exact text and translations, no timing; one typo
+    {"text": "bonjour", "en": "hello"},
+    {"text": "merci beaucoup", "en": "thank you very much"},
+    {"text": "au revior", "en": "goodbye"},
+    {"text": "s'il vous plait", "en": "please"},
+    {"text": "excusez-moi", "en": "excuse me"},
+    {"text": "bonne nuit", "en": "good night"},
+]
+audio = [  # the recording: timed, noisy transcript; two items read swapped, one skipped
+    {"text": "bonjour", "start": 0.0},
+    {"text": "merci bocou", "start": 1.2},
+    {"text": "au revoir", "start": 2.6},
+    {"text": "excusez moi", "start": 3.9},
+    {"text": "sil vous plait", "start": 5.1},
+]
+ocr = [  # a scan of the list: character errors
+    {"text": "bonjour", "page": 1},
+    {"text": "merci beaucoup", "page": 1},
+    {"text": "au revoir", "page": 1},
+    {"text": "s'il vous p1ait", "page": 1},
+    {"text": "excusez-moi", "page": 2},
+    {"text": "bonne nuit", "page": 2},
+]
+
+aligned = align_sources({"sheet": sheet, "audio": audio, "ocr": ocr})
+fused = fuse(aligned, trust={"audio": {"text": 0.3}, "ocr": {"text": 0.8}})
+
+[(item.values["text"], item.values.get("start")) for item in fused]
+# [('bonjour', 0.0), ('merci beaucoup', 1.2), ('au revoir', 2.6),
+#  ("s'il vous plait", 5.1), ('excusez-moi', 3.9), ('bonne nuit', None)]
+[(k, c.field, c.votes[1].value) for k, c in fused.conflicts]
+# [(2, 'text', 'au revior'), (3, 'text', "s'il vous p1ait")]
+[item.reordered for item in fused], fused[5].missing
+# ([False, False, False, True, True, False], ['audio'])
+```
+
+The fused list is better than any one source: every text is right (the scan and the recording outvote the sheet's typo; the sheet outvotes the scan's `p1ait`), every item read aloud has its time, and the translations and pages come along. The planted errors are what comes out for review: both text disagreements are `conflicts`, the swapped pair is `reordered`, and the skipped item is `missing` its audio.
+
+- **`compare`** says how records are scored: on the string fields they share by default (`ratio`), or `{field: comparator}` with equate's comparators or your own callables, so domain knowledge (a phonetic reading, a unit normaliser) is injected. A source with fields the others lack is compared on what it shares.
+- **`order`**: `'monotone'` (default) is a progressive multiple sequence alignment (Needleman-Wunsch over records), so an item missing from one source is a gap, not a shift, and an item moved up to `window` positions (a local swap) is recovered and flagged; `'free'` is an optimal assignment; or pass your own `gain -> pairs` callable.
+- **A group holds at most one record per source**, so segmentation is yours: if one source merges two items into one record, or splits one over two, fix that before aligning.
+- **Each group** has its records, pairwise scores and a `margin` (its score minus the best a nearby rival record would get in its place), which is low where the alignment is unsure.
+- **`fuse`** takes `trust` per source or per source and field (equal by default), `agree` (when two values count as the same; normalised `==` by default, so give numeric fields such as times a tolerance: `agree={'start': lambda a, b: abs(a - b) < 0.1}`) and `conflict_ratio` (how heavy a losing vote must be to be a conflict). Every value records the source it came from (`item.provenance`).
+
 ## Tables: join keys, near-duplicate columns, completion
 
 Columns are objects too. Each is featurized as its set of values and compared by overlap, so no header names are needed.

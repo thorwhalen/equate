@@ -24,8 +24,16 @@ IDENTITY = {0: 0, 1: 1, 2: 2}
 
 # --- registry & resolve -----------------------------------------------------------
 
+
 def test_registry_has_matchers():
-    for name in ("optimal", "hungarian", "greedy", "stable", "max_weight", "kuhn_munkres"):
+    for name in (
+        "optimal",
+        "hungarian",
+        "greedy",
+        "stable",
+        "max_weight",
+        "kuhn_munkres",
+    ):
         assert name in matchers
 
 
@@ -41,6 +49,7 @@ def test_matcher_rejects_config():
 
 
 # --- assignment matchers ----------------------------------------------------------
+
 
 def test_optimal_greedy_stable_agree_on_diagonal():
     assert dict(optimal_matching(DIAG)) == IDENTITY
@@ -67,12 +76,15 @@ def test_optimal_sparse_lap_routing():
 
 # --- soft / optimal transport -----------------------------------------------------
 
+
 def test_soft_match_and_harden_if_ot_available():
     pytest.importorskip("ot")
     plan = soft_match(DIAG, reg=0.05)
     assert plan.shape == (3, 3)
     assert np.all(plan >= 0)
-    assert dict(harden(plan)) == IDENTITY  # the plan's mass concentrates on the diagonal
+    assert (
+        dict(harden(plan)) == IDENTITY
+    )  # the plan's mass concentrates on the diagonal
 
 
 def test_soft_match_requires_extra_when_absent():
@@ -90,7 +102,11 @@ def test_soft_match_requires_extra_when_absent():
 
 KEYS = ["apple pie", "banana split", "cherry tart"]
 VALS = ["cherry tarte", "aple pie", "banana split"]
-EXPECTED = {"apple pie": "aple pie", "banana split": "banana split", "cherry tart": "cherry tarte"}
+EXPECTED = {
+    "apple pie": "aple pie",
+    "banana split": "banana split",
+    "cherry tart": "cherry tarte",
+}
 
 
 def test_match_returns_matching_with_scores_and_labels():
@@ -106,8 +122,14 @@ def test_match_default_featurized_route():
 
 
 def test_match_how_greedy_and_stable():
-    assert dict(match(KEYS, VALS, compare="ratio", how="greedy").labeled_pairs()) == EXPECTED
-    assert dict(match(KEYS, VALS, compare="ratio", how="stable").labeled_pairs()) == EXPECTED
+    assert (
+        dict(match(KEYS, VALS, compare="ratio", how="greedy").labeled_pairs())
+        == EXPECTED
+    )
+    assert (
+        dict(match(KEYS, VALS, compare="ratio", how="stable").labeled_pairs())
+        == EXPECTED
+    )
 
 
 def test_match_blocked_produces_sparse_and_still_matches():
@@ -128,6 +150,7 @@ def test_match_how_soft_if_ot_available():
 
 # --- review-driven fixes ----------------------------------------------------------
 
+
 def test_optimal_sparse_keeps_explicit_zero_candidate_minimize():
     # (0,0)=0 is a perfect distance-0 candidate; scipy's sparse solver would drop it
     S = csr_matrix(([0.0, 10.0, 10.0, 1.0], ([0, 0, 1, 1], [0, 1, 0, 1])), shape=(2, 2))
@@ -137,7 +160,9 @@ def test_optimal_sparse_keeps_explicit_zero_candidate_minimize():
 def test_optimal_sparse_partial_matching_drops_hole_assignments():
     # column 2 is absent everywhere; row 2's only candidates are taken by rows 0,1,
     # so row 2 has no free real candidate and is left unmatched (partial matching)
-    S = csr_matrix(([-1.0, -1.0, -2.0, -2.0], ([0, 1, 2, 2], [0, 1, 0, 1])), shape=(3, 3))
+    S = csr_matrix(
+        ([-1.0, -1.0, -2.0, -2.0], ([0, 1, 2, 2], [0, 1, 0, 1])), shape=(3, 3)
+    )
     assert dict(optimal_matching(S, sense="maximize")) == {0: 0, 1: 1}
 
 
@@ -199,7 +224,10 @@ def _assert_valid_partial_matching(name, pairs, sm):
 # so a matcher that returns transposed (col, row) pairs — an orientation bug — is caught here
 # (a symmetric anti-diagonal fixture would silently pass it). Values are chosen so a hole,
 # if densified to 0, would win: negative for maximize, positive for minimize.
-_CYCLE = ([0, 1, 2], [1, 2, 0])  # candidates (0,1), (1,2), (2,0); diagonal + rest absent
+_CYCLE = (
+    [0, 1, 2],
+    [1, 2, 0],
+)  # candidates (0,1), (1,2), (2,0); diagonal + rest absent
 _RECT = ([0, 1], [1, 2])  # a 2x3 blocked matrix: candidates (0,1), (1,2)
 # FORCED-PARTIAL: all three rows' only candidate is column 0, so a full-cardinality solver
 # MUST assign two rows onto holes — this is the fixture that actually exercises drop_holes.
@@ -219,7 +247,9 @@ _FORCED = ([0, 1, 2], [0, 0, 0])
         ("minimize", [5.0, 6.0, 7.0], _FORCED, (3, 3)),
     ],
 )
-def test_matcher_valid_partial_matching_on_blocked_input(name, sense, data, rowcol, shape):
+def test_matcher_valid_partial_matching_on_blocked_input(
+    name, sense, data, rowcol, shape
+):
     sm = ScoreMatrix(csr_matrix((data, rowcol), shape=shape), sense=sense)
     _assert_valid_partial_matching(name, _run_matcher_or_skip(name, sm), sm)
 
@@ -227,7 +257,9 @@ def test_matcher_valid_partial_matching_on_blocked_input(name, sense, data, rowc
 @pytest.mark.parametrize("name", matchers.names())
 def test_matcher_leaves_row_without_candidate_unmatched(name):
     # row 2 has NO candidate at all -> it must be left unmatched, never assigned a hole
-    sm = ScoreMatrix(csr_matrix(([0.9, 0.8], ([0, 1], [0, 1])), shape=(3, 3)), sense="maximize")
+    sm = ScoreMatrix(
+        csr_matrix(([0.9, 0.8], ([0, 1], [0, 1])), shape=(3, 3)), sense="maximize"
+    )
     pairs = _run_matcher_or_skip(name, sm)
     _assert_valid_partial_matching(name, pairs, sm)
     assert dict(pairs) == {0: 0, 1: 1}
@@ -240,13 +272,20 @@ def test_legacy_matcher_output_is_hole_filtered_at_the_boundary():
         arr = np.asarray(scores, dtype=float)
         return [(i, int(arr[i].argmax())) for i in range(arr.shape[0])]
 
-    sm = ScoreMatrix(csr_matrix(([0.9, 0.8], ([0, 1], [0, 1])), shape=(3, 3)), sense="maximize")
+    sm = ScoreMatrix(
+        csr_matrix(([0.9, 0.8], ([0, 1], [0, 1])), shape=(3, 3)), sense="maximize"
+    )
     pairs = list(resolve_matcher(per_row_argmax)(sm))
     assert pairs == [(0, 0), (1, 1)]  # the (2, x) hole row 2 argmaxed into is dropped
 
     # and end-to-end through the facade: no fabricated 0.0 score for a non-candidate
-    m = match(["aa", "bb", "zz"], ["aa", "bb", "qq"], compare="ratio",
-              block=lambda A, B: [(0, 0), (1, 1)], how=per_row_argmax)
+    m = match(
+        ["aa", "bb", "zz"],
+        ["aa", "bb", "qq"],
+        compare="ratio",
+        block=lambda A, B: [(0, 0), (1, 1)],
+        how=per_row_argmax,
+    )
     assert list(m) == [(0, 0), (1, 1)] and 0.0 not in m.scores
 
 
@@ -264,6 +303,7 @@ def test_soft_never_selects_a_hole(sense):
 
 
 # --- ScoreMatrix as the native matcher input (the deep contract) ------------------
+
 
 def test_matchers_accept_scorematrix_natively():
     S = csr_matrix(([0.9, 0.8, 0.7], ([0, 1, 2], [0, 1, 2])), shape=(3, 3))
@@ -337,7 +377,11 @@ def test_resolve_matcher_legacy_contract_variants_get_raw_array():
         return []
 
     S = csr_matrix(([-0.9, -0.8], ([0, 1], [1, 0])), shape=(2, 2))
-    for key, m in [("kwargs", kwargs_matcher), ("named", named_dir_matcher), ("nodir", no_dir_matcher)]:
+    for key, m in [
+        ("kwargs", kwargs_matcher),
+        ("named", named_dir_matcher),
+        ("nodir", no_dir_matcher),
+    ]:
         resolve_matcher(m)(S)
         assert seen[key] == "ndarray", f"{key} matcher got {seen[key]}, not a raw array"
 
