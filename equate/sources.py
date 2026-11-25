@@ -96,6 +96,22 @@ def _field_comparator(spec, field_name):
     return cmp
 
 
+#: reducers that take numbers, not a ``{field: score}`` mapping (beyond ``statistics``)
+_NUMBER_REDUCERS = (max, min, sum)
+
+
+def _as_combiner(combine):
+    """``combine`` as a ``{field: score}`` combiner: a reducer of numbers (``max``,
+    ``min``, ``sum``, a ``statistics`` function) is given the scores, not the mapping,
+    whose iteration would yield field names."""
+    if (
+        combine in _NUMBER_REDUCERS
+        or getattr(combine, "__module__", None) == "statistics"
+    ):
+        return lambda cv: combine(cv.values())
+    return combine
+
+
 def record_similarity(compare=None, *, combine=mean, missing=0.0):
     """Build a record comparator ``(a, b) -> float`` from per-field comparators.
 
@@ -108,10 +124,16 @@ def record_similarity(compare=None, *, combine=mean, missing=0.0):
 
     The per-field scores are a :func:`~equate.compare.vectorize.comparison_vector` over
     the fields **both records actually have** (a field missing or ``None`` on either side
-    is left out, not scored zero), reduced by ``combine`` (default the mean; any combiner
-    of :mod:`equate.compare.vectorize`, e.g. ``weighted_sum``, works). So a source with
-    extra fields is compared on what it shares. Records sharing no compared field score
-    ``missing``.
+    is left out, not scored zero), reduced by ``combine``: a combiner of
+    :mod:`equate.compare.vectorize`, which takes the ``{field: score}`` mapping (the
+    default ``mean``, ``weighted_sum``, ``fellegi_sunter``), or a reducer of numbers
+    (``max``, ``min``, ``sum``, ``statistics.median``, ...), which gets the scores. So a
+    source with extra fields is compared on what it shares. Records sharing no compared
+    field score ``missing``.
+
+    >>> sim = record_similarity({'fr': 'ratio', 'zh': 'ratio'}, combine=max)
+    >>> sim({'fr': 'merci', 'zh': '谢谢'}, {'fr': 'merci', 'zh': '鞋'})  # the better field
+    1.0
 
     >>> sim = record_similarity({'text': 'ratio'})
     >>> sim({'text': 'merci'}, {'text': 'merci', 'pinyin': 'xiexie'})
@@ -121,6 +143,7 @@ def record_similarity(compare=None, *, combine=mean, missing=0.0):
     """
     if callable(compare):
         return compare
+    combine = _as_combiner(combine)
     if compare is not None and not isinstance(compare, Mapping):
         raise TypeError(
             f"compare must be None, a mapping {{field: comparator}} or a callable, "

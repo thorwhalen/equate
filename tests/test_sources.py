@@ -1,6 +1,7 @@
 """Tests for multi-source alignment (``align_sources``) and field-by-field fusion (``fuse``)."""
 
 import json
+import statistics
 from collections import namedtuple
 from dataclasses import asdict
 
@@ -470,3 +471,21 @@ def test_fuse_zero_trust_is_never_a_conflict_and_nan_agrees():
     assert fuse(al)[0].conflicts
     zero = fuse(al, trust={"a": {"n": 0}, "b": {"n": 0}})
     assert not zero[0].conflicts and zero[0].values["n"] == 1
+
+
+@pytest.mark.parametrize(
+    "combine, expected",
+    [(max, 1.0), (min, 0.0), (sum, 1.0), (statistics.median, 0.5)],
+)
+def test_record_similarity_takes_number_reducers(combine, expected):
+    sim = record_similarity({"fr": "ratio", "zh": "ratio"}, combine=combine)
+    assert sim({"fr": "merci", "zh": "ab"}, {"fr": "merci", "zh": "cd"}) == expected
+
+
+def test_record_similarity_mapping_combiners_still_get_field_names():
+    from equate.compare.vectorize import weighted_sum
+
+    sim = record_similarity(
+        {"fr": "ratio", "zh": "ratio"}, combine=weighted_sum({"fr": 2.0, "zh": 0.0})
+    )
+    assert sim({"fr": "merci", "zh": "ab"}, {"fr": "merci", "zh": "cd"}) == 2.0
