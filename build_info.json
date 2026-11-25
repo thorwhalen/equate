@@ -1,32 +1,32 @@
 {
   "schema_version": 1,
-  "built_at": "2026-11-25T14:49:53Z",
+  "built_at": "2026-11-25T15:00:01Z",
   "package": {
     "name": "equate",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "display_name": "equate",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "ca79a433912d212d0d54d746c94a77fdcba2b95f",
-    "short_commit": "ca79a43",
+    "commit": "3ec613a8b861280f21b973fdc8c1b70e4e5790a3",
+    "short_commit": "3ec613a",
     "branch": "master",
     "tags": [],
     "dirty": false,
     "remote_url": "https://github.com/thorwhalen/equate",
-    "commit_url": "https://github.com/thorwhalen/equate/commit/ca79a433912d212d0d54d746c94a77fdcba2b95f",
+    "commit_url": "https://github.com/thorwhalen/equate/commit/3ec613a8b861280f21b973fdc8c1b70e4e5790a3",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "thorwhalen/equate",
-    "sha": "ca79a433912d212d0d54d746c94a77fdcba2b95f",
+    "sha": "3ec613a8b861280f21b973fdc8c1b70e4e5790a3",
     "sha_in_history": true,
     "ref": "refs/heads/master",
     "ref_name": "master",
-    "run_id": "45638000677",
-    "run_url": "https://github.com/thorwhalen/equate/actions/runs/45638000677",
+    "run_id": "45639865218",
+    "run_url": "https://github.com/thorwhalen/equate/actions/runs/45639865218",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -60,16 +60,16 @@
   },
   "pypi": {
     "checked": true,
-    "latest": "0.1.6",
+    "latest": "0.1.7",
     "relation": "behind",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/equate && cd equate\ngit checkout ca79a433912d212d0d54d746c94a77fdcba2b95f\npip install \"epythet==0.2.25\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/thorwhalen/equate && cd equate\ngit checkout 3ec613a8b861280f21b973fdc8c1b70e4e5790a3\npip install \"epythet==0.2.25\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
     "aligned": false,
     "notes": [
-      "The documented version (0.1.5) is behind the latest release on PyPI (0.1.6): `pip install equate` gives newer code than these docs describe."
+      "The documented version (0.1.6) is behind the latest release on PyPI (0.1.7): `pip install equate` gives newer code than these docs describe."
     ]
   }
 }

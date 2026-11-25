@@ -183,10 +183,18 @@ Build a record comparator `(a, b) -> float` from per-field comparators.
 
 The per-field scores are a [`comparison_vector()`](equate.compare.vectorize.html.md#equate.compare.vectorize.comparison_vector) over
 the fields **both records actually have** (a field missing or `None` on either side
-is left out, not scored zero), reduced by `combine` (default the mean; any combiner
-of [`equate.compare.vectorize`](equate.compare.vectorize.html.md#module-equate.compare.vectorize), e.g. `weighted_sum`, works). So a source with
-extra fields is compared on what it shares. Records sharing no compared field score
-`missing`.
+is left out, not scored zero), reduced by `combine`: a combiner of
+[`equate.compare.vectorize`](equate.compare.vectorize.html.md#module-equate.compare.vectorize), which takes the `{field: score}` mapping (the
+default `mean`, `weighted_sum`, `fellegi_sunter`), or a reducer of numbers
+(`max`, `min`, `sum`, `statistics.median`, …), which gets the scores. So a
+source with extra fields is compared on what it shares. Records sharing no compared
+field score `missing`.
+
+```pycon
+>>> sim = record_similarity({'fr': 'ratio', 'zh': 'ratio'}, combine=max)
+>>> sim({'fr': 'merci', 'zh': '谢谢'}, {'fr': 'merci', 'zh': '鞋'})  # the better field
+1.0
+```
 
 ```pycon
 >>> sim = record_similarity({'text': 'ratio'})

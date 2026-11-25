@@ -1,4 +1,4 @@
-> built 2026-11-25 14:49 UTC from ca79a43 (master) · equate 0.1.5. Details: build_info.json
+> built 2026-11-25 15:00 UTC from 3ec613a (master) · equate 0.1.6. Details: build_info.json
 
 # index.html.md
 
@@ -6074,10 +6074,18 @@ Build a record comparator `(a, b) -> float` from per-field comparators.
 
 The per-field scores are a [`comparison_vector()`](_autosummary/equate.compare.vectorize.html.md#equate.compare.vectorize.comparison_vector) over
 the fields **both records actually have** (a field missing or `None` on either side
-is left out, not scored zero), reduced by `combine` (default the mean; any combiner
-of [`equate.compare.vectorize`](_autosummary/equate.compare.vectorize.html.md#module-equate.compare.vectorize), e.g. `weighted_sum`, works). So a source with
-extra fields is compared on what it shares. Records sharing no compared field score
-`missing`.
+is left out, not scored zero), reduced by `combine`: a combiner of
+[`equate.compare.vectorize`](_autosummary/equate.compare.vectorize.html.md#module-equate.compare.vectorize), which takes the `{field: score}` mapping (the
+default `mean`, `weighted_sum`, `fellegi_sunter`), or a reducer of numbers
+(`max`, `min`, `sum`, `statistics.median`, …), which gets the scores. So a
+source with extra fields is compared on what it shares. Records sharing no compared
+field score `missing`.
+
+```pycon
+>>> sim = record_similarity({'fr': 'ratio', 'zh': 'ratio'}, combine=max)
+>>> sim({'fr': 'merci', 'zh': '谢谢'}, {'fr': 'merci', 'zh': '鞋'})  # the better field
+1.0
+```
 
 ```pycon
 >>> sim = record_similarity({'text': 'ratio'})
@@ -6230,18 +6238,18 @@ See: [https://en.wikipedia.org/wiki/Stable_marriage_problem](https://en.wikipedi
 
 # About this build
 
-This documentation was built on **2026-11-25 14:49 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/ca79a433912d212d0d54d746c94a77fdcba2b95f"><code>ca79a43</code></a> on branch <code>master</code>, for **equate 0.1.5** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-25 15:00 UTC** from commit <a href="https://github.com/thorwhalen/equate/commit/3ec613a8b861280f21b973fdc8c1b70e4e5790a3"><code>3ec613a</code></a> on branch <code>master</code>, for **equate 0.1.6** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.1.5) is behind the latest release on PyPI (0.1.6): `pip install equate` gives newer code than these docs describe.
+- The documented version (0.1.6) is behind the latest release on PyPI (0.1.7): `pip install equate` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/equate/commit/ca79a433912d212d0d54d746c94a77fdcba2b95f"><code>ca79a433912d212d0d54d746c94a77fdcba2b95f</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/equate/commit/3ec613a8b861280f21b973fdc8c1b70e4e5790a3"><code>3ec613a8b861280f21b973fdc8c1b70e4e5790a3</code></a> |
 | Branch              | <code>master</code>                                                                                                                                      |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -6252,9 +6260,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/equate</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/45638000677">45638000677</a>    |
+| Run          | <a href="https://github.com/thorwhalen/equate/actions/runs/45639865218">45639865218</a>    |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>ca79a433912d212d0d54d746c94a77fdcba2b95f</code> (in the history of the built commit) |
+| Event commit | <code>3ec613a8b861280f21b973fdc8c1b70e4e5790a3</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6279,13 +6287,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/equate/0.1.6/">0.1.6</a>, newer than the documented version (0.1.5).
+Latest release: <a href="https://pypi.org/project/equate/0.1.7/">0.1.7</a>, newer than the documented version (0.1.6).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/equate && cd equate
-git checkout ca79a433912d212d0d54d746c94a77fdcba2b95f
+git checkout 3ec613a8b861280f21b973fdc8c1b70e4e5790a3
 pip install "epythet==0.2.25"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

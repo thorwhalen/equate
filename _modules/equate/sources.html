@@ -403,6 +403,22 @@
     <span class="k">return</span> <span class="n">cmp</span>
 
 
+<span class="c1">#: reducers that take numbers, not a ``{field: score}`` mapping (beyond ``statistics``)</span>
+<span class="n">_NUMBER_REDUCERS</span> <span class="o">=</span> <span class="p">(</span><span class="nb">max</span><span class="p">,</span> <span class="nb">min</span><span class="p">,</span> <span class="nb">sum</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_as_combiner</span><span class="p">(</span><span class="n">combine</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``combine`` as a ``{field: score}`` combiner: a reducer of numbers (``max``,</span>
+<span class="sd">    ``min``, ``sum``, a ``statistics`` function) is given the scores, not the mapping,</span>
+<span class="sd">    whose iteration would yield field names."""</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">combine</span> <span class="ow">in</span> <span class="n">_NUMBER_REDUCERS</span>
+        <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">combine</span><span class="p">,</span> <span class="s2">"__module__"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"statistics"</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="k">lambda</span> <span class="n">cv</span><span class="p">:</span> <span class="n">combine</span><span class="p">(</span><span class="n">cv</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">combine</span>
+
+
 <div class="viewcode-block" id="record_similarity">
 <a class="viewcode-back" href="../../_autosummary/equate.sources.html#equate.sources.record_similarity">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">record_similarity</span><span class="p">(</span><span class="n">compare</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">combine</span><span class="o">=</span><span class="n">mean</span><span class="p">,</span> <span class="n">missing</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
@@ -417,10 +433,16 @@
 
 <span class="sd">    The per-field scores are a :func:`~equate.compare.vectorize.comparison_vector` over</span>
 <span class="sd">    the fields **both records actually have** (a field missing or ``None`` on either side</span>
-<span class="sd">    is left out, not scored zero), reduced by ``combine`` (default the mean; any combiner</span>
-<span class="sd">    of :mod:`equate.compare.vectorize`, e.g. ``weighted_sum``, works). So a source with</span>
-<span class="sd">    extra fields is compared on what it shares. Records sharing no compared field score</span>
-<span class="sd">    ``missing``.</span>
+<span class="sd">    is left out, not scored zero), reduced by ``combine``: a combiner of</span>
+<span class="sd">    :mod:`equate.compare.vectorize`, which takes the ``{field: score}`` mapping (the</span>
+<span class="sd">    default ``mean``, ``weighted_sum``, ``fellegi_sunter``), or a reducer of numbers</span>
+<span class="sd">    (``max``, ``min``, ``sum``, ``statistics.median``, ...), which gets the scores. So a</span>
+<span class="sd">    source with extra fields is compared on what it shares. Records sharing no compared</span>
+<span class="sd">    field score ``missing``.</span>
+
+<span class="sd">    &gt;&gt;&gt; sim = record_similarity({'fr': 'ratio', 'zh': 'ratio'}, combine=max)</span>
+<span class="sd">    &gt;&gt;&gt; sim({'fr': 'merci', 'zh': '谢谢'}, {'fr': 'merci', 'zh': '鞋'})  # the better field</span>
+<span class="sd">    1.0</span>
 
 <span class="sd">    &gt;&gt;&gt; sim = record_similarity({'text': 'ratio'})</span>
 <span class="sd">    &gt;&gt;&gt; sim({'text': 'merci'}, {'text': 'merci', 'pinyin': 'xiexie'})</span>
@@ -430,6 +452,7 @@
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">compare</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">compare</span>
+    <span class="n">combine</span> <span class="o">=</span> <span class="n">_as_combiner</span><span class="p">(</span><span class="n">combine</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">compare</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compare</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"compare must be None, a mapping </span><span class="se">{{</span><span class="s2">field: comparator</span><span class="se">}}</span><span class="s2"> or a callable, "</span>
@@ -916,7 +939,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=5964c245"></script>
+</div><script src="../../_static/documentation_options.js?v=79d558ae"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

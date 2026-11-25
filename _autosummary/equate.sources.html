@@ -539,10 +539,17 @@ positions of the gap they sit in (a local order swap); those pairs cross the oth
 </ul>
 <p>The per-field scores are a <a class="reference internal" href="equate.compare.vectorize.html#equate.compare.vectorize.comparison_vector" title="equate.compare.vectorize.comparison_vector"><code class="xref py py-func docutils literal notranslate"><span class="pre">comparison_vector()</span></code></a> over
 the fields <strong>both records actually have</strong> (a field missing or <code class="docutils literal notranslate"><span class="pre">None</span></code> on either side
-is left out, not scored zero), reduced by <code class="docutils literal notranslate"><span class="pre">combine</span></code> (default the mean; any combiner
-of <a class="reference internal" href="equate.compare.vectorize.html#module-equate.compare.vectorize" title="equate.compare.vectorize"><code class="xref py py-mod docutils literal notranslate"><span class="pre">equate.compare.vectorize</span></code></a>, e.g. <code class="docutils literal notranslate"><span class="pre">weighted_sum</span></code>, works). So a source with
-extra fields is compared on what it shares. Records sharing no compared field score
-<code class="docutils literal notranslate"><span class="pre">missing</span></code>.</p>
+is left out, not scored zero), reduced by <code class="docutils literal notranslate"><span class="pre">combine</span></code>: a combiner of
+<a class="reference internal" href="equate.compare.vectorize.html#module-equate.compare.vectorize" title="equate.compare.vectorize"><code class="xref py py-mod docutils literal notranslate"><span class="pre">equate.compare.vectorize</span></code></a>, which takes the <code class="docutils literal notranslate"><span class="pre">{field:</span> <span class="pre">score}</span></code> mapping (the
+default <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">weighted_sum</span></code>, <code class="docutils literal notranslate"><span class="pre">fellegi_sunter</span></code>), or a reducer of numbers
+(<code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">sum</span></code>, <code class="docutils literal notranslate"><span class="pre">statistics.median</span></code>, …), which gets the scores. So a
+source with extra fields is compared on what it shares. Records sharing no compared
+field score <code class="docutils literal notranslate"><span class="pre">missing</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sim</span> <span class="o">=</span> <span class="n">record_similarity</span><span class="p">({</span><span class="s1">'fr'</span><span class="p">:</span> <span class="s1">'ratio'</span><span class="p">,</span> <span class="s1">'zh'</span><span class="p">:</span> <span class="s1">'ratio'</span><span class="p">},</span> <span class="n">combine</span><span class="o">=</span><span class="nb">max</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sim</span><span class="p">({</span><span class="s1">'fr'</span><span class="p">:</span> <span class="s1">'merci'</span><span class="p">,</span> <span class="s1">'zh'</span><span class="p">:</span> <span class="s1">'谢谢'</span><span class="p">},</span> <span class="p">{</span><span class="s1">'fr'</span><span class="p">:</span> <span class="s1">'merci'</span><span class="p">,</span> <span class="s1">'zh'</span><span class="p">:</span> <span class="s1">'鞋'</span><span class="p">})</span>  <span class="c1"># the better field</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sim</span> <span class="o">=</span> <span class="n">record_similarity</span><span class="p">({</span><span class="s1">'text'</span><span class="p">:</span> <span class="s1">'ratio'</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sim</span><span class="p">({</span><span class="s1">'text'</span><span class="p">:</span> <span class="s1">'merci'</span><span class="p">},</span> <span class="p">{</span><span class="s1">'text'</span><span class="p">:</span> <span class="s1">'merci'</span><span class="p">,</span> <span class="s1">'pinyin'</span><span class="p">:</span> <span class="s1">'xiexie'</span><span class="p">})</span>
 <span class="go">1.0</span>
@@ -632,7 +639,7 @@ extra fields is compared on what it shares. Records sharing no compared field sc
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=5964c245"></script>
+</div><script src="../_static/documentation_options.js?v=79d558ae"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
